@@ -17,7 +17,7 @@ tasks; later phases are decomposed when they become active.
 
 | Phase | Description | Status |
 | --- | --- | --- |
-| [Phase 1](tasks/phase-1.md) | Project scaffold, complete entity model, and the app shell every route inherits | `Todo` |
+| [Phase 1](tasks/phase-1.md) | Project scaffold, complete entity model, and the app shell every route inherits | `In Progress` (5/14) |
 
 Execution order within the phase is `A → (B ‖ C) → T`: Tracks B and C never touch
 the same files and run in parallel, but both need Track A's scaffold on disk

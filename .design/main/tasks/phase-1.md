@@ -1,7 +1,7 @@
 ---
 phase: 1
 name: "Platform Foundation"
-status: Todo
+status: In Progress
 subsystem: "src/"
 requires: []
 provides: []
@@ -15,7 +15,7 @@ duration_minutes: ~
 # Stage 1 Tasks — Platform Foundation
 
 **Phase:** 1
-**Status:** Todo
+**Status:** In Progress
 **Strategic Goal:** A running Next.js application with the complete entity model
 persisted in PostgreSQL and the shared shell every route inherits — the substrate
 all five later phases build on.

@@ -1,2 +1,5 @@
 allowBuilds:
   sharp: true
+minimumReleaseAgeExclude:
+  - '@vitejs/plugin-react@6.0.5'
+  - lucide-react@1.28.0

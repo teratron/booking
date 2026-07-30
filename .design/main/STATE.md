@@ -25,8 +25,8 @@ Overall: [0/9]   ░░░░░░░░ 0%    (specs implemented; 9/9 specs St
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-07-30 **Decision:** Phase 1 unblocked — l2-tech-stack.md v0.2.0 Stable; backlog empty, all 9 specs scheduled into phases.
-- 2026-07-30 **Decision:** l2-tech-stack.md amended to v0.2.0; vendor selections stay owned by l2-third-party-integrations.md and are referenced by link, not restated, so the two specs cannot drift apart again.
+- 2026-07-30 **Decision:** Dependency policy — keep the whole stack on latest, including major bumps (`pnpm update --latest`), not conservatively pinned. Ran it post-Track-A: TypeScript 5→7 (native compiler), `@types/node` 20→26, React 19.2.4→19.2.8. Fixed the one real incompatibility this surfaced (below); everything else verified clean (`tsc`, `biome`, `pnpm test`, `next dev`).
+- 2026-07-30 **Pattern:** TypeScript 7's native compiler doesn't expose the compiler API Next.js 16.2.12 expects by default — fixed via `experimental.useTypeScriptCli: true` in `next.config.ts` (Next's own documented escape hatch), not by downgrading TypeScript. Two harmless, expected peer-metadata lags remain (`tsconfck@3.1.6` peers `typescript@^5`; a `rolldown`/`@napi-rs/wasm-runtime` WASI-only fallback chain wants an alpha `@emnapi/*` line) — both transitive, both empirically inert on this platform.
 - 2026-07-30 **Decision:** Six implementation phases ordered by hard dependency — identity and the shared data model precede every feature that reads or writes them.
 - 2026-07-30 **Pattern:** Single shared entity model — the Phase 1 Drizzle schema covers the full relationship graph in one pass so later phases extend it instead of restructuring it.
 - 2026-07-30 **Pattern:** Phase execution shape `A → (B ‖ C) → T` — parallel tracks are declared only where they touch disjoint files.
@@ -35,7 +35,7 @@ Overall: [0/9]   ░░░░░░░░ 0%    (specs implemented; 9/9 specs St
 
 <!-- Empty if none. Format: [severity] description -->
 
-- none — the l2-tech-stack.md blocker was resolved on 2026-07-30. `TASKS.md` and `tasks/phase-1.md` still carry the stale `Blocked` status; the next `/magic.task` run clears it.
+- none
 
 ## Blocking Constraints
 
