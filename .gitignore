@@ -90,19 +90,26 @@ copilot-instructions.md
 .*/prompts/
 .*/workflows/
 !.agents/workflows/
+!.claude/workflows/
 !.github/workflows/
 .agents/workflows/magic*.md
+.claude/workflows/magic*.md
 
 ## Skills
 .*/skills/
 !.agents/skills/
+!.claude/skills/
 .agents/skills/magic*
+.claude/skills/magic*
 
 ## Rules
 .*/rules/
 !.agents/rules/
+!.claude/rules/
 .agents/rules/magic*.md
 .agents/rules/MAGIC.md
+.claude/rules/magic*.md
+.claude/rules/MAGIC.md
 
 # Magic Spec
 .magic/
