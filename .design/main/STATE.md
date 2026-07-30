@@ -4,21 +4,21 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-07-30 15:42
+**Updated:** 2026-07-30 16:17
 **Phase:** 1 — Platform Foundation
 **Status:** Active
 
 ## Current Position
 
-- **Task:** none started — Phase 1 is ready to dispatch
+- **Task:** T-1A05 Wire Fallow for dev-time codebase intelligence (Done — last completed)
 - **Spec:** l1-platform-foundation.md, l1-platform-shell.md, l2-tech-stack.md
-- **Next Action:** Execute T-1A01 Scaffold the Next.js application via /magic.run main
+- **Next Action:** Execute T-1B01 (Track B: Drizzle schema) and T-1C01 (Track C: root layout shell) via /magic.run main — both depend only on T-1A01's scaffold, already Done
 
 ## Progress
 
 ```
-Phase 1: [0/14]  ░░░░░░░░ 0%
-Overall: [0/9]   ░░░░░░░░ 0%   (specs implemented; 9 of 9 Stable)
+Phase 1: [5/14]  ███░░░░░ 36%   (Track A complete: T-1A01–T-1A05)
+Overall: [0/9]   ░░░░░░░░ 0%    (specs implemented; 9/9 specs Stable)
 ```
 
 ## Recent Decisions
