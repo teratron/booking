@@ -1,6 +1,6 @@
 # Hotel Profile
 
-**Version:** 0.1.0
+**Version:** 0.2.0
 **Status:** Draft
 **Layer:** concept
 
@@ -17,6 +17,7 @@ recently-viewed rail. Evidenced by Figma frames `страница отеля` /
 - [l1-hotel-discovery.md](l1-hotel-discovery.md) - Upstream entry point into this page.
 - [l1-room-reservation.md](l1-room-reservation.md) - The room inventory table embedded in this page.
 - [l1-content-publishing.md](l1-content-publishing.md) - Source of the on-page "hotel news" section.
+- [l2-third-party-integrations.md](l2-third-party-integrations.md) - Resolves who may author a review (§2).
 
 ## 1. Motivation
 
@@ -29,9 +30,13 @@ aggregation and presentation, not the underlying data mechanics.
 
 - Reviews display an aggregate score plus a per-review breakdown (reviewer name,
   avatar, individual rating, free-text comment, date).
-  <!-- TBD: no review-submission form was found among inspected frames; whether
-       only guests with a completed reservation can review is undefined and
-       depends on resolving the actor-role question in l1-platform-foundation.md. -->
+  [MODIFIED] **Resolved**: a review is authored by an authenticated guest
+  (see [l2-third-party-integrations.md](l2-third-party-integrations.md) §5.1)
+  and passes the same moderation checkpoint as other external content (see
+  [l1-platform-foundation.md](l1-platform-foundation.md) §3).
+  <!-- TBD: whether a guest must additionally have a completed reservation at
+       this specific hotel to review it (vs. any authenticated guest) is a
+       separate business-policy question, not yet decided. -->
 - The on-site restaurant section is presented as an amenity of the hotel, not a
   separately bookable entity.
 
@@ -47,7 +52,10 @@ aggregation and presentation, not the underlying data mechanics.
   items, or a partial gallery must still render a usable page (no section may be
   a hard dependency for page render).
 - The recently-viewed rail is scoped to the visiting browser/session, not to an
-  authenticated account, unless the actor-role question resolves otherwise.
+  authenticated account — this stays true independent of the actor-role
+  resolution, since browsing does not require an account
+  ([l2-third-party-integrations.md](l2-third-party-integrations.md) only gates
+  reservations, reviews, and hotel submission, not browsing).
 
 ## 5. Detailed Design
 
@@ -90,3 +98,4 @@ frame exists yet to justify the split; revisit if a submission flow is designed.
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1.0 | 2026-07-30 | Initial draft derived from Figma hotel-page frames. |
+| 0.2.0 | 2026-07-30 | Resolved review-authorship (authenticated guest) via l2-third-party-integrations.md. |

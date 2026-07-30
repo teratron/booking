@@ -1,6 +1,6 @@
 # Platform Foundation
 
-**Version:** 0.1.0
+**Version:** 0.2.0
 **Status:** Draft
 **Layer:** concept
 
@@ -22,6 +22,7 @@ repeating these invariants.
 - [l1-property-onboarding.md](l1-property-onboarding.md) - Consumes moderation + actor-role invariants.
 - [l1-content-publishing.md](l1-content-publishing.md) - Consumes discoverability + moderation invariants.
 - [l1-platform-shell.md](l1-platform-shell.md) - Consumes localization + responsive delivery invariants.
+- [l2-third-party-integrations.md](l2-third-party-integrations.md) - Implements the actor-role and moderation-checkpoint invariants below.
 
 ## 1. Motivation
 
@@ -62,19 +63,18 @@ into every domain spec would violate the no-duplication rule (RULES.md §6).
   or more rooms. No room may exist without a parent hotel.
 - **Content moderation checkpoint**: any content originating from an external actor
   (a submitted hotel listing, a guest review) must pass an integrity/moderation
-  checkpoint before it is publicly visible.
-  <!-- TBD: no moderation screen or workflow was found among the inspected Figma
-       frames. The checkpoint's existence is inferred from the presence of a
-       public submission form (`Добавить отель`) feeding a public marketplace;
-       the concrete workflow (manual review queue vs. automated checks) is an
-       open product question. -->
-- **Actor roles**: the system distinguishes at least two actor roles — guests who
-  browse/reserve, and property owners who submit listings.
-  <!-- TBD: no login/registration/account-dashboard frame was found among the
-       inspected Figma frames (only a hotel-submission form and a guest-review
-       display were seen). Whether either role requires authenticated accounts,
-       and how a submitted listing is later managed by its owner, is undefined
-       and must be resolved before l1-property-onboarding.md can reach RFC. -->
+  checkpoint before it is publicly visible. [MODIFIED] Mechanism resolved: an
+  authenticated admin actor reviews a queue of pending items (hotels, rooms,
+  reviews) and approves or rejects them; see
+  [l2-third-party-integrations.md](l2-third-party-integrations.md) §5.3 for the
+  concrete tool. The invariant itself (a checkpoint must exist) is unchanged —
+  only its previously-open mechanism is now decided.
+- **Actor roles**: the system distinguishes three actor roles — guests who
+  browse/reserve, property owners who submit listings, and admins who moderate
+  submitted content. All three are authenticated accounts. [MODIFIED] Resolved:
+  see [l2-third-party-integrations.md](l2-third-party-integrations.md) §5.1 for
+  the concrete auth solution. A submitted listing remains attributed to its
+  owner's account for later management (edits, viewing moderation status).
 - **Media resilience**: photo/video-heavy pages (hotel galleries, room galleries)
   must remain usable when images load slowly or fail; content structure must not
   depend on every asset resolving.
@@ -100,12 +100,20 @@ into every domain spec would violate the no-duplication rule (RULES.md §6).
 
 ```mermaid
 graph TD
+    Account -->|role: guest| Guest
+    Account -->|role: owner| Owner
+    Account -->|role: admin| Admin
+    Owner -->|submits| Hotel
     Hotel -->|has many| Room
+    Guest -->|writes| Review
     Hotel -->|has many| Review
     Hotel -->|has many| NewsItem
     Hotel -->|located at| Location
     Room -->|reserved via| Reservation
+    Guest -->|makes| Reservation
     Reservation -->|for date range + guest count| Room
+    Admin -->|approves/rejects| Hotel
+    Admin -->|approves/rejects| Review
 ```
 
 ## 7. Drawbacks & Alternatives
@@ -126,3 +134,4 @@ duplication across five-plus domain specs, per RULES.md §6.
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1.0 | 2026-07-30 | Initial draft derived from Figma sitemap discovery. |
+| 0.2.0 | 2026-07-30 | Resolved actor-roles and moderation-checkpoint TBDs via l2-third-party-integrations.md. |

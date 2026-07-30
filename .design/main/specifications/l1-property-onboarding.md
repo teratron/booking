@@ -1,6 +1,6 @@
 # Property Onboarding
 
-**Version:** 0.1.0
+**Version:** 0.2.0
 **Status:** Draft
 **Layer:** concept
 
@@ -14,6 +14,7 @@ room inventory into the marketplace. Evidenced by frame `добавить оте
 - [l1-platform-foundation.md](l1-platform-foundation.md) - Actor-role and moderation-checkpoint invariants.
 - [l1-hotel-profile.md](l1-hotel-profile.md) - Consumer of the data this flow produces.
 - [l1-room-reservation.md](l1-room-reservation.md) - The room amenity taxonomy mirrored by this form.
+- [l2-third-party-integrations.md](l2-third-party-integrations.md) - Implements the auth-gate and moderation-queue mechanism resolved below.
 
 ## 1. Motivation
 
@@ -24,11 +25,12 @@ materially different concern (data completeness and integrity, not conversion).
 
 ## 2. Constraints & Assumptions
 
-- The form is reachable from the public footer ("Добавить отель") without any
-  visible sign-in step preceding it.
-  <!-- TBD: whether submission requires an authenticated owner account is the
-       same open question raised in l1-platform-foundation.md. If it does, this
-       form is the first step of an account-creation flow, not a bare form. -->
+- [MODIFIED] **Resolved**: the footer's "Добавить отель" link now leads to
+  account creation/login first (see
+  [l2-third-party-integrations.md](l2-third-party-integrations.md) §5.1) if the
+  visitor has no owner account, then the intake form — it is not a bare
+  anonymous form. This changes the Figma-evidenced flow (no sign-in frame was
+  found) by explicit product direction, not by re-reading the source.
 - The form's room-amenity groupings (room / bathroom / bedroom / general)
   mirror the grouping shown in the room-detail popup
   ([l1-room-reservation.md](l1-room-reservation.md)), confirming both surfaces
@@ -46,9 +48,14 @@ materially different concern (data completeness and integrity, not conversion).
   [l1-hotel-discovery.md](l1-hotel-discovery.md) results or reachable at its own
   profile URL until it clears the moderation checkpoint defined in
   [l1-platform-foundation.md](l1-platform-foundation.md).
-  <!-- TBD: the concrete moderation workflow (queue, reviewer role, rejection
-  feedback to the owner) has no corresponding frame in the inspected source and
-  must be designed separately. -->
+  [MODIFIED] **Resolved**: an admin reviews the submission in a queue (see
+  [l2-third-party-integrations.md](l2-third-party-integrations.md) §5.3),
+  approving or rejecting with a reason; a rejection is visible to the owner
+  against their own submission (owner-account attribution from the auth
+  resolution above is what makes this feedback loop possible at all).
+- Every submission is attributed to the authenticated owner account that
+  created it, so the owner can later view its moderation status and edit a
+  rejected submission for re-review.
 - Location data captured here must be sufficient to place the hotel on the map
   view in [l1-hotel-discovery.md](l1-hotel-discovery.md) (i.e. resolvable to
   coordinates, not free-text address alone).
@@ -75,17 +82,21 @@ Room section (repeatable — see Drawbacks)
 
 ```mermaid
 graph TD
-    A[Owner fills hotel + room sections] --> B[Draft saved]
-    B --> C{Moderation checkpoint}
+    Z[Owner account?] -->|no| Y[Login / register]
+    Y --> A
+    Z -->|yes| A[Owner fills hotel + room sections]
+    A --> B[Draft saved, attributed to owner]
+    B --> C{Admin review queue}
     C -->|Approved| D[Published: visible in Discovery + Profile]
-    C -->|Rejected| E[Returned to owner]
+    C -->|Rejected + reason| E[Returned to owner for edits]
+    E --> A
 ```
 
 ## 6. Implementation Notes
 
-1. Resolve the authentication question before building persistence for this
-   flow — it determines whether submissions are linked to an owner account or
-   handled as anonymous leads.
+1. Build the auth gate ([l2-third-party-integrations.md](l2-third-party-integrations.md)
+   §5.1) before this flow's persistence layer — every submission must carry an
+   owner-account reference from the start.
 2. Reuse the amenity taxonomy verbatim from
    [l1-room-reservation.md](l1-room-reservation.md) rather than defining it
    twice.
@@ -109,3 +120,4 @@ frame alone.
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1.0 | 2026-07-30 | Initial draft derived from the add-hotel form frame. |
+| 0.2.0 | 2026-07-30 | Resolved: owner-account gate + admin moderation queue via l2-third-party-integrations.md. |

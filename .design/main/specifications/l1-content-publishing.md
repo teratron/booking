@@ -1,6 +1,6 @@
 # Content Publishing
 
-**Version:** 0.1.0
+**Version:** 0.2.0
 **Status:** Draft
 **Layer:** concept
 
@@ -15,6 +15,7 @@ items that appear embedded on a hotel's profile page. Evidenced by frames `бл�
 
 - [l1-platform-foundation.md](l1-platform-foundation.md) - Discoverability and moderation-checkpoint invariants.
 - [l1-hotel-profile.md](l1-hotel-profile.md) - Embeds this spec's content as hotel-scoped news.
+- [l2-third-party-integrations.md](l2-third-party-integrations.md) - Resolves article/news authorship (§2) via the admin panel.
 
 ## 1. Motivation
 
@@ -25,11 +26,14 @@ building two redundant systems or silently assuming one without evidence.
 
 ## 2. Constraints & Assumptions
 
-- Assume a single "article" entity that may optionally be associated with a
-  hotel; a hotel's "news" section is then simply articles filtered by that
-  association. <!-- TBD: could instead be two unrelated content types authored
-  by different actors (platform editors vs. hotel owners); no authoring
-  interface for either was found in the inspected frames. -->
+- [MODIFIED] **Resolved**: a single "article" entity, optionally associated
+  with a hotel; a hotel's "news" section is articles filtered by that
+  association. Authorship is resolved too: platform admins author and publish
+  all articles (including hotel-scoped news) through the admin panel (see
+  [l2-third-party-integrations.md](l2-third-party-integrations.md) §5.3) —
+  hotel owners do not get a separate authoring path. This keeps one content
+  pipeline instead of two and reuses the moderation actor already established
+  for hotel/room/review approval.
 
 ## 3. Core Invariants (Layer 1 only)
 
@@ -41,9 +45,12 @@ building two redundant systems or silently assuming one without evidence.
 - Article pages are independently crawlable and shareable, per the
   discoverability invariant in
   [l1-platform-foundation.md](l1-platform-foundation.md).
-- Published articles pass the same moderation checkpoint as other
-  externally-originated content, if authored by a non-platform actor.
-  <!-- TBD: contingent on resolving who authors hotel-scoped news (see §2). -->
+- [MODIFIED] **Resolved**: since articles are admin-authored (not submitted by
+  an external actor), they do not pass through the moderation checkpoint that
+  gates hotel/room/review content — an admin publishing an article is already
+  the trusted-actor act. The moderation checkpoint invariant in
+  [l1-platform-foundation.md](l1-platform-foundation.md) §3 remains scoped to
+  externally-originated content only.
 
 ## 5. Detailed Design
 
@@ -81,3 +88,4 @@ abstraction).
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1.0 | 2026-07-30 | Initial draft derived from blog/article frames and the hotel-profile news section. |
+| 0.2.0 | 2026-07-30 | Resolved: single admin-authored article entity; no separate moderation checkpoint needed. |
