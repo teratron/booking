@@ -46,11 +46,11 @@ reference points at the old IDs and no traceability is lost.
 
 ## Atomic Checklist
 
-- [ ] [T-2A01] Install Better Auth and configure it against the existing schema
-- [ ] [T-2A02] Mount the Better Auth route handler
-- [ ] [T-2A03] Wire the three actor roles onto the account record
-- [ ] [T-2A04] Provide server-side session access and a route-protection helper
-- [ ] [T-2B01] Split the root layout so the admin surface sheds the marketing chrome
+- [x] [T-2A01] Install Better Auth and configure it against the existing schema
+- [x] [T-2A02] Mount the Better Auth route handler
+- [x] [T-2A03] Wire the three actor roles onto the account record
+- [x] [T-2A04] Provide server-side session access and a route-protection helper
+- [x] [T-2B01] Split the root layout so the admin surface sheds the marketing chrome
 - [ ] [T-2B02] Build the sign-up and sign-in surfaces
 - [ ] [T-2B03] Make the shell header session-aware
 - [ ] [T-2C01] Build the admin REST surface with mandatory admin authorization
@@ -63,7 +63,7 @@ reference points at the old IDs and no traceability is lost.
 ### [T-2A01] Install Better Auth and configure it against the existing schema
 
 - **Spec:** l2-third-party-integrations.md §5.1; l2-tech-stack.md §5.6
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** `pnpm exec drizzle-kit generate` reports "No schema changes,
   nothing to migrate" — proving Better Auth adopted Phase 1's existing
@@ -77,11 +77,35 @@ reference points at the old IDs and no traceability is lost.
   migration *is* emitted, that is a real mismatch to investigate, not something
   to apply. `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL` go in `.env` with
   placeholders committed to `.env.example` (never real values).
+- **Changes:** `src/lib/auth/index.ts` — `betterAuth({ database:
+  drizzleAdapter(db, { provider: "pg", schema }), emailAndPassword: { enabled:
+  true } })`. Verified the current import path before writing anything: the
+  package export map (`npm view better-auth exports`) confirms
+  `better-auth/adapters/drizzle` is a real subpath of the core `better-auth`
+  package — no separate adapter package needed, despite one search result
+  suggesting `@better-auth/drizzle-adapter` (which also happens to exist on
+  npm, likely a re-export; used the core package's own path instead to avoid
+  an unnecessary dependency). `emailAndPassword` enabled now, not deferred to
+  T-2A02, since that task's own Verify line needs it live and an auth instance
+  with no enabled method would be a non-functional hand-off.
+  `BETTER_AUTH_SECRET` generated via `openssl rand -base64 32` (not a
+  placeholder string) into `.env` (gitignored); `.env.example` carries a
+  generation instruction, not a real value.
+  - **Honest scope of this task's own Verify line:** `drizzle-kit generate`
+    diffs `schema.ts` against existing migrations — since this task didn't
+    touch `schema.ts`, "no changes" was structurally guaranteed and is not by
+    itself proof the adapter accepts the schema at runtime. That proof is
+    T-2A02's job (an actual sign-up call against a live server). Recorded here
+    so "Verify passed" isn't overstated as "adapter confirmed working."
+  - `pnpm exec drizzle-kit generate` — exit 0 — "No schema changes, nothing to
+    migrate", 14 tables unchanged.
+  - `pnpm exec tsc --noEmit`, `pnpm exec biome check .` (36 files), `pnpm test`
+    (12 files / 14 tests) — exit 0, no regression.
 
 ### [T-2A02] Mount the Better Auth route handler
 
 - **Spec:** l2-third-party-integrations.md §5.1
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** against a live `pnpm dev`, `POST /api/auth/sign-up/email` with a
   test credential returns 2xx and creates exactly one row in `user`
@@ -92,11 +116,26 @@ reference points at the old IDs and no traceability is lost.
   (`toNextJsHandler` from `better-auth/next-js`) at
   `src/app/api/auth/[...all]/route.ts` — this is the App-Router-native path, no
   Express shim involved.
+- **Changes:** `src/app/api/auth/[...all]/route.ts` — `toNextJsHandler(auth)`
+  exporting `GET`/`POST`. This is the task that actually proves T-2A01's
+  adapter works at runtime, not just at the schema-file level.
+  - `POST /api/auth/sign-up/email` — HTTP 200, returned a `user` object with
+    `id`/`email`/`name`. `psql` confirmed exactly one row in `user`, with
+    `role` already defaulting to `guest` from Phase 1's schema default (T-2A03
+    formally wires this into the session/escalation-guard, but the DB-level
+    default was already correct).
+  - `GET /api/auth/get-session` with the returned session cookie — HTTP 200,
+    returned the same user plus session metadata (`expiresAt`, `token`).
+  - Test data cleaned up via `psql` after verification (`DELETE 1` for both
+    `session` and `user`); confirmed `count(*) = 0` on `user` afterward.
+  - `pnpm exec tsc --noEmit`, `pnpm exec biome check .` (37 files), `pnpm test`
+    (12 files / 14 tests) — exit 0, no regression. Dev server stopped after
+    verification.
 
 ### [T-2A03] Wire the three actor roles onto the account record
 
 - **Spec:** l1-platform-foundation.md §3 (Actor roles); l2-third-party-integrations.md §4, §5.1
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** a newly signed-up account has `role = 'guest'` in the database; the
   session object exposes `role`; a test asserts a client-supplied `role` in the
@@ -109,11 +148,30 @@ reference points at the old IDs and no traceability is lost.
   privilege-escalation hole, and the negative test above is the point of this
   task, not an extra. The column and its `actor_role` enum already exist from
   Phase 1; this makes the auth layer aware of them.
+- **Changes:** `src/lib/auth/index.ts` — `user.additionalFields.role`:
+  `type: ["guest", "owner", "admin"]`, `defaultValue: "guest"`, `input: false`.
+  Verified the exact config shape (array-of-literals for enum, `input: false`
+  semantics) against Better Auth's current docs before writing it, since this
+  is the actual privilege-escalation guard, not a place to guess syntax.
+  `src/lib/auth/index.test.ts` — real Vitest tests calling
+  `auth.api.signUpEmail()` directly against the live Postgres (the same
+  pattern as T-1B02's `constraints.test.ts`; `auth` is plain server code, not
+  a React Server Component, so it isn't subject to the async-RSC testing
+  limitation from Phase 1/T-2A01–02). Two tests, both empirical rather than
+  trusting the docs' unstated behavior for unknown fields: default role is
+  `guest`; a sign-up payload with `role: "admin"` (forced past the TS type
+  with `@ts-expect-error`, simulating a caller bypassing the client type)
+  still persists as `guest` in the database — the escalation is genuinely
+  rejected server-side, not just hidden from the TS-typed client. Both tests
+  clean up their own rows via `afterEach`.
+  - `pnpm test` — exit 0 — 13 files / 16 tests (2 new), no regression.
+    Confirmed `select count(*) from "user"` = 0 after the run.
+  - `pnpm exec tsc --noEmit`, `pnpm exec biome check .` (38 files) — exit 0.
 
 ### [T-2A04] Provide server-side session access and a route-protection helper
 
 - **Spec:** l2-third-party-integrations.md §5.1, §5.3; l2-tech-stack.md §5.6
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** a test asserts the helper returns `null` for an unauthenticated
   request and the user record for an authenticated one; a second asserts a
@@ -125,11 +183,33 @@ reference points at the old IDs and no traceability is lost.
 - **Notes:** Server-side only, in `src/lib/auth/` — business logic belongs in
   the library layer, not in route handlers or components. Build the role check
   as one parameterised helper rather than three near-identical ones.
+- **Changes:** `src/lib/auth/session.ts` — three functions:
+  `getSessionFromHeaders(Headers)` (thin wrapper over `auth.api.getSession`),
+  `getCurrentUser(Headers)`, and `requireRole(Headers, role)` — one
+  parameterised gate, not three near-identical ones, per the task's own note.
+  Deliberately takes a plain `Headers` object rather than calling `next/headers`
+  internally: that keeps this module framework-agnostic and directly testable
+  in Vitest (`next/headers` throws outside a real Next.js request scope); call
+  sites (T-2B03, T-2C01) supply `await headers()` themselves. Roles are treated
+  as three distinct actors, not a hierarchy — `requireRole` is an exact match,
+  so an `admin` session does not satisfy an `owner` gate.
+  - Test cookie handling: Better Auth signs its session cookie (HMAC), so a
+    test can't hand-construct one — `session.test.ts` calls
+    `auth.api.signUpEmail({ returnHeaders: true, ... })` to get the real
+    `Set-Cookie` the server generates, forwards it as a request `Cookie`
+    header, and exercises the helpers against that.
+  - `pnpm test` — exit 0 — 14 files / 19 tests (3 new: unauthenticated → null,
+    authenticated → user with `role: "guest"`, role-gate rejects
+    guest-as-owner but accepts guest-as-guest). No regression. Confirmed
+    `select count(*) from "user"` = 0 after the run.
+  - `pnpm exec tsc --noEmit`, `pnpm exec biome check .` (40 files) — exit 0.
+
+**Track A (auth core) complete — T-2A01 through T-2A04.**
 
 ### [T-2B01] Split the root layout so the admin surface sheds the marketing chrome
 
 - **Spec:** l1-platform-shell.md §3; l2-tech-stack.md §5.6
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** `/`, `/privacy-policy`, and an unresolved route still render the
   header and footer (Phase 1's `header.test.tsx` / `footer.test.tsx` and the live
@@ -146,6 +226,38 @@ reference points at the old IDs and no traceability is lost.
   global 404; moved inside a group it becomes group-scoped — decide deliberately
   which behavior is wanted and keep Phase 1's verified "404 still renders the
   shell" result true for marketing routes.
+- **Changes:** `src/app/(marketing)/layout.tsx` (Header/{children}/Footer),
+  `src/app/layout.tsx` reduced to `<html>`/`<body>`/fonts/`NextIntlClientProvider`
+  only. `page.tsx` and `privacy-policy/` moved into `(marketing)/` (with their
+  tests; fixed one relative import depth that shifted). Added
+  `src/app/admin/page.tsx` as a placeholder (T-2C02 replaces it).
+  - **Verified before deciding, not assumed:** fetched Next.js's own current
+    `not-found.js` reference. It states plainly that the *root* `app/not-found.js`
+    "handle[s] any unmatched URLs for your whole application" — a
+    `(marketing)`-scoped one would not. Kept `not-found.tsx` at the app root
+    (not moved into `(marketing)`) to preserve that global-catch-all guarantee,
+    and since it therefore no longer nests under `(marketing)/layout.tsx`, it
+    now imports and renders `Header`/`Footer` directly itself.
+  - **A curl+grep false alarm, caught before it became a wrong conclusion:**
+    the first pass checked `/admin`'s raw HTML for header/footer marker text
+    and found them — appearing to fail this task's own core requirement. The
+    actual rendered `<body>` held only `<div>Admin</div>`; the matches were
+    inside Next.js's RSC "flight" payload (`self.__next_f.push(...)`), which
+    pre-serializes the `not-found` boundary's content for instant client-side
+    transitions regardless of whether it's currently displayed — not the
+    visible DOM. Re-verified via chrome-devtools MCP's accessibility-tree
+    snapshot (real rendered content, immune to this false positive) for all
+    four cases: `/` and `/privacy-policy` show full chrome; a genuinely random
+    nested unmatched path shows the global 404 *with* chrome (proving the
+    root-`not-found.tsx` decision above actually works, not just compiles);
+    `/admin` shows only "Admin", no chrome.
+  - `pnpm test` — exit 0 — 14 files / 19 tests, no regression (import-path fix
+    was the only source change required beyond the move itself).
+  - `pnpm exec tsc --noEmit` — one failure on first run, fully explained: a
+    stale `.next/dev/types/validator.ts` (Next's own generated cache) still
+    referenced the old `src/app/page.tsx` location. Deleted `.next/`
+    (gitignored build cache, not source) and reran clean.
+  - `pnpm exec biome check .` (42 files) — exit 0.
 
 ### [T-2B02] Build the sign-up and sign-in surfaces
 

@@ -9,7 +9,7 @@
 - **Data**: PostgreSQL via Drizzle ORM — schema-as-code, no separate migration DSL.
 - **Auth**: Better Auth (Drizzle adapter) — guest / owner / admin roles.
 - **Payments**: Fondy (marketplace split payments to hotel owners); WayForPay as the single-recipient alternative if payouts stay manual.
-- **Admin / moderation**: AdminJS (Drizzle adapter) — auto-generated resource CRUD + custom approve/reject actions.
+- **Admin / moderation**: React-admin (Drizzle adapter) — auto-generated resource CRUD + custom approve/reject actions.
 - **Lint / format**: Biome.
 - **Codebase intelligence**: Fallow — dead code, duplication, circular dependencies, architecture-boundary and design-system-drift detection. Dev-time only, no runtime footprint.
 
@@ -20,7 +20,7 @@ src/
 ├── app/                  # Next.js App Router routes
 │   ├── (marketing)/      # home, catalog, hotel/[id], blog, blog/[id]
 │   ├── add-hotel/
-│   ├── admin/            # AdminJS mount point
+│   ├── admin/            # React-admin mount point
 │   └── api/              # Route Handlers where a Server Action isn't a fit
 ├── components/           # shadcn/ui-based shared components
 ├── lib/
