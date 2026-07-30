@@ -44,7 +44,7 @@ build/
 *.min.js
 *.min.css
 
-# Node / pnpm (packages/*, apps/*)
+# Node / pnpm
 node_modules/
 .pnpm-store/
 .npm/
@@ -52,17 +52,17 @@ node_modules/
 # Note: IS committed (reproducible installs).
 #pnpm-lock.yaml
 
-# Vite
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# Vercel
+.vercel/
+
+# Vite (isolated tooling only — not the primary app bundler)
 .vite/
 *.timestamp-*.mjs
-
-# Tauri (apps/desktop/tauri)
-**/tauri/gen/
-# tauri/target is covered by `target/` above.
-# Signing keys — never commit.
-*.keystore
-*.jks
-*.p12
 
 # fallow (codebase intelligence) — ignore local cache only; fallow-baselines/ ARE committed.
 .fallow/
