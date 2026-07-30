@@ -1,7 +1,7 @@
 # Third-Party Integrations
 
 **Version:** 0.1.0
-**Status:** Draft
+**Status:** Stable
 **Layer:** implementation
 **Implements:** l1-platform-foundation.md
 

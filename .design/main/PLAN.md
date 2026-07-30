@@ -1,0 +1,149 @@
+# Implementation Plan
+
+**Version:** 1.0.0
+**Generated:** 2026-07-30
+**Based on:** .design/main/INDEX.md v1.0.0
+**Status:** Active
+
+## Overview
+
+Delivery plan for the Booking marketplace — a single Next.js application serving
+guests (browse and reserve), property owners (submit listings), and admins
+(moderate submitted content).
+
+Phase 0 records the concept layer, which is complete: all seven L1 specifications
+are `Stable`. Phases 1–6 sequence the implementation, ordered by hard dependency
+rather than by product surface — identity and the shared data model precede every
+feature that reads or writes them.
+
+### Precondition for Phase 1
+
+`l2-tech-stack.md` is the specification that names the concrete technology for
+scaffolding, styling, the ORM, and i18n. It did not pass stabilization review: its
+`Invariant Compliance` table still records auth and the moderation checkpoint as
+open ("no auth library is selected yet"), and its Implementation Notes instruct
+against scaffolding auth — both of which were resolved in
+[l1-platform-foundation.md](specifications/l1-platform-foundation.md) v0.2.0 and
+[l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)
+§5.1/§5.3. Promoting it as-is would hand contradictory instructions to execution.
+
+Phase 1 is therefore `Blocked` until that spec is amended. Everything it needs
+already exists in the two `Stable` specs above; the amendment is reconciliation,
+not new design.
+
+### Phase Dependency Graph
+
+```mermaid
+graph TD
+    P0[Phase 0 — Concept Layer: Stable] --> P1[Phase 1 — Platform Foundation]
+    P1 --> P2[Phase 2 — Identity & Back Office]
+    P2 --> P3[Phase 3 — Property Onboarding]
+    P1 --> P4[Phase 4 — Discovery & Catalog]
+    P2 --> P5[Phase 5 — Hotel Profile & Content]
+    P3 --> P5
+    P4 --> P5
+    P5 --> P6[Phase 6 — Reservation & Payment]
+    P2 --> P6
+```
+
+## Phase 0 — Requirements (Layer 1: Concept)
+
+*Abstract specifications — technology-agnostic contracts.*
+*Must reach Stable before Phase 1 can begin.*
+
+- [x] **Platform Foundation** ([l1-platform-foundation.md](specifications/l1-platform-foundation.md)) [L1]
+- [x] **Platform Shell** ([l1-platform-shell.md](specifications/l1-platform-shell.md)) [L1]
+- [x] **Hotel Discovery** ([l1-hotel-discovery.md](specifications/l1-hotel-discovery.md)) [L1]
+- [x] **Hotel Profile** ([l1-hotel-profile.md](specifications/l1-hotel-profile.md)) [L1]
+- [x] **Room Reservation** ([l1-room-reservation.md](specifications/l1-room-reservation.md)) [L1]
+- [x] **Property Onboarding** ([l1-property-onboarding.md](specifications/l1-property-onboarding.md)) [L1]
+- [x] **Content Publishing** ([l1-content-publishing.md](specifications/l1-content-publishing.md)) [L1]
+
+## Phase 1 — Platform Foundation
+
+*Project scaffold, the complete entity model, and the shell every route inherits.*
+*Blocked on the precondition above.*
+
+- [ ] **Platform Foundation** ([l1-platform-foundation.md](specifications/l1-platform-foundation.md)) [L1]
+- [ ] **Platform Shell** ([l1-platform-shell.md](specifications/l1-platform-shell.md)) [L1]
+
+The entity model authored here is the shared write surface for all later phases.
+It must cover the full relationship graph in `l1-platform-foundation.md` §5.2 in
+one pass — including the moderation `status` field on externally-originated
+content, the account/role shape Better Auth's Drizzle adapter expects, and the
+reservation's paid state — so Phases 2–6 extend the schema instead of
+restructuring it.
+
+## Phase 2 — Identity & Back Office
+
+*Authentication for three actor roles, and the moderation queue that gates
+externally-submitted content.*
+
+- [ ] **Third-Party Integrations** §5.1, §5.3 ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
+
+Sequenced immediately after the foundation because every subsequent phase either
+gates on an authenticated actor (onboarding, reviews, reservation) or renders only
+content that cleared moderation (discovery, profile).
+
+## Phase 3 — Property Onboarding
+
+*The owner-gated intake flow that puts hotels and rooms into the marketplace.*
+
+- [ ] **Property Onboarding** ([l1-property-onboarding.md](specifications/l1-property-onboarding.md)) [L1]
+
+Produces the data every guest-facing surface reads. The amenity taxonomy defined
+here is shared verbatim with the room detail popup in Phase 6.
+
+## Phase 4 — Discovery & Catalog
+
+*Hero search, catalog with filters/sort/pagination, and the map view.*
+
+- [ ] **Hotel Discovery** ([l1-hotel-discovery.md](specifications/l1-hotel-discovery.md)) [L1]
+
+Depends on the Phase 1 schema (hotels must carry resolvable coordinates), not on
+the Phase 3 intake UI — seed data is sufficient to build and verify it. Kept
+parallel-eligible with Phase 3 rather than serialized behind it.
+
+## Phase 5 — Hotel Profile & Content Publishing
+
+*The conversion surface and the editorial content it embeds.*
+
+- [ ] **Hotel Profile** ([l1-hotel-profile.md](specifications/l1-hotel-profile.md)) [L1]
+- [ ] **Content Publishing** ([l1-content-publishing.md](specifications/l1-content-publishing.md)) [L1]
+
+Paired in one phase because the hotel news feed is articles filtered by hotel
+association — one content pipeline, one article component, rendered in two places.
+
+## Phase 6 — Reservation & Payment
+
+*Room inventory detail, date/guest selection, and the paid booking flow.*
+
+- [ ] **Room Reservation** ([l1-room-reservation.md](specifications/l1-room-reservation.md)) [L1]
+- [ ] **Third-Party Integrations** §5.2 ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
+
+Last by design: payment integration must not precede a reservation model with a
+concrete paid state to transition into.
+
+## Backlog
+
+<!-- Registered specifications waiting for prioritization (Draft or non-critical Stable) -->
+
+- [l2-tech-stack.md](specifications/l2-tech-stack.md) — `Draft`. Failed stabilization
+  review: `Invariant Compliance` rows for actor roles and the moderation checkpoint
+  are deferred placeholders, and §6.4 contradicts
+  [l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)
+  §6.1. Blocks Phase 1.
+
+## Open Questions Carried by Stable Specs
+
+These are recorded product decisions still outstanding. None blocks its phase —
+each has a documented default — but each should be settled before the phase that
+consumes it ships.
+
+| Question | Spec | Phase |
+| --- | --- | --- |
+| Is the Home result list the catalog query or an independent featured feed? | l1-hotel-discovery §2 | 4 |
+| Must a reviewer have a completed reservation at that hotel, or is any authenticated guest sufficient? | l1-hotel-profile §2 | 5 |
+| Full prepayment or partial deposit at reservation time? | l1-room-reservation §2 | 6 |
+| Is the operating legal entity Ukraine-domiciled? Changes payment provider viability. | l2-third-party-integrations §2 | 6 |
+| Automated marketplace split payouts at launch, or manual reconciliation? | l2-third-party-integrations §2 | 6 |
