@@ -1,6 +1,6 @@
 # Implementation Plan
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Generated:** 2026-07-30
 **Based on:** .design/main/INDEX.md v1.0.0
 **Status:** Active
@@ -16,20 +16,8 @@ are `Stable`. Phases 1–6 sequence the implementation, ordered by hard dependen
 rather than by product surface — identity and the shared data model precede every
 feature that reads or writes them.
 
-### Precondition for Phase 1
-
-`l2-tech-stack.md` is the specification that names the concrete technology for
-scaffolding, styling, the ORM, and i18n. It did not pass stabilization review: its
-`Invariant Compliance` table still records auth and the moderation checkpoint as
-open ("no auth library is selected yet"), and its Implementation Notes instruct
-against scaffolding auth — both of which were resolved in
-[l1-platform-foundation.md](specifications/l1-platform-foundation.md) v0.2.0 and
-[l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)
-§5.1/§5.3. Promoting it as-is would hand contradictory instructions to execution.
-
-Phase 1 is therefore `Blocked` until that spec is amended. Everything it needs
-already exists in the two `Stable` specs above; the amendment is reconciliation,
-not new design.
+All nine registered specifications are `Stable`; the backlog is empty and Phase 1
+is ready to dispatch.
 
 ### Phase Dependency Graph
 
@@ -62,10 +50,10 @@ graph TD
 ## Phase 1 — Platform Foundation
 
 *Project scaffold, the complete entity model, and the shell every route inherits.*
-*Blocked on the precondition above.*
 
 - [ ] **Platform Foundation** ([l1-platform-foundation.md](specifications/l1-platform-foundation.md)) [L1]
 - [ ] **Platform Shell** ([l1-platform-shell.md](specifications/l1-platform-shell.md)) [L1]
+- [ ] **Technology Stack** ([l2-tech-stack.md](specifications/l2-tech-stack.md)) [L2]
 
 The entity model authored here is the shared write surface for all later phases.
 It must cover the full relationship graph in `l1-platform-foundation.md` §5.2 in
@@ -128,11 +116,7 @@ concrete paid state to transition into.
 
 <!-- Registered specifications waiting for prioritization (Draft or non-critical Stable) -->
 
-- [l2-tech-stack.md](specifications/l2-tech-stack.md) — `Draft`. Failed stabilization
-  review: `Invariant Compliance` rows for actor roles and the moderation checkpoint
-  are deferred placeholders, and §6.4 contradicts
-  [l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)
-  §6.1. Blocks Phase 1.
+Empty — every registered specification is `Stable` and scheduled into a phase.
 
 ## Open Questions Carried by Stable Specs
 

@@ -1,7 +1,7 @@
 ---
 phase: 1
 name: "Platform Foundation"
-status: Blocked
+status: Todo
 subsystem: "src/"
 requires: []
 provides: []
@@ -15,14 +15,10 @@ duration_minutes: ~
 # Stage 1 Tasks — Platform Foundation
 
 **Phase:** 1
-**Status:** Blocked
+**Status:** Todo
 **Strategic Goal:** A running Next.js application with the complete entity model
 persisted in PostgreSQL and the shared shell every route inherits — the substrate
 all five later phases build on.
-
-**Blocked by:** `l2-tech-stack.md` is `Draft` (see PLAN.md §Precondition). It is the
-authority for the framework, styling layer, ORM, and i18n choices this phase
-implements. Run `/magic.spec` to reconcile it, then re-run `/magic.task`.
 
 ## Track Structure
 
@@ -73,15 +69,18 @@ the scaffold to exist first. Track T validates.
 
 ### [T-1A03] Select and wire the test framework
 
-- **Spec:** l1-platform-foundation.md §3
+- **Spec:** l2-tech-stack.md §5.5
 - **Status:** Todo
 - **Assignment:** Agent
 - **Verify:** `pnpm test` runs and exits 0 against one trivial passing test.
 - **Handoff:** Every `Verify` line in Tracks B, C, and T that names a test depends
-  on this existing first.
-- **Notes:** The framework is genuinely unselected — this task decides it. Weigh
-  first-class Next.js App Router support and Server Component testing, since the
-  bulk of this codebase renders on the server.
+  on this existing first. Once decided, record the selection back into the
+  developer-tooling section via `/magic.spec` — that section currently names only
+  the lint/format and codebase-intelligence tools.
+- **Notes:** The framework is genuinely unselected — no specification names one, so
+  this task decides it rather than implementing a prior decision. Weigh first-class
+  App Router support and Server Component testing, since the bulk of this codebase
+  renders on the server.
 
 ### [T-1A04] Configure Tailwind CSS and the shadcn/ui base
 

@@ -1,8 +1,8 @@
 # Master Task Index (Registry)
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Generated:** 2026-07-30
-**Based on:** .design/main/PLAN.md v1.0.0
+**Based on:** .design/main/PLAN.md v1.1.0
 **Based on RULES:** .design/RULES.md v1.4.0
 **Execution Mode:** Parallel
 **Status:** Active
@@ -17,13 +17,11 @@ tasks; later phases are decomposed when they become active.
 
 | Phase | Description | Status |
 | --- | --- | --- |
-| [Phase 1](tasks/phase-1.md) | Project scaffold, complete entity model, and the app shell every route inherits | `Blocked` |
+| [Phase 1](tasks/phase-1.md) | Project scaffold, complete entity model, and the app shell every route inherits | `Todo` |
 
-**Phase 1 unblock action**: amend `l2-tech-stack.md` §4 (actor-roles and
-moderation-checkpoint rows), §5.6 (project structure omits the admin mount point
-and the auth module), and §6.4 (instructs against scaffolding auth) to match
-`l1-platform-foundation.md` v0.2.0 and `l2-third-party-integrations.md`
-§5.1/§5.3. Run `/magic.spec`, then re-run `/magic.task`.
+Execution order within the phase is `A → (B ‖ C) → T`: Tracks B and C never touch
+the same files and run in parallel, but both need Track A's scaffold on disk
+first. Track T validates the phase before it closes.
 
 ## Planned Phases
 

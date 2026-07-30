@@ -1,7 +1,7 @@
 # Technology Stack
 
-**Version:** 0.1.0
-**Status:** Draft
+**Version:** 0.2.0
+**Status:** Stable
 **Layer:** implementation
 **Implements:** l1-platform-foundation.md
 
@@ -18,6 +18,7 @@ decision.
 ## Related Specifications
 
 - [l1-platform-foundation.md](l1-platform-foundation.md) - Invariants this spec implements.
+- [l2-third-party-integrations.md](l2-third-party-integrations.md) - [ADDED] Sibling L2; selects the auth, payment, and admin-panel solutions that integrate into this stack, and resolves the two invariants deferred in §4 below.
 
 ## 1. Motivation
 
@@ -51,8 +52,8 @@ did not cover.
 | Public discoverability | Next.js App Router with Server Components / SSR for catalog, hotel-profile, and article routes gives crawlable HTML without a separate rendering layer. |
 | Catalog structure | Server-side query layer (via the ORM, §5.4) implements filter/sort/paginate against PostgreSQL directly; no client-only filtering of a full dataset. |
 | Hotel/room hierarchy | Enforced at the schema level: `room.hotel_id` is a required foreign key with no nullable variant. |
-| Content moderation checkpoint | Deferred to domain design — flagged here as a required data-model field (`status: pending \| published \| rejected`) on submitted hotels and reviews; workflow specifics remain <!-- TBD: see l1-platform-foundation.md --> until product resolves the open question. |
-| Actor roles | Deferred — no auth library is selected yet <!-- TBD: pending the actor-role question in l1-platform-foundation.md; candidates to evaluate once resolved are Auth.js or Better Auth, both Next.js-native -->. |
+| Content moderation checkpoint | [MODIFIED] Enforced at the data layer as a `status: pending \| published \| rejected` column on externally-originated content (hotels, rooms, reviews), so the checkpoint holds regardless of which UI writes it. The operator-facing review queue with approve/reject actions is the admin panel selected in [l2-third-party-integrations.md](l2-third-party-integrations.md) §5.3, mounted as a route inside this application (§5.6). |
+| Actor roles | [MODIFIED] A `role: guest \| owner \| admin` discriminator on the account record, managed by the auth solution selected in [l2-third-party-integrations.md](l2-third-party-integrations.md) §5.1. Its Drizzle adapter keeps the account tables in this project's own schema (§5.4) rather than a vendor's, so authorization joins against domain data directly. |
 | Media resilience | Next.js `<Image>` with explicit fallback states covers lazy-loading, sizing, and failure placeholders without hand-rolled logic. |
 
 ## 5. Detailed Design
@@ -125,30 +126,50 @@ src/
 ├── app/                  # Next.js App Router routes
 │   ├── (marketing)/      # home, catalog, hotel/[id], blog, blog/[id]
 │   ├── add-hotel/
+│   ├── admin/            # admin panel mount point (see [L2-INTEGRATIONS] §5.3)
 │   └── api/              # Route Handlers where a Server Action isn't a fit
 ├── components/           # shadcn/ui-based shared components
 ├── lib/
-│   ├── db/                # Drizzle schema + client
+│   ├── db/               # Drizzle schema + client
+│   ├── auth/             # auth configuration (see [L2-INTEGRATIONS] §5.1)
 │   └── i18n/
 └── styles/
 ```
+
+[MODIFIED] The `admin/` and `lib/auth/` entries were added once the integration
+selections resolved; business logic lives under `lib/`, keeping route handlers
+and components presentation-focused.
+
+Single Next.js app for now — no `packages/` workspace split until a second
+deployable surface actually exists (§7). The admin panel is a route inside this
+application, not a separate deployable, so it does not trigger that split.
 
 ## 6. Implementation Notes
 
 1. Framework + package manager + tooling (Next.js, pnpm, TypeScript, Biome,
    Fallow) — no open questions, safe to scaffold first.
-2. Data layer (PostgreSQL + Drizzle schema for Hotel/Room per the foundation
-   spec's entity relationship) — second, since domain specs depend on it.
+2. Data layer (PostgreSQL + Drizzle schema per the foundation spec's entity
+   relationship) — second, since domain specs depend on it. Model the complete
+   graph in one pass, including the account role discriminator and the
+   moderation `status` column from §4, so later work extends the schema instead
+   of restructuring it.
 3. UI layer (Tailwind + shadcn/ui) — alongside or after the data layer.
-4. Auth — blocked on the actor-role open question; do not scaffold until
-   resolved.
+4. [MODIFIED] Auth is no longer blocked — the actor-role question is resolved
+   (§4). Sequence the three integrations per
+   [l2-third-party-integrations.md](l2-third-party-integrations.md) §6: auth
+   first, since every other integration depends on an authenticated actor; the
+   admin panel second, once its moderated resources exist in the schema; payment
+   last, once the reservation model has a concrete paid state to transition
+   into.
 
 ## 7. Drawbacks & Alternatives
 
 - **Monorepo vs. single app**: a single Next.js app is chosen for v1 simplicity.
-  Revisit (pnpm workspaces + a `packages/ui` split) only if a second deployable
-  surface (e.g., an admin dashboard, a native app backend) is actually planned —
-  not preemptively.
+  [MODIFIED] The admin panel is not a second surface — it mounts as a route
+  inside this application (§5.6), so it does not trigger the split. Revisit
+  (pnpm workspaces + a `packages/ui` split) only if a genuinely separate
+  deployable appears, such as a native mobile client's backend or a standalone
+  marketing site — not preemptively.
 - **Astryx now instead of later**: rejected for v1 (see §5.3) on beta-maturity
   grounds, not on technical merit; this is the one recommendation most likely to
   change as the design system evolves, per the requester's own expectation.
@@ -160,9 +181,11 @@ src/
 | Alias | Path | Purpose |
 | --- | --- | --- |
 | `[L1]` | `.design/main/specifications/l1-platform-foundation.md` | Invariants this stack must satisfy. |
+| `[L2-INTEGRATIONS]` | `.design/main/specifications/l2-third-party-integrations.md` | Auth, payment, and admin-panel selections that integrate into this stack. |
 
 ## Document History
 
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1.0 | 2026-07-30 | Initial draft; resolved framework and styling forks, proposed ORM addition, clarified "Fallow". |
+| 0.2.0 | 2026-07-30 | Reconciled §4 actor-roles and moderation-checkpoint rows against l2-third-party-integrations.md; added the admin and auth entries to §5.6; replaced the §6.4 auth block with the integration sequence. |
