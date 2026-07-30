@@ -1,0 +1,115 @@
+# Dotenv files (local secrets — never commit)
+.env*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory
+coverage/
+
+# Temporary folders
+tmp/
+temp/
+cache/
+*cache/
+.drafts/
+.references/
+
+# Build outputs
+dist/
+build/
+*.min.js
+*.min.css
+
+# Node / pnpm (packages/*, apps/*)
+node_modules/
+.pnpm-store/
+.npm/
+*.tsbuildinfo
+# Note: IS committed (reproducible installs).
+#pnpm-lock.yaml
+
+# Vite
+.vite/
+*.timestamp-*.mjs
+
+# Tauri (apps/desktop/tauri)
+**/tauri/gen/
+# tauri/target is covered by `target/` above.
+# Signing keys — never commit.
+*.keystore
+*.jks
+*.p12
+
+# fallow (codebase intelligence) — ignore local cache only; fallow-baselines/ ARE committed.
+.fallow/
+
+# Editor backup files
+*.bak
+*.tmp
+
+.gemini/
+gha-creds-*.json
+
+# Local settings
+*/settings.json
+*/settings.*.json
+
+# Agents
+#CLAUDE.md
+GEMINI.md
+CODEX.md
+QWEN.md
+copilot-instructions.md
+
+## Workflows
+.*/commands/
+.*/prompts/
+.*/workflows/
+!.agents/workflows/
+!.github/workflows/
+.agents/workflows/magic*.md
+
+## Skills
+.*/skills/
+!.agents/skills/
+.agents/skills/magic*
+
+## Rules
+.*/rules/
+!.agents/rules/
+.agents/rules/magic*.md
+.agents/rules/MAGIC.md
+
+# Magic Spec
+.magic/
+
+## Generated graph artifacts
+.design/spec-graph.html
+.design/spec-graph.json
+.design/graph-before.json
+.design/.graph-cache/
+.design/wiki/
