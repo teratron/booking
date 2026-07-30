@@ -1,6 +1,6 @@
 # Technology Stack
 
-**Version:** 0.3.0
+**Version:** 0.3.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-platform-foundation.md
@@ -128,6 +128,7 @@ src/
 │   ├── add-hotel/
 │   ├── admin/            # admin panel mount point (see [L2-INTEGRATIONS] §5.3)
 │   └── api/              # Route Handlers where a Server Action isn't a fit
+│       └── admin/        # REST surface the admin panel reads ([L2-INTEGRATIONS] §5.3)
 ├── components/
 │   └── ui/               # [ADDED] shadcn/ui primitives — installed, not hand-authored (§5.7)
 ├── lib/
@@ -227,3 +228,4 @@ genuinely has no reuse case is not required to be pre-emptively generalized
 | 0.1.0 | 2026-07-30 | Initial draft; resolved framework and styling forks, proposed ORM addition, clarified "Fallow". |
 | 0.2.0 | 2026-07-30 | Reconciled §4 actor-roles and moderation-checkpoint rows against l2-third-party-integrations.md; added the admin and auth entries to §5.6; replaced the §6.4 auth block with the integration sequence. |
 | 0.3.0 | 2026-07-30 | Added §5.7 Component Architecture Principles (reusable, scalable, customizable, extensible UI elements) per explicit user direction; updated §5.6 to show the `components/ui/` split. |
+| 0.3.1 | 2026-07-30 | Clarification only: §5.6 now shows the `api/admin/` REST surface the admin panel reads, following the §5.3 tool change in l2-third-party-integrations.md v0.2.0. |

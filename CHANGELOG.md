@@ -18,3 +18,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated specification `tech-stack` (main)
 - Completed task (main)
 - Updated task index (main)
+- Updated 2 specifications (main)

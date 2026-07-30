@@ -1,6 +1,6 @@
 # Implementation Plan
 
-**Version:** 1.1.0
+**Version:** 1.3.0
 **Generated:** 2026-07-30
 **Based on:** .design/main/INDEX.md v1.0.0
 **Status:** Active
@@ -16,8 +16,8 @@ are `Stable`. Phases 1–6 sequence the implementation, ordered by hard dependen
 rather than by product surface — identity and the shared data model precede every
 feature that reads or writes them.
 
-All nine registered specifications are `Stable`; the backlog is empty and Phase 1
-is ready to dispatch.
+All nine registered specifications are `Stable` and the backlog is empty. Phase 1
+is complete and archived; Phase 2 is decomposed and fully dispatchable.
 
 ### Phase Dependency Graph
 
@@ -67,11 +67,24 @@ restructuring it.
 *Authentication for three actor roles, and the moderation queue that gates
 externally-submitted content.*
 
-- [ ] **Third-Party Integrations** §5.1, §5.3 ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
+- [ ] **Third-Party Integrations** §5.1 — authentication ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
+- [ ] **Third-Party Integrations** §5.3 — moderation back office ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
 
 Sequenced immediately after the foundation because every subsequent phase either
 gates on an authenticated actor (onboarding, reviews, reservation) or renders only
 content that cleared moderation (discovery, profile).
+
+Both halves are dispatchable. §5.3's back-office blocker — AdminJS cannot mount
+in a Next.js App Router application — was resolved by amending that spec to
+v0.2.0 (react-admin via shadcn-admin-kit, which supports the App Router
+first-party and renders in this project's own design system). The cascade it
+threatened into Phase 3 (approving owner submissions) and Phase 5 (admin-authored
+articles) is therefore cleared.
+
+One structural consequence reaches back into Phase 1's delivered work: the admin
+surface must not inherit the marketing header and footer, which the Phase 1 root
+layout applies to every route. `T-2B01` splits the marketing chrome into a route
+group before the back office mounts.
 
 ## Phase 3 — Property Onboarding
 

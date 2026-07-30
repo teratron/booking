@@ -1,6 +1,6 @@
 # Third-Party Integrations
 
-**Version:** 0.1.0
+**Version:** 0.2.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-platform-foundation.md
@@ -62,7 +62,7 @@ N/A — this is an L2 spec; see [l1-platform-foundation.md](l1-platform-foundati
 | L1 Invariant | Implementation |
 | --- | --- |
 | Actor roles (guest vs. property owner) | Better Auth's custom-fields/roles mechanism models a `role: guest \| owner \| admin` on the user record; both actor types authenticate through the same integration. |
-| Content moderation checkpoint | AdminJS-based back office gives an operator a review queue with Approve/Reject actions over pending hotels, rooms, and reviews; the checkpoint is enforced at the data layer (`status` field), not just in the UI. |
+| Content moderation checkpoint | [MODIFIED] A react-admin back office (§5.3) gives an operator a review queue with Approve/Reject actions over pending hotels, rooms, reviews, and articles; the checkpoint is enforced at the data layer (`status` field), not just in the UI. |
 | Media resilience / hotel-room hierarchy | Unaffected by this spec — see [l2-tech-stack.md](l2-tech-stack.md). |
 
 ## 5. Detailed Design
@@ -108,17 +108,55 @@ question. A reservation is a paid booking, not a contact inquiry — the room
 popup's "feedback" action is superseded by a payment step once dates/guests are
 confirmed.
 
-### 5.3 Admin / Moderation — AdminJS
+### 5.3 Admin / Moderation — react-admin via shadcn-admin-kit
 
-**Decision**: AdminJS, with the `adminjs-drizzle` adapter.
+**Decision** [MODIFIED]: **react-admin**'s headless core (`ra-core`) through
+**shadcn-admin-kit**, mounted as a client-side admin surface at `app/admin/`,
+reading and writing through a REST Route Handler at `app/api/admin/` that this
+project implements over Drizzle.
 
-**Reasoning**: AdminJS auto-generates a CRUD back office directly from Drizzle
-schema resources — no hand-built tables, forms, or filters for the operator
-who moderates hotel/room submissions, reviews, and blog content. Custom
-actions (e.g. "Approve", "Reject" with a reason field) attach per-resource
-without leaving the framework. Refine is the noted alternative (see §7) if the
-back office later needs to visually match the shadcn/ui brand or grows more
-bespoke workflows than resource CRUD + actions.
+**Reasoning**: this replaces the original AdminJS selection, which was found
+during Phase 2 planning to be unimplementable on the stack this project has
+already committed to (full evidence in §7). The replacement was chosen against
+three constraints the original pick failed:
+
+1. **It runs on the App Router.** react-admin documents Next.js App Router
+   integration first-party: the admin app is a `"use client"` component, and its
+   data provider talks to a catch-all Route Handler. It is a client-side React
+   application, not server middleware, so it needs nothing from the server
+   framework that the App Router withholds.
+2. **It uses this project's existing design system.** `shadcn-admin-kit` is
+   maintained by marmelab (the react-admin team), built on `ra-core`, and renders
+   through shadcn/ui + Radix — the same layer [l2-tech-stack.md](l2-tech-stack.md)
+   §5.3 already commits to. No second UI system enters the codebase, and the back
+   office is on-brand by construction rather than by later theming work.
+3. **It preserves the integrate-over-build criterion.** Its guessers scaffold
+   working List / Show / Edit pages from a resource's shape, and custom actions
+   ("Approve", "Reject" with a reason) attach per-resource — the same property
+   that motivated the original AdminJS choice, which no other surviving candidate
+   offered.
+
+**What this project implements** (the deliberate, bounded cost): no react-admin
+data provider exists for Drizzle — and none exists for Refine either, so this
+cost is common to every remaining option rather than specific to this one. One
+catch-all Route Handler implements the `ra-data-simple-rest` contract
+(filter / sort / pagination via `Content-Range`) over the existing Drizzle client
+from [l2-tech-stack.md](l2-tech-stack.md) §5.4. This is an adapter the project
+owns, in place of a vendor adapter that does not exist.
+
+**Authorization is a hard requirement of the REST surface, not of the UI.** This
+follows directly from the architecture change: the previous selection was server
+middleware that carried its own gate, whereas this admin surface is a client-side
+application and therefore cannot be a security boundary. Every request to
+`app/api/admin/` MUST be rejected unless it carries a session whose account has
+`role = 'admin'` (§5.1), independently of what the client renders. Hiding or
+omitting a control in the admin UI is a usability affordance and never an access
+control — an ungated handler would leave the moderation checkpoint bypassable by
+direct request, defeating the invariant this section exists to satisfy.
+
+Scope stays as before: the four resources with a moderation need — hotels, rooms,
+reviews, and articles. The checkpoint itself remains enforced at the data layer
+(`status` column), not in this UI; the admin surface is an operator view onto it.
 
 Resolves: the moderation-checkpoint mechanism referenced but undesigned in
 [l1-property-onboarding.md](l1-property-onboarding.md) and the news-authorship
@@ -134,8 +172,9 @@ graph TD
     Owner -->|signs up / logs in| BetterAuth
     Guest -->|pays for a reservation| Fondy
     Fondy -->|split payout| HotelOwner
-    Admin -->|reviews queue, approve/reject| AdminJS
-    AdminJS -->|reads/writes| Postgres[(PostgreSQL via Drizzle)]
+    Admin -->|reviews queue, approve/reject| ReactAdmin[react-admin at /admin]
+    ReactAdmin -->|REST| AdminApi[Route Handler at /api/admin]
+    AdminApi -->|reads/writes| Postgres[(PostgreSQL via Drizzle)]
     BetterAuth -->|reads/writes| Postgres
 ```
 
@@ -143,9 +182,11 @@ graph TD
 
 1. Better Auth first — every other item in this spec (owner-gated submission,
    attributable reviews, admin-panel operator accounts) depends on it existing.
-2. AdminJS second, scoped initially to the three resources with a moderation
-   need: hotels, rooms, reviews (plus blog articles per
-   [l1-content-publishing.md](l1-content-publishing.md)).
+2. [MODIFIED] The admin surface (§5.3) second, scoped initially to the resources
+   with a moderation need: hotels, rooms, reviews (plus blog articles per
+   [l1-content-publishing.md](l1-content-publishing.md)). [MODIFIED] Build the
+   REST Route Handler (§5.3) before the admin screens — the guessers scaffold
+   from live resource responses, so the data surface has to exist first.
 3. Fondy last, once the reservation data model
    ([l1-room-reservation.md](l1-room-reservation.md)) has a concrete "paid"
    state to transition into — do not integrate payment before that model is
@@ -160,9 +201,34 @@ graph TD
 - **WayForPay instead of Fondy**: valid if the business decides against
   automated split payouts (see §2); revisit if that business question resolves
   toward "manual reconciliation is fine for MVP."
-- **Refine instead of AdminJS**: more work than AdminJS's auto-generated
-  resources, but produces a more bespoke, on-brand back office; not justified
-  for a v1 moderation queue of three-to-four resource types.
+- **AdminJS** [MODIFIED] — the original §5.3 selection, **rejected on
+  implementability**, not on merit. It cannot mount in this application:
+  AdminJS ships framework plugins for Express, Fastify, NestJS, Koa, and Hapi,
+  but none for Next.js; the only public integration is a third-party demo
+  repository that states it "needs to be setup with the pages router because the
+  App Router doesn't have an option to disable the body parser", while
+  [l2-tech-stack.md](l2-tech-stack.md) §5.1 commits this project to the App
+  Router. Separately, the `adminjs-drizzle` adapter its reasoning depended on is
+  an unofficial community package (v0.1.2, roughly a year without a release);
+  no `@adminjs/drizzle` exists. Both pillars of the original rationale —
+  auto-generated CRUD from Drizzle, and mounting as a route inside this
+  application — therefore fail against the committed stack.
+- **Refine instead of react-admin** [MODIFIED] — rejected. Its UI kits are Ant
+  Design, MUI, Chakra, and Mantine; there is no shadcn kit, so adopting it means
+  either a second design system in the codebase (against
+  [l2-tech-stack.md](l2-tech-stack.md) §5.3) or using it headless and building
+  every admin screen by hand anyway. It has no Drizzle data provider either, so
+  it carries the same adapter cost as §5.3's choice without the on-brand
+  rendering that offsets it. The earlier claim in this section — that Refine
+  would be the pick "if the back office needs to visually match the shadcn/ui
+  brand" — was factually wrong and is corrected here.
+- **A hand-built moderation queue** — viable and genuinely small (four
+  resources, one `status` transition plus a reason), and it needs no new
+  dependency. Rejected as the default because it abandons the integrate-over-build
+  criterion this spec is written against, and because §5.3's choice delivers
+  list/filter/sort/pagination, forms, and i18n that would otherwise be written
+  by hand. It remains the documented fallback if react-admin's client-side
+  bundle or its REST adapter proves disproportionate in practice.
 
 ## Canonical References
 
@@ -176,3 +242,4 @@ graph TD
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1.0 | 2026-07-30 | Initial draft: Better Auth, Fondy (primary)/WayForPay (alternative), AdminJS. |
+| 0.2.0 | 2026-07-30 | Replaced AdminJS in §5.3 with react-admin via shadcn-admin-kit — AdminJS cannot mount in a Next.js App Router application. Updated §4, §5.4, §6.2, and §7 accordingly; corrected §7's factually wrong claim that Refine offers shadcn brand matching. Added the admin REST surface's authorization requirement, which the previous server-mounted design carried implicitly. |
