@@ -1,0 +1,37 @@
+{
+	"Header": {
+		"navLabel": "Основная навигация",
+		"menuLabel": "Меню",
+		"navCatalog": "Каталог",
+		"navMap": "Карта",
+		"navBlog": "Блог"
+	},
+	"Footer": {
+		"navLabel": "Навигация в подвале",
+		"about": "О нас",
+		"privacyPolicy": "Политика конфиденциальности",
+		"addHotel": "Добавить отель"
+	},
+	"LanguageSwitcher": {
+		"current": "Ру",
+		"ariaLabel": "Текущий язык"
+	},
+	"FeedbackPopup": {
+		"triggerLabel": "Обратная связь",
+		"title": "Обратная связь",
+		"description": "Расскажите нам, что можно улучшить.",
+		"nameLabel": "Имя",
+		"messageLabel": "Сообщение",
+		"submitLabel": "Отправить",
+		"cancelLabel": "Отмена"
+	},
+	"NotFound": {
+		"title": "Страница не найдена",
+		"description": "Такой страницы не существует или она была перемещена.",
+		"homeLink": "На главную"
+	},
+	"PrivacyPolicy": {
+		"title": "Политика конфиденциальности",
+		"body": "Содержание политики конфиденциальности будет добавлено позже."
+	}
+}

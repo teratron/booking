@@ -47,13 +47,13 @@ graph TD
 - [x] **Property Onboarding** ([l1-property-onboarding.md](specifications/l1-property-onboarding.md)) [L1]
 - [x] **Content Publishing** ([l1-content-publishing.md](specifications/l1-content-publishing.md)) [L1]
 
-## Phase 1 — Platform Foundation
+## Phase 1 — Platform Foundation — ✅ Done (2026-07-30)
 
 *Project scaffold, the complete entity model, and the shell every route inherits.*
 
-- [ ] **Platform Foundation** ([l1-platform-foundation.md](specifications/l1-platform-foundation.md)) [L1]
-- [ ] **Platform Shell** ([l1-platform-shell.md](specifications/l1-platform-shell.md)) [L1]
-- [ ] **Technology Stack** ([l2-tech-stack.md](specifications/l2-tech-stack.md)) [L2]
+- [x] **Platform Foundation** ([l1-platform-foundation.md](specifications/l1-platform-foundation.md)) [L1]
+- [x] **Platform Shell** ([l1-platform-shell.md](specifications/l1-platform-shell.md)) [L1]
+- [x] **Technology Stack** ([l2-tech-stack.md](specifications/l2-tech-stack.md)) [L2]
 
 The entity model authored here is the shared write surface for all later phases.
 It must cover the full relationship graph in `l1-platform-foundation.md` §5.2 in

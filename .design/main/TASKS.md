@@ -17,11 +17,12 @@ tasks; later phases are decomposed when they become active.
 
 | Phase | Description | Status |
 | --- | --- | --- |
-| [Phase 1](tasks/phase-1.md) | Project scaffold, complete entity model, and the app shell every route inherits | `In Progress` (5/14) |
+| [Phase 1](archives/tasks/phase-1.md) | Project scaffold, complete entity model, and the app shell every route inherits | `Done (Archived)` (14/14) |
 
-Execution order within the phase is `A → (B ‖ C) → T`: Tracks B and C never touch
-the same files and run in parallel, but both need Track A's scaffold on disk
-first. Track T validates the phase before it closes.
+Execution order within the phase was `A → (B ‖ C) → T`: Tracks B and C never
+touch the same files and ran in parallel, both needing Track A's scaffold on
+disk first. Track T validated the phase before it closed. See
+`.design/main/CHANGELOG.md` for the full delivery summary.
 
 ## Planned Phases
 

@@ -12,7 +12,7 @@ Local registry of specifications for this workspace.
 | File | Description | Status | Layer | Version |
 | --- | --- | --- | --- | --- |
 | [l1-platform-foundation.md](specifications/l1-platform-foundation.md) | Cross-cutting platform requirements: responsive delivery, i18n, discoverability, hotel/room data foundation | Stable | 1 | 0.2.0 |
-| [l2-tech-stack.md](specifications/l2-tech-stack.md) | Concrete technology stack (Next.js, TypeScript, pnpm, Tailwind+shadcn/ui, Biome, Fallow, PostgreSQL, Drizzle) | Stable | 2 | 0.2.0 |
+| [l2-tech-stack.md](specifications/l2-tech-stack.md) | Concrete technology stack (Next.js, TypeScript, pnpm, Tailwind+shadcn/ui, Biome, Fallow, PostgreSQL, Drizzle) | Stable | 2 | 0.3.0 |
 | [l1-hotel-discovery.md](specifications/l1-hotel-discovery.md) | Home hero search, catalog filters/sort/pagination, map view | Stable | 1 | 0.1.0 |
 | [l1-hotel-profile.md](specifications/l1-hotel-profile.md) | Hotel detail page: gallery, amenities, location, reviews, news, recently viewed | Stable | 1 | 0.2.0 |
 | [l1-room-reservation.md](specifications/l1-room-reservation.md) | Room inventory, room detail popup, date/guest selection, paid reservation | Stable | 1 | 0.2.0 |

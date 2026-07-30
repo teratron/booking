@@ -4,32 +4,32 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-07-30 16:17
-**Phase:** 1 — Platform Foundation
+**Updated:** 2026-07-30 19:54
+**Phase:** 2 — Identity & Back Office
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-1A05 Wire Fallow for dev-time codebase intelligence (Done — last completed)
-- **Spec:** l1-platform-foundation.md, l1-platform-shell.md, l2-tech-stack.md
-- **Next Action:** Execute T-1B01 (Track B: Drizzle schema) and T-1C01 (Track C: root layout shell) via /magic.run main — both depend only on T-1A01's scaffold, already Done
+- **Task:** none started — Phase 2 not yet decomposed into tasks
+- **Spec:** l2-third-party-integrations.md §5.1 (Better Auth), §5.3 (AdminJS)
+- **Next Action:** Plan complete — run /magic.task main to plan new scope
 
 ## Progress
 
 ```
-Phase 1: [5/14]  ███░░░░░ 36%   (Track A complete: T-1A01–T-1A05)
-Overall: [0/9]   ░░░░░░░░ 0%    (specs implemented; 9/9 specs Stable)
+Phase 1: [14/14] ████████ 100%  DONE — archived
+Overall: [1/6]   █░░░░░░░ 17%   (1 of 6 planned phases complete)
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-07-30 **Decision:** Dependency policy — keep the whole stack on latest, including major bumps (`pnpm update --latest`), not conservatively pinned. Ran it post-Track-A: TypeScript 5→7 (native compiler), `@types/node` 20→26, React 19.2.4→19.2.8. Fixed the one real incompatibility this surfaced (below); everything else verified clean (`tsc`, `biome`, `pnpm test`, `next dev`).
-- 2026-07-30 **Pattern:** TypeScript 7's native compiler doesn't expose the compiler API Next.js 16.2.12 expects by default — fixed via `experimental.useTypeScriptCli: true` in `next.config.ts` (Next's own documented escape hatch), not by downgrading TypeScript. Two harmless, expected peer-metadata lags remain (`tsconfck@3.1.6` peers `typescript@^5`; a `rolldown`/`@napi-rs/wasm-runtime` WASI-only fallback chain wants an alpha `@emnapi/*` line) — both transitive, both empirically inert on this platform.
-- 2026-07-30 **Decision:** Six implementation phases ordered by hard dependency — identity and the shared data model precede every feature that reads or writes them.
-- 2026-07-30 **Pattern:** Single shared entity model — the Phase 1 Drizzle schema covers the full relationship graph in one pass so later phases extend it instead of restructuring it.
-- 2026-07-30 **Pattern:** Phase execution shape `A → (B ‖ C) → T` — parallel tracks are declared only where they touch disjoint files.
+- 2026-07-30 **Decision:** Phase 1 complete (14/14) and archived. Provides: full Next.js scaffold, 14-table Drizzle schema (Better-Auth-ready), local Postgres, root layout shell with i18n/404/privacy/feedback, responsive nav. Track T validated both entity model and shell invariants; fallow audit clean (0 circular deps, 0 boundary violations). See `.design/main/CHANGELOG.md` for the full phase summary and `RETROSPECTIVE.md` for the L1 snapshot (🟢).
+- 2026-07-30 **Decision:** Track C complete (T-1C01-04) — verified with a real browser (chrome-devtools MCP) at 375px/1280px, not just class-presence checks.
+- 2026-07-30 **Decision:** Local dev Postgres via `docker-compose.yml` (postgres:18-alpine, host port 5433 — 5432 is taken by a pre-existing native PostgreSQL 18 service on this machine).
+- 2026-07-30 **Decision:** Dependency policy — keep the whole stack on latest, including major bumps, not conservatively pinned. Fix real breakage as it surfaces rather than reverting versions.
+- 2026-07-30 **Pattern:** Async Server Components calling `getTranslations` (next-intl/server) cannot be unit-tested with Vitest/RTL — verify via a live dev-server/browser instead.
 
 ## Blockers
 
@@ -46,6 +46,6 @@ Overall: [0/9]   ░░░░░░░░ 0%    (specs implemented; 9/9 specs St
 
 ## Session Continuity
 
-**Last Session Ended:** 2026-07-30 15:21
+**Last Session Ended:** 2026-07-30 19:54
 **Handoff File:** none
 **Bootstrap Mode:** false

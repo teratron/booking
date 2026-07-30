@@ -1,6 +1,6 @@
 # Technology Stack
 
-**Version:** 0.2.0
+**Version:** 0.3.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-platform-foundation.md
@@ -128,7 +128,8 @@ src/
 │   ├── add-hotel/
 │   ├── admin/            # admin panel mount point (see [L2-INTEGRATIONS] §5.3)
 │   └── api/              # Route Handlers where a Server Action isn't a fit
-├── components/           # shadcn/ui-based shared components
+├── components/
+│   └── ui/               # [ADDED] shadcn/ui primitives — installed, not hand-authored (§5.7)
 ├── lib/
 │   ├── db/               # Drizzle schema + client
 │   ├── auth/             # auth configuration (see [L2-INTEGRATIONS] §5.1)
@@ -138,11 +139,47 @@ src/
 
 [MODIFIED] The `admin/` and `lib/auth/` entries were added once the integration
 selections resolved; business logic lives under `lib/`, keeping route handlers
-and components presentation-focused.
+and components presentation-focused. [ADDED] `components/ui/` split out from
+`components/` once shadcn's own convention (§5.7) made the distinction concrete:
+installed primitives in `ui/`, page/domain-specific compositions built from them
+directly under `components/`.
 
 Single Next.js app for now — no `packages/` workspace split until a second
 deployable surface actually exists (§7). The admin panel is a route inside this
 application, not a separate deployable, so it does not trigger that split.
+
+### 5.7 Component Architecture Principles [ADDED]
+
+**Principle**: every UI element is built reusable, scalable, customizable, and
+extensible by default — not as a page-specific one-off — so that later phases
+compose existing pieces instead of re-implementing them from scratch.
+
+**Reasoning**: this is not a new tool decision; it is already the concrete
+behavior of the stack chosen in §5.3, made explicit here so every later
+component-building task is held to it:
+
+- **Reusable & composable**: shadcn/ui distributes source, not a compiled
+  library — a component is copied into `components/ui/` once and composed
+  everywhere, not re-fetched or duplicated per feature.
+- **Scalable variants, not copy-paste forks**: variant/size axes are expressed
+  via `class-variance-authority` (`cva`) — a discrete set of `variant`/`size`
+  props — instead of a new component per visual state. Proven in this codebase
+  already: `components/ui/button.tsx` exposes `variant` (`default`, `outline`,
+  `secondary`, `ghost`, `destructive`, `link`) and `size` axes from one
+  implementation.
+- **Customizable without forking**: the `cn()` helper (`lib/utils.ts`, wraps
+  `clsx` + `tailwind-merge`) lets a caller override or extend any variant's
+  classes at the call site — the last class wins, no prop-drilling a style
+  override path through the component.
+- **Extensible primitives**: shadcn's components wrap Radix/Base UI primitives
+  (accessible, unstyled behavior underneath), so new visual variants are a
+  styling change, not new interaction logic.
+
+**Boundary**: this governs shared, cross-feature UI (`components/ui/`,
+`components/`). Route-specific composition inside `app/**/page.tsx` is expected
+to assemble these pieces, not re-implement them — but a page-local one-off that
+genuinely has no reuse case is not required to be pre-emptively generalized
+(no speculative abstraction ahead of a second use site).
 
 ## 6. Implementation Notes
 
@@ -189,3 +226,4 @@ application, not a separate deployable, so it does not trigger that split.
 | --- | --- | --- |
 | 0.1.0 | 2026-07-30 | Initial draft; resolved framework and styling forks, proposed ORM addition, clarified "Fallow". |
 | 0.2.0 | 2026-07-30 | Reconciled §4 actor-roles and moderation-checkpoint rows against l2-third-party-integrations.md; added the admin and auth entries to §5.6; replaced the §6.4 auth block with the integration sequence. |
+| 0.3.0 | 2026-07-30 | Added §5.7 Component Architecture Principles (reusable, scalable, customizable, extensible UI elements) per explicit user direction; updated §5.6 to show the `components/ui/` split. |

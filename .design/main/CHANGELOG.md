@@ -1,58 +1,26 @@
-# Project Context
+# Workspace Changelog (main)
 
-**Generated:** 2026-07-30
+Internal phase journal — summarizes what each completed phase delivered, extracted from Done task `Changes` fields in `tasks/phase-{N}.md`. Distinct from the root `CHANGELOG.md` (user-facing release notes).
 
-## Active Technologies
+## Phase 1 — 2026-07-30
 
-- Node.js
+**Platform Foundation** — project scaffold, complete entity model, and the app shell every route inherits. 14/14 tasks done across four tracks.
 
-## Core Project Structure
+### Track A — Scaffold & Tooling
 
-```plaintext
-.
-├── .claude/
-│   └── rules/
-├── .design/
-│   ├── .version
-│   ├── INDEX.md
-│   ├── RULES.md
-│   ├── main/
-│   └── workspace.json
-├── .env.example
-├── .fallowrc.json
-├── .gitignore
-├── .magic/
-├── .markdownlint.json
-├── CHANGELOG.md
-├── CLAUDE.md
-├── README.md
-├── biome.json
-├── components.json
-├── docker-compose.yml
-├── docs/
-│   └── README.md
-├── drizzle/
-│   ├── 0000_gorgeous_triton.sql
-│   └── meta/
-├── drizzle.config.ts
-├── messages/
-│   └── ru.json
-├── next.config.ts
-├── package.json
-├── pnpm-lock.yaml
-├── pnpm-workspace.yaml
-├── postcss.config.mjs
-├── src/
-│   ├── app/
-│   ├── components/
-│   ├── i18n/
-│   ├── lib/
-│   └── no-hardcoded-copy.test.ts
-├── tsconfig.json
-└── vitest.config.ts
-```
+- Next.js 16.2.12 (App Router, strict TypeScript, Turbopack) scaffolded via `create-next-app`.
+- Biome 2.5.6 as the sole lint/format toolchain, scoped to `src/**` and root app configs.
+- Vitest selected as the test framework (confirmed against Next.js's own current docs — async Server Components are documented as untestable with Vitest, an E2E concern).
+- Tailwind CSS v4 + shadcn/ui (`base-nova`/Base UI preset) installed via the real `shadcn` CLI.
+- Fallow wired for dev-time codebase intelligence — a standing quality gate for later phases.
 
-## Recent Changes
+### Track B — Data Layer
+
+- 14-table Drizzle schema for the complete entity graph: `user`/`session`/`account`/`verification` match Better Auth's Drizzle adapter shape exactly; shared `amenity` taxonomy (hotel + room); `room.hotel_id` `NOT NULL` with a cascading FK (the hierarchy invariant verbatim).
+- Local dev PostgreSQL via `docker-compose.yml` (postgres:18-alpine, host port 5433 — 5432 was already bound by a native Postgres 18 service on this machine).
+- `src/lib/db/client.ts` (`drizzle-orm/node-postgres`), migration applied, hierarchy/moderation constraints proven against the live database.
+
+### Track C — Shell
 
 - Header/Footer/LanguageSwitcher (Server Components) wired into the root layout; verified rendering on `/` and an arbitrary nested route.
 - Full i18n: `next-intl` in non-routing single-locale mode (only `ru` ships; no `[locale]` routing until a second locale actually exists); every UI string externalized to `messages/ru.json`; a permanent regression guard (`no-hardcoded-copy.test.ts`) scans for hardcoded Cyrillic.
