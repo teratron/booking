@@ -22,7 +22,7 @@ key_files:
   created:
     - "package.json, tsconfig.json, next.config.ts, biome.json"
     - "vitest.config.ts, postcss.config.mjs, components.json, drizzle.config.ts"
-    - "docker-compose.yml, .env.example, .fallowrc.json"
+    - "docker-compose.yml, .env.example, .fallowrc.jsonc"
     - "src/app/layout.tsx, page.tsx, not-found.tsx, privacy-policy/page.tsx, globals.css"
     - "src/components/header.tsx, footer.tsx, language-switcher.tsx, feedback-popup.tsx"
     - "src/components/ui/button.tsx, dialog.tsx"
@@ -208,7 +208,7 @@ the scaffold to exist first. Track T validates.
   package, description matches the spec exactly, MIT) — its name is an ordinary
   English word, worth confirming rather than assuming. Installed as a devDependency
   only. Ran `fallow init` (its own scaffolder, same precedent as T-1A01/T-1A04)
-  rather than hand-authoring `.fallowrc.json`; its `nextjs` plugin auto-detected
+  rather than hand-authoring `.fallowrc.jsonc`; its `nextjs` plugin auto-detected
   `layout.tsx`/`page.tsx` as framework entry points with zero config (confirmed
   via `fallow list`) — the generic `src/index.*` entry glob in the generated
   template matches nothing here and is harmless.
@@ -219,7 +219,7 @@ the scaffold to exist first. Track T validates.
     change outside this task's scope, same reasoning as the T-1A03 TypeScript
     revert. Kept `packageManager` (harmless, standard reproducibility pin, a
     direct property of the pnpm operation itself).
-  - Added `ignoreDependencies: ["tailwindcss"]` to `.fallowrc.json`: fallow
+  - Added `ignoreDependencies: ["tailwindcss"]` to `.fallowrc.jsonc`: fallow
     flagged it as a "devDependency imported by production code" because
     `globals.css` does `@import "tailwindcss"`, but Next.js's PostCSS pipeline
     resolves that at build time only — no runtime import survives into the

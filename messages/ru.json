@@ -4,7 +4,10 @@
 		"menuLabel": "Меню",
 		"navCatalog": "Каталог",
 		"navMap": "Карта",
-		"navBlog": "Блог"
+		"navBlog": "Блог",
+		"signInLabel": "Войти",
+		"signOutLabel": "Выйти",
+		"signOutPendingLabel": "Выход…"
 	},
 	"Footer": {
 		"navLabel": "Навигация в подвале",
@@ -33,5 +36,29 @@
 	"PrivacyPolicy": {
 		"title": "Политика конфиденциальности",
 		"body": "Содержание политики конфиденциальности будет добавлено позже."
+	},
+	"SignUp": {
+		"title": "Регистрация",
+		"description": "Создайте аккаунт, чтобы бронировать и управлять объектами размещения.",
+		"nameLabel": "Имя",
+		"emailLabel": "Электронная почта",
+		"passwordLabel": "Пароль",
+		"passwordHint": "От 8 до 128 символов",
+		"submitLabel": "Зарегистрироваться",
+		"submitPendingLabel": "Регистрация…",
+		"errorGeneric": "Не удалось создать аккаунт. Проверьте данные и попробуйте снова.",
+		"signInPrompt": "Уже есть аккаунт?",
+		"signInLink": "Войти"
+	},
+	"SignIn": {
+		"title": "Вход",
+		"description": "Войдите в свой аккаунт.",
+		"emailLabel": "Электронная почта",
+		"passwordLabel": "Пароль",
+		"submitLabel": "Войти",
+		"submitPendingLabel": "Вход…",
+		"errorGeneric": "Не удалось войти. Проверьте почту и пароль.",
+		"signUpPrompt": "Ещё нет аккаунта?",
+		"signUpLink": "Зарегистрироваться"
 	}
 }

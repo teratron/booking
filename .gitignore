@@ -37,6 +37,7 @@ cache/
 *cache/
 .drafts/
 .references/
+.playwright-mcp/
 
 # Build outputs
 dist/

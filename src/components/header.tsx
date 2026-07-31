@@ -1,9 +1,13 @@
+import { headers } from "next/headers";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { AuthNav } from "@/components/auth-nav";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { getCurrentUser } from "@/lib/auth/session";
 
 export async function Header() {
 	const t = await getTranslations("Header");
+	const user = await getCurrentUser(await headers());
 
 	const navLinks = [
 		{ href: "/catalog", label: t("navCatalog") },
@@ -50,7 +54,16 @@ export async function Header() {
 						))}
 					</ul>
 				</nav>
-				<LanguageSwitcher />
+				<div className="flex items-center gap-4">
+					<AuthNav
+						authenticated={Boolean(user)}
+						userLabel={user?.name ?? null}
+						signInLabel={t("signInLabel")}
+						signOutLabel={t("signOutLabel")}
+						signOutPendingLabel={t("signOutPendingLabel")}
+					/>
+					<LanguageSwitcher />
+				</div>
 			</div>
 		</header>
 	);

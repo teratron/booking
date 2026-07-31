@@ -12,4 +12,7 @@ test("ru catalog resolves every key Header references", () => {
 	expect(messages.Header.navCatalog).toBeTruthy();
 	expect(messages.Header.navMap).toBeTruthy();
 	expect(messages.Header.navBlog).toBeTruthy();
+	expect(messages.Header.signInLabel).toBeTruthy();
+	expect(messages.Header.signOutLabel).toBeTruthy();
+	expect(messages.Header.signOutPendingLabel).toBeTruthy();
 });

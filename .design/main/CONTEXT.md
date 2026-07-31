@@ -19,7 +19,7 @@
 │   ├── main/
 │   └── workspace.json
 ├── .env.example
-├── .fallowrc.json
+├── .fallowrc.jsonc
 ├── .gitignore
 ├── .magic/
 ├── .markdownlint.json
