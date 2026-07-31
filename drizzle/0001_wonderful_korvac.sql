@@ -1,0 +1,2 @@
+CREATE TYPE "public"."accommodation_type" AS ENUM('hotel', 'hostel', 'apartment', 'guesthouse', 'resort');--> statement-breakpoint
+ALTER TABLE "hotel" ADD COLUMN "accommodation_type" "accommodation_type" DEFAULT 'hotel' NOT NULL;

@@ -19,19 +19,61 @@ tasks; later phases are decomposed when they become active.
 | --- | --- | --- |
 | [Phase 1](archives/tasks/phase-1.md) | Project scaffold, complete entity model, and the app shell every route inherits | `Done (Archived)` (14/14) |
 | [Phase 2](archives/tasks/phase-2.md) | Better Auth identity for guest/owner/admin, plus the react-admin moderation back office | `Done (Archived)` (11/11) |
+| [Phase 3](archives/tasks/phase-3.md) | Owner-gated Add-Hotel intake flow with moderation lifecycle | `Done (Archived)` (8/8) |
+| [Phase 4](archives/tasks/phase-4.md) | Home hero search, catalog filters/sort/pagination/map, shared with Home's default list | `Done (Archived)` (7/7) |
+| [Phase 5](archives/tasks/phase-5.md) | Hotel profile aggregation and the article/news content pipeline | `Done (Archived)` (6/6) |
 
 Phase 1 ran `A → (B ‖ C) → T` and is summarized in `.design/main/CHANGELOG.md`.
 
-Phase 2 runs `A → B01 → (B02–B03 ‖ C01–C03) → T`. Track A (auth core) is the
-critical path — both other tracks import from it. `T-2B01` (splitting the
-marketing chrome into a route group) is sequenced early because Track C's admin
+Phase 2 ran `A → B01 → (B02–B03 ‖ C01–C03) → T`. Track A (auth core) was the
+critical path — both other tracks imported from it. `T-2B01` (splitting the
+marketing chrome into a route group) was sequenced early because Track C's admin
 surface must not inherit it *and* because it touches the same layout/header files
-Track B does; after it, the auth UI and the back office are genuinely
-file-disjoint and run in parallel.
+Track B does; after it, the auth UI and the back office were genuinely
+file-disjoint and ran in parallel.
 
-The earlier `Blocked [!]` on the back office is cleared —
-`l2-third-party-integrations.md` §5.3 was amended to v0.2.0 (react-admin via
-shadcn-admin-kit), and Track C is decomposed into real work.
+Phase 3 ran `(A01 ‖ A02 ‖ B01 ‖ C01) → B02 → B03 → C02 → T`. Track A (data +
+persistence foundation) and `T-3B01` (upload route) were mutually file-disjoint
+and dispatchable immediately; `T-3C01` (owner dashboard) only needed `T-3A02`'s
+data model, not the form, so it ran parallel with `T-3B02`/`T-3B03`. See
+`archives/tasks/phase-3.md` for the full track rationale, including the
+`T-3B02`/`T-3B03` split a Planning Audit pass surfaced, and the Server
+Action file-split pattern (schema/persistence/actions) T-3B02 established
+after a build break only a live dev-server request caught.
+
+Phase 4 ran `(A01 ‖ A02) → (B01 ‖ C01 ‖ C02) → C03 → T`. Track A (the shared
+catalog-query contract and the reusable date/guest-count widgets) had no
+Phase 3 dependency and started immediately; `T-4C02` (filter sidebar) only
+needed the URL-param contract `T-4A01` defines, not its runtime output, so it
+ran parallel with `T-4C01` rather than behind it. See `archives/tasks/phase-4.md`
+for the full track rationale, its four planning-stage `[DR]` resolutions
+(Home-as-shared-query, category shortcuts as filter presets not new schema,
+Leaflet/OSM as the map provider, and the catalog map plotting the full
+filtered set rather than just the current page), and the exit-gate task
+(`T-4T01`) that retrofitted a Phase 4B test to a mocked-query pattern after
+its own pagination fixture surfaced a real cross-file DB-fixture-visibility
+risk.
+
+Phase 5 ran `(A01 ‖ A02) → (B01 ‖ C01) → B02 → T`. Track A (the hotel-profile
+aggregation query and the article/blog query module) were mutually
+file-disjoint and read only tables Phase 1 already created, so both started
+immediately; `B01` (hotel profile page) and `C01` (blog pages) touched
+entirely different route trees and only depended on one Track A module each,
+so they ran in parallel. `B02` (hotel news + reviews + recently-viewed) was
+the one task with a genuine cross-track dependency — `l1-hotel-profile.md`
+requires its news section to reuse `C01`'s article component rather than a
+bespoke one — so it was sequenced after both `B01` and `C01`. See
+`tasks/phase-5.md` for the full track rationale, its five planning-stage
+`[DR]` resolutions (room summary renders without a functional booking CTA
+since Phase 6 owns that popup, no synthetic nearby-POI data without a
+registered provider, review submission and article authoring both out of
+scope, and the recently-viewed rail as browser-local `localStorage` state),
+two shared-component extractions this phase produced (`leaflet-map`/
+`leaflet-map-loader` out of Catalog into `src/components/`, `format-date`
+out of the blog article card), and a real gap its own live checks surfaced
+in article authoring (`next/image`'s host allowlist has no story for an
+admin-entered cover-image URL, since articles have no upload flow the way
+hotel/room media do).
 
 ## Planned Phases
 
@@ -39,9 +81,6 @@ Registered in `PLAN.md`; decomposed into atomic tasks when activated.
 
 | Phase | Description | Status |
 | --- | --- | --- |
-| Phase 3 | Owner-gated Add-Hotel intake flow with moderation lifecycle | `Planned` |
-| Phase 4 | Hero search, catalog filters/sort/pagination, map view | `Planned` |
-| Phase 5 | Hotel profile aggregation and the article/news content pipeline | `Planned` |
 | Phase 6 | Room detail, date/guest selection, and the paid booking flow | `Planned` |
 
 ## Meta Information

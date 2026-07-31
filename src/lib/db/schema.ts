@@ -40,6 +40,18 @@ export const amenityGroupEnum = pgEnum("amenity_group", [
 
 export const mediaTypeEnum = pgEnum("media_type", ["photo", "video"]);
 
+// l1-hotel-discovery.md §5.2 lists "accommodation type" as a required
+// catalog filter facet; Phase 1's schema had no field for it. Added in
+// Phase 4 (T-4A01) rather than Phase 1 because no discovery/catalog work
+// existed yet to consume it.
+export const accommodationTypeEnum = pgEnum("accommodation_type", [
+	"hotel",
+	"hostel",
+	"apartment",
+	"guesthouse",
+	"resort",
+]);
+
 // --- Shared column groups (spread into tables below to avoid repeating ---
 // --- the same timestamp / moderation shape on every table). --------------
 
@@ -148,6 +160,9 @@ export const hotel = pgTable("hotel", {
 		.references(() => user.id),
 	name: text("name").notNull(),
 	starCategory: integer("star_category"),
+	accommodationType: accommodationTypeEnum("accommodation_type")
+		.notNull()
+		.default("hotel"),
 	address: text("address").notNull(),
 	latitude: doublePrecision("latitude").notNull(),
 	longitude: doublePrecision("longitude").notNull(),

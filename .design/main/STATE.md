@@ -4,33 +4,34 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-07-31 13:45
-**Phase:** 2 — Identity & Back Office — Done, archived
-**Status:** Active (between phases)
+**Updated:** 2026-07-31 19:33
+**Phase:** 5 - Hotel Profile and Content Publishing
+**Status:** Active
 
 ## Current Position
 
-- **Task:** T-2T01 Validate the actor-roles and moderation-checkpoint invariants (Done) — Phase 2 exit gate passed, phase archived
-- **Spec:** l2-third-party-integrations.md v0.2.0 — §5.1 (Better Auth), §5.3 (react-admin) — both fully implemented and validated
-- **Next Action:** Run `/magic.task main` to decompose Phase 3 — Property Onboarding (PLAN.md)
+- **Task:** T-5T01 Validate independent section degradation and the moderation checkpoint (Done — Phase 5 complete)
+- **Spec:** l1-hotel-profile.md v0.2.0 + l1-content-publishing.md v0.2.0 — decomposed into 6 tasks across 3 tracks
+- **Next Action:** Plan complete — run /magic.task main to plan new scope
 
 ## Progress
 
 ```
 Phase 1: [14/14] ████████ 100%  DONE — archived
 Phase 2: [11/11] ████████ 100%  DONE — archived
-Overall: [2/6]   ███░░░░░ 33%   (2 of 6 planned phases complete)
+Phase 3: [8/8]   ████████ 100%  DONE — archived
+Phase 4: [7/7]   ████████ 100%  DONE — archived
+Phase 5: [6/6]   ████████ 100%  DONE — archived
+Overall: [5/6]   ███████░ 83%   (5 of 6 planned phases complete)
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-07-31 **Decision:** T-2C03 built dedicated `approve`/`reject` Route Handlers rather than reusing T-2C01's generic `PUT` — the checkpoint's transition rules (reject requires a reason; only hotel/room/review are moderatable) needed server-side enforcement, not admin-UI convention. `src/app/admin/` (not `src/components/`) hosts the new Show/actions UI — deliberately avoids growing the vendor-negation lists below.
-- 2026-07-31 **Decision:** T-2C02 installed via `pnpm dlx shadcn@latest add https://marmelab.com/shadcn-admin-kit/r/admin.json` (registry block, not npm) — flattened all ~85 files into `src/components/*.tsx` (no `admin/` subfolder) because of this project's `components.json` aliases; see Blocking Constraints for the fallout.
-- 2026-07-31 **Decision:** `app/api/admin/[resource]` now accepts both singular (`hotel`, T-2C01's documented contract) and plural (`hotels`, react-admin's auto-guessed `ReferenceField` resource name) via `normalizeAdminResourceName` — purely additive, doesn't change T-2C01's verified behavior. `user`/`session`/`account` remain structurally unreachable.
-- 2026-07-31 **Pattern:** Any client-side auth mutation (sign-up/sign-in/sign-out) that should be reflected by a Server Component in the same layout (e.g. the header) must pair its redirect with `router.refresh()` — see Blocking Constraints.
-- 2026-07-31 **Bug (test infra, not app):** `vitest.config.ts` has no `test.globals`/`setupFiles`, so `@testing-library/react`'s auto `afterEach(cleanup)` never self-registers under Vitest. Any test file with more than one `render()` call needs an explicit `afterEach(() => { cleanup(); vi.clearAllMocks(); })`.
+- 2026-07-31 **Decision:** Phase 4 (Discovery & Catalog) closed, all 7 tasks Done — full decision record archived in `archives/tasks/phase-4.md`.
+- 2026-07-31 **Decision:** Phase 5 pairs Hotel Profile + Content Publishing (one article pipeline, two render sites). Room-summary cards ship with no booking CTA yet (Phase 6 owns the popup), no synthetic nearby-POI pins, review submission and article authoring both out of scope — see `tasks/phase-5.md` Decisions for all five [DR] resolutions.
+- 2026-07-31 **Pattern:** `ResultCard`'s translation strings live in their own `"ResultCard"` namespace, not borrowed from whichever page built it first.
 
 ## Blockers
 
@@ -43,41 +44,51 @@ Overall: [2/6]   ███░░░░░ 33%   (2 of 6 planned phases complete)
 <!-- Anti-patterns discovered through real failures. MANDATORY reading. -->
 <!-- Agent MUST explicitly acknowledge each constraint before working. -->
 
-- **Router Cache staleness after auth mutations:** a plain `fetch()`-based
-  auth call (sign-up/sign-in/sign-out) sets/clears the session cookie but
-  gives Next.js's client Router Cache no signal to invalidate — a shared
-  layout Server Component (e.g. `Header`) that already rendered will keep
-  showing the OLD session state after `router.push()` alone. Always pair the
-  redirect with `router.refresh()`. Discovered live in T-2B03 (header stayed
-  on "Войти" after a successful sign-up until this was added).
-- **Stale `useState` across a conditional-branch prop flip:** a component
-  whose top-level return differs by a boolean prop (e.g. `AuthNav`'s
-  `authenticated`) is NOT remounted by React on that flip — it's the same
-  fiber at the same position in the parent, so its internal `useState` state
-  persists across branches even though the rendered DOM subtree changes.
-  Any "pending/loading" flag must be reset in the success path too, not only
-  on error, or it can resurface stale on a later render of the other branch.
-  Discovered live in T-2B03 (sign-out button reappeared permanently disabled
-  after a later sign-in, from a stale `pending=true` set by an earlier
-  sign-out click).
-- **`biome.json` breaks on a `//` comment block placed directly before the
-  `"overrides"` key:** Biome's config deserializer then reports
-  `Incorrect type, expected an object, but received an array` at line 1 (not
-  the comment's line), and — worse, silently — `useIgnoreFile`/`files.includes`
-  stop being honored, so `biome lint .` wanders into `.next/`/`.magic/` and
-  produces 30k+ false findings. Comments elsewhere in the same file are fine;
-  only this exact position broke. `biome.json` currently has no inline
-  comments as a result — if adding one, verify with `pnpm exec biome check .`
-  (not a scoped path — `biome check src` did NOT reproduce the ignore-file
-  breakage) before trusting a clean result. Discovered live in T-2C02.
-- **`src/components/` has no clean vendor/first-party path boundary:**
-  shadcn-admin-kit's registry install flattened into `src/components/*.tsx`
-  directly (T-2C02 Decision above). Both `biome.json` (`overrides.includes`)
-  and `.fallowrc.jsonc` (`ignorePatterns`) exclude the vendor set via a
-  positive glob (`src/components/*.{ts,tsx}`) with this project's own ~15
-  files negated (`!src/components/header.tsx` etc.) — if a new first-party
-  file is added directly under `src/components/` (not `ui/`), it must be
-  added to BOTH negation lists or it silently loses lint/health coverage.
+- **Router Cache staleness / stale `useState` after auth mutations:** pair a
+  client-side sign-up/sign-in/sign-out redirect with `router.refresh()` (a
+  plain `fetch()` doesn't invalidate the Router Cache, so a shared layout
+  like `Header` keeps showing stale session state); also reset
+  "pending/loading" `useState` flags in the success path, not just on error
+  — a conditional-branch prop flip does not remount the component. Both
+  discovered live in T-2B03.
+- **`biome.json` breaks on a `//` comment before `"overrides"`** (silently
+  stops honoring `useIgnoreFile`) — verify with unscoped `pnpm exec biome
+  check .`. Discovered live in T-2C02.
+- **`src/components/` has no clean vendor/first-party boundary** (shadcn-
+  admin-kit flattened ~85 files in directly) — a new first-party file there
+  needs both `biome.json`/`.fallowrc.jsonc` negation lists updated.
+- **Engine bug:** `executor.js update-state` corrupts STATE.md fields on
+  nearly every invocation — most often overwrites the top-level `**Status:**`
+  with the single task's `--status` value (wrongly marking the whole
+  workspace `Done`), sometimes also collapses `## Progress`. Always re-open
+  STATE.md after `update-state`/`finalize` and manually verify both.
+- **Server Actions must live in their own file**, separate from the schema
+  and the persistence logic: a "use server" function sharing a file with
+  server-only helpers (anything importing `db`) breaks the build the moment
+  a Client Component imports it — and even after splitting, importing
+  *anything else* from the persistence file still pulls `db`→`pg`→Node
+  builtins into the client bundle, a runtime 500 `tsc`/Vitest never catch.
+  Split three ways: schema (client-safe), persistence (db logic), actions
+  (`"use server"`, imports persistence + schema types). Reference shape:
+  `src/lib/property-onboarding/{schema,submit-listing,actions}.ts`.
+  Discovered live in T-3B02 — only a real dev-server request caught it.
+- **`pnpm test -- <path>` does not reliably scope to one file** — use
+  `pnpm exec vitest run <path>` instead.
+- **Stop the dev server before `pnpm test`.** A concurrent `pnpm dev`
+  (Turbopack watching/compiling) competes with Vitest's worker threads for
+  CPU and reliably causes flaky timeouts (85s w/ failures → 40s w/ none,
+  confirmed by A/B). `db/client.ts`'s pooled `max` cap under
+  `process.env.VITEST` and `vitest.config.ts`'s `testTimeout: 15000` are
+  secondary mitigations only. Discovered T-3B02, root-caused Phase 4 planning.
+- **Multi-render test files need explicit `afterEach(() => cleanup())`**
+  (`@testing-library/react`) — no global setup wires this in automatically.
+  Also: Vitest runs test files in parallel workers against one real,
+  non-transactional Postgres instance — an unfiltered/loosely-scoped query in
+  one file can see another concurrently-running file's in-flight fixture
+  rows. Prefer mocking the query layer (`vi.mock` + `importOriginal`) for
+  page/component tests that don't need to re-prove DB-level correctness a
+  lower-level test already covers; reserve real-DB fixtures for the module
+  that owns that query logic. Discovered live in T-4C01.
 
 ## Session Continuity
 

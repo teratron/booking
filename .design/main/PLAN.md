@@ -16,8 +16,8 @@ are `Stable`. Phases 1–6 sequence the implementation, ordered by hard dependen
 rather than by product surface — identity and the shared data model precede every
 feature that reads or writes them.
 
-All nine registered specifications are `Stable` and the backlog is empty. Phases 1
-and 2 are complete and archived; Phase 3 is not yet decomposed.
+All nine registered specifications are `Stable` and the backlog is empty. Phases 1,
+2, 3, 4, and 5 are complete and archived; Phase 6 remains undecomposed.
 
 ### Phase Dependency Graph
 
@@ -86,31 +86,36 @@ surface must not inherit the marketing header and footer, which the Phase 1 root
 layout applies to every route. `T-2B01` splits the marketing chrome into a route
 group before the back office mounts.
 
-## Phase 3 — Property Onboarding
+## Phase 3 — Property Onboarding — ✅ Done (2026-07-31)
 
 *The owner-gated intake flow that puts hotels and rooms into the marketplace.*
 
-- [ ] **Property Onboarding** ([l1-property-onboarding.md](specifications/l1-property-onboarding.md)) [L1]
+- [x] **Property Onboarding** ([l1-property-onboarding.md](specifications/l1-property-onboarding.md)) [L1]
 
 Produces the data every guest-facing surface reads. The amenity taxonomy defined
 here is shared verbatim with the room detail popup in Phase 6.
 
-## Phase 4 — Discovery & Catalog
+No schema migration is required — Phase 1's entity model already carries the
+`hotel`/`room`/`amenity`/`hotelMedia`/`roomMedia` tables and the moderation
+`status` column this phase writes into; Phase 3 is pure application logic (Server
+Actions, routes, and UI) over an already-complete data layer.
+
+## Phase 4 — Discovery & Catalog — ✅ Done (2026-07-31)
 
 *Hero search, catalog with filters/sort/pagination, and the map view.*
 
-- [ ] **Hotel Discovery** ([l1-hotel-discovery.md](specifications/l1-hotel-discovery.md)) [L1]
+- [x] **Hotel Discovery** ([l1-hotel-discovery.md](specifications/l1-hotel-discovery.md)) [L1]
 
 Depends on the Phase 1 schema (hotels must carry resolvable coordinates), not on
 the Phase 3 intake UI — seed data is sufficient to build and verify it. Kept
 parallel-eligible with Phase 3 rather than serialized behind it.
 
-## Phase 5 — Hotel Profile & Content Publishing
+## Phase 5 — Hotel Profile & Content Publishing — ✅ Done (2026-07-31)
 
 *The conversion surface and the editorial content it embeds.*
 
-- [ ] **Hotel Profile** ([l1-hotel-profile.md](specifications/l1-hotel-profile.md)) [L1]
-- [ ] **Content Publishing** ([l1-content-publishing.md](specifications/l1-content-publishing.md)) [L1]
+- [x] **Hotel Profile** ([l1-hotel-profile.md](specifications/l1-hotel-profile.md)) [L1]
+- [x] **Content Publishing** ([l1-content-publishing.md](specifications/l1-content-publishing.md)) [L1]
 
 Paired in one phase because the hotel news feed is articles filtered by hotel
 association — one content pipeline, one article component, rendered in two places.

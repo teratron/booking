@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-07-30
+**Generated:** 2026-07-31
 
 ## Active Technologies
 
@@ -23,6 +23,7 @@
 ├── .gitignore
 ├── .magic/
 ├── .markdownlint.json
+├── AGENTS.md
 ├── CHANGELOG.md
 ├── CLAUDE.md
 ├── README.md
@@ -33,6 +34,7 @@
 │   └── README.md
 ├── drizzle/
 │   ├── 0000_gorgeous_triton.sql
+│   ├── 0001_wonderful_korvac.sql
 │   └── meta/
 ├── drizzle.config.ts
 ├── messages/
@@ -45,6 +47,7 @@
 ├── src/
 │   ├── app/
 │   ├── components/
+│   ├── hooks/
 │   ├── i18n/
 │   ├── lib/
 │   └── no-hardcoded-copy.test.ts
@@ -69,3 +72,4 @@
 
 - Dependency policy: keep the whole stack on latest, including major bumps (TypeScript 5→7, `@types/node` 20→26) — fix real breakage as it surfaces rather than reverting versions.
 - Async Server Components calling `next-intl/server`'s `getTranslations` cannot be unit-tested with Vitest at all (confirmed empirically, matches Next.js's own documented guidance) — verified via live dev-server/browser checks instead; unit tests cover catalog completeness and source-level regression guards.
+

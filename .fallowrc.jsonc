@@ -35,15 +35,25 @@
     "src/components/*.{ts,tsx}",
     "!src/components/auth-nav.tsx",
     "!src/components/auth-nav.test.tsx",
+    "!src/components/date-range-picker.tsx",
+    "!src/components/date-range-picker.test.tsx",
     "!src/components/feedback-popup.tsx",
     "!src/components/feedback-popup.test.tsx",
     "!src/components/footer.tsx",
     "!src/components/footer.test.tsx",
+    "!src/components/guest-count-picker.tsx",
+    "!src/components/guest-count-picker.test.tsx",
     "!src/components/header.tsx",
     "!src/components/header.test.tsx",
+    "!src/components/home-hero-search.tsx",
+    "!src/components/home-hero-search.test.tsx",
+    "!src/components/leaflet-map.tsx",
+    "!src/components/leaflet-map.test.tsx",
+    "!src/components/leaflet-map-loader.tsx",
     "!src/components/language-switcher.tsx",
     "!src/components/language-switcher.test.tsx",
     "!src/components/responsive-shell.test.ts",
+    "!src/components/result-card.tsx",
     "!src/components/sign-in-form.tsx",
     "!src/components/sign-in-form.test.tsx",
     "!src/components/sign-up-form.tsx",
@@ -59,5 +69,32 @@
   // convention (including shadcn/ui's own official template) keeps it in
   // devDependencies; flagging it as a missing production dependency is a
   // false positive for this build-time-only CSS import pattern.
-  "ignoreDependencies": ["tailwindcss"]
+  // dotenv is only imported by dev/CI-time CLI scripts (drizzle.config.ts,
+  // db/seed-amenities.ts via the `db:seed` script) — never by the deployed
+  // Next.js app, which loads .env through its own built-in mechanism.
+  // Flagging it as "devDependency used in production" is a false positive:
+  // these scripts never run in the production install.
+  // react-day-picker and date-fns are real runtime dependencies of
+  // components/ui/calendar.tsx (installed via `shadcn add calendar`,
+  // T-4A02) — but that file lives under the vendor-excluded
+  // src/components/ui/*.tsx glob above, so fallow's reachability graph
+  // never sees the import. date-range-picker.tsx (not excluded) also
+  // imports date-fns/locale, but only react-day-picker's *type* (DateRange),
+  // which doesn't count as a value-level usage for this check.
+  // leaflet and react-leaflet are real runtime dependencies of
+  // leaflet-map.tsx (T-5B01) — a *negated*, in-scope src/components/ file
+  // that imports both at the value level (`import L from "leaflet"`,
+  // `import { MapContainer, ... } from "react-leaflet"`), confirmed working
+  // by tsc and by both leaflet-map.test.tsx and a live dev-server request.
+  // Despite being negated (unlike calendar.tsx above), fallow's dependency
+  // tracer still doesn't see the import — a narrower instance of the same
+  // false-positive class, not a re-derivation of the calendar.tsx case.
+  "ignoreDependencies": [
+    "tailwindcss",
+    "dotenv",
+    "react-day-picker",
+    "date-fns",
+    "leaflet",
+    "react-leaflet"
+  ]
 }

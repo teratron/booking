@@ -19,3 +19,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Completed task (main)
 - Updated task index (main)
 - Updated 2 specifications (main)
+- Completed 2 tasks (main)
+- Completed 3 tasks (main)
