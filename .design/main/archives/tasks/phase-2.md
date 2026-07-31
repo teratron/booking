@@ -1,22 +1,52 @@
 ---
 phase: 2
 name: "Identity & Back Office"
-status: Todo
+status: Done
 subsystem: "src/lib/auth/, src/app/api/auth/, src/app/(marketing)/, src/app/admin/, src/app/api/admin/"
 requires:
   - "Phase 1 — Platform Foundation (scaffold, Drizzle schema with Better-Auth-shaped account tables, db client, layout shell)"
-provides: []
+provides:
+  - "Better Auth wired over the existing Drizzle schema — email/password, session cookies, role escalation blocked server-side"
+  - "src/lib/auth/session.ts — getCurrentUser/requireRole, Headers-based (framework-agnostic, directly testable)"
+  - "src/lib/auth/client.ts — createAuthClient for Client Components"
+  - "(marketing) route group carrying Header/Footer; root layout minimal, admin surface sheds marketing chrome"
+  - "Sign-up/sign-in surfaces at /sign-up, /sign-in — shadcn primitives, no bespoke styling"
+  - "Session-aware shell header (AuthNav — sign-in link or account/sign-out affordance)"
+  - "app/api/admin/[resource] REST surface (ra-data-simple-rest contract) over hotel/room/review/article — admin-role gated on every method, singular and plural resource-name aliases"
+  - "app/api/admin/[resource]/[id]/approve and /reject — the moderation-checkpoint transition, admin-gated, reject requires a reason"
+  - "react-admin (shadcn-admin-kit) back office mounted at /admin — List/Show/Edit per resource, custom Show + Approve/Reject actions for hotel/room/review"
+  - "Actor roles (guest | owner | admin) proven assignable and readable through the auth layer, exact-match not hierarchy"
+  - "Moderation checkpoint proven: no public read path exists yet, the only read path (admin REST) is fully role-gated, transitions enforced server-side"
 key_files:
-  created: []
-  modified: []
-patterns_established: []
+  created:
+    - "src/lib/auth/index.ts, index.test.ts, session.ts, session.test.ts, client.ts"
+    - "src/app/api/auth/[...all]/route.ts"
+    - "src/app/(marketing)/layout.tsx, sign-up/page.tsx, sign-in/page.tsx"
+    - "src/components/sign-up-form.tsx, sign-in-form.tsx, auth-nav.tsx (+ .test.tsx each)"
+    - "src/lib/admin/authorize.ts, resources.ts, resolve-request.ts, apply-update.ts, moderation.ts"
+    - "src/app/api/admin/[resource]/route.ts (+ .test.ts), [id]/route.ts (+ .test.ts), [id]/approve/route.ts (+ .test.ts), [id]/reject/route.ts (+ .test.ts)"
+    - "src/app/admin/App.tsx, page.tsx, moderation-actions.tsx, moderated-show.tsx, hotel-show.tsx, room-show.tsx, review-show.tsx"
+    - "src/lib/test-helpers/auth.ts"
+    - "~85 shadcn-admin-kit vendor files under src/components/ (flat, no admin/ subfolder — see Blocking Constraints in STATE.md)"
+  modified:
+    - "src/app/layout.tsx (reduced to html/body/fonts/NextIntlClientProvider)"
+    - "src/components/header.tsx, header.test.tsx (session-aware)"
+    - "src/lib/db/constraints.test.ts (owner-attribution assertion)"
+    - "biome.json, .fallowrc.jsonc (vendor-file exclusion overrides), package.json (new deps + fallow's own scripts)"
+patterns_established:
+  - "Dedicated Route Handlers for constrained state transitions (approve/reject) rather than reusing a generic PUT — transition rules belong in the handler, not admin-UI convention"
+  - "Router Cache staleness: any client-side auth mutation reflected by a shared-layout Server Component needs router.refresh() paired with the redirect, not just router.push()"
+  - "A component whose top-level return differs by a boolean prop is not remounted by React on that flip (same fiber, same position) — reset pending/loading flags in the success path too, not only on error"
+  - "Vendor-scaffolded code (shadcn/shadcn-admin-kit registries) gets format applied but linting/health analysis excluded via negated glob patterns in biome.json/.fallowrc.jsonc, not hand-fixed to this project's own standards"
+  - "New first-party files must not land directly under src/components/ without updating both negation lists — prefer a dedicated subdirectory (e.g. src/app/admin/) for anything not meant to join the shadcn/vendor surface"
+  - "Test helper extraction at the first sign of a 3rd duplicate (signUpAndGetCookieHeaders → src/lib/test-helpers/auth.ts), matching fallow's own minOccurrences:3 threshold"
 duration_minutes: ~
 ---
 
 # Stage 2 Tasks — Identity & Back Office
 
 **Phase:** 2
-**Status:** Todo
+**Status:** Done
 **Strategic Goal:** Every actor is an authenticated account carrying a
 `guest | owner | admin` role, and an operator can approve or reject
 externally-submitted content through a back office — the two things Phases 3–6
@@ -55,8 +85,8 @@ reference points at the old IDs and no traceability is lost.
 - [x] [T-2B03] Make the shell header session-aware
 - [x] [T-2C01] Build the admin REST surface with mandatory admin authorization
 - [x] [T-2C02] Mount the react-admin back office at `/admin`
-- [ ] [T-2C03] Implement the approve and reject actions
-- [ ] [T-2T01] Validate the actor-roles and moderation-checkpoint invariants
+- [x] [T-2C03] Implement the approve and reject actions
+- [x] [T-2T01] Validate the actor-roles and moderation-checkpoint invariants
 
 ## Detailed Tracking
 
@@ -624,7 +654,7 @@ reference points at the old IDs and no traceability is lost.
 ### [T-2C03] Implement the approve and reject actions
 
 - **Spec:** l1-platform-foundation.md §3 (Content moderation checkpoint); l2-third-party-integrations.md §4, §5.3
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** approving a `pending` hotel sets `status = 'published'` in the
   database (confirmed via `psql`); rejecting sets `status = 'rejected'` and
@@ -640,6 +670,79 @@ reference points at the old IDs and no traceability is lost.
   design (admin-authored content is exempt from the checkpoint per
   `l1-content-publishing.md`) — they appear in the back office for authoring and
   editing, not for approval.
+- **Changes:** Two dedicated Route Handlers rather than reusing T-2C01's
+  generic `PUT` — `src/app/api/admin/[resource]/[id]/approve/route.ts`
+  (`POST`, sets `status: "published"`) and `.../reject/route.ts` (`POST`,
+  requires a non-empty `reason` in the body — 400 if missing/blank — sets
+  `status: "rejected"` and `moderationReason`). Deliberate choice over the
+  generic `PUT`: the moderation checkpoint's *transition rules* (reject
+  requires a reason; only hotel/room/review are moderatable) needed to be
+  enforced in the Route Handler itself, not left to admin-UI convention — the
+  same reasoning the task's own Notes give for authorization. `src/lib/admin/
+  moderation.ts` (`isModeratableResource` — hotel/room/review only, matching
+  the schema's own article exemption). `src/lib/admin/resolve-request.ts`
+  gained `resolveModerationRequest` (wraps `resolveAdminRequest` +
+  the moderatable-resource gate — 404 for `article`) and a new `src/lib/admin/
+  apply-update.ts` (`applyUpdate` — the update+404-check+json-response
+  boilerplate shared across `PUT`/approve/reject, extracted after fallow
+  flagged the 3-way duplication, same discipline as T-2C01).
+  - **Test duplication paid down proactively:** `signUpAndGetCookieHeaders`
+    was about to reach a 4th copy-pasted instance (session.test.ts,
+    T-2C01's route.test.ts, and two new files here) — extracted to
+    `src/lib/test-helpers/auth.ts` (`signUpAndGetCookieHeaders` +
+    `deleteTestUsers`) and retrofitted into both existing call sites rather
+    than adding a 4th copy, ahead of fallow's `minOccurrences: 3` threshold
+    flagging it.
+  - **Admin UI wired in, beyond this task's own Verify line (which is fully
+    backend/test-focused) but within §5.3's "custom actions … attach
+    per-resource" and the integration diagram's "Admin —reviews queue,
+    approve/reject→ ReactAdmin":** `ShowGuesser`/`EditGuesser`/`ListGuesser`
+    expose no clean extension point for injecting action buttons (confirmed
+    by reading their source, not assumed), so `show` was swapped from the
+    guesser to small hand-built components for hotel/room/review only (list/
+    edit stay guessers; article's `show` stays `ShowGuesser` — no moderation
+    actions belong there). `src/app/admin/moderation-actions.tsx` (Approve
+    button; Reject opens a `Dialog` — this project's own Base-UI `dialog.tsx`,
+    not a vendor one — asking for a reason, calls the two new endpoints
+    directly via `fetch`, since they sit outside the `ra-data-simple-rest`
+    CRUD contract `useUpdate` targets). `src/app/admin/moderated-show.tsx`
+    (the common `Show actions={<ModerationActions/>}` + status/reason/
+    timestamp tail shared by all three) plus `hotel-show.tsx`/`room-show.tsx`/
+    `review-show.tsx` for the resource-specific fields — extracted this
+    shared wrapper after fallow's own inline diagnostics flagged the
+    duplication across the first draft of all three. Placed under
+    `src/app/admin/` rather than the flat `src/components/` — deliberately
+    sidesteps the negated-vendor-list problem STATE.md's Blocking Constraints
+    already flags for that directory, rather than growing it further.
+  - **Honest verification gap:** chrome-devtools and Playwright MCP were both
+    disconnected for this task (unrelated to the app — tool-availability
+    only) and did not reconnect despite retrying, so the custom Show views'
+    actual rendered output/click behavior was **not** re-verified visually.
+    What *was* verified: `pnpm dev` compiles and serves `/admin` with no
+    server-side errors after these changes (checked the dev server log
+    directly), and the components are built from the exact same `RecordField`/
+    `ReferenceField`/`DateField`/`NumberField` primitives `ShowGuesser`
+    rendered correctly in T-2C02's own browser-verified session. The backend
+    contract these buttons call is fully verified independently (below) — the
+    remaining gap is narrowly "does clicking Approve/Reject in the browser
+    work," not "does the moderation checkpoint work."
+  - **Verified against a live `pnpm dev` (curl + psql, all four scenarios the
+    task's Verify line names):** seeded two `pending` hotels as an admin
+    session; `POST .../approve` on one → 200, `status: "published"` in the
+    response AND confirmed via a direct `psql` `SELECT`; `POST .../reject`
+    with `{"reason": "Missing required photos"}` on the other → 200,
+    `status: "rejected"` and `moderation_reason` persisted, confirmed via
+    `psql`. Then: a guest session → 403 on approve; an admin session against
+    `article` → 404 (no checkpoint); an admin session rejecting with a
+    blank/whitespace-only reason → 400, row left unchanged in `psql`. Test
+    data (both hotels, both users) deleted after verification.
+  - `pnpm test` — 20 files / 34 tests (6 new: hotel approve → published +
+    non-admin 403 + article 404; hotel reject → rejected + reason persisted +
+    no-reason 400 + non-admin 403), exit 0. `pnpm exec tsc --noEmit`,
+    `pnpm exec biome check .` (186 files) — exit 0. `fallow audit
+    --changed-since master` — 0 new dead code / 0 complexity / 0 duplication
+    for the 15 changed files (28 unused-dependency findings remain, all
+    inherited from T-2C02, `warn` tier, not newly introduced here).
 
 ### [T-2T01] Validate the actor-roles and moderation-checkpoint invariants
 
@@ -655,7 +758,61 @@ reference points at the old IDs and no traceability is lost.
   `pnpm exec biome check .`, `pnpm exec tsc --noEmit`, and
   `pnpm exec fallow audit --format json` (expecting 0 circular dependencies and
   0 boundary violations) as the phase exit gate.
-- **Status:** Todo
+- **Status:** Done
 - **Notes:** Unlike the previous draft of this phase, moderation **is** in scope
   for validation now that §5.3 is implementable — both invariants must be proven,
   and neither may be reported as satisfied on the strength of the other.
+- **Changes:** This task is validation, not new features — closed three real
+  coverage gaps found while checking the Method's claims against actual test
+  coverage (not assumed from memory), then ran the exit gate.
+  - **Actor roles — gap found and closed:** existing tests proved `guest` is
+    the default and that a client-supplied `role: "admin"` in the sign-up
+    payload is rejected (T-2A03), but nothing proved `owner`/`admin`, once
+    genuinely set, are correctly *read* through the auth layer — only that
+    mismatches are correctly *rejected* (`session.test.ts`'s existing "guest
+    session where owner is required" test). Added two tests to
+    `session.test.ts`: promote a signed-up user to `owner` (resp. `admin`)
+    directly in Postgres — the same out-of-band provisioning path this
+    project actually uses today, since there is no self-service escalation
+    endpoint by design — then assert `getCurrentUser` returns that role and
+    `requireRole` accepts it for the matching role and rejects it for the
+    other (reconfirming the exact-match-not-hierarchy invariant from T-2A04
+    for two roles, not just guest-vs-owner). Also added one assertion line to
+    Phase 1's `constraints.test.ts` (`expect(insertedHotel.ownerId).toBe(owner.id)`)
+    — the existing test already created a hotel with a real owner FK but
+    never asserted the attribution itself, only status defaulting.
+  - **Moderation checkpoint — gap found and closed:** `[resource]/[id]/
+    route.ts`'s `GET` (single-record read) and `PUT` (update) had **zero**
+    automated test coverage — confirmed by checking for a `.test.ts` file
+    next to it before writing anything, found none. This is the literal
+    "read/transition a specific pending record" path the Method asks about;
+    the list route (`route.ts`) and the approve/reject actions already had
+    coverage (T-2C01, T-2C03), but this file didn't. Added
+    `[id]/route.test.ts`: unauthenticated `GET` → 401; guest-session `GET` on
+    a real pending hotel → 403 ("pending content is not publicly readable");
+    admin-session `GET` → 200 with the pending record; guest-session `PUT` →
+    403 ("the transition is enforced server-side, not by the admin UI").
+  - **"Not publicly readable while pending" — verified as an absence, not
+    assumed:** `grep`'d the whole `src/app/api/` tree and every
+    `from(hotel)`/`from(room)`/`from(review)` call site outside test files —
+    confirmed `/api/admin/*` (fully role-gated, per T-2C01/T-2C03's own
+    coverage) is the *only* read path for these tables anywhere in the
+    codebase; there is no separate public/catalog endpoint yet (Phase 4 owns
+    building one). The invariant holds for Phase 2's actual scope because
+    there is nothing else that could leak pending content — worth
+    re-verifying once Phase 4 adds a real public read path, noted here for
+    that phase's own author to pick up rather than left implicit.
+  - **Escalation guard** — already proven by T-2A03's existing
+    `index.test.ts` test; re-read it to confirm it's still exactly what it
+    claims (a client-supplied `role: "admin"` in the sign-up payload is
+    ignored) rather than citing it from memory.
+  - **Phase exit gate, run in full (not diff-scoped, per this task's own
+    Method):** `pnpm test` — 21 files / 40 tests (6 new), exit 0.
+    `pnpm exec biome check .` (187 files) — exit 0. `pnpm exec tsc --noEmit` —
+    exit 0. `pnpm exec fallow audit --format json` (project-wide, not
+    `--changed-since`) — `verdict: "pass"`,
+    `circular_dependencies: 0`, `boundary_violations: 0`,
+    `boundary_coverage_violations: 0`, `boundary_call_violations: 0` — the
+    exact numbers this task's Method names. 28 unused-dependency findings
+    remain at the project's existing `warn` tier (T-2C02's vendor-exclusion
+    side effect, not new here, not blocking).

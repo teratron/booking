@@ -3,6 +3,9 @@
 import { Resource } from "ra-core";
 import simpleRestProvider from "ra-data-simple-rest";
 import { Admin, EditGuesser, ListGuesser, ShowGuesser } from "@/components";
+import HotelShow from "./hotel-show";
+import ReviewShow from "./review-show";
+import RoomShow from "./room-show";
 
 const dataProvider = simpleRestProvider("/api/admin");
 
@@ -12,19 +15,19 @@ export default function App() {
 			<Resource
 				name="hotel"
 				list={ListGuesser}
-				show={ShowGuesser}
+				show={HotelShow}
 				edit={EditGuesser}
 			/>
 			<Resource
 				name="room"
 				list={ListGuesser}
-				show={ShowGuesser}
+				show={RoomShow}
 				edit={EditGuesser}
 			/>
 			<Resource
 				name="review"
 				list={ListGuesser}
-				show={ShowGuesser}
+				show={ReviewShow}
 				edit={EditGuesser}
 			/>
 			<Resource

@@ -47,6 +47,9 @@ test("hotel, room, and review default status to pending", async () => {
 		.returning();
 
 	expect(insertedHotel.status).toBe("pending");
+	// A submitted listing is attributable to its owner via hotel.owner_id
+	// (l1-platform-foundation.md §3 — T-2T01 invariant).
+	expect(insertedHotel.ownerId).toBe(owner.id);
 
 	const [insertedRoom] = await db
 		.insert(room)

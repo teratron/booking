@@ -16,8 +16,8 @@ are `Stable`. Phases 1–6 sequence the implementation, ordered by hard dependen
 rather than by product surface — identity and the shared data model precede every
 feature that reads or writes them.
 
-All nine registered specifications are `Stable` and the backlog is empty. Phase 1
-is complete and archived; Phase 2 is decomposed and fully dispatchable.
+All nine registered specifications are `Stable` and the backlog is empty. Phases 1
+and 2 are complete and archived; Phase 3 is not yet decomposed.
 
 ### Phase Dependency Graph
 
@@ -62,13 +62,13 @@ content, the account/role shape Better Auth's Drizzle adapter expects, and the
 reservation's paid state — so Phases 2–6 extend the schema instead of
 restructuring it.
 
-## Phase 2 — Identity & Back Office
+## Phase 2 — Identity & Back Office — ✅ Done (2026-07-31)
 
 *Authentication for three actor roles, and the moderation queue that gates
 externally-submitted content.*
 
-- [ ] **Third-Party Integrations** §5.1 — authentication ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
-- [ ] **Third-Party Integrations** §5.3 — moderation back office ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
+- [x] **Third-Party Integrations** §5.1 — authentication ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
+- [x] **Third-Party Integrations** §5.3 — moderation back office ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
 
 Sequenced immediately after the foundation because every subsequent phase either
 gates on an authenticated actor (onboarding, reviews, reservation) or renders only

@@ -4,31 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-07-31 07:45
-**Phase:** 2 — Identity & Back Office
-**Status:** Active
+**Updated:** 2026-07-31 13:45
+**Phase:** 2 — Identity & Back Office — Done, archived
+**Status:** Active (between phases)
 
 ## Current Position
 
-- **Task:** T-2C02 Mount the react-admin back office at `/admin` (Done)
-- **Spec:** l2-third-party-integrations.md v0.2.0 — §5.1 (Better Auth), §5.3 (react-admin)
-- **Next Action:** Execute T-2C03 (approve/reject actions)
+- **Task:** T-2T01 Validate the actor-roles and moderation-checkpoint invariants (Done) — Phase 2 exit gate passed, phase archived
+- **Spec:** l2-third-party-integrations.md v0.2.0 — §5.1 (Better Auth), §5.3 (react-admin) — both fully implemented and validated
+- **Next Action:** Run `/magic.task main` to decompose Phase 3 — Property Onboarding (PLAN.md)
 
 ## Progress
 
 ```
 Phase 1: [14/14] ████████ 100%  DONE — archived
-Phase 2: [9/11]  ████████ 82%   (Track A complete; T-2B01-03, T-2C01-02 done, no blockers)
-Overall: [1/6]   █░░░░░░░ 17%   (1 of 6 planned phases complete)
+Phase 2: [11/11] ████████ 100%  DONE — archived
+Overall: [2/6]   ███░░░░░ 33%   (2 of 6 planned phases complete)
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
+- 2026-07-31 **Decision:** T-2C03 built dedicated `approve`/`reject` Route Handlers rather than reusing T-2C01's generic `PUT` — the checkpoint's transition rules (reject requires a reason; only hotel/room/review are moderatable) needed server-side enforcement, not admin-UI convention. `src/app/admin/` (not `src/components/`) hosts the new Show/actions UI — deliberately avoids growing the vendor-negation lists below.
 - 2026-07-31 **Decision:** T-2C02 installed via `pnpm dlx shadcn@latest add https://marmelab.com/shadcn-admin-kit/r/admin.json` (registry block, not npm) — flattened all ~85 files into `src/components/*.tsx` (no `admin/` subfolder) because of this project's `components.json` aliases; see Blocking Constraints for the fallout.
 - 2026-07-31 **Decision:** `app/api/admin/[resource]` now accepts both singular (`hotel`, T-2C01's documented contract) and plural (`hotels`, react-admin's auto-guessed `ReferenceField` resource name) via `normalizeAdminResourceName` — purely additive, doesn't change T-2C01's verified behavior. `user`/`session`/`account` remain structurally unreachable.
-- 2026-07-31 **Decision:** `app/api/admin/[resource]` uses an explicit allow-list (`hotel`/`room`/`review`/`article`). `article` has no `status` column by design (admin-authored, skips the moderation checkpoint); the REST layer handles this generically per-resource rather than forcing schema uniformity.
 - 2026-07-31 **Pattern:** Any client-side auth mutation (sign-up/sign-in/sign-out) that should be reflected by a Server Component in the same layout (e.g. the header) must pair its redirect with `router.refresh()` — see Blocking Constraints.
 - 2026-07-31 **Bug (test infra, not app):** `vitest.config.ts` has no `test.globals`/`setupFiles`, so `@testing-library/react`'s auto `afterEach(cleanup)` never self-registers under Vitest. Any test file with more than one `render()` call needs an explicit `afterEach(() => { cleanup(); vi.clearAllMocks(); })`.
 

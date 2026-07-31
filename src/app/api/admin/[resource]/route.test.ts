@@ -1,29 +1,16 @@
-import { eq } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { afterEach, expect, test } from "vitest";
-import { auth } from "@/lib/auth/index";
-import { db } from "@/lib/db/client";
-import { user } from "@/lib/db/schema";
+import {
+	deleteTestUsers,
+	signUpAndGetCookieHeaders,
+} from "@/lib/test-helpers/auth";
 import { GET } from "./route";
 
 const testEmails: string[] = [];
 
 afterEach(async () => {
-	for (const email of testEmails.splice(0)) {
-		await db.delete(user).where(eq(user.email, email));
-	}
+	await deleteTestUsers(testEmails.splice(0));
 });
-
-async function signUpAndGetCookieHeaders(email: string) {
-	const { headers: responseHeaders } = await auth.api.signUpEmail({
-		body: { email, password: "TestPassword123!", name: "Test Admin Route" },
-		returnHeaders: true,
-	});
-	const setCookie = responseHeaders.get("set-cookie");
-	if (!setCookie) throw new Error("sign-up did not return a session cookie");
-	const cookiePair = setCookie.split(";")[0];
-	return new Headers({ cookie: cookiePair });
-}
 
 function listRequest(headers: Headers) {
 	return new NextRequest("http://localhost:3000/api/admin/hotel", {

@@ -18,7 +18,7 @@ tasks; later phases are decomposed when they become active.
 | Phase | Description | Status |
 | --- | --- | --- |
 | [Phase 1](archives/tasks/phase-1.md) | Project scaffold, complete entity model, and the app shell every route inherits | `Done (Archived)` (14/14) |
-| [Phase 2](tasks/phase-2.md) | Better Auth identity for guest/owner/admin, plus the react-admin moderation back office | `Todo` (0/11) |
+| [Phase 2](archives/tasks/phase-2.md) | Better Auth identity for guest/owner/admin, plus the react-admin moderation back office | `Done (Archived)` (11/11) |
 
 Phase 1 ran `A → (B ‖ C) → T` and is summarized in `.design/main/CHANGELOG.md`.
 
@@ -46,5 +46,5 @@ Registered in `PLAN.md`; decomposed into atomic tasks when activated.
 
 ## Meta Information
 
-- **Last Updated**: 2026-07-30
+- **Last Updated**: 2026-07-31
 - **Maintainer**: Core Team

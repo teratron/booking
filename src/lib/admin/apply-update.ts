@@ -1,6 +1,6 @@
-import { type SQL, eq } from "drizzle-orm";
-import { NextResponse } from "next/server";
+import { eq, type SQL } from "drizzle-orm";
 import type { PgColumn, PgTable } from "drizzle-orm/pg-core";
+import { NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 
 // Shared by PUT/approve/reject: applies a column update, returns the updated
