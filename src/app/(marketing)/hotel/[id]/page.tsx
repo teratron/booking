@@ -16,6 +16,7 @@ import type {
 } from "@/lib/hotel-profile/hotel-profile-query";
 import { getHotelProfile } from "@/lib/hotel-profile/hotel-profile-query";
 import { RecentlyViewedRail } from "./recently-viewed";
+import { type RoomBookingLabels, RoomDetailDialog } from "./room-detail-dialog";
 
 const HEADER_AMENITY_BADGE_LIMIT = 6;
 const PROFILE_MAP_ZOOM = 14;
@@ -34,6 +35,32 @@ export default async function HotelProfilePage({
 
 	const t = await getTranslations("HotelProfile");
 	const resultCardT = await getTranslations("ResultCard");
+	const roomBookingT = await getTranslations("RoomBooking");
+	const roomBookingLabels: RoomBookingLabels = {
+		triggerLabel: roomBookingT("triggerLabel"),
+		datesPlaceholder: roomBookingT("datesPlaceholder"),
+		guestsLabel: roomBookingT("guestsLabel"),
+		decreaseGuestsLabel: roomBookingT("decreaseGuestsLabel"),
+		increaseGuestsLabel: roomBookingT("increaseGuestsLabel"),
+		amenitiesTitle: roomBookingT("amenitiesTitle"),
+		bedConfigurationPrefix: roomBookingT("bedConfigurationPrefix"),
+		checkingLabel: roomBookingT("checkingLabel"),
+		availableLabel: roomBookingT("availableLabel"),
+		unavailableLabel: roomBookingT("unavailableLabel"),
+		reserveLabel: roomBookingT("reserveLabel"),
+		reservingLabel: roomBookingT("reservingLabel"),
+		successTitle: roomBookingT("successTitle"),
+		successBody: roomBookingT("successBody"),
+		successLinkLabel: roomBookingT("successLinkLabel"),
+		signInLinkLabel: roomBookingT("signInLinkLabel"),
+		errorMessages: {
+			UNAUTHENTICATED: roomBookingT("errorUnauthenticatedLabel"),
+			VALIDATION_ERROR: roomBookingT("errorValidationLabel"),
+			ROOM_NOT_FOUND: roomBookingT("errorRoomNotFoundLabel"),
+			CAPACITY_EXCEEDED: roomBookingT("errorCapacityExceededLabel"),
+			UNAVAILABLE: roomBookingT("errorUnavailableLabel"),
+		},
+	};
 
 	return (
 		<main className="mx-auto max-w-5xl space-y-8 px-4 py-10">
@@ -47,6 +74,7 @@ export default async function HotelProfilePage({
 				title={t("roomsTitle")}
 				guestsLabel={(count) => t("guestsLabel", { count })}
 				fromLabel={resultCardT("fromLabel")}
+				bookingLabels={roomBookingLabels}
 			/>
 			<section className="space-y-3">
 				<h2 className="text-xl font-medium">{t("locationTitle")}</h2>
@@ -149,11 +177,13 @@ function RoomsSection({
 	title,
 	guestsLabel,
 	fromLabel,
+	bookingLabels,
 }: {
 	rooms: HotelProfileRoom[];
 	title: string;
 	guestsLabel: (count: number) => string;
 	fromLabel: string;
+	bookingLabels: RoomBookingLabels;
 }) {
 	if (rooms.length === 0) return null;
 	return (
@@ -173,7 +203,7 @@ function RoomsSection({
 								/>
 							) : null}
 						</div>
-						<div className="space-y-1 p-3">
+						<div className="space-y-2 p-3">
 							<p className="font-medium">{room.name}</p>
 							<p className="text-sm text-muted-foreground">
 								{guestsLabel(room.guestCapacity)}
@@ -181,6 +211,12 @@ function RoomsSection({
 							<p className="text-sm font-medium">
 								{fromLabel} {room.basePrice} ₴
 							</p>
+							<RoomDetailDialog
+								room={room}
+								capacityLabel={guestsLabel(room.guestCapacity)}
+								priceLabel={`${fromLabel} ${room.basePrice} ₴`}
+								labels={bookingLabels}
+							/>
 						</div>
 					</div>
 				))}

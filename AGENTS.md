@@ -60,7 +60,7 @@ The entry point of the admin page is the `<Admin>` component.
 
 You'll need to specify a Data Provider to let the Admin know how to fetch data from the API.
 
-If no Data Provider was specified, simply use `ra-data-json-server`, and typicode's JSONPlaceholder as endpoint: https://jsonplaceholder.typicode.com/.
+If no Data Provider was specified, simply use `ra-data-json-server`, and typicode's JSONPlaceholder as endpoint: <https://jsonplaceholder.typicode.com/>.
 
 You will need to install the `ra-data-json-server` package first:
 

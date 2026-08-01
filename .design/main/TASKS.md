@@ -22,6 +22,7 @@ tasks; later phases are decomposed when they become active.
 | [Phase 3](archives/tasks/phase-3.md) | Owner-gated Add-Hotel intake flow with moderation lifecycle | `Done (Archived)` (8/8) |
 | [Phase 4](archives/tasks/phase-4.md) | Home hero search, catalog filters/sort/pagination/map, shared with Home's default list | `Done (Archived)` (7/7) |
 | [Phase 5](archives/tasks/phase-5.md) | Hotel profile aggregation and the article/news content pipeline | `Done (Archived)` (6/6) |
+| [Phase 6](tasks/phase-6.md) | Room reservation detail, availability, and the paid booking flow | `In Progress` (4/6 code, DB verification deferred — see phase-6.md) |
 
 Phase 1 ran `A → (B ‖ C) → T` and is summarized in `.design/main/CHANGELOG.md`.
 
@@ -63,27 +64,37 @@ so they ran in parallel. `B02` (hotel news + reviews + recently-viewed) was
 the one task with a genuine cross-track dependency — `l1-hotel-profile.md`
 requires its news section to reuse `C01`'s article component rather than a
 bespoke one — so it was sequenced after both `B01` and `C01`. See
-`tasks/phase-5.md` for the full track rationale, its five planning-stage
-`[DR]` resolutions (room summary renders without a functional booking CTA
-since Phase 6 owns that popup, no synthetic nearby-POI data without a
-registered provider, review submission and article authoring both out of
-scope, and the recently-viewed rail as browser-local `localStorage` state),
-two shared-component extractions this phase produced (`leaflet-map`/
+`archives/tasks/phase-5.md` for the full track rationale, its five
+planning-stage `[DR]` resolutions (room summary renders without a functional
+booking CTA since Phase 6 owns that popup, no synthetic nearby-POI data
+without a registered provider, review submission and article authoring both
+out of scope, and the recently-viewed rail as browser-local `localStorage`
+state), two shared-component extractions this phase produced (`leaflet-map`/
 `leaflet-map-loader` out of Catalog into `src/components/`, `format-date`
 out of the blog article card), and a real gap its own live checks surfaced
 in article authoring (`next/image`'s host allowlist has no story for an
 admin-entered cover-image URL, since articles have no upload flow the way
 hotel/room media do).
 
-## Planned Phases
-
-Registered in `PLAN.md`; decomposed into atomic tasks when activated.
-
-| Phase | Description | Status |
-| --- | --- | --- |
-| Phase 6 | Room detail, date/guest selection, and the paid booking flow | `Planned` |
+Phase 6 runs `A01 → (B01 ‖ D01) → B02 → C01 → T`. Track A (room detail,
+availability, and guest-reservations queries) has no dependency on anything
+else in this phase and starts immediately; `B01` (room detail popup) and
+`D01` (guest reservation status page) are mutually file-disjoint and only
+depend on `A01`, so they run in parallel. `B02` (reservation creation) needs
+`B01`'s popup to collect room/dates/guests from; `C01` (payment) needs `B02`'s
+`pending` reservation to attach a payment attempt to — a linear checkout
+funnel from there on, an honest reflection of this phase's narrower,
+deeper shape versus Phase 4/5's broader parallel surfaces. See
+`tasks/phase-6.md` for the full track rationale and its four planning-stage
+`[DR]` resolutions (payment built behind a swappable provider interface with
+a simulated implementation, since no real Fondy credentials exist — real
+Fondy wiring is a later drop-in swap, not a rewrite; guest reservation status
+as a dedicated account page, not email; the room popup as a Base UI Dialog
+finally wiring Phase 5's intentionally-inert room cards; availability
+computed from `paid` reservations only, per the spec's own "unpaid attempts
+don't hold dates" invariant).
 
 ## Meta Information
 
-- **Last Updated**: 2026-07-31
+- **Last Updated**: 2026-08-01
 - **Maintainer**: Core Team

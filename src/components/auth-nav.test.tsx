@@ -17,6 +17,7 @@ const LABELS = {
 	signInLabel: "Войти",
 	signOutLabel: "Выйти",
 	signOutPendingLabel: "Выход…",
+	myReservationsLabel: "Мои бронирования",
 };
 
 afterEach(() => {
@@ -45,6 +46,11 @@ test("shows the user and a sign-out affordance when authenticated, and signs out
 
 	expect(screen.getByText("Тестовый Пользователь")).toBeDefined();
 	expect(screen.queryByRole("link", { name: LABELS.signInLabel })).toBeNull();
+	expect(
+		screen
+			.getByRole("link", { name: LABELS.myReservationsLabel })
+			.getAttribute("href"),
+	).toBe("/account/reservations");
 
 	await user.click(screen.getByRole("button", { name: LABELS.signOutLabel }));
 

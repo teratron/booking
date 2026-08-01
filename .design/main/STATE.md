@@ -4,15 +4,15 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-07-31 19:33
-**Phase:** 5 - Hotel Profile and Content Publishing
+**Updated:** 2026-08-01 12:41
+**Phase:** 6 - Room Reservation and Payment
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-5T01 Validate independent section degradation and the moderation checkpoint (Done — Phase 5 complete)
-- **Spec:** l1-hotel-profile.md v0.2.0 + l1-content-publishing.md v0.2.0 — decomposed into 6 tasks across 3 tracks
-- **Next Action:** Plan complete — run /magic.task main to plan new scope
+- **Task:** T-6A01/B01/D01/B02 code complete (4/6), DB verification deferred
+- **Spec:** l1-room-reservation.md v0.2.0 + l2-third-party-integrations.md v0.2.0 §5.2 — decomposed into 6 tasks across 3 tracks
+- **Next Action:** T-6C01 Payment integration (simulated provider) via magic.run main
 
 ## Progress
 
@@ -22,6 +22,7 @@ Phase 2: [11/11] ████████ 100%  DONE — archived
 Phase 3: [8/8]   ████████ 100%  DONE — archived
 Phase 4: [7/7]   ████████ 100%  DONE — archived
 Phase 5: [6/6]   ████████ 100%  DONE — archived
+Phase 6: [4/6]   █████░░░ 67%   IN PROGRESS (code; DB verification deferred)
 Overall: [5/6]   ███████░ 83%   (5 of 6 planned phases complete)
 ```
 
@@ -29,15 +30,20 @@ Overall: [5/6]   ███████░ 83%   (5 of 6 planned phases complete)
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-07-31 **Decision:** Phase 4 (Discovery & Catalog) closed, all 7 tasks Done — full decision record archived in `archives/tasks/phase-4.md`.
-- 2026-07-31 **Decision:** Phase 5 pairs Hotel Profile + Content Publishing (one article pipeline, two render sites). Room-summary cards ship with no booking CTA yet (Phase 6 owns the popup), no synthetic nearby-POI pins, review submission and article authoring both out of scope — see `tasks/phase-5.md` Decisions for all five [DR] resolutions.
-- 2026-07-31 **Pattern:** `ResultCard`'s translation strings live in their own `"ResultCard"` namespace, not borrowed from whichever page built it first.
+- 2026-08-01 **Decision:** Phase 6 payment (`T-6C01`) is built behind a swappable `PaymentProvider` interface with a simulated implementation — no real Fondy sandbox credentials exist in this environment (confirmed with the user). Real Fondy wiring later is a drop-in implementation swap. See `tasks/phase-6.md` Decisions for all four [DR] resolutions.
+- 2026-08-01 **Decision:** T-6A01/B01/D01/B02 all code-complete (dialog, reservation-creation action, `/account/reservations` page) — every DB-independent gate (tsc/biome/fallow/non-DB suite) clean, zero regressions. All four checklist items stay unchecked deliberately until real DB verification runs (see Blockers) — same rationale as T-6A01 alone previously.
+- 2026-08-01 **Note:** this codebase has no client-side `useTranslations`/`NextIntlClientProvider` — Client Components take fully-resolved plain-string label props from their Server Component parent (confirmed via `AuthNav`/`SignInForm`). Follow this for any future Client Component needing translated text.
 
 ## Blockers
 
 <!-- Empty if none. Format: [severity] description -->
 
-- none
+- [medium] Postgres (`booking-postgres-1`, port 5433) is unreachable this
+  session — `docker` isn't found in Bash or PowerShell post-resume. Per user
+  direction: keep writing code and running `tsc`/`biome`/`fallow` (DB-free),
+  but every DB-backed test and live-server check from T-6A01 onward is
+  **deferred, not verified** — don't report those as passing until Postgres
+  access is confirmed restored and the suite actually runs green.
 
 ## Blocking Constraints
 
@@ -62,33 +68,30 @@ Overall: [5/6]   ███████░ 83%   (5 of 6 planned phases complete)
   with the single task's `--status` value (wrongly marking the whole
   workspace `Done`), sometimes also collapses `## Progress`. Always re-open
   STATE.md after `update-state`/`finalize` and manually verify both.
-- **Server Actions must live in their own file**, separate from the schema
-  and the persistence logic: a "use server" function sharing a file with
-  server-only helpers (anything importing `db`) breaks the build the moment
-  a Client Component imports it — and even after splitting, importing
-  *anything else* from the persistence file still pulls `db`→`pg`→Node
-  builtins into the client bundle, a runtime 500 `tsc`/Vitest never catch.
-  Split three ways: schema (client-safe), persistence (db logic), actions
-  (`"use server"`, imports persistence + schema types). Reference shape:
-  `src/lib/property-onboarding/{schema,submit-listing,actions}.ts`.
-  Discovered live in T-3B02 — only a real dev-server request caught it.
+- **Server Actions must live in their own file**, separate from schema and
+  persistence: a "use server" fn sharing a file with server-only helpers
+  (anything importing `db`) breaks the build the moment a Client Component
+  imports it — even after splitting, importing anything else from the
+  persistence file pulls `db`→`pg`→Node builtins into the client bundle, a
+  runtime 500 `tsc`/Vitest never catch. Split three ways: schema
+  (client-safe), persistence (db logic), actions (`"use server"`). Reference:
+  `src/lib/property-onboarding/{schema,submit-listing,actions}.ts`. T-3B02.
 - **`pnpm test -- <path>` does not reliably scope to one file** — use
   `pnpm exec vitest run <path>` instead.
 - **Stop the dev server before `pnpm test`.** A concurrent `pnpm dev`
-  (Turbopack watching/compiling) competes with Vitest's worker threads for
-  CPU and reliably causes flaky timeouts (85s w/ failures → 40s w/ none,
-  confirmed by A/B). `db/client.ts`'s pooled `max` cap under
-  `process.env.VITEST` and `vitest.config.ts`'s `testTimeout: 15000` are
-  secondary mitigations only. Discovered T-3B02, root-caused Phase 4 planning.
+  competes with Vitest's worker threads for CPU, causing flaky timeouts
+  (85s w/ failures → 40s w/ none, confirmed by A/B). Pool cap under
+  `process.env.VITEST` + `testTimeout: 15000` are secondary mitigations only.
+  Discovered T-3B02, root-caused Phase 4 planning.
 - **Multi-render test files need explicit `afterEach(() => cleanup())`**
-  (`@testing-library/react`) — no global setup wires this in automatically.
-  Also: Vitest runs test files in parallel workers against one real,
-  non-transactional Postgres instance — an unfiltered/loosely-scoped query in
-  one file can see another concurrently-running file's in-flight fixture
-  rows. Prefer mocking the query layer (`vi.mock` + `importOriginal`) for
-  page/component tests that don't need to re-prove DB-level correctness a
-  lower-level test already covers; reserve real-DB fixtures for the module
-  that owns that query logic. Discovered live in T-4C01.
+  (`@testing-library/react`) — not wired in automatically. Also: Vitest runs
+  test files in parallel against one real, non-transactional Postgres —
+  an unscoped query in one file can see another file's in-flight fixture
+  rows. Prefer mocking the query layer for page/component tests that don't
+  need to re-prove DB correctness a lower-level test covers. T-4C01.
+- **`reservation.guest_id`/`hotel.owner_id` have no `onDelete: cascade`** —
+  use the shared `deleteTestUsers` helper (cleans up both) for any test
+  creating either row, not bespoke local cleanup. Discovered live in T-6B02.
 
 ## Session Continuity
 

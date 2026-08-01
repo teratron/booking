@@ -61,6 +61,7 @@ export async function Header() {
 						signInLabel={t("signInLabel")}
 						signOutLabel={t("signOutLabel")}
 						signOutPendingLabel={t("signOutPendingLabel")}
+						myReservationsLabel={t("myReservationsLabel")}
 					/>
 					<LanguageSwitcher />
 				</div>

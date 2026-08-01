@@ -7,7 +7,8 @@
 		"navBlog": "Блог",
 		"signInLabel": "Войти",
 		"signOutLabel": "Выйти",
-		"signOutPendingLabel": "Выход…"
+		"signOutPendingLabel": "Выход…",
+		"myReservationsLabel": "Мои бронирования"
 	},
 	"Footer": {
 		"navLabel": "Навигация в подвале",
@@ -118,6 +119,16 @@
 		"statusRejected": "Отклонено",
 		"editLabel": "Редактировать и отправить снова"
 	},
+	"AccountReservations": {
+		"title": "Мои бронирования",
+		"emptyState": "У вас пока нет бронирований. Найдите отель в каталоге.",
+		"statusPending": "Ожидает оплаты",
+		"statusPaid": "Оплачено",
+		"statusPaymentFailed": "Оплата не прошла",
+		"statusCancelled": "Отменено",
+		"datesLabel": "{checkIn} — {checkOut}",
+		"guestsLabel": "{count} чел."
+	},
 	"Home": {
 		"heroTitle": "Найдите отель своей мечты",
 		"destinationPlaceholder": "Куда едем?",
@@ -173,6 +184,29 @@
 		"newsTitle": "Новости отеля",
 		"reviewsTitle": "Отзывы гостей",
 		"recentlyViewedTitle": "Недавно просмотренные"
+	},
+	"RoomBooking": {
+		"triggerLabel": "Забронировать",
+		"datesPlaceholder": "Даты заезда — выезда",
+		"guestsLabel": "Гости",
+		"decreaseGuestsLabel": "Уменьшить количество гостей",
+		"increaseGuestsLabel": "Увеличить количество гостей",
+		"amenitiesTitle": "Удобства номера",
+		"bedConfigurationPrefix": "Кровати:",
+		"checkingLabel": "Проверяем доступность…",
+		"availableLabel": "Даты свободны",
+		"unavailableLabel": "Эти даты уже забронированы",
+		"reserveLabel": "Забронировать",
+		"reservingLabel": "Бронирование…",
+		"successTitle": "Бронирование создано",
+		"successBody": "Заявка отправлена. Перейдите в «Мои бронирования», чтобы оплатить.",
+		"successLinkLabel": "Мои бронирования",
+		"signInLinkLabel": "Войти",
+		"errorUnauthenticatedLabel": "Войдите, чтобы забронировать номер",
+		"errorValidationLabel": "Проверьте выбранные даты и количество гостей",
+		"errorRoomNotFoundLabel": "Этот номер сейчас недоступен",
+		"errorCapacityExceededLabel": "Превышена вместимость номера",
+		"errorUnavailableLabel": "Эти даты уже забронированы"
 	},
 	"Blog": {
 		"title": "Блог",

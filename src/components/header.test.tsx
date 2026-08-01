@@ -15,4 +15,5 @@ test("ru catalog resolves every key Header references", () => {
 	expect(messages.Header.signInLabel).toBeTruthy();
 	expect(messages.Header.signOutLabel).toBeTruthy();
 	expect(messages.Header.signOutPendingLabel).toBeTruthy();
+	expect(messages.Header.myReservationsLabel).toBeTruthy();
 });

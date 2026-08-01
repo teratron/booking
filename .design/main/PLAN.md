@@ -17,7 +17,8 @@ rather than by product surface — identity and the shared data model precede ev
 feature that reads or writes them.
 
 All nine registered specifications are `Stable` and the backlog is empty. Phases 1,
-2, 3, 4, and 5 are complete and archived; Phase 6 remains undecomposed.
+2, 3, 4, and 5 are complete and archived; Phase 6 is decomposed and active (see
+`tasks/phase-6.md`).
 
 ### Phase Dependency Graph
 
@@ -120,7 +121,7 @@ parallel-eligible with Phase 3 rather than serialized behind it.
 Paired in one phase because the hotel news feed is articles filtered by hotel
 association — one content pipeline, one article component, rendered in two places.
 
-## Phase 6 — Reservation & Payment
+## Phase 6 — Reservation & Payment — 🔄 Active (2026-08-01)
 
 *Room inventory detail, date/guest selection, and the paid booking flow.*
 

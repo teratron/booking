@@ -12,12 +12,14 @@ export function AuthNav({
 	signInLabel,
 	signOutLabel,
 	signOutPendingLabel,
+	myReservationsLabel,
 }: {
 	authenticated: boolean;
 	userLabel: string | null;
 	signInLabel: string;
 	signOutLabel: string;
 	signOutPendingLabel: string;
+	myReservationsLabel: string;
 }) {
 	const router = useRouter();
 	const [pending, setPending] = useState(false);
@@ -37,6 +39,9 @@ export function AuthNav({
 					{userLabel}
 				</span>
 			) : null}
+			<Link href="/account/reservations" className="font-medium">
+				{myReservationsLabel}
+			</Link>
 			<Button
 				variant="ghost"
 				size="sm"
