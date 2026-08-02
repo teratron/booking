@@ -3,9 +3,9 @@ services:
     image: postgres:18-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: booking
-      POSTGRES_PASSWORD: booking
-      POSTGRES_DB: booking
+      POSTGRES_USER: ${POSTGRES_USER:-booking}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-booking}
+      POSTGRES_DB: ${POSTGRES_DB:-booking}
     ports:
       # Host port 5433, not 5432 — this machine already runs a native
       # PostgreSQL 18 Windows service bound to 5432.
@@ -16,7 +16,7 @@ services:
       # https://github.com/docker-library/postgres/pull/1259
       - postgres-data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U booking -d booking"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-booking} -d ${POSTGRES_DB:-booking}"]
       interval: 5s
       timeout: 5s
       retries: 10
