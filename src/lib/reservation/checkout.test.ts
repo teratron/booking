@@ -9,6 +9,7 @@ import {
 } from "@/lib/test-helpers/auth";
 import { initiatePaymentCore, resolvePaymentCore } from "./checkout";
 import { createReservationCore } from "./create-reservation";
+import type { PaymentOutcome } from "./payment-provider";
 
 const testEmails: string[] = [];
 let ownerId: string;
@@ -70,10 +71,7 @@ afterAll(async () => {
 // --- initiatePaymentCore ----------------------------------------------------
 
 test("initiatePaymentCore: rejects an unauthenticated caller", async () => {
-	const result = await initiatePaymentCore(
-		new Headers(),
-		crypto.randomUUID(),
-	);
+	const result = await initiatePaymentCore(new Headers(), crypto.randomUUID());
 	expect(result).toEqual({ success: false, error: "UNAUTHENTICATED" });
 });
 
@@ -82,10 +80,7 @@ test("initiatePaymentCore: rejects a reservation that does not exist", async () 
 	testEmails.push(email);
 	const requestHeaders = await signUpAndGetCookieHeaders(email);
 
-	const result = await initiatePaymentCore(
-		requestHeaders,
-		crypto.randomUUID(),
-	);
+	const result = await initiatePaymentCore(requestHeaders, crypto.randomUUID());
 	expect(result).toEqual({ success: false, error: "NOT_FOUND" });
 });
 
@@ -215,6 +210,36 @@ test("resolvePaymentCore: rejects a non-owner caller", async () => {
 		"success",
 	);
 	expect(result).toEqual({ success: false, error: "FORBIDDEN" });
+});
+
+test("resolvePaymentCore: rejects an outcome that is neither success nor failure", async () => {
+	const email = "test-checkout-resolve-invalid-outcome@example.com";
+	testEmails.push(email);
+	const requestHeaders = await signUpAndGetCookieHeaders(email);
+
+	const created = await createReservationCore(requestHeaders, {
+		roomId,
+		checkIn: "2026-11-01",
+		checkOut: "2026-11-03",
+		guestCount: 1,
+	});
+	expect(created.success).toBe(true);
+	if (!created.success) throw new Error("expected success");
+
+	// A hand-crafted request is not bound by resolvePaymentAction's
+	// TypeScript parameter type at runtime — cast past it deliberately.
+	const result = await resolvePaymentCore(
+		requestHeaders,
+		created.reservationId,
+		"bogus" as unknown as PaymentOutcome,
+	);
+	expect(result).toEqual({ success: false, error: "INVALID_OUTCOME" });
+
+	const [row] = await db
+		.select()
+		.from(reservation)
+		.where(eq(reservation.id, created.reservationId));
+	expect(row.status).toBe("pending");
 });
 
 test("resolvePaymentCore: rejects a reservation that isn't pending", async () => {
@@ -352,4 +377,46 @@ test("resolvePaymentCore: transitions to payment_failed on a success outcome whe
 		.from(reservation)
 		.where(eq(reservation.id, held.reservationId));
 	expect(row.status).toBe("payment_failed");
+});
+
+test("resolvePaymentCore: a concurrent duplicate call for the same reservation never overwrites the terminal status the first call already wrote", async () => {
+	// Simulates an at-least-once webhook retry racing itself: two calls for
+	// the same `pending` reservation fire concurrently. Both pass the plain
+	// pending-status SELECT (taken before either transaction starts), but the
+	// atomic `WHERE status = 'pending'` UPDATE inside the transaction must
+	// let exactly one of them win — the loser must report NOT_PENDING instead
+	// of silently overwriting whatever the winner already wrote.
+	const email = "test-checkout-resolve-concurrent@example.com";
+	testEmails.push(email);
+	const requestHeaders = await signUpAndGetCookieHeaders(email);
+
+	const created = await createReservationCore(requestHeaders, {
+		roomId,
+		checkIn: "2026-12-10",
+		checkOut: "2026-12-12",
+		guestCount: 1,
+	});
+	expect(created.success).toBe(true);
+	if (!created.success) throw new Error("expected success");
+
+	const [first, second] = await Promise.all([
+		resolvePaymentCore(requestHeaders, created.reservationId, "success"),
+		resolvePaymentCore(requestHeaders, created.reservationId, "failure"),
+	]);
+
+	const outcomes = [first, second];
+	const winners = outcomes.filter((outcome) => outcome.success);
+	const losers = outcomes.filter((outcome) => !outcome.success);
+	expect(winners).toHaveLength(1);
+	expect(losers).toEqual([{ success: false, error: "NOT_PENDING" }]);
+
+	const [row] = await db
+		.select()
+		.from(reservation)
+		.where(eq(reservation.id, created.reservationId));
+	// The persisted status must match whichever call actually won — never a
+	// hybrid or an overwritten value.
+	const winner = winners[0];
+	if (!winner.success) throw new Error("expected a winner");
+	expect(row.status).toBe(winner.status);
 });

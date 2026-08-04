@@ -3,7 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { resolvePaymentAction } from "@/lib/reservation/checkout-actions";
+import {
+	initiatePaymentAction,
+	resolvePaymentAction,
+} from "@/lib/reservation/checkout-actions";
 import type { PaymentOutcome } from "@/lib/reservation/payment-provider";
 
 export function SimulatePaymentButtons({
@@ -31,6 +34,20 @@ export function SimulatePaymentButtons({
 			setSuccessPending(true);
 		} else {
 			setFailurePending(true);
+		}
+
+		// Initiating the payment attempt is itself a mutation (it calls the
+		// payment provider and persists a reference), so it happens here —
+		// behind this explicit click-triggered Server Action — rather than as a
+		// side effect of loading the checkout page. The returned checkoutUrl is
+		// not used: the simulated provider's checkoutUrl points right back at
+		// this same page.
+		const initiateResult = await initiatePaymentAction(reservationId);
+		if (!initiateResult.success) {
+			setSuccessPending(false);
+			setFailurePending(false);
+			setError(errorLabel);
+			return;
 		}
 
 		const result = await resolvePaymentAction(reservationId, outcome);

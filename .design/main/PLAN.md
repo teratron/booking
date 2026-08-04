@@ -121,12 +121,12 @@ parallel-eligible with Phase 3 rather than serialized behind it.
 Paired in one phase because the hotel news feed is articles filtered by hotel
 association — one content pipeline, one article component, rendered in two places.
 
-## Phase 6 — Reservation & Payment — 🔄 Active (2026-08-01)
+## Phase 6 — Reservation & Payment — ✅ Done (2026-08-05)
 
 *Room inventory detail, date/guest selection, and the paid booking flow.*
 
-- [ ] **Room Reservation** ([l1-room-reservation.md](specifications/l1-room-reservation.md)) [L1]
-- [ ] **Third-Party Integrations** §5.2 ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
+- [x] **Room Reservation** ([l1-room-reservation.md](specifications/l1-room-reservation.md)) [L1]
+- [x] **Third-Party Integrations** §5.2 ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
 
 Last by design: payment integration must not precede a reservation model with a
 concrete paid state to transition into.

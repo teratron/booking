@@ -67,6 +67,7 @@ export default async function AccountReservationsPage() {
 								<div className="mt-3">
 									<Button
 										size="sm"
+										nativeButton={false}
 										render={
 											<Link
 												href={`/account/reservations/${reservation.id}/checkout`}

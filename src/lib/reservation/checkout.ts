@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import { reservation, room } from "@/lib/db/schema";
 import { getPaymentProvider, type PaymentOutcome } from "./payment-provider";
+import { calculateNightsAndAmount } from "./pricing";
 
 export type InitiatePaymentResult =
 	| { success: true; checkoutUrl: string }
@@ -15,7 +16,12 @@ export type ResolvePaymentResult =
 	| { success: true; status: "paid" | "payment_failed" }
 	| {
 			success: false;
-			error: "UNAUTHENTICATED" | "NOT_FOUND" | "FORBIDDEN" | "NOT_PENDING";
+			error:
+				| "UNAUTHENTICATED"
+				| "NOT_FOUND"
+				| "FORBIDDEN"
+				| "NOT_PENDING"
+				| "INVALID_OUTCOME";
 	  };
 
 /**
@@ -60,17 +66,11 @@ export async function initiatePaymentCore(
 		return { success: false, error: "NOT_PENDING" };
 	}
 
-	// checkIn/checkOut are "YYYY-MM-DD" date-only strings (the `date` column's
-	// default string mode). `new Date("YYYY-MM-DD")` parses a date-only ISO
-	// string as UTC midnight, so subtracting the two is an exact, DST-safe
-	// night count with zero timezone risk — do NOT "fix" this into something
-	// that reads local timezone offsets. (This is the opposite direction from
-	// formatting a locally-picked Date back into a "YYYY-MM-DD" string, which
-	// DOES carry timezone risk and is handled elsewhere via local getters.)
-	const nights =
-		(new Date(row.checkOut).getTime() - new Date(row.checkIn).getTime()) /
-		86_400_000;
-	const amount = Number(row.basePrice) * nights;
+	const { amount } = calculateNightsAndAmount(
+		row.checkIn,
+		row.checkOut,
+		row.basePrice,
+	);
 
 	const attempt = await getPaymentProvider().createPayment({
 		reservationId: row.id,
@@ -122,6 +122,14 @@ export async function resolvePaymentCore(
 		return { success: false, error: "UNAUTHENTICATED" };
 	}
 
+	// Validated strictly rather than trusted at the type level: a Server
+	// Action's TypeScript parameter types are not enforced at runtime, and a
+	// hand-crafted request with a garbage `outcome` string must not silently
+	// fall through to the success branch below.
+	if (outcome !== "success" && outcome !== "failure") {
+		return { success: false, error: "INVALID_OUTCOME" };
+	}
+
 	const [row] = await db
 		.select({
 			id: reservation.id,
@@ -143,14 +151,27 @@ export async function resolvePaymentCore(
 		return { success: false, error: "NOT_PENDING" };
 	}
 
-	const status: "paid" | "payment_failed" = await db.transaction(
-		async (tx): Promise<"paid" | "payment_failed"> => {
+	// The reservation's own `status = 'pending'` re-check is made atomic with
+	// the terminal-status write below by folding it into the UPDATE's WHERE
+	// clause instead of relying on the plain SELECT above (which is not part
+	// of this transaction). Two concurrent/duplicate calls for the same
+	// reservation — e.g. a retried webhook delivery, standard for
+	// at-least-once webhook delivery once a real gateway is wired in — can
+	// then never both "win": Postgres serializes the two UPDATEs against the
+	// same row, and whichever runs second finds `status` no longer `pending`
+	// and updates zero rows, which is reported back as "race" below instead
+	// of silently overwriting whatever the first call already wrote.
+	const status: "paid" | "payment_failed" | "race" = await db.transaction(
+		async (tx): Promise<"paid" | "payment_failed" | "race"> => {
 			if (outcome === "failure") {
-				await tx
+				const updated = await tx
 					.update(reservation)
 					.set({ status: "payment_failed", updatedAt: new Date() })
-					.where(eq(reservation.id, row.id));
-				return "payment_failed";
+					.where(
+						and(eq(reservation.id, row.id), eq(reservation.status, "pending")),
+					)
+					.returning({ id: reservation.id });
+				return updated.length > 0 ? "payment_failed" : "race";
 			}
 
 			// outcome === "success" — re-check for a competing `paid` reservation
@@ -177,14 +198,25 @@ export async function resolvePaymentCore(
 			const nextStatus: "paid" | "payment_failed" =
 				overlapping.length > 0 ? "payment_failed" : "paid";
 
-			await tx
+			const updated = await tx
 				.update(reservation)
 				.set({ status: nextStatus, updatedAt: new Date() })
-				.where(eq(reservation.id, row.id));
+				.where(
+					and(eq(reservation.id, row.id), eq(reservation.status, "pending")),
+				)
+				.returning({ id: reservation.id });
 
-			return nextStatus;
+			return updated.length > 0 ? nextStatus : "race";
 		},
 	);
+
+	if (status === "race") {
+		// Another call already resolved this reservation between our courtesy
+		// SELECT above and the atomic UPDATE — treat it the same as the plain
+		// "not pending anymore" case rather than overwriting the terminal
+		// status the other call already wrote.
+		return { success: false, error: "NOT_PENDING" };
+	}
 
 	return { success: true, status };
 }

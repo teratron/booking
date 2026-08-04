@@ -22,7 +22,7 @@ tasks; later phases are decomposed when they become active.
 | [Phase 3](archives/tasks/phase-3.md) | Owner-gated Add-Hotel intake flow with moderation lifecycle | `Done (Archived)` (8/8) |
 | [Phase 4](archives/tasks/phase-4.md) | Home hero search, catalog filters/sort/pagination/map, shared with Home's default list | `Done (Archived)` (7/7) |
 | [Phase 5](archives/tasks/phase-5.md) | Hotel profile aggregation and the article/news content pipeline | `Done (Archived)` (6/6) |
-| [Phase 6](tasks/phase-6.md) | Room reservation detail, availability, and the paid booking flow | `In Progress` (4/6 code, DB verification deferred — see phase-6.md) |
+| [Phase 6](archives/tasks/phase-6.md) | Room reservation detail, availability, and the paid booking flow | `Done (Archived)` (6/6) |
 
 Phase 1 ran `A → (B ‖ C) → T` and is summarized in `.design/main/CHANGELOG.md`.
 
@@ -76,23 +76,30 @@ in article authoring (`next/image`'s host allowlist has no story for an
 admin-entered cover-image URL, since articles have no upload flow the way
 hotel/room media do).
 
-Phase 6 runs `A01 → (B01 ‖ D01) → B02 → C01 → T`. Track A (room detail,
-availability, and guest-reservations queries) has no dependency on anything
-else in this phase and starts immediately; `B01` (room detail popup) and
-`D01` (guest reservation status page) are mutually file-disjoint and only
-depend on `A01`, so they run in parallel. `B02` (reservation creation) needs
-`B01`'s popup to collect room/dates/guests from; `C01` (payment) needs `B02`'s
-`pending` reservation to attach a payment attempt to — a linear checkout
-funnel from there on, an honest reflection of this phase's narrower,
-deeper shape versus Phase 4/5's broader parallel surfaces. See
-`tasks/phase-6.md` for the full track rationale and its four planning-stage
-`[DR]` resolutions (payment built behind a swappable provider interface with
-a simulated implementation, since no real Fondy credentials exist — real
-Fondy wiring is a later drop-in swap, not a rewrite; guest reservation status
-as a dedicated account page, not email; the room popup as a Base UI Dialog
-finally wiring Phase 5's intentionally-inert room cards; availability
-computed from `paid` reservations only, per the spec's own "unpaid attempts
-don't hold dates" invariant).
+Phase 6 ran `A01 → (B01 ‖ D01) → B02 → C01 → T`. Track A (room detail,
+availability, and guest-reservations queries) had no dependency on anything
+else in this phase and started immediately; `B01` (room detail popup) and
+`D01` (guest reservation status page) were mutually file-disjoint and only
+depended on `A01`, so they ran in parallel. `B02` (reservation creation)
+needed `B01`'s popup to collect room/dates/guests from; `C01` (payment)
+needed `B02`'s `pending` reservation to attach a payment attempt to — a
+linear checkout funnel from there on, an honest reflection of this phase's
+narrower, deeper shape versus Phase 4/5's broader parallel surfaces. See
+`archives/tasks/phase-6.md` for the full track rationale, its four
+planning-stage `[DR]` resolutions (payment built behind a swappable provider
+interface with a simulated implementation, since no real Fondy credentials
+exist — real Fondy wiring is a later drop-in swap, not a rewrite; guest
+reservation status as a dedicated account page, not email; the room popup as
+a Base UI Dialog finally wiring Phase 5's intentionally-inert room cards;
+availability computed from `paid` reservations only, per the spec's own
+"unpaid attempts don't hold dates" invariant), T-6C01's multi-agent
+build-then-adversarially-verify pass (8 real findings, all fixed), and
+T-6T01's live-browser exit gate, which caught and fixed two real defects no
+automated test had (a Base UI `nativeButton` accessibility warning, and a
+deterministic same-file test-isolation bug mischaracterized earlier in the
+phase as random flakiness) — the full suite closed at 52 files / 158 tests,
+zero failures. This was the last phase this project's plan scheduled; all six
+are now complete.
 
 ## Meta Information
 

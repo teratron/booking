@@ -4,15 +4,15 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-01 12:41
+**Updated:** 2026-08-04 21:24
 **Phase:** 6 - Room Reservation and Payment
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-6A01/B01/D01/B02 code complete (4/6), DB verification deferred
-- **Spec:** l1-room-reservation.md v0.2.0 + l2-third-party-integrations.md v0.2.0 §5.2 — decomposed into 6 tasks across 3 tracks
-- **Next Action:** T-6C01 Payment integration (simulated provider) via magic.run main
+- **Task:** Phase 6 complete (6/6) — the last phase this project's plan scheduled
+- **Spec:** l1-room-reservation.md v0.2.0 + l2-third-party-integrations.md v0.2.0 §5.2 — all 6 tasks DB-verified and live-checked
+- **Next Action:** Plan complete — no Draft/unregistered specs remain (9/9 Stable, Backlog empty). Author new scope via /magic.spec, or /magic.status for a briefing.
 
 ## Progress
 
@@ -22,28 +22,23 @@ Phase 2: [11/11] ████████ 100%  DONE — archived
 Phase 3: [8/8]   ████████ 100%  DONE — archived
 Phase 4: [7/7]   ████████ 100%  DONE — archived
 Phase 5: [6/6]   ████████ 100%  DONE — archived
-Phase 6: [4/6]   █████░░░ 67%   IN PROGRESS (code; DB verification deferred)
-Overall: [5/6]   ███████░ 83%   (5 of 6 planned phases complete)
+Phase 6: [6/6]   ████████ 100%  DONE — archived
+Overall: [6/6]   ████████ 100%  (6 of 6 planned phases complete)
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-01 **Decision:** Phase 6 payment (`T-6C01`) is built behind a swappable `PaymentProvider` interface with a simulated implementation — no real Fondy sandbox credentials exist in this environment (confirmed with the user). Real Fondy wiring later is a drop-in implementation swap. See `tasks/phase-6.md` Decisions for all four [DR] resolutions.
-- 2026-08-01 **Decision:** T-6A01/B01/D01/B02 all code-complete (dialog, reservation-creation action, `/account/reservations` page) — every DB-independent gate (tsc/biome/fallow/non-DB suite) clean, zero regressions. All four checklist items stay unchecked deliberately until real DB verification runs (see Blockers) — same rationale as T-6A01 alone previously.
-- 2026-08-01 **Note:** this codebase has no client-side `useTranslations`/`NextIntlClientProvider` — Client Components take fully-resolved plain-string label props from their Server Component parent (confirmed via `AuthNav`/`SignInForm`). Follow this for any future Client Component needing translated text.
+- 2026-08-05 **Decision:** Phase 6 (and the full 6-phase plan) closed. T-6T01's live browser check surfaced and fixed two real defects no automated test caught: a Base UI `nativeButton` console error on the "Оплатить" button-as-Link, and a genuinely deterministic (not flaky) bug in `reservation-query.test.ts` — every test in that file shares one fixed `guestId` but only cleaned up in one file-level `afterAll`, so an earlier test's own rows leaked into a later exact-count assertion. Full suite: 52 files / 158 tests, 0 failures.
+- 2026-08-04 **Note:** Docker/Postgres access RESTORED — `docker` CLI reappeared on PATH, daemon was stopped, started via Docker Desktop + `docker compose up -d`; the named `postgres-data` volume preserved the schema through container recreation.
+- 2026-08-04 **Decision:** T-6C01 (payment) built via an orchestrated multi-agent workflow (Ultracode posture) — 4 agents built provider/persistence/UI/tests in dependency order, 3 agents adversarially reviewed (correctness, auth, conventions) and found 8 real issues, all confirmed and fixed. See `archives/tasks/phase-6.md` T-6C01 Changes.
 
 ## Blockers
 
 <!-- Empty if none. Format: [severity] description -->
 
-- [medium] Postgres (`booking-postgres-1`, port 5433) is unreachable this
-  session — `docker` isn't found in Bash or PowerShell post-resume. Per user
-  direction: keep writing code and running `tsc`/`biome`/`fallow` (DB-free),
-  but every DB-backed test and live-server check from T-6A01 onward is
-  **deferred, not verified** — don't report those as passing until Postgres
-  access is confirmed restored and the suite actually runs green.
+(none)
 
 ## Blocking Constraints
 
@@ -52,46 +47,39 @@ Overall: [5/6]   ███████░ 83%   (5 of 6 planned phases complete)
 
 - **Router Cache staleness / stale `useState` after auth mutations:** pair a
   client-side sign-up/sign-in/sign-out redirect with `router.refresh()` (a
-  plain `fetch()` doesn't invalidate the Router Cache, so a shared layout
-  like `Header` keeps showing stale session state); also reset
-  "pending/loading" `useState` flags in the success path, not just on error
-  — a conditional-branch prop flip does not remount the component. Both
-  discovered live in T-2B03.
-- **`biome.json` breaks on a `//` comment before `"overrides"`** (silently
-  stops honoring `useIgnoreFile`) — verify with unscoped `pnpm exec biome
-  check .`. Discovered live in T-2C02.
-- **`src/components/` has no clean vendor/first-party boundary** (shadcn-
-  admin-kit flattened ~85 files in directly) — a new first-party file there
-  needs both `biome.json`/`.fallowrc.jsonc` negation lists updated.
+  plain `fetch()` doesn't invalidate the Router Cache); also reset
+  "pending/loading" `useState` flags in the success path, not just on error.
+  Discovered T-2B03.
+- **`biome.json` breaks on a `//` comment before `"overrides"`** — verify
+  with unscoped `pnpm exec biome check .`. Discovered T-2C02.
+- **`src/components/` has no clean vendor/first-party boundary** — a new
+  first-party file there needs both `biome.json`/`.fallowrc.jsonc` negation
+  lists updated.
 - **Engine bug:** `executor.js update-state` corrupts STATE.md fields on
-  nearly every invocation — most often overwrites the top-level `**Status:**`
-  with the single task's `--status` value (wrongly marking the whole
-  workspace `Done`), sometimes also collapses `## Progress`. Always re-open
-  STATE.md after `update-state`/`finalize` and manually verify both.
-- **Server Actions must live in their own file**, separate from schema and
-  persistence: a "use server" fn sharing a file with server-only helpers
-  (anything importing `db`) breaks the build the moment a Client Component
-  imports it — even after splitting, importing anything else from the
-  persistence file pulls `db`→`pg`→Node builtins into the client bundle, a
-  runtime 500 `tsc`/Vitest never catch. Split three ways: schema
-  (client-safe), persistence (db logic), actions (`"use server"`). Reference:
-  `src/lib/property-onboarding/{schema,submit-listing,actions}.ts`. T-3B02.
-- **`pnpm test -- <path>` does not reliably scope to one file** — use
-  `pnpm exec vitest run <path>` instead.
-- **Stop the dev server before `pnpm test`.** A concurrent `pnpm dev`
-  competes with Vitest's worker threads for CPU, causing flaky timeouts
-  (85s w/ failures → 40s w/ none, confirmed by A/B). Pool cap under
-  `process.env.VITEST` + `testTimeout: 15000` are secondary mitigations only.
-  Discovered T-3B02, root-caused Phase 4 planning.
-- **Multi-render test files need explicit `afterEach(() => cleanup())`**
-  (`@testing-library/react`) — not wired in automatically. Also: Vitest runs
-  test files in parallel against one real, non-transactional Postgres —
-  an unscoped query in one file can see another file's in-flight fixture
-  rows. Prefer mocking the query layer for page/component tests that don't
-  need to re-prove DB correctness a lower-level test covers. T-4C01.
-- **`reservation.guest_id`/`hotel.owner_id` have no `onDelete: cascade`** —
-  use the shared `deleteTestUsers` helper (cleans up both) for any test
-  creating either row, not bespoke local cleanup. Discovered live in T-6B02.
+  nearly every invocation (top-level `**Status:**`, `## Progress`). Always
+  re-open STATE.md after `update-state`/`finalize` and manually verify both.
+- **Server Actions must live in their own file**, AND a mutation must never
+  run as a side effect of a GET-triggered Server Component render. Split
+  three ways: schema (client-safe), persistence (db logic), actions
+  (`"use server"`). Reference: `src/lib/property-onboarding/*`. T-3B02/T-6C01.
+- **An UPDATE's own precondition must be atomic with the write** — fold it
+  into that UPDATE's `WHERE` clause + `returning().length`, not a separate
+  pre-transaction SELECT. Discovered T-6C01.
+- **`pnpm test -- <path>` does not reliably scope** — use `pnpm exec vitest
+  run <path>`. Stop the dev server before `pnpm test`. Running two
+  `pnpm exec <cmd>` processes concurrently can EPERM-fail on a shared
+  dependency install — run pnpm-wrapped commands sequentially.
+- **Vitest's parallel workers share one real, non-transactional Postgres** —
+  an unscoped query in one file can see another's in-flight rows. A test
+  file whose tests share one fixed fixture `guestId` must clean up
+  per-test (`afterEach`), not only in one file-level `afterAll` — an
+  earlier test's own rows for that id are otherwise still present later.
+  `reservation.guest_id`/`hotel.owner_id` have no `onDelete: cascade` — use
+  `deleteTestUsers` (cleans up both). T-4C01/T-6B02/T-6T01.
+- **shadcn `Button` rendered as a Link** (`render={<Link/>}`) needs
+  `nativeButton={false}` — Base UI's `Button` otherwise assumes its root DOM
+  node is a native `<button>`. Discovered T-6T01 (pre-existing since Phase 3,
+  unfixed there — cross-phase, left alone).
 
 ## Session Continuity
 

@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { hotel, reservation, room } from "@/lib/db/schema";
+import { calculateNightsAndAmount } from "./pricing";
 
 export type ReservationCheckoutDetail = {
 	id: string;
@@ -44,12 +45,11 @@ export async function getReservationForCheckout(
 
 	if (!row) return undefined;
 
-	// checkIn/checkOut are "YYYY-MM-DD" date-only strings; see
-	// initiatePaymentCore's doc comment for why this UTC-midnight subtraction
-	// is an exact, DST-safe night count with zero timezone risk.
-	const nights =
-		(new Date(row.checkOut).getTime() - new Date(row.checkIn).getTime()) /
-		86_400_000;
+	const { nights, amount } = calculateNightsAndAmount(
+		row.checkIn,
+		row.checkOut,
+		row.basePrice,
+	);
 
 	return {
 		id: row.id,
@@ -61,6 +61,6 @@ export async function getReservationForCheckout(
 		guestCount: row.guestCount,
 		status: row.status,
 		nights,
-		amount: Number(row.basePrice) * nights,
+		amount,
 	};
 }

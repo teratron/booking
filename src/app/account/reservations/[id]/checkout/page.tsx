@@ -3,7 +3,6 @@ import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getCurrentUser } from "@/lib/auth/session";
 import { formatDate } from "@/lib/format-date";
-import { initiatePaymentCore } from "@/lib/reservation/checkout";
 import { getReservationForCheckout } from "@/lib/reservation/checkout-query";
 import { SimulatePaymentButtons } from "./simulate-payment-buttons";
 
@@ -33,17 +32,13 @@ export default async function ReservationCheckoutPage({
 		redirect("/account/reservations");
 	}
 
-	// This page's own data-loading step, not a client-triggered mutation —
-	// persists a payment attempt reference for this reservation. The returned
-	// checkoutUrl is not used: the simulated provider's checkoutUrl points
-	// right back at this same page.
-	const initiateResult = await initiatePaymentCore(requestHeaders, id);
-	if (!initiateResult.success) {
-		// Defensive — the checks above should have already prevented every one
-		// of initiatePaymentCore's own error cases.
-		redirect("/account/reservations");
-	}
-
+	// Initiating a payment attempt is a mutation (it calls the payment
+	// provider and persists a reference) — it must not run as a side effect of
+	// this GET-triggered Server Component render (a forged cross-site request,
+	// aggressive Link prefetching, or a crawler could otherwise re-trigger it
+	// with no user gesture required). It runs instead behind
+	// `initiatePaymentAction`, invoked by SimulatePaymentButtons on the
+	// guest's explicit click, right before resolving the outcome.
 	const [t, accountT] = await Promise.all([
 		getTranslations("Checkout"),
 		getTranslations("AccountReservations"),
@@ -71,7 +66,7 @@ export default async function ReservationCheckoutPage({
 					{accountT("guestsLabel", { count: reservationDetail.guestCount })}
 				</p>
 				<p className="text-base font-semibold">
-					{t("amountLabel")} {reservationDetail.amount} ₴
+					{t("amountLabel", { amount: reservationDetail.amount.toFixed(2) })}
 				</p>
 			</div>
 

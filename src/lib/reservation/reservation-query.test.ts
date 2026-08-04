@@ -302,11 +302,21 @@ test("getGuestReservations returns only that guest's own rows, newest first", as
 	testReservationIds.push(otherGuestReservation.id);
 
 	const results = await getGuestReservations(guestId);
-	expect(results.map((r) => r.id)).toEqual([
+	// Scoped to this test's own two rows rather than the full result set —
+	// `guestId` is shared across every test in this file (a single fixed
+	// fixture user), so an earlier test's own reservations for the same guest
+	// (e.g. isRoomAvailable's, only cleaned up in the file-level afterAll, not
+	// per test) can legitimately still be present here too. Newest-first
+	// ordering only needs to hold among this test's own rows to be proven.
+	const ownResults = results.filter(
+		(r) => r.id === newerReservation.id || r.id === olderReservation.id,
+	);
+	expect(ownResults.map((r) => r.id)).toEqual([
 		newerReservation.id,
 		olderReservation.id,
 	]);
-	expect(results.every((r) => r.hotelName === "T6A01 Guest List Hotel")).toBe(
-		true,
-	);
+	expect(results.some((r) => r.id === otherGuestReservation.id)).toBe(false);
+	expect(
+		ownResults.every((r) => r.hotelName === "T6A01 Guest List Hotel"),
+	).toBe(true);
 });
