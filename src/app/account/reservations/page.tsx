@@ -1,7 +1,9 @@
 import { headers } from "next/headers";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth/session";
 import { formatDate } from "@/lib/format-date";
 import { getGuestReservations } from "@/lib/reservation/reservation-query";
@@ -61,6 +63,20 @@ export default async function AccountReservationsPage() {
 							<p className="text-sm text-muted-foreground">
 								{t("guestsLabel", { count: reservation.guestCount })}
 							</p>
+							{reservation.status === "pending" ? (
+								<div className="mt-3">
+									<Button
+										size="sm"
+										render={
+											<Link
+												href={`/account/reservations/${reservation.id}/checkout`}
+											/>
+										}
+									>
+										{t("payNowLabel")}
+									</Button>
+								</div>
+							) : null}
 						</li>
 					))}
 				</ul>

@@ -127,7 +127,18 @@
 		"statusPaymentFailed": "Оплата не прошла",
 		"statusCancelled": "Отменено",
 		"datesLabel": "{checkIn} — {checkOut}",
-		"guestsLabel": "{count} чел."
+		"guestsLabel": "{count} чел.",
+		"payNowLabel": "Оплатить"
+	},
+	"Checkout": {
+		"title": "Оплата бронирования",
+		"summaryTitle": "Детали бронирования",
+		"amountLabel": "К оплате",
+		"noticeText": "Тестовый режим оплаты — реальная оплата не выполняется. Выберите один из вариантов ниже, чтобы симулировать результат оплаты.",
+		"successButtonLabel": "Симулировать успешную оплату",
+		"failureButtonLabel": "Симулировать неудачную оплату",
+		"pendingButtonLabel": "Обработка платежа…",
+		"errorLabel": "Не удалось обработать платёж. Попробуйте ещё раз."
 	},
 	"Home": {
 		"heroTitle": "Найдите отель своей мечты",
