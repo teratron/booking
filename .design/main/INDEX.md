@@ -1,6 +1,6 @@
 # Workspace Specifications Registry
 
-**Version:** 2.0.0
+**Version:** 2.1.0
 **Status:** Active
 
 ## Overview
@@ -19,7 +19,13 @@ substantive new requirements and a number of open questions marked inline as `TB
 A second, line-by-line pass over `[TZ]` on the same date closed six coverage gaps and
 added three specifications: `l1-home-page.md` (§4/§5), `l1-public-api.md` (§19), and
 `l2-data-model.md` (§21/§98, including the client approval gate that precedes backend
-development).
+development). All 134 `[TZ]` sections are cited by at least one specification.
+
+**Stack change (2026-08-05):** the implementation stack was replaced with
+**Laravel 13 + Filament 5 + PostgreSQL/PostGIS + Redis**, self-hosted. The 19 Layer-1
+specifications are technology-neutral and unaffected; the three Layer-2 documents were
+rewritten. The previous Next.js/TypeScript implementation is preserved at git tag
+`v0.1.34` and is not a migration source.
 
 Grouping below is editorial (Foundation → Public → Owner/Operator → Commerce →
 Optional → Implementation); the registry itself is flat.
@@ -28,7 +34,7 @@ Optional → Implementation); the registry itself is flat.
 
 | File | Description | Status | Layer | Version |
 | --- | --- | --- | --- | --- |
-| [l1-platform-foundation.md](specifications/l1-platform-foundation.md) | Foundation. Cross-cutting invariants: delivery, reach, domain, governance, commerce, evolution, privacy; delivery stages | RFC | 1 | 1.3.0 |
+| [l1-platform-foundation.md](specifications/l1-platform-foundation.md) | Foundation. Cross-cutting invariants: delivery, reach, domain, governance, commerce, evolution, privacy; delivery stages | RFC | 1 | 1.4.0 |
 | [l1-feature-modules.md](specifications/l1-feature-modules.md) | Foundation. Administrator-toggleable capability modules; scoping ladder, dependencies, inertness, candidate modules | RFC | 1 | 0.2.0 |
 | [l1-localization.md](specifications/l1-localization.md) | Foundation. Countries, languages (launch: EN + RU), per-entity translation model, phased activation | RFC | 1 | 0.2.0 |
 | [l1-geography.md](specifications/l1-geography.md) | Foundation. Recursive territory hierarchy, per-country level vocabularies, landing pages | RFC | 1 | 0.1.0 |
@@ -48,9 +54,9 @@ Optional → Implementation); the registry itself is flat.
 | [l1-analytics.md](specifications/l1-analytics.md) | Commerce. Event model, aggregation, traffic sources, owner and operator reporting, privacy bounds | RFC | 1 | 0.2.0 |
 | [l1-public-api.md](specifications/l1-public-api.md) | Integration. Outward-facing REST contract, issued tokens, scoping, rate limits, documentation | RFC | 1 | 0.1.0 |
 | [l1-room-reservation.md](specifications/l1-room-reservation.md) | Optional module — **disabled by default**. Booking: calendars, requests, prepaid checkout | RFC | 1 | 1.0.0 |
-| [l2-data-model.md](specifications/l2-data-model.md) | Implementation. Consolidated table inventory, conventions, index plan, deletion rules, client approval gate | RFC | 2 | 0.1.0 |
-| [l2-tech-stack.md](specifications/l2-tech-stack.md) | Implementation. Stack selection, dependency audit, missing-capability ledger, deployment fork | RFC | 2 | 1.0.1 |
-| [l2-third-party-integrations.md](specifications/l2-third-party-integrations.md) | Implementation. Auth, back office, storage, mail, queue, maps, conditional payment | RFC | 2 | 1.0.0 |
+| [l2-data-model.md](specifications/l2-data-model.md) | Implementation. Consolidated table inventory, conventions, index plan, deletion rules, client approval gate | RFC | 2 | 0.2.0 |
+| [l2-tech-stack.md](specifications/l2-tech-stack.md) | Implementation. Laravel 13 + Filament 5 + PostgreSQL/PostGIS + Redis; package set, bespoke surface, self-hosted deployment | RFC | 2 | 2.0.0 |
+| [l2-third-party-integrations.md](specifications/l2-third-party-integrations.md) | Implementation. External services: storage, CDN, map tiles, SMTP, CAPTCHA, error tracking, dormant payment | RFC | 2 | 2.0.0 |
 
 ## Rename Map (2026-08-05)
 

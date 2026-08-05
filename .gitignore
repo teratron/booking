@@ -5,6 +5,7 @@
 # IDE
 .vscode/
 .idea/
+*.iml
 
 # OS generated files
 .DS_Store
@@ -14,12 +15,10 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
+desktop.ini
 
 # Logs
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # Runtime data
 pids
@@ -39,39 +38,68 @@ cache/
 .references/
 .playwright-mcp/
 
-# Build outputs
-dist/
-build/
-*.min.js
-*.min.css
-
-# Node / pnpm
-node_modules/
-.pnpm-store/
-.npm/
-*.tsbuildinfo
-# Note: IS committed (reproducible installs).
-#pnpm-lock.yaml
-
-# Next.js
-.next/
-out/
-next-env.d.ts
-
-# Vercel
-.vercel/
-
-# Vite (isolated tooling only — not the primary app bundler)
-.vite/
-*.timestamp-*.mjs
-
-# fallow (codebase intelligence) — ignore local cache only; fallow-baselines/ ARE committed.
-.fallow/
-
 # Editor backup files
 *.bak
 *.tmp
 
+# --- PHP / Composer ----------------------------------------------------------
+/vendor/
+auth.json
+# Note: composer.lock IS committed (reproducible installs).
+
+# --- Laravel -----------------------------------------------------------------
+/storage/*.key
+/storage/pail
+/storage/app/public/*
+!/storage/app/public/.gitignore
+/storage/framework/cache/*
+!/storage/framework/cache/.gitignore
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitignore
+/storage/framework/testing/*
+!/storage/framework/testing/.gitignore
+/storage/framework/views/*
+!/storage/framework/views/.gitignore
+/storage/logs/*
+!/storage/logs/.gitignore
+/bootstrap/cache/*
+!/bootstrap/cache/.gitignore
+/public/storage
+/public/hot
+
+# Backups — spatie/laravel-backup writes here; copies belong off-server per the
+# client specification, never in the repository.
+/storage/app/backups/
+/storage/app/private/backups/
+*.sql
+*.sql.gz
+*.dump
+
+# --- Frontend build (Vite asset pipeline) ------------------------------------
+node_modules/
+.pnpm-store/
+.npm/
+/public/build/
+dist/
+build/
+*.min.js
+*.min.css
+*.tsbuildinfo
+# Note: package-lock / pnpm-lock IS committed.
+
+# --- Quality tooling caches --------------------------------------------------
+.phpunit.result.cache
+.phpunit.cache/
+/.pint.cache
+/.php-cs-fixer.cache
+/.phpstan.cache/
+/phpstan.neon.local
+/.rector.cache
+
+# --- Local dev environments --------------------------------------------------
+/.vagrant
+Homestead.json
+Homestead.yaml
 .gemini/
 gha-creds-*.json
 

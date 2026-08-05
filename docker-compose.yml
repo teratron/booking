@@ -1,25 +1,71 @@
 services:
   postgres:
-    image: postgres:18-alpine
+    # PostGIS bundle rather than plain postgres: the catalog needs bbox and
+    # radius queries for the map, "nearby objects", and the distance filters.
+    image: postgis/postgis:18-3.5-alpine
     restart: unless-stopped
     environment:
-      DATABASE_USER: ${DATABASE_USER:-booking}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-booking}
-      DATABASE_NAME: ${DATABASE_NAME:-booking}
+      POSTGRES_USER: ${DB_USERNAME:-booking}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-booking}
+      POSTGRES_DB: ${DB_DATABASE:-booking}
     ports:
       # Host port 5433, not 5432 — this machine already runs a native
-      # PostgreSQL 18 Windows service bound to 5432.
+      # PostgreSQL Windows service bound to 5432.
       - "5433:5432"
     volumes:
       # postgres:18+ images store data under major-version-specific
       # subdirectories of /var/lib/postgresql (not .../data directly) —
       # https://github.com/docker-library/postgres/pull/1259
       - postgres-data:/var/lib/postgresql
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-booking} -d ${DATABASE_NAME:-booking}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-booking} -d ${DB_DATABASE:-booking}"]
       interval: 5s
       timeout: 5s
       retries: 10
 
+  redis:
+    # Cache, session store, and the queue broker behind Horizon.
+    image: redis:8-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    # S3-compatible object storage for media. Keeps the storage interface
+    # identical between local development and production, so the provider
+    # (Cloudflare R2 / Backblaze B2 / self-hosted MinIO) stays a configuration
+    # change rather than a migration.
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:-booking}
+      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:-booking-secret}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+
+  mailpit:
+    # Local SMTP sink — notification templates are developed against it
+    # without sending real mail.
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
 volumes:
   postgres-data:
+  redis-data:
+  minio-data:

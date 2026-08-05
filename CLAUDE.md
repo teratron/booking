@@ -1,184 +1,134 @@
 # Project Instructions
 
+International tourism portal-directory for Moldova, Ukraine, and Georgia.
+**Not a booking system** — it publishes objects and hands visitors directly to the
+owner's phone or messenger. Revenue is paid placement sold to object owners.
+
 ## Tech Stack
 
-- **Framework**: Next.js (App Router) — Server Components by default; Route Handlers / Server Actions cover backend logic, no separate API service.
-- **Language**: TypeScript, strict mode. No `any` on public surfaces.
-- **Package Manager**: pnpm.
-- **Styling / UI**: Tailwind CSS + shadcn/ui.
-- **Data**: PostgreSQL via Drizzle ORM — schema-as-code, no separate migration DSL.
-- **Auth**: Better Auth (Drizzle adapter) — guest / owner / admin roles.
-- **Payments**: Fondy (marketplace split payments to hotel owners); WayForPay as the single-recipient alternative if payouts stay manual.
-- **Admin / Moderation**: React-admin (Drizzle adapter) — auto-generated resource CRUD + custom approve/reject actions.
-- **Lint / Format**: Biome.
-- **Codebase Intelligence**: Fallow — dead code, duplication, circular dependencies, architecture-boundary and design-system-drift detection. Dev-time only, no runtime footprint.
+- **Language**: PHP 8.4+, `declare(strict_types=1)` in every file.
+- **Framework**: Laravel 13 — monolith. Blade + Livewire for the public site; no separate frontend application.
+- **Admin & owner cabinet**: Filament 5 — two panels from one toolkit (`/admin` for staff, `/cabinet` for object owners).
+- **Database**: PostgreSQL 18 + PostGIS. Extensions: `postgis`, `pg_trgm`, `unaccent`.
+- **Cache / queue / session**: Redis 8; queues via Laravel Horizon.
+- **Object storage**: S3-compatible (MinIO locally, Cloudflare R2 / Backblaze B2 in production).
+- **Frontend**: Blade + Livewire 3 + Alpine.js + Tailwind CSS 4, bundled by Vite.
+- **Maps**: MapLibre GL JS with a paid or self-hosted tile provider.
+- **Package manager**: Composer (PHP), pnpm (asset pipeline only).
+- **Quality**: Pest (tests), PHPStan level 8 via Larastan, Laravel Pint (formatting), Rector (upgrades).
+
+Always install the latest stable release of every package; do not pin back a major
+version as a precaution.
+
+## Required Packages
+
+Each maps to a specification requirement — do not hand-build what these already cover.
+
+| Package | Covers |
+| --- | --- |
+| `filament/filament` | Admin panel and owner cabinet |
+| `spatie/laravel-permission` | Roles and permissions |
+| `astrotomic/laravel-translatable` | Per-entity translations in **separate tables** |
+| `spatie/laravel-medialibrary` | Media upload, conversions, thumbnails, ordering |
+| `owen-it/laravel-auditing` | Action journal with old/new values |
+| `spatie/laravel-backup` | Scheduled backups, retention, integrity checks |
+| `spatie/laravel-sitemap` | Sitemap generation |
+| `staudenmeir/laravel-adjacency-list` | Recursive territory hierarchy (CTE) |
+| `laravel/sanctum` | API tokens |
+| `laravel/horizon` | Queue monitoring |
+| `laravel/scout` | Search abstraction (Postgres driver first, Typesense later) |
+| `pragmarx/google2fa-laravel` | Two-factor authentication |
+| Filament import/export actions | XLSX / CSV import and export |
 
 ## Project Structure
 
 ```plaintext
-src/
-├── app/                  # Next.js App Router routes
-│   ├── (marketing)/      # home, catalog, hotel/[id], blog, blog/[id]
-│   ├── add-hotel/
-│   ├── admin/            # React-admin mount point
-│   └── api/              # Route Handlers where a Server Action isn't a fit
-├── components/           # shadcn/ui-based shared components
-├── lib/
-│   ├── db/               # Drizzle schema + client
-│   ├── auth/             # Better Auth config
-│   └── i18n/
-└── styles/
-```
+app/
+├── Models/                 # Eloquent models
+├── Filament/
+│   ├── Admin/              # Staff panel: resources, pages, widgets
+│   └── Cabinet/            # Owner panel: resources scoped to the owner
+├── Livewire/               # Public-site interactive components (catalog, map, filters)
+├── Services/               # Business logic — ranking, bumps, banner targeting, statistics
+├── Policies/               # Authorization, including geo/category-scoped rules
+├── Jobs/                   # Queued work: expiry sweeps, notifications, rollups
+├── Console/Commands/       # Scheduled entry points
+└── Support/                # Cross-cutting helpers
 
-Single Next.js app for now — no `packages/` workspace split until a second deployable surface (e.g. a separate admin app or a native client) actually exists.
+resources/
+├── views/                  # Blade templates (public site)
+├── lang/                   # Interface translation catalogs
+├── css/  js/               # Tailwind + Alpine, bundled by Vite
+
+database/
+├── migrations/
+├── factories/
+└── seeders/                # Registries: languages, countries, territory levels,
+                            # object types, amenities, tiers, roles, permissions
+
+docker/                     # Local infrastructure (Postgres init SQL, etc.)
+.design/                    # Specifications — read-only for implementation work
+```
 
 ## Implementation Guidelines
 
-- Business logic lives in `lib/`, not scattered across route handlers or components — components stay presentation-focused.
-- Externalize all user-facing strings (localization); Russian is the primary locale, but no template or data model may assume it's the only one.
-- Reach for a Client Component only where interactivity requires it; default to Server Components.
+- **Business logic lives in `app/Services/`**, not in controllers, Livewire components,
+  Filament resources, or models. Models hold relations, casts, and scopes only.
+- **Authorization is server-side, always.** Hiding a Filament action or a Blade block is
+  a usability affordance and never an access control. Permissions may be scoped to a
+  country, territory subtree, or object category — enforce that in Policies.
+- **Every user-facing string is translatable.** No literal copy in Blade, Livewire, or
+  Filament labels. Entity text lives in translation tables, not JSON columns.
+- **Never hard-code the language or country count.** Both are runtime registries.
+- **Catalog ordering is placement-tier first.** A lower-tier object must never outrank a
+  higher-tier one except by an explicit administrator pin. Do not "improve" this into
+  relevance-first ordering.
+- **Soft delete by default** for objects, users, news, promotions, banners, articles.
+  Filter in a global scope, not per query.
+- **Scheduled work belongs in Jobs**, dispatched by the scheduler — never executed
+  during a web request.
+- Prefer Filament's own abstractions (resources, relation managers, actions, widgets)
+  over custom pages. Reach for a custom page only when the resource model genuinely
+  does not fit.
 
-## Rules for Using shadcn MCP Server
+## Filament Conventions
 
-1. **Always Check Registry First**
-   - Before creating custom components, search the registries for existing solutions.
-   - Use `mcp_shadcn_search_items_in_registries` to find relevant components.
-   - Check `mcp_shadcn_list_items_in_registries` to see all available options.
+- One panel provider per audience: `AdminPanelProvider` and `CabinetPanelProvider`.
+- The cabinet panel scopes **every** resource query to the authenticated owner. Enforce
+  it in the resource's base query and in the Policy — never in the UI alone.
+- Register permissions as Filament resource policies, not as inline `visible()` closures.
+- Moderation uses record versions: the published record stays untouched while a pending
+  revision exists, so a rejected edit can never damage a live page.
+- Bulk actions require a confirmation naming the affected record count.
 
-2. **Component Discovery Workflow**
-   - Start with semantic search using `mcp_shadcn_search_items_in_registries`.
-   - View detailed component info with `mcp_shadcn_view_items_in_registries`.
-   - Get usage examples with `mcp_shadcn_get_item_examples_from_registries`.
-   - Use `mcp_shadcn_get_add_command_for_items` to get installation commands.
+## Specification Layer
 
-3. **Component Installation**
-   - Use the provided add commands from the registry.
-   - Ensure components are properly imported and configured.
-   - Do not install example- components directly, use them as reference to create your components.
-   - Follow the component's usage examples for proper implementation.
-   - Do not overwrite ui or registry/ui components unless explicitly requested.
+`.design/` holds the specifications this project implements. Treat them as the source
+of truth for behaviour, and as **read-only** during implementation work — they change
+through the `/magic.spec` workflow, not by editing files directly.
 
-## Rules for Using shadcn-admin-kit Registry
-
-- The `shadcn-admin-kit` registry mainly consists of a single block component called `admin`, which will install the `<Admin>` component along with all the necessary components to create an admin (such as `<List>`, `<Edit>`, `<DataTable>`, `<TextField>`, `<TextInput>`, etc.).
-- The `shadcn-admin-kit` registry contains only the UI components, and relies on `ra-core`, a headless admin framework for React, to provide the logic and data fetching capabilities. For instance, the `<Resource>` component comes from `ra-core`.
-- If asked to bootstrap a new Admin, you can use the `example-admin` component from the `shadcn-admin-kit` registry to get a working example, configured with a sample dataProvider, which you can use as basis.
-- Shadcn Admin Kit requires a specific TS config to work: the `verbatimModuleSyntax` option must be set to `false`.
-
-### Fixing TS Config for Admin Kit
-
-When initializing a new Admin:
-Set the `verbatimModuleSyntax` option to `false` in `tsconfig.app.json`:
-
-```json
-{
-  // ...
-  "compilerOptions": {
-    // ...
-    // (keep the other options)
-    // ...
-    "verbatimModuleSyntax": false
-  }
-}
-```
-
-## Rules for Using the `<Admin>` Component
-
-### Client-Side Component Requirement
-
-The `<Admin>` component from `shadcn-admin-kit` is a client-side component. Therefore, it must be either:
-
-- Used in a Single Page Application (SPA), for instance created with Vite.
-- Marked with the `"use client"` directive if used in a Server-Side Rendered (SSR) application, for instance a Next.js app.
-
-### Root Component Setup
-
-The entry point of the admin page is the `<Admin>` component. Specify a Data Provider to let the Admin know how to fetch data from the API.
-
-If no Data Provider is specified, use `ra-data-json-server` and JSONPlaceholder as endpoint: `https://jsonplaceholder.typicode.com/`.
-
-Install `ra-data-json-server`:
-
-```bash
-npm install ra-data-json-server
-```
-
-Example usage:
-
-```tsx
-"use client";
-
-import { Admin } from "@/components/admin/admin";
-import jsonServerProvider from "ra-data-json-server";
-
-const dataProvider = jsonServerProvider(
-  "https://jsonplaceholder.typicode.com/",
-);
-
-export const App = () => (
-  <Admin dataProvider={dataProvider}>{/* Resources go here */}</Admin>
-);
-```
-
-### Resource Declarations
-
-Declare the CRUD routes of the application using `<Resource>` from `ra-core`.
-For each resource, specify `name` and the `list`, `edit`, `create`, and `show` components.
-
-Example with guessers:
-
-```tsx
-"use client";
-
-import { Resource } from "ra-core";
-import jsonServerProvider from "ra-data-json-server";
-import { Admin } from "@/components/admin/admin";
-import { ListGuesser } from "@/components/admin/list-guesser";
-import { ShowGuesser } from "@/components/admin/show-guesser";
-import { EditGuesser } from "@/components/admin/edit-guesser";
-
-const dataProvider = jsonServerProvider(
-  "https://jsonplaceholder.typicode.com/",
-);
-
-export const App = () => (
-  <Admin dataProvider={dataProvider}>
-    <Resource
-      name="posts"
-      list={ListGuesser}
-      edit={EditGuesser}
-      show={ShowGuesser}
-    />
-  </Admin>
-);
-```
+Never reference specification artefacts from product code: no task IDs, no phase
+names, no `.design/…` paths, no spec file names in comments, identifiers, or strings.
+If design rationale matters at a code site, restate it in plain language.
 
 ## Verification
 
-Before marking tasks complete, run and verify the following quality checks:
+Run and verify before marking any task complete:
 
-- `pnpm lint` / `pnpm format` (Biome) — zero lint or formatting errors.
-- `tsc --noEmit` — zero TypeScript type errors.
-- `fallow audit --changed-since <base>` — verify no new dead code, duplication, circular dependencies, or architecture-boundary violations.
-- Project test suite — all automated tests pass.
+- `vendor/bin/pint --test` — zero formatting violations.
+- `vendor/bin/phpstan analyse` — level 8, zero errors.
+- `php artisan test` — full suite green.
+- `php artisan migrate:fresh --seed` on a scratch database — migrations and seeders
+  apply cleanly from empty.
 
 ## Completion Protocol (Mandatory Checklist)
 
-Before declaring any task or work item complete, the agent MUST explicitly verify every item on this checklist:
+Before declaring any task complete, verify every item:
 
-- [ ] **Quality Gates & Verification**:
-  - [ ] `pnpm lint` and `pnpm format` run with zero errors.
-  - [ ] `tsc --noEmit` completes without type errors.
-  - [ ] `fallow audit` passes with no architectural violations or dead code regressions.
-  - [ ] All unit and integration tests pass cleanly.
-- [ ] **Language Policy**:
-  - [ ] All code identifiers, comments, docstrings, git commit messages, and documentation files are strictly in English.
-  - [ ] All user-facing chat interactions, explanations, and planning discussions are in Russian.
-- [ ] **Architecture & Design Principles**:
-  - [ ] Business logic is kept within `lib/` and not leaked into presentation components or route handlers.
-  - [ ] Server Components are used by default; Client Components (`"use client"`) are used only when interactive state is required.
-  - [ ] UI components leverage shadcn/ui and registry standards without arbitrary overrides or duplicate implementations.
-  - [ ] User-facing strings are properly externalized for i18n localization.
-  - [ ] No design/spec-layer internal references or temporary debug hooks are leaked into committed source files.
-- [ ] **Formatting Rules**:
-  - [ ] No horizontal rules (`---`) are used within document bodies except in footers if strictly required.
+- [ ] **Quality gates**: Pint, PHPStan level 8, Pest suite, and a clean `migrate:fresh --seed` all pass.
+- [ ] **Language policy**: all code, identifiers, comments, documentation, and commit messages in English; all chat interaction in Russian.
+- [ ] **Architecture**: business logic in `app/Services/`; models thin; authorization enforced in Policies; no logic in Filament resources or Blade.
+- [ ] **Localization**: no hard-coded user-facing strings; no hard-coded language or country counts.
+- [ ] **Ordering**: placement-tier precedence preserved wherever objects are listed.
+- [ ] **Specification containment**: no `.design/` references, task IDs, or spec file names in product code.
+- [ ] **Formatting**: no horizontal rules (`---`) in document bodies except in a footer.

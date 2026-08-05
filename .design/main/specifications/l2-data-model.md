@@ -1,6 +1,6 @@
 # Data Model
 
-**Version:** 0.1.0
+**Version:** 0.2.0
 **Status:** RFC
 **Layer:** implementation
 **Implements:** l1-platform-foundation.md
@@ -19,7 +19,7 @@ before backend work begins.
 ## Related Specifications
 
 - [l1-platform-foundation.md](l1-platform-foundation.md) - §5.2 entity relationship graph this spec makes concrete.
-- [l2-tech-stack.md](l2-tech-stack.md) - §5.4 modelling decisions (materialized path, JSONB attributes, translation tables, partitioning) this spec applies.
+- [l2-tech-stack.md](l2-tech-stack.md) - §5.3 modelling decisions (recursive-CTE hierarchy, JSONB attributes, translation tables) and §5.5 package set this spec applies.
 - [l1-localization.md](l1-localization.md) - Translation table contract.
 - [l1-geography.md](l1-geography.md) - Territory hierarchy.
 - [l1-object-catalog.md](l1-object-catalog.md) - Object type registry and ordering indexes.
@@ -55,15 +55,15 @@ spec states only its own tables, and they are exactly where inconsistency creeps
 
 ## 2. Constraints & Assumptions
 
-- The current implemented schema (`src/lib/db/schema.ts`, ~15 tables) was built for the
-  superseded hotel-booking product. It is a **subset with a different shape**, not a
-  starting point to extend incrementally
-  ([l2-tech-stack.md](l2-tech-stack.md) §6.3).
+- [MODIFIED — v0.2.0] There is **no schema to migrate from**. The previous
+  implementation was built for the superseded hotel-booking product on a different
+  stack and is preserved at git tag `v0.1.34`; the schema below is created from empty
+  ([l2-tech-stack.md](l2-tech-stack.md) §6.2).
 - This spec fixes the **inventory, relationships, conventions, and rules**. Column-level
   types and constraints per table are the deliverable that follows it and that §5.7
   gates.
-- Modelling decisions are inherited from [l2-tech-stack.md](l2-tech-stack.md) §5.4 and
-  are not re-litigated here.
+- Modelling decisions are inherited from [l2-tech-stack.md](l2-tech-stack.md) §5.3 and
+  the package set in §5.5; they are not re-litigated here.
 - <!-- TBD: [TZ] §98 requires client approval of the final structure. Neither the
      approver, the review format, nor the turnaround is stated. This is a project-
      management question that must be answered before backend scheduling, since it
@@ -78,14 +78,16 @@ tables.
 
 | Convention | Applies to | Shape |
 | --- | --- | --- |
-| Surrogate key | Every table | UUID primary key, except auth tables which follow Better Auth's text ids |
-| Timestamps | Every table | `created_at`, `updated_at`, not null, defaulted |
-| Soft deletion | Objects, users, news, promotions, banners, articles, reviews | `deleted_at` nullable + `deleted_by`; filtered in the shared query layer |
+| Surrogate key | Every table | `bigIncrements` primary key; ULID on records exposed in public URLs |
+| Timestamps | Every table | `created_at`, `updated_at` — Eloquent defaults |
+| Soft deletion | Objects, users, news, promotions, banners, articles, reviews | `deleted_at` via Eloquent `SoftDeletes`, plus `deleted_by`; filtered by the trait's global scope |
 | Moderation | Externally-authored content | `status` (pending / published / rejected), `moderation_reason` |
 | Ordering | Every administrator-orderable registry | `display_order` integer |
 | Activation | Every registry | `is_active` boolean |
-| Translation | Every content-bearing entity | Sibling `*_translation` table, unique on `(entity_id, language_id)` |
+| Translation | Every content-bearing entity | Sibling `*_translations` table, unique on `(entity_id, locale)` — `astrotomic/laravel-translatable` conventions |
 | Scope denormalization | Object, banner, news, promotion | `country_id` carried directly for query performance ([l1-geography.md](l1-geography.md) §5.1) |
+| Spatial | Object, territory | `geography(Point, 4326)` column with a GiST index, alongside plain `latitude`/`longitude` for display |
+| Audit | Every table under `[TZ]` §91 | `owen-it/laravel-auditing` writes to one polymorphic `audits` table |
 
 ### 5.2 Table Inventory
 
@@ -94,33 +96,45 @@ Grouped by owning specification. Roughly fifty tables.
 **Identity & access** — [l1-back-office.md](l1-back-office.md), [l1-public-api.md](l1-public-api.md)
 
 ```plaintext
-user · session · account · verification        (Better Auth core)
-role · permission · role_permission
-user_role_grant        (role + scope kind + scope reference)
-object_grant           (per-object rights per [TZ] §72)
-api_client · api_token
+users · sessions · password_reset_tokens       (Laravel core)
+two_factor_secrets                             ([TZ] §17, §100)
+roles · permissions · model_has_roles
+  · model_has_permissions · role_has_permissions   (spatie/laravel-permission)
+role_scopes            (scope kind + reference — [TZ] §121, this project's addition)
+object_user            (per-object rights and staff — [TZ] §72)
+personal_access_tokens (laravel/sanctum — [TZ] §19)
+api_clients            (token owner metadata, rate limit, scope)
 ```
+
+`spatie/laravel-permission` supplies roles and permissions but **not** `[TZ]` §121's
+scoping of a permission to a country, territory subtree, or object category.
+`role_scopes` is this project's addition, consumed by Policies
+([l2-tech-stack.md](l2-tech-stack.md) §5.6).
 
 **Localization** — [l1-localization.md](l1-localization.md)
 
 ```plaintext
-language · country · country_translation
+languages · countries · country_translations
 ```
 
 **Geography** — [l1-geography.md](l1-geography.md)
 
 ```plaintext
-territory              (parent_id, country_id, level_id, path, coordinates)
-territory_level        (per-country vocabulary)
-territory_translation
+territories            (parent_id, country_id, level_id, geom, latitude, longitude)
+territory_levels       (per-country vocabulary)
+territory_translations
 ```
+
+Hierarchy traversal uses `staudenmeir/laravel-adjacency-list`, which expresses
+ancestor and descendant relations as recursive CTEs on the `parent_id` column —
+so no materialized-path column is maintained by hand.
 
 **Taxonomy** — [l1-object-catalog.md](l1-object-catalog.md), [l1-object-profile.md](l1-object-profile.md)
 
 ```plaintext
-object_type · object_type_translation
-amenity · amenity_translation · amenity_group
-contact_channel_type · contact_channel_type_translation
+object_types · object_type_translations
+amenities · amenity_translations · amenity_groups
+contact_channel_types · contact_channel_type_translations
 ```
 
 **Object** — [l1-object-profile.md](l1-object-profile.md), [l1-object-onboarding.md](l1-object-onboarding.md)
@@ -134,85 +148,88 @@ SEO text move to `object_translation` per §5.1; placement fields move to
 `object_placement` so a package change does not rewrite the object row.
 
 ```plaintext
-object                 (owner, type, territory, country, coordinates,
+objects                (owner, type, territory, country, geom, latitude, longitude,
                         attributes JSONB, availability fields, moderation, soft delete)
-object_translation
-object_amenity · room_amenity
-contact_channel
-media_asset            (photo · video · panorama · logo · document)
-media_asset_translation    (captions)
-room · room_translation
-price                  (period-aware, per object or room)
-review
-availability_history
-favorite               (§5.5)
+object_translations
+amenity_object · amenity_room
+contact_channels
+media                  (spatie/laravel-medialibrary — polymorphic, with conversions)
+rooms · room_translations
+prices                 (period-aware, per object or room)
+reviews
+availability_histories
+favorites              (§5.5)
 ```
+
+Media uses Media Library's single polymorphic `media` table rather than per-entity
+asset tables; conversions (thumbnail, card, gallery) are declared on the model and
+generated on the queue, satisfying `[TZ]` §33's automatic optimization.
 
 **Placement & finance** — [l1-placement-monetization.md](l1-placement-monetization.md)
 
 ```plaintext
-placement_tier · placement_tier_translation
-placement_package · placement_package_translation
-object_placement       (current: package, dates, pinned position, internal priority)
-placement_history      (append-only, with financial fields)
-bump_event             (scoped: territory or category)
-financial_record       ([TZ] §122 ledger)
+placement_tiers · placement_tier_translations
+placement_packages · placement_package_translations
+object_placements      (current: package, dates, pinned position, internal priority)
+placement_histories    (append-only, with financial fields)
+bump_events            (scoped: territory or category)
+financial_records      ([TZ] §122 ledger)
 ```
 
 **Advertising** — [l1-advertising.md](l1-advertising.md)
 
 ```plaintext
-banner · banner_translation
-banner_slot
-banner_target          (many-to-many: territories, categories, languages)
-promotion_label · promotion_label_translation
-object_promotion
+banners · banner_translations
+banner_slots
+banner_targets         (many-to-many: territories, categories, languages)
+promotion_labels · promotion_label_translations
+object_promotions
 ```
 
 **Content** — [l1-content-publishing.md](l1-content-publishing.md)
 
 ```plaintext
-article · article_translation
-article_category · article_category_translation · article_tag
-article_object · article_territory      (many-to-many)
-news_item · news_translation
-promotion · promotion_translation
+articles · article_translations
+article_categories · article_category_translations · article_tags
+article_object · article_territory      (many-to-many pivots)
+news_items · news_translations
+promotions · promotion_translations
 ```
 
 **Governance** — [l1-moderation-governance.md](l1-moderation-governance.md)
 
 ```plaintext
-moderation_request     (previous data, proposed data, decision, reason)
-audit_entry            (append-only; INSERT-only privileges)
+moderation_requests    (previous data, proposed data, decision, reason)
+audits                 (owen-it/laravel-auditing — polymorphic, INSERT-only privileges)
 ```
 
 **Notifications** — [l1-notifications.md](l1-notifications.md)
 
 ```plaintext
-notification · notification_type · notification_channel · notification_dispatch
-notification_template  (per language, per channel)
+notifications · notification_types · notification_channels · notification_dispatches
+notification_templates (per locale, per channel)
 ```
 
 **Analytics** — [l1-analytics.md](l1-analytics.md)
 
 ```plaintext
-stat_event             (date-partitioned, short retention)
-stat_daily             (aggregate, long retention)
+stat_events            (date-partitioned, short retention)
+stat_dailies           (aggregate, long retention)
 ```
 
 **Platform** — [l1-feature-modules.md](l1-feature-modules.md), [l1-seo.md](l1-seo.md), [l1-home-page.md](l1-home-page.md)
 
 ```plaintext
-module · module_setting
-setting                ([TZ] §130 portal settings)
-redirect               (slug changes, merges, archived content)
-home_block_selection   (per-country curated selections)
+modules · module_settings
+settings               ([TZ] §130 portal settings)
+redirects              (slug changes, merges, archived content)
+home_block_selections  (per-country curated selections)
 ```
 
 **Booking (dormant)** — [l1-room-reservation.md](l1-room-reservation.md)
 
 ```plaintext
-reservation · room_availability · booking_settings
+reservations · room_availabilities · booking_settings
 ```
 
 These three exist in the schema and carry no rows until the module is activated
@@ -244,20 +261,21 @@ article      n ── n  object · territory
 
 | Requirement (`[TZ]` §94) | Index |
 | --- | --- |
-| Country, region, city, resort | `object(country_id, territory_id)`; `territory(path)` GIN for subtree scans |
-| Object type | `object(object_type_id)` |
-| Package | `object_placement(package_id)` |
-| Publication status | `object(status) WHERE deleted_at IS NULL` (partial) |
-| Moderation status | `moderation_request(decision, submitted_at)` |
-| Bump date | `bump_event(object_id, scope_kind, scope_id, occurred_at DESC)` |
-| Package expiry | `object_placement(end_date)` |
-| Object name | `object_translation(language_id, name) gin_trgm_ops` |
-| Page address (slug) | `object_translation(language_id, slug)` unique; same per translated entity |
-| Publication date | `news_item(published_at)`, `article(published_at)`, `promotion(start, end)` |
-| Language | Every `*_translation(entity_id, language_id)` unique |
+| Country, region, city, resort | `objects(country_id, territory_id)`; `territories(parent_id)` for CTE traversal |
+| Object type | `objects(object_type_id)` |
+| Package | `object_placements(placement_package_id)` |
+| Publication status | `objects(status) WHERE deleted_at IS NULL` (partial) |
+| Moderation status | `moderation_requests(decision, created_at)` |
+| Bump date | `bump_events(object_id, scope_type, scope_id, occurred_at DESC)` |
+| Package expiry | `object_placements(ends_at)` |
+| Object name | `object_translations(locale, name) gin_trgm_ops` |
+| Page address (slug) | `object_translations(locale, slug)` unique; same per translated entity |
+| Publication date | `news_items(published_at)`, `articles(published_at)`, `promotions(starts_at, ends_at)` |
+| Language | Every `*_translations(entity_id, locale)` unique |
 | Catalog ordering | Composite covering `(country_id, territory_id, object_type_id, status)` supporting the §5.2 ordering in [l1-placement-monetization.md](l1-placement-monetization.md) |
-| Filterable attributes | GIN on `object.attributes` for the type-declared filterable keys |
-| Statistics | `stat_daily(date, subject_id, kind)`; `stat_event` partitioned by date |
+| Filterable attributes | GIN on `objects.attributes` for the type-declared filterable keys |
+| **Spatial** | GiST on `objects.geom` and `territories.geom` — map bbox, radius, and nearby-object queries (`[TZ]` §7, §10, §15) |
+| Statistics | `stat_dailies(date, subject_id, kind)`; `stat_events` partitioned by date |
 
 ### 5.5 Favorites [`[TZ]` §8]
 
@@ -320,25 +338,25 @@ Deliverables required before that approval:
 ☐ Indexes                        (§5.4 — complete at requirement level)
 ☐ Deletion rules                 (§5.6 — complete)
 ☐ Archival rules                 (§5.6 — complete)
-☐ Backup scheme                  ([TZ] §97; blocked on the deployment fork,
-                                  l2-tech-stack.md §5.9)
+☑ Backup scheme                  ([TZ] §97 — spatie/laravel-backup to an
+                                  S3-compatible destination separate from the
+                                  application server, l2-tech-stack.md §5.10)
 ```
 
-Four of nine are complete at this spec's granularity; three require column-level
-elaboration; one is blocked on an unrelated decision. Stating the split plainly is
-more useful than a claim of completeness — the column-level work is bounded and
-mechanical once the inventory is agreed, and the backup scheme cannot be written at
-all until the deployment target is chosen.
+[MODIFIED — v0.2.0] Five of nine are complete at this spec's granularity; three
+require column-level elaboration. The backup item is no longer blocked — the
+deployment target resolved to self-hosted with the stack decision.
 
-**Sequencing consequence**: the deployment fork
-([l2-tech-stack.md](l2-tech-stack.md) §5.9) is on the critical path for this gate, and
-this gate is on the critical path for all backend work.
+**Sequencing consequence**: this gate is now the *only* thing on the critical path
+ahead of backend work, and it is unblocked. The remaining column-level elaboration is
+bounded and mechanical once the inventory is agreed with the client.
 
 ## 6. Implementation Notes
 
-1. Create the schema in one migration pass. The current schema is a different-shaped
-   subset ([l2-tech-stack.md](l2-tech-stack.md) §6.3), and incremental extension
-   would produce a hybrid of two product models.
+1. Create the schema in one migration pass, from empty. Group migrations by domain
+   (identity, localization, geography, taxonomy, object, placement, advertising,
+   content, governance, notifications, analytics, platform, booking) so the ordering
+   is legible and `migrate:fresh --seed` is the standard verification.
 2. Create translation tables alongside their parents, never afterwards
    ([l1-localization.md](l1-localization.md) §6.1) — regardless of how many languages
    are active at launch.
@@ -385,3 +403,4 @@ failure the client wrote the clause to prevent.
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1.0 | 2026-08-05 | Initial draft. Closes the `[TZ]` §21/§98 gap found during the second requirements pass: consolidated table inventory, cross-cutting conventions, index plan, deletion and archival rules, the favorites model, and the client approval gate that precedes backend development. |
+| 0.2.0 | 2026-08-05 | Minor: realigned to the approved Laravel stack — Eloquent/Filament table naming, spatie Media Library and Auditing tables, spatie/laravel-permission plus this project's `role_scopes` addition, adjacency-list traversal in place of a materialized path, and PostGIS `geom` columns with GiST indexes. Marked the backup-scheme deliverable complete: the deployment fork it depended on is resolved. |

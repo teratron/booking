@@ -1,6 +1,6 @@
 # Platform Foundation
 
-**Version:** 1.3.0
+**Version:** 1.4.0
 **Status:** RFC
 **Layer:** concept
 
@@ -74,11 +74,12 @@ specs from each carrying their own private theory of what the product is.
   extensibility invariant in §3. No specification, schema, or template may encode
   either count: the reduced launch set is a content decision, and the difference
   between two active languages and five must be visible only in data.
-- <!-- TBD: [TZ] §22 lists Redis, queues, cron, and file storage as server
-     requirements, and §97/§131 require database and media backups with a restore
-     procedure. Whether the portal is self-hosted (VPS/Docker) or deployed to a
-     managed platform is unresolved and materially changes the storage, queue, and
-     backup selections in l2-third-party-integrations.md §5. -->
+- [MODIFIED — v1.4.0] **Deployment is resolved: self-hosted.** `[TZ]` §22 lists Redis,
+  queues, cron, and file storage as server requirements, and §97/§131 require database
+  and media backups with an administrator-triggered restore procedure — which wants
+  direct control of backup destinations. See
+  [l2-tech-stack.md](l2-tech-stack.md) §5.10. This closes the last constraint that
+  blocked the storage, queue, and mail selections.
 
 ## 3. Core Invariants (Layer 1 only)
 
@@ -368,3 +369,4 @@ trade is no longer close.
 | 1.1.0 | 2026-08-05 | Minor: booking and payment reclassified from removed scope to dormant, administrator-activatable modules per explicit product direction and `[TZ]` §63–64. Added the capability-module and disabling-never-destroys invariants to §3.6, restated the no-booking invariant as configuration-scoped, and settled the §5.3 disposition of the existing reservation implementation. |
 | 1.2.0 | 2026-08-05 | Minor: launch language set narrowed to English and Russian per explicit product direction, with the remaining three activated from the back office post-completion; §2 now forbids encoding either language count anywhere outside data. |
 | 1.3.0 | 2026-08-05 | Minor: second full requirements pass over `[TZ]`. Added §5.4 client-stated delivery stages with the §98 approval gate and the content-population stage; linked the three specs written to close gaps found in that pass — l1-home-page.md (§4/§5), l1-public-api.md (§19), l2-data-model.md (§21/§98). |
+| 1.4.0 | 2026-08-05 | Minor: closed the deployment-target TBD in §2 — resolved to self-hosted following the approved stack change to Laravel 13 + Filament 5. This spec's invariants are otherwise unaffected by that change, being technology-neutral by construction. |

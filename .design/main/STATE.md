@@ -4,38 +4,32 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-05 06:26
-**Phase:** 0 - Concept re-baseline (post-TZ restructure)
+**Updated:** 2026-08-05 07:30
+**Phase:** 0 - Concept re-baseline + stack pivot
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Specification set restructured against the client technical specification (`.drafts/booking.md`), then verified by a second line-by-line pass. 9 specs → 23; INDEX.md v1.0.0 → v2.0.0.
-- **Spec:** All 23 are `RFC` pending review — see `l1-platform-foundation.md` §5.3 for the scope-delta ledger. Coverage verified: all 134 TZ sections cited by at least one spec; registry parity and cross-links clean.
-- **Next Action:** Review the RFC set (`l1-platform-foundation.md` §5.3 → `l2-tech-stack.md` §5.1/§5.5/§5.9 → `l2-data-model.md` §5.7). Two decisions block backend work: the deployment fork and the §98 client schema approval. Then `/magic.task main`.
+- **Task:** Stack replaced. Laravel 13 + Filament 5 + PostgreSQL/PostGIS + Redis, self-hosted monolith. TypeScript implementation removed (275 files) and preserved at tag `v0.1.34`. Project version 0.1.34 → 0.2.0.
+- **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral and unchanged by the pivot; the 3 L2 documents were rewritten. TZ coverage 134/134, registry parity clean.
+- **Next Action:** Review the RFC set, then `/magic.task main`. Backend work is gated by `[TZ]` §98 (client approval of the DB structure) — now the only remaining blocker.
 
 ## Progress
 
 ```
-Implementation (against the SUPERSEDED 6-phase plan — product has since changed):
-Phase 1: [14/14] ████████ 100%  DONE — archived
-Phase 2: [11/11] ████████ 100%  DONE — archived
-Phase 3: [8/8]   ████████ 100%  DONE — archived
-Phase 4: [7/7]   ████████ 100%  DONE — archived
-Phase 5: [6/6]   ████████ 100%  DONE — archived
-Phase 6: [6/6]   ████████ 100%  DONE — archived
-
-Specification (current): [23/23] re-baselined, all RFC, TZ coverage 134/134, review pending
-Plan: SUPERSEDED — awaiting /magic.task regeneration
+Specification:  [23/23] re-baselined + re-targeted, all RFC, review pending
+Plan:           NOT GENERATED — awaiting spec review
+Implementation: RESET — new stack, no code yet (previous work at tag v0.1.34)
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
+- 2026-08-05 **Decision:** **Stack replaced: Laravel 13 + Filament 5 + PostgreSQL/PostGIS + Redis**, self-hosted monolith. Rationale in `l2-tech-stack.md` §1. The v1.x argument for Next.js was wrong on two counts — it conflated SEO indexability with client interactivity (Blade renders equally crawlable HTML), and it anchored on an existing codebase whose schema needed full replacement anyway. Decisive factor: §99–134 + §29–43 (back office + owner cabinet) are more than a third of the TZ, and Filament delivers both from one toolkit; ten packages cover eleven TZ sections. Go was evaluated and rejected — no Filament-class admin toolkit, and the performance premise does not hold at ~30–60k objects behind Redis.
+- 2026-08-05 **Note:** Deployment fork CLOSED — self-hosted, driven by `[TZ]` §97/§131 (off-server backups, administrator-triggered restore). This unblocked the last of the three storage/queue/mail selections and the §98 backup-scheme deliverable.
 - 2026-08-05 **Finding:** Second line-by-line TZ pass found **6 gaps** the first pass missed, all closed. New specs: `l1-public-api.md` (§19 — REST API/tokens/docs had zero coverage), `l1-home-page.md` (§4/§5 — 16-block composition unowned), `l2-data-model.md` (§21/§98). Amendments: favorites (§8), traffic-source analytics (§23), candidate-module catalogue (§23/§64). One was worse than a gap — `l1-advertising.md` §2 flatly excluded a self-service advertiser cabinet that TZ §23 actually *recommends*; corrected to a deferred candidate.
-- 2026-08-05 **BLOCKER (process):** `[TZ]` §98 — the client must approve the final DB structure **before main backend development starts**. That gate is itself blocked on the deployment fork (`l2-tech-stack.md` §5.9). Two decisions therefore sit on the critical path ahead of all backend work. Deliverable status in `l2-data-model.md` §5.7: 4 of 9 items complete, 3 need column-level detail, 1 (backup scheme) blocked on the fork.
-- 2026-08-05 **Decision:** Booking is **preserved, not deprecated**. Per explicit product direction and `[TZ]` §63–64, the reservation work (schema, `src/lib/reservation/`, checkout, Fondy) is retained behind an administrator-toggleable module registry (`l1-feature-modules.md`), disabled by default. Booking and payment are separate module rows, so "dated request + owner confirmation, no payment provider" is a supported intermediate state.
+- 2026-08-05 **Decision:** Booking is **preserved, not deprecated**. Per explicit product direction and `[TZ]` §63–64, the reservation work (schema, checkout flow, Fondy adapter — preserved at tag `v0.1.34`) is retained behind an administrator-toggleable module registry (`l1-feature-modules.md`), disabled by default. Booking and payment are separate module rows, so "dated request + owner confirmation, no payment provider" is a supported intermediate state.
 - 2026-08-05 **Decision:** Launch locales narrowed to **English + Russian only**; Romanian, Ukrainian, Georgian deferred until after project completion and activated from the back office (`l1-localization.md` §5.6). Content decision, not a capability one — translation tables, per-language slugs, hreflang, and fallback still ship in the first migration. Consequence: no launch country's own primary language is active at release, so country records reference inactive languages and must resolve via fallback rather than fail validation.
 - 2026-08-05 **Decision:** Specs re-baselined against the client TZ. Product changed from hotel booking marketplace → 3-country multi-language tourism information portal. 3 renames (hotel-discovery→object-catalog, hotel-profile→object-profile, property-onboarding→object-onboarding), 10 new specs, 7 amended. All set to `RFC` (not auto-promoted to Stable) because the set carries unresolved TBDs — chiefly the deployment fork in `l2-tech-stack.md` §5.9.
 - 2026-08-05 **Finding:** Stack audit by import analysis, not manifest reading: **11 packages are removable today with zero code change** (10 unused `@radix-ui/*` from the incomplete Base UI migration, plus `vaul`); `shadcn` CLI is misplaced in `dependencies`. Conversely **12 TZ-required capabilities have no dependency at all** (Redis, job queue, mail, image derivatives, map clustering, XLSX, 2FA/CAPTCHA, scoped RBAC, audit, soft delete, the `en` locale catalog). The stack is mis-provisioned, not excessive.
@@ -47,49 +41,32 @@ Plan: SUPERSEDED — awaiting /magic.task regeneration
 
 <!-- Empty if none. Format: [severity] description -->
 
-- **[high] Deployment fork unresolved** (`l2-tech-stack.md` §5.9) — self-hosted vs managed. Blocks the storage, queue, and mail selections, and the `[TZ]` §97 backup scheme.
-- **[high] `[TZ]` §98 client schema approval not started** (`l2-data-model.md` §5.7) — backend development cannot begin without it. Depends on the fork above.
+- **[high] `[TZ]` §98 client schema approval not started** (`l2-data-model.md` §5.7) — backend development cannot begin without it. Now unblocked and the only remaining gate: 5 of 9 deliverables complete, 3 need column-level detail.
 
 ## Blocking Constraints
 
 <!-- Anti-patterns discovered through real failures. MANDATORY reading. -->
 <!-- Agent MUST explicitly acknowledge each constraint before working. -->
 
-- **Router Cache staleness / stale `useState` after auth mutations:** pair a
-  client-side sign-up/sign-in/sign-out redirect with `router.refresh()` (a
-  plain `fetch()` doesn't invalidate the Router Cache); also reset
-  "pending/loading" `useState` flags in the success path, not just on error.
-  Discovered T-2B03.
-- **`biome.json` breaks on a `//` comment before `"overrides"`** — verify
-  with unscoped `pnpm exec biome check .`. Discovered T-2C02.
-- **`src/components/` has no clean vendor/first-party boundary** — a new
-  first-party file there needs both `biome.json`/`.fallowrc.jsonc` negation
-  lists updated.
-- **Engine bug:** `executor.js update-state` corrupts STATE.md fields on
-  nearly every invocation (top-level `**Status:**`, `## Progress`). Always
-  re-open STATE.md after `update-state`/`finalize` and manually verify both.
-- **Server Actions must live in their own file**, AND a mutation must never
-  run as a side effect of a GET-triggered Server Component render. Split
-  three ways: schema (client-safe), persistence (db logic), actions
-  (`"use server"`). Reference: `src/lib/property-onboarding/*`. T-3B02/T-6C01.
-- **An UPDATE's own precondition must be atomic with the write** — fold it
-  into that UPDATE's `WHERE` clause + `returning().length`, not a separate
-  pre-transaction SELECT. Discovered T-6C01.
-- **`pnpm test -- <path>` does not reliably scope** — use `pnpm exec vitest
-  run <path>`. Stop the dev server before `pnpm test`. Running two
-  `pnpm exec <cmd>` processes concurrently can EPERM-fail on a shared
-  dependency install — run pnpm-wrapped commands sequentially.
-- **Vitest's parallel workers share one real, non-transactional Postgres** —
-  an unscoped query in one file can see another's in-flight rows. A test
-  file whose tests share one fixed fixture `guestId` must clean up
-  per-test (`afterEach`), not only in one file-level `afterAll` — an
-  earlier test's own rows for that id are otherwise still present later.
-  `reservation.guest_id`/`hotel.owner_id` have no `onDelete: cascade` — use
-  `deleteTestUsers` (cleans up both). T-4C01/T-6B02/T-6T01.
-- **shadcn `Button` rendered as a Link** (`render={<Link/>}`) needs
-  `nativeButton={false}` — Base UI's `Button` otherwise assumes its root DOM
-  node is a native `<button>`. Discovered T-6T01 (pre-existing since Phase 3,
-  unfixed there — cross-phase, left alone).
+- **Engine bug:** `executor.js update-state` corrupts STATE.md fields on nearly
+  every invocation (top-level `**Status:**`, `## Progress`). Always re-open
+  STATE.md after `update-state`/`finalize` and manually verify both.
+- **Public OSM tile servers are prohibited in production** by the OSMF Tile
+  Usage Policy. Never ship pointing at `tile.openstreetmap.org` — use MapTiler,
+  Stadia, or self-hosted tiles. The previous implementation shipped this
+  violation unnoticed.
+- **Local Postgres occupies host port 5432** — the Docker service is mapped to
+  5433. `postgres:18+` images store data under major-version subdirectories of
+  `/var/lib/postgresql`, not `/var/lib/postgresql/data`.
+- **PostgreSQL ships no full-text dictionary for Georgian or Ukrainian.**
+  Trigram matching carries name search; stemmed FTS will be incomplete.
+  Escalation trigger to Typesense is recorded in `l2-tech-stack.md` §5.7.
+- **Hiding a Filament action or Blade block is never an access control.**
+  `[TZ]` §121 permissions are scoped by country/territory/category and must be
+  enforced in Policies, server-side, on every read and write.
+- **Catalog ordering is placement-tier first** — never "improve" it into
+  relevance-first. A lower-tier object outranking a higher-tier one breaks the
+  revenue model (`[TZ]` §25.2).
 
 ## Session Continuity
 
