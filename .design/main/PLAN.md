@@ -3,7 +3,20 @@
 **Version:** 1.3.0
 **Generated:** 2026-07-30
 **Based on:** .design/main/INDEX.md v1.0.0
-**Status:** Active
+**Status:** Superseded — awaiting regeneration
+
+> [!IMPORTANT]
+> This plan was generated against `INDEX.md` v1.0.0, whose nine specifications
+> described a hotel booking marketplace. The specification set was restructured to
+> twenty specifications on 2026-08-05 against the client technical specification
+> (`INDEX.md` v2.0.0). Phases 1–6 below are a truthful record of completed work, but
+> they no longer describe the product being built — see
+> [l1-platform-foundation.md](specifications/l1-platform-foundation.md) §5.3 for the
+> scope delta.
+>
+> Spec links below were rewritten to the renamed files so they resolve; the phase
+> content itself is unrevised. Run `/magic.task` to regenerate against the current
+> registry once the RFC specifications are reviewed.
 
 ## Overview
 
@@ -42,10 +55,10 @@ graph TD
 
 - [x] **Platform Foundation** ([l1-platform-foundation.md](specifications/l1-platform-foundation.md)) [L1]
 - [x] **Platform Shell** ([l1-platform-shell.md](specifications/l1-platform-shell.md)) [L1]
-- [x] **Hotel Discovery** ([l1-hotel-discovery.md](specifications/l1-hotel-discovery.md)) [L1]
-- [x] **Hotel Profile** ([l1-hotel-profile.md](specifications/l1-hotel-profile.md)) [L1]
+- [x] **Object Catalog** ([l1-object-catalog.md](specifications/l1-object-catalog.md)) [L1]
+- [x] **Object Profile** ([l1-object-profile.md](specifications/l1-object-profile.md)) [L1]
 - [x] **Room Reservation** ([l1-room-reservation.md](specifications/l1-room-reservation.md)) [L1]
-- [x] **Property Onboarding** ([l1-property-onboarding.md](specifications/l1-property-onboarding.md)) [L1]
+- [x] **Object Onboarding** ([l1-object-onboarding.md](specifications/l1-object-onboarding.md)) [L1]
 - [x] **Content Publishing** ([l1-content-publishing.md](specifications/l1-content-publishing.md)) [L1]
 
 ## Phase 1 — Platform Foundation — ✅ Done (2026-07-30)
@@ -91,7 +104,7 @@ group before the back office mounts.
 
 *The owner-gated intake flow that puts hotels and rooms into the marketplace.*
 
-- [x] **Property Onboarding** ([l1-property-onboarding.md](specifications/l1-property-onboarding.md)) [L1]
+- [x] **Object Onboarding** ([l1-object-onboarding.md](specifications/l1-object-onboarding.md)) [L1]
 
 Produces the data every guest-facing surface reads. The amenity taxonomy defined
 here is shared verbatim with the room detail popup in Phase 6.
@@ -105,7 +118,7 @@ Actions, routes, and UI) over an already-complete data layer.
 
 *Hero search, catalog with filters/sort/pagination, and the map view.*
 
-- [x] **Hotel Discovery** ([l1-hotel-discovery.md](specifications/l1-hotel-discovery.md)) [L1]
+- [x] **Object Catalog** ([l1-object-catalog.md](specifications/l1-object-catalog.md)) [L1]
 
 Depends on the Phase 1 schema (hotels must carry resolvable coordinates), not on
 the Phase 3 intake UI — seed data is sufficient to build and verify it. Kept
@@ -115,7 +128,7 @@ parallel-eligible with Phase 3 rather than serialized behind it.
 
 *The conversion surface and the editorial content it embeds.*
 
-- [x] **Hotel Profile** ([l1-hotel-profile.md](specifications/l1-hotel-profile.md)) [L1]
+- [x] **Object Profile** ([l1-object-profile.md](specifications/l1-object-profile.md)) [L1]
 - [x] **Content Publishing** ([l1-content-publishing.md](specifications/l1-content-publishing.md)) [L1]
 
 Paired in one phase because the hotel news feed is articles filtered by hotel
@@ -145,8 +158,8 @@ consumes it ships.
 
 | Question | Spec | Phase |
 | --- | --- | --- |
-| Is the Home result list the catalog query or an independent featured feed? | l1-hotel-discovery §2 | 4 |
-| Must a reviewer have a completed reservation at that hotel, or is any authenticated guest sufficient? | l1-hotel-profile §2 | 5 |
+| Is the Home result list the catalog query or an independent featured feed? | l1-object-catalog §2 | 4 |
+| Must a reviewer have a completed reservation at that object, or is any authenticated visitor sufficient? | l1-object-profile §2 | 5 |
 | Full prepayment or partial deposit at reservation time? | l1-room-reservation §2 | 6 |
 | Is the operating legal entity Ukraine-domiciled? Changes payment provider viability. | l2-third-party-integrations §2 | 6 |
 | Automated marketplace split payouts at launch, or manual reconciliation? | l2-third-party-integrations §2 | 6 |

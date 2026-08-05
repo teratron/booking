@@ -1,231 +1,410 @@
 # Technology Stack
 
-**Version:** 0.3.1
-**Status:** Stable
+**Version:** 1.0.0
+**Status:** RFC
 **Layer:** implementation
 **Implements:** l1-platform-foundation.md
 
 ## Overview
 
-Concrete technology selection for the Booking platform, resolving the stack
-proposed in the initiating request (React/Next.js, TypeScript, pnpm, Vite,
-Astryx-or-Tailwind+shadcn/ui, Fallow, Biome, PostgreSQL) against the requirements
-in [l1-platform-foundation.md](l1-platform-foundation.md). Per the requester's own
-framing, this stack is expected to evolve as more of the Figma mechanics are
-worked through; this spec is the running record of that evolution, not a one-time
-decision.
+The concrete technology selection for the portal, re-evaluated end to end against the
+client technical specification. This revision is a **major restructure**: the previous
+version resolved a stack for a single-country hotel booking marketplace, and the
+product it was solving for no longer exists
+([l1-platform-foundation.md](l1-platform-foundation.md) §5.3).
+
+The headline finding contradicts the framing of the question that prompted it. The
+stack is **not excessive**. It is *mis-provisioned*: it carries a measurable amount of
+verifiable dead weight, it duplicates one layer, and it is materially
+**under-provisioned** for what the technical specification actually requires. Removing
+dependencies and adding dependencies are both correct answers here, applied to
+different parts of the same list.
 
 ## Related Specifications
 
-- [l1-platform-foundation.md](l1-platform-foundation.md) - Invariants this spec implements.
-- [l2-third-party-integrations.md](l2-third-party-integrations.md) - [ADDED] Sibling L2; selects the auth, payment, and admin-panel solutions that integrate into this stack, and resolves the two invariants deferred in §4 below.
+- [l1-platform-foundation.md](l1-platform-foundation.md) - Invariants this stack must satisfy.
+- [l2-third-party-integrations.md](l2-third-party-integrations.md) - Sibling L2; selects auth, storage, mail, queue, maps, and the conditional payment provider.
+- [l1-back-office.md](l1-back-office.md) - The requirement that settles the admin-framework question.
+- [l1-localization.md](l1-localization.md) - Five-language requirement driving the i18n layer.
+- [l1-geography.md](l1-geography.md) - Recursive hierarchy driving a data-layer decision.
+- [l1-analytics.md](l1-analytics.md) - High-volume event storage driving a partitioning decision.
+- [l1-notifications.md](l1-notifications.md) - Scheduled jobs driving the background-execution decision.
+- [l1-seo.md](l1-seo.md) - Rendering-strategy constraints.
+- [l1-feature-modules.md](l1-feature-modules.md) - Runtime gating this stack must enforce server-side.
 
 ## 1. Motivation
 
-The request named two open forks explicitly ("React or Next.js" + "Vite", and
-"Astryx under consideration OR Tailwind CSS + shadcn/ui") and asked for the
-remaining elements to be evaluated for currency, plus for new stack elements to be
-proposed as they become necessary. This spec resolves both forks against an
-objective tiebreaker — the discoverability and hotel/room data-hierarchy
-invariants from the foundation spec — rather than leaving them as unresolved
-alternatives, and proposes the one missing layer (data access) the original list
-did not cover.
+Three questions were asked of the stack: is it excessive, can anything be replaced
+with something better, and can the dependency count be reduced — without harming
+quality. Answering them honestly required auditing actual imports rather than reading
+the manifest, because a manifest records intent and imports record reality.
+
+The audit found the two diverging in a specific, correctable way (§4), and it found
+something more consequential: several capabilities the technical specification states
+as requirements have **no dependency at all** behind them (§5.5). A stack review that
+only subtracted would have left the project further from deliverable than it started.
 
 ## 2. Constraints & Assumptions
 
-- Single deployable web application for the initial release (no monorepo split)
-  — see §7 for when that assumption should be revisited.
-- All version numbers below reflect latest-stable at time of authoring
-  (2026-07-30) and are expected to drift; treat them as a floor, not a pin.
-- `Fallow` in the original request is confirmed (via package research) to be
-  **Fallow — codebase intelligence for TypeScript/JavaScript** (dead code,
-  duplication, architecture-boundary, and design-system-drift detection), not a
-  backend framework or ORM as its name might suggest. It is a dev-time tool,
-  paired below with Biome under developer tooling.
+- Version numbers reflect latest-stable at authoring time (2026-08-05) and are a
+  floor, not a pin.
+- Findings in §4 were verified by import analysis against `src/`, not inferred from
+  `package.json`. Each row states its evidence.
+- The deployment target is **unresolved** and is the single largest open decision in
+  this spec — see §5.9. Three selections in
+  [l2-third-party-integrations.md](l2-third-party-integrations.md) depend on it.
+- "Fallow" is confirmed as **Fallow — codebase intelligence for
+  TypeScript/JavaScript** (dead code, duplication, architecture-boundary, and
+  design-system-drift detection), a dev-time tool, not a backend framework.
 
 ## 4. Invariant Compliance
 
 | L1 Invariant | Implementation |
 | --- | --- |
-| Responsive parity | A single Next.js component tree per page, styled mobile-first; the Figma desktop/mobile frame pairs map to one responsive implementation rather than two separate templates. |
-| Localization-ready | `next-intl` (or equivalent App Router i18n routing) externalizes all copy from day one, even though only `ru` ships initially. |
-| Public discoverability | Next.js App Router with Server Components / SSR for catalog, hotel-profile, and article routes gives crawlable HTML without a separate rendering layer. |
-| Catalog structure | Server-side query layer (via the ORM, §5.4) implements filter/sort/paginate against PostgreSQL directly; no client-only filtering of a full dataset. |
-| Hotel/room hierarchy | Enforced at the schema level: `room.hotel_id` is a required foreign key with no nullable variant. |
-| Content moderation checkpoint | [MODIFIED] Enforced at the data layer as a `status: pending \| published \| rejected` column on externally-originated content (hotels, rooms, reviews), so the checkpoint holds regardless of which UI writes it. The operator-facing review queue with approve/reject actions is the admin panel selected in [l2-third-party-integrations.md](l2-third-party-integrations.md) §5.3, mounted as a route inside this application (§5.6). |
-| Actor roles | [MODIFIED] A `role: guest \| owner \| admin` discriminator on the account record, managed by the auth solution selected in [l2-third-party-integrations.md](l2-third-party-integrations.md) §5.1. Its Drizzle adapter keeps the account tables in this project's own schema (§5.4) rather than a vendor's, so authorization joins against domain data directly. |
-| Media resilience | Next.js `<Image>` with explicit fallback states covers lazy-loading, sizing, and failure placeholders without hand-rolled logic. |
+| Responsive parity (4 viewports) | One Next.js component tree per page, styled mobile-first; Tailwind breakpoints cover phone/tablet/laptop/desktop from a single template. |
+| Localization-completeness | `next-intl` for interface catalogs; per-entity translation **tables** in PostgreSQL for content ([l1-localization.md](l1-localization.md) §5.2). The former exists; the latter does not yet — see §5.5. |
+| Public discoverability | App Router Server Components render catalog, territory, object, and article pages as crawlable HTML with no separate rendering layer. |
+| Geographic scoping | Recursive territory hierarchy resolved via a materialized path column with a GIN-indexed ancestor lookup — see §5.4. |
+| Object as central entity, type-varying attributes | Typed core columns plus a validated JSONB attribute bag keyed by the type's declared field set — see §5.4. |
+| Paid-placement ordering | Server-side ordered query with scoped bump lookup; composite indexes per [l1-placement-monetization.md](l1-placement-monetization.md) §5.2. |
+| Configuration over code | Settings, registries, and module state read from PostgreSQL at request time and cached; no build-time constants. |
+| Capability modules toggleable | Server-side resolution at the route boundary; gated routes reject rather than hide ([l1-feature-modules.md](l1-feature-modules.md) §6.2). |
+| Soft deletion, accountability | Schema-level `deleted_at` plus an append-only audit table with revoked UPDATE/DELETE privileges. |
+| Privacy-minimal measurement | Date-partitioned raw event table compacted into daily aggregates ([l1-analytics.md](l1-analytics.md) §5.1). |
+| Performance at scale | Redis-backed page and query caching, image derivatives, map clustering, and the index set in `[TZ]` §94 — none of which currently exist (§5.5). |
+| Defense baseline | Better Auth rate limiting, two-factor, and CAPTCHA plugins; Drizzle's parameterized queries; React's default output escaping. |
 
 ## 5. Detailed Design
 
-### 5.1 Application Framework — Next.js (resolves the React-vs-Next.js / Vite fork)
+### 5.1 Audit: Verified Dead Weight
 
-**Decision**: Next.js (App Router), not a React + Vite single-page app.
+Each row was confirmed by counting importing files under `src/`.
 
-**Reasoning**: the foundation spec's discoverability invariant requires that
-catalog, hotel-profile, and article pages be independently crawlable and
-shareable — a client-rendered Vite SPA needs a separate SSR/prerendering layer to
-achieve that, while Next.js provides it natively. Next.js Route Handlers and
-Server Actions also cover the backend needs visible in the design (search/filter
-queries, the add-hotel submission form) without standing up a separate API
-service. This is an objective tiebreaker, not a stylistic preference, so it is
-recorded as a resolved decision rather than an open fork.
+| Package | Manifest | Imports found | Finding |
+| --- | --- | --- | --- |
+| `@radix-ui/react-accordion` | dependency | 0 | Remove |
+| `@radix-ui/react-avatar` | dependency | 0 | Remove |
+| `@radix-ui/react-checkbox` | dependency | 0 | Remove |
+| `@radix-ui/react-dialog` | dependency | 0 | Remove |
+| `@radix-ui/react-dropdown-menu` | dependency | 0 | Remove |
+| `@radix-ui/react-radio-group` | dependency | 0 | Remove |
+| `@radix-ui/react-select` | dependency | 0 | Remove |
+| `@radix-ui/react-separator` | dependency | 0 | Remove |
+| `@radix-ui/react-switch` | dependency | 0 | Remove |
+| `@radix-ui/react-tooltip` | dependency | 0 | Remove |
+| `vaul` | dependency | 0 | Remove |
+| `@radix-ui/react-label` | dependency | 1 | Migrate to Base UI, then remove |
+| `@radix-ui/react-popover` | dependency | 2 | Migrate to Base UI, then remove |
+| `@radix-ui/react-slot` | dependency | 1 | Migrate to Base UI, then remove |
+| `shadcn` | **dependency** | CLI, not imported | Move to devDependencies |
 
-Latest stable at authoring time: **Next.js 16.2.x**, **React 19**.
+**Eleven packages are removable immediately** with no code change. Three more carry a
+single vendored-file dependency each and go once migrated.
 
-Vite is not discarded outright — it remains the right tool if an isolated
-non-Next surface appears later (a component workshop, a standalone docs site);
-it is simply not the primary application bundler while Next.js's own bundler
-(Turbopack, stable as of v16) serves that role.
+The cause is legible: the codebase migrated from Radix primitives to `@base-ui/react`
+(19 files import Base UI, 3 import Radix), and the manifest was never pruned. This is
+not architectural excess — it is an incomplete migration, and it is the only place the
+"too many dependencies" concern is literally true.
 
-### 5.2 Language & Package Management
+### 5.2 Audit: The Admin-Kit Cluster
 
-- **TypeScript** — strict mode, matching the original request; no change.
-- **pnpm** — latest stable **10.30.x**; workspaces left unconfigured until a
-  second deployable package exists (see §7).
+`lodash`, `inflection`, `diacritic`, `query-string`, `react-router`, `ra-core`,
+`ra-data-simple-rest`, `ra-i18n-polyglot`, and `ra-language-english` — nine packages —
+exist solely to support 107 vendored `shadcn-admin-kit` components under
+`src/components/`, referenced by 84 files.
 
-### 5.3 UI / Styling Layer (resolves the Astryx-vs-Tailwind+shadcn/ui fork)
+At first read this is the stack's heaviest cluster and the obvious candidate for
+removal. **The audit reverses that conclusion**, on requirements rather than taste.
 
-**Decision for v1**: Tailwind CSS + shadcn/ui.
+When the admin surface was four moderated resources, nine packages was a poor trade.
+The technical specification now specifies **twenty-four back-office sections**
+(`[TZ]` §102) with filtering, sorting, pagination, bulk operations, saved filters,
+breadcrumbs, unsaved-change guards, preview, import/export, and scoped permissions —
+and `[TZ]` §134 makes sixteen of them mandatory for release one
+([l1-back-office.md](l1-back-office.md) §5.8). Hand-building that surface is a
+multi-month project whose output would be strictly worse than the framework's.
 
-**Reasoning**: Astryx (`facebook/astryx`) is confirmed real and credible — an
-MIT-licensed, Meta-originated design system built on StyleX, 150+ components,
-7 themes, explicitly interoperable with Tailwind — but it is currently in
-**Beta**, ships chart components only under a `@canary` tag, and has a smaller
-component surface than shadcn/ui's mature, Radix-based catalog. Reproducing the
-pixel-specific catalog filters, room-detail popup, and multi-section onboarding
-form seen in the Figma source is lower-risk against a mature, widely-documented
-component base for a first release. This is not a rejection of Astryx — it is
-recorded as a **Draft candidate to re-evaluate** once it exits Beta and its theme
-set is confirmed to cover this project's visual language, since Astryx and
-Tailwind are not mutually exclusive (Astryx explicitly supports Tailwind-class
-overrides).
+Two properties bound the cost, and both were verified:
 
-### 5.4 Data Layer (new element, proposed per the requester's invitation to add stack items as they emerge)
+1. **The cluster is admin-only.** None of the nine packages is imported outside
+   `src/components/` and `src/app/admin/`. Under route-level code splitting they do
+   not enter the public marketplace bundle — the SEO-critical pages
+   ([l1-seo.md](l1-seo.md)) are unaffected.
+2. **The weight is already vendored.** The 107 components are source in this
+   repository, not a versioned black box; they can be pruned to the resources actually
+   used without fighting a dependency.
 
-- **PostgreSQL** — latest stable major, **18.x**, per the original request.
-- **Drizzle ORM** — proposed addition. The original list specified the database
-  but not how the application talks to it. Drizzle is TypeScript-first,
-  schema-as-code, and SQL-shaped rather than a heavy generated client —
-  consistent with the fast, minimal-abstraction tooling philosophy already
-  expressed by choosing Biome over ESLint+Prettier. Prisma is the noted
-  alternative if a more batteries-included migration/studio experience is
-  preferred later.
+**Decision: keep.** The one worthwhile refinement is replacing full `lodash` with
+`es-toolkit` (a modern, TypeScript-native, substantially smaller equivalent) across
+the eight vendored files that use `get`, `isEqual`, `matches`, and `pickBy`. That is a
+mechanical change with a real bundle benefit and no behavioural risk — but it is
+optimization, not correction, and it ranks below §5.5.
 
-### 5.5 Developer Tooling
+### 5.3 Application Framework, Language, Tooling
 
-- **Biome** — lint + format, latest stable **v2.3+**, replacing ESLint/Prettier.
-- **Fallow** — codebase-intelligence tool (dead code, duplication, architecture
-  boundary, and design-system drift detection); dev-time only, no runtime
-  footprint. Included as originally requested, with its role clarified per §2.
+Unchanged and re-confirmed against the new requirements.
 
-### 5.6 Project Structure
+- **Next.js (App Router)** — latest stable **16.2.x**, **React 19**. The
+  discoverability invariant is now larger, not smaller: territory landing pages across
+  three countries and five languages are the portal's primary organic surface
+  ([l1-seo.md](l1-seo.md)). Server-rendered HTML without a separate rendering layer is
+  the right answer, and more clearly so than before.
+- **TypeScript** — strict, **7.x** (the Go-native compiler; substantially faster
+  checking on a codebase this size).
+- **pnpm** — **10.30.x**.
+- **Tailwind CSS 4 + shadcn/ui on Base UI** — retained. The
+  `class-variance-authority` + `cn()` composition model in §5.7 is what makes the
+  administrator-configurable card decorations in
+  [l1-advertising.md](l1-advertising.md) §5.5 expressible without a component per
+  variant.
+- **Biome 2.x**, **Fallow 3.x**, **Vitest 4.x** — retained.
+
+Fallow deserves a note: it detects dead code and unused exports, and §5.1's eleven
+unused packages are exactly the class of drift it exists to catch. Adding a manifest-
+versus-imports check to the audit gate would have surfaced this without a manual pass.
+
+### 5.4 Data Layer
+
+- **PostgreSQL 18.x** and **Drizzle ORM** — retained. Drizzle's schema-as-code suits a
+  model this index-heavy (`[TZ]` §94 names fourteen indexed fields), and its SQL-shaped
+  API matters for the ordering query in
+  [l1-placement-monetization.md](l1-placement-monetization.md) §5.2, which an
+  abstraction-heavy ORM would obscure.
+
+Three modelling decisions that the new requirements force:
+
+**Territory hierarchy** ([l1-geography.md](l1-geography.md) §5.4). Descendant
+expansion runs on every catalog view. A recursive CTE per request is the wrong cost;
+a **materialized path** column with a denormalized `country` reference answers ancestor
+and descendant queries with an index scan. A closure table is the alternative, and
+loses on write amplification during the bulk territory imports `[TZ]` §127 expects.
+
+**Type-varying object attributes**
+([l1-object-catalog.md](l1-object-catalog.md) §5.5). `[TZ]` §69 requires new object
+types without a developer, and §109 requires different field sets per type. Frequently
+filtered attributes stay as typed columns; the type-specific remainder lives in a
+**JSONB bag validated against the type's declared schema**, with GIN indexes on the
+filterable keys. Full EAV is rejected — it makes every catalog query a self-join
+against the portal's hottest table.
+
+**Translation tables** ([l1-localization.md](l1-localization.md) §5.2). Per-entity
+translation rows, uniquely keyed on `(entity, language)`, indexed on
+`(language, slug)`. This is the largest schema change the new specification demands,
+and it is the one that must land in the same migration as the entities it localizes.
+
+**Statistics** ([l1-analytics.md](l1-analytics.md) §5.1). Date-partitioned raw events
+compacted into daily aggregates; native PostgreSQL partitioning, no additional
+dependency.
+
+### 5.5 Missing Capabilities
+
+This is the section that answers "is the stack excessive" with a plain no. Each row is
+a technical-specification requirement with **nothing currently behind it**.
+
+| Requirement | Source | Gap | Selection |
+| --- | --- | --- | --- |
+| Caching | `[TZ]` §18, §22 | None | **Redis** (named explicitly by the client) |
+| Job queue and scheduling | `[TZ]` §22, §52, §62, §117, §123, §97 | None | **BullMQ** on the same Redis — see §5.6 |
+| Transactional email | `[TZ]` §49, §62, §124, §130 | None | Provider-agnostic SMTP — [l2-third-party-integrations.md](l2-third-party-integrations.md) §5.6 |
+| Object storage | `[TZ]` §22, §75, §97 | `@vercel/blob` (5 files) — platform-locked | S3-compatible — §5.9 |
+| Image derivatives | `[TZ]` §33, §75, §130 | None | **sharp** for stored thumbnails and size limits |
+| Map clustering | `[TZ]` §15 | `leaflet` present, no clustering | **supercluster**; MapLibre GL as the scale escalation |
+| XLSX / CSV import-export | `[TZ]` §96, §127, §128 | None | **ExcelJS** (reads and writes both formats) |
+| Full-text search | `[TZ]` §14, §94 | None | PostgreSQL FTS + `pg_trgm` GIN — escalate only on measurement |
+| Two-factor, rate limiting, CAPTCHA | `[TZ]` §17, §100, §130 | None | Better Auth plugins — no new vendor |
+| Scoped RBAC | `[TZ]` §73, §121 | `role` enum only | Own schema — [l1-back-office.md](l1-back-office.md) §5.2 |
+| Audit journal, soft delete | `[TZ]` §91, §95 | None | Own schema, no dependency |
+| Four of five locales | `[TZ]` §1.4 | Only `messages/ru.json` exists | Content, not dependency |
+
+Two entries deserve emphasis.
+
+**Search is deliberately not a new service.** PostgreSQL full-text search with
+trigram indexes will very likely satisfy `[TZ]` §14 at this data volume, and adding
+Meilisearch or Typesense pre-emptively would introduce an index to synchronize, a
+service to operate, and a consistency problem to debug. The escalation trigger should
+be a measured p95 latency on the real catalog, not an assumption.
+
+**The RBAC gap is larger than it looks.** Better Auth supplies roles and permissions;
+it does not supply `[TZ]` §121's scoping of a permission to a country, territory
+subtree, or object category. That resolution logic is this project's to build, and it
+sits on the authorization path of every back-office request.
+
+### 5.6 Background Execution — the Architectural Finding
+
+[l1-notifications.md](l1-notifications.md) §5.4 enumerates recurring work: placement
+expiry sweeps, staleness sweeps, availability-confirmation prompts, promotion
+archival, dispatch retries, statistics rollups, sitemap regeneration, and backups.
+
+None of these is a request. They are scheduled and long-running, and several must
+survive a deployment mid-run.
+
+**This is the first genuine second deployable this project has had.** The previous
+revision deferred a workspace split until "a second deployable surface actually
+exists" and correctly ruled that the admin panel — a route inside the app — was not
+one. A background worker is: a separate process, a separate lifecycle, a separate
+scaling profile, and a separate failure mode.
+
+**Decision**: introduce a worker process sharing the schema and business logic in
+`lib/`, run from the same repository. The concrete shape — a second entry point, a
+pnpm workspace split, or a separate deploy target — is bounded by §5.9 and should be
+settled with it rather than independently.
+
+**BullMQ over pg-boss**: pg-boss avoids Redis entirely and is attractive when Redis
+would be a new component. Here `[TZ]` §18 and §22 name Redis as a requirement for
+caching regardless, so BullMQ reuses infrastructure the portal must operate anyway,
+rather than adding a second job substrate on top of the primary database — which is
+also the database serving every catalog query.
+
+### 5.7 Project Structure
 
 ```plaintext
 src/
-├── app/                  # Next.js App Router routes
-│   ├── (marketing)/      # home, catalog, hotel/[id], blog, blog/[id]
-│   ├── add-hotel/
-│   ├── admin/            # admin panel mount point (see [L2-INTEGRATIONS] §5.3)
-│   └── api/              # Route Handlers where a Server Action isn't a fit
-│       └── admin/        # REST surface the admin panel reads ([L2-INTEGRATIONS] §5.3)
+├── app/
+│   ├── [lang]/               # language-prefixed public routes
+│   │   ├── (marketing)/      # home, territory pages, catalog, object, blog, news
+│   │   ├── cabinet/          # owner cabinet
+│   │   └── (legal)/
+│   ├── admin/                # back office mount point
+│   └── api/
+│       ├── admin/            # REST surface the back office reads
+│       └── auth/
 ├── components/
-│   └── ui/               # [ADDED] shadcn/ui primitives — installed, not hand-authored (§5.7)
+│   ├── ui/                   # shadcn primitives on Base UI
+│   └── admin/                # vendored shadcn-admin-kit (§5.2)
 ├── lib/
-│   ├── db/               # Drizzle schema + client
-│   ├── auth/             # auth configuration (see [L2-INTEGRATIONS] §5.1)
-│   └── i18n/
+│   ├── db/                   # Drizzle schema, client, migrations
+│   ├── auth/                 # Better Auth + scoped RBAC resolution
+│   ├── i18n/                 # catalogs + entity translation resolution
+│   ├── geo/                  # territory hierarchy, scope expansion
+│   ├── catalog/              # retrieval, ordering, filters
+│   ├── placement/            # packages, bumps, expiry
+│   ├── advertising/          # banner targeting and selection
+│   ├── moderation/           # queue, audit journal
+│   ├── analytics/            # event capture, rollups
+│   ├── notifications/        # notification model, channel adapters
+│   ├── modules/              # feature-module resolution
+│   ├── reservation/          # dormant booking module (gated)
+│   └── seo/                  # metadata, sitemaps, redirects
+├── worker/                   # [ADDED] scheduled jobs (§5.6)
 └── styles/
 ```
 
-[MODIFIED] The `admin/` and `lib/auth/` entries were added once the integration
-selections resolved; business logic lives under `lib/`, keeping route handlers
-and components presentation-focused. [ADDED] `components/ui/` split out from
-`components/` once shadcn's own convention (§5.7) made the distinction concrete:
-installed primitives in `ui/`, page/domain-specific compositions built from them
-directly under `components/`.
+Business logic stays in `lib/`, shared verbatim between the web app and the worker —
+which is the property that makes §5.6's split cheap rather than a fork.
 
-Single Next.js app for now — no `packages/` workspace split until a second
-deployable surface actually exists (§7). The admin panel is a route inside this
-application, not a separate deployable, so it does not trigger that split.
+`lib/reservation/` is retained and gated, not deleted
+([l1-room-reservation.md](l1-room-reservation.md) §6.1).
 
-### 5.7 Component Architecture Principles [ADDED]
+### 5.8 Component Architecture Principles
 
-**Principle**: every UI element is built reusable, scalable, customizable, and
-extensible by default — not as a page-specific one-off — so that later phases
-compose existing pieces instead of re-implementing them from scratch.
+Retained from the previous revision and now load-bearing rather than aspirational:
+`[TZ]` §113 lets an administrator define card decorations — border colour, badge
+colour, icon, position — at runtime. That is only expressible against a variant-driven
+component model. Every UI element is built reusable, composable, and extensible by
+default; variant and size axes are expressed through `class-variance-authority` rather
+than duplicated components; `cn()` (`clsx` + `tailwind-merge`) allows call-site
+override without prop-drilling; primitives wrap Base UI so new visual variants are a
+styling change, not new interaction logic.
 
-**Reasoning**: this is not a new tool decision; it is already the concrete
-behavior of the stack chosen in §5.3, made explicit here so every later
-component-building task is held to it:
+The boundary is unchanged: this governs shared, cross-feature UI. A genuinely
+page-local one-off is not required to be generalized ahead of a second use site.
 
-- **Reusable & composable**: shadcn/ui distributes source, not a compiled
-  library — a component is copied into `components/ui/` once and composed
-  everywhere, not re-fetched or duplicated per feature.
-- **Scalable variants, not copy-paste forks**: variant/size axes are expressed
-  via `class-variance-authority` (`cva`) — a discrete set of `variant`/`size`
-  props — instead of a new component per visual state. Proven in this codebase
-  already: `components/ui/button.tsx` exposes `variant` (`default`, `outline`,
-  `secondary`, `ghost`, `destructive`, `link`) and `size` axes from one
-  implementation.
-- **Customizable without forking**: the `cn()` helper (`lib/utils.ts`, wraps
-  `clsx` + `tailwind-merge`) lets a caller override or extend any variant's
-  classes at the call site — the last class wins, no prop-drilling a style
-  override path through the component.
-- **Extensible primitives**: shadcn's components wrap Radix/Base UI primitives
-  (accessible, unstyled behavior underneath), so new visual variants are a
-  styling change, not new interaction logic.
+### 5.9 Deployment — the Open Fork
 
-**Boundary**: this governs shared, cross-feature UI (`components/ui/`,
-`components/`). Route-specific composition inside `app/**/page.tsx` is expected
-to assemble these pieces, not re-implement them — but a page-local one-off that
-genuinely has no reuse case is not required to be pre-emptively generalized
-(no speculative abstraction ahead of a second use site).
+`[TZ]` §22 requires PostgreSQL, Redis, queues, cron, and file storage. `[TZ]` §97
+requires daily automated database backups, separate media backups, several retained
+generations, integrity verification, and a documented restore procedure. `[TZ]` §131
+requires an administrator-triggered restore.
+
+Those requirements point away from a purely managed platform and toward a
+self-operated deployment, but the choice is the client's, not this spec's — and it
+determines three selections in
+[l2-third-party-integrations.md](l2-third-party-integrations.md).
+
+| | Managed platform | Self-hosted (VPS / Docker) |
+| --- | --- | --- |
+| Worker (§5.6) | Separate service or external scheduler | Native second process |
+| Storage | Platform blob store (current `@vercel/blob`) | MinIO or an S3-compatible provider |
+| Redis | Managed add-on | Native |
+| Backup / restore (`[TZ]` §97, §131) | Provider-dependent; §131's admin-triggered restore is awkward | Direct control |
+| Operating cost | Higher at traffic; lower in effort | Lower at traffic; requires operations capability |
+
+**Recommendation**: choose an **S3-compatible storage interface regardless of the
+answer**. Cloudflare R2, MinIO, and Backblaze all speak it, and so do managed
+platforms via a compatible bucket. That single decision makes storage portable and
+keeps `@vercel/blob` from becoming a migration this project has to pay for later.
+
+<!-- TBD: the deployment target is the highest-value unresolved decision in this
+     spec. It is a client/business decision with no technical tiebreaker: [TZ] §22
+     and §97 are satisfiable both ways at different cost profiles. -->
 
 ## 6. Implementation Notes
 
-1. Framework + package manager + tooling (Next.js, pnpm, TypeScript, Biome,
-   Fallow) — no open questions, safe to scaffold first.
-2. Data layer (PostgreSQL + Drizzle schema per the foundation spec's entity
-   relationship) — second, since domain specs depend on it. Model the complete
-   graph in one pass, including the account role discriminator and the
-   moderation `status` column from §4, so later work extends the schema instead
-   of restructuring it.
-3. UI layer (Tailwind + shadcn/ui) — alongside or after the data layer.
-4. [MODIFIED] Auth is no longer blocked — the actor-role question is resolved
-   (§4). Sequence the three integrations per
-   [l2-third-party-integrations.md](l2-third-party-integrations.md) §6: auth
-   first, since every other integration depends on an authenticated actor; the
-   admin panel second, once its moderated resources exist in the schema; payment
-   last, once the reservation model has a concrete paid state to transition
-   into.
+Sequenced by dependency, not by visibility.
+
+1. **Prune §5.1.** Eleven packages, zero code change. Add a manifest-versus-imports
+   check to the Fallow audit gate so the drift cannot silently return.
+2. **Settle §5.9.** Three integration selections are blocked behind it, and the answer
+   is cheap to obtain and expensive to reverse.
+3. **Re-model the schema**: territories, object types with JSONB attributes,
+   translation tables, contact channels, placement, banners, moderation, audit,
+   statistics. Model the whole graph in one pass — every domain spec reads from it,
+   and the current hotel-centric schema cannot be extended into it incrementally.
+4. **Add the missing infrastructure** (§5.5): Redis, BullMQ and the worker, mail,
+   S3-compatible storage, sharp, ExcelJS, supercluster.
+5. **Build scoped RBAC** before any back-office screen. Every screen depends on it and
+   retrofitting authorization is how authorization gaps happen.
+6. **Then the surfaces**, in `[TZ]` §134's priority order.
+7. Keep `lib/reservation/` under test with its module both on and off
+   ([l1-feature-modules.md](l1-feature-modules.md) §6.3).
 
 ## 7. Drawbacks & Alternatives
 
-- **Monorepo vs. single app**: a single Next.js app is chosen for v1 simplicity.
-  [MODIFIED] The admin panel is not a second surface — it mounts as a route
-  inside this application (§5.6), so it does not trigger the split. Revisit
-  (pnpm workspaces + a `packages/ui` split) only if a genuinely separate
-  deployable appears, such as a native mobile client's backend or a standalone
-  marketing site — not preemptively.
-- **Astryx now instead of later**: rejected for v1 (see §5.3) on beta-maturity
-  grounds, not on technical merit; this is the one recommendation most likely to
-  change as the design system evolves, per the requester's own expectation.
-- **Prisma instead of Drizzle**: viable alternative; Drizzle preferred for
-  consistency with the lightweight-tooling direction already set by Biome.
+**Rebuilding on a different stack entirely.** The product definition changed enough to
+make the question fair. It does not survive contact with the audit: Next.js, Drizzle,
+PostgreSQL, Tailwind, Better Auth, and react-admin are all *more* justified under the
+new requirements than the old ones — five languages, deep SEO, twenty-four admin
+sections, and runtime-configurable everything all play to this stack's strengths. What
+changed is the data model and the missing infrastructure, and neither is a framework
+problem.
+
+**Dropping react-admin to cut nine dependencies.** The most attractive-looking saving
+in the manifest, and the analysis in §5.2 inverts it: the admin surface grew sixfold,
+the cluster is admin-only, and hand-building `[TZ]` §134's sixteen mandatory sections
+would cost far more than nine admin-scoped packages.
+
+**pg-boss instead of Redis and BullMQ.** Genuinely appealing — one fewer component —
+and rejected because `[TZ]` §18 and §22 require Redis for caching anyway, so pg-boss
+would add a second job substrate rather than remove infrastructure, and would put job
+polling on the database serving every catalog query.
+
+**Adding a dedicated search engine now.** Meilisearch or Typesense would be
+comfortably better than PostgreSQL FTS at some scale. Adding one before measuring buys
+an index to synchronize and a service to operate against a bottleneck that has not
+been demonstrated. §5.5 records the escalation trigger instead.
+
+**Keeping `@vercel/blob`.** Fine if the deployment answer is Vercel and a liability
+otherwise. The S3-compatible recommendation in §5.9 costs nothing today and removes a
+migration risk regardless of how §5.9 resolves.
+
+**Full EAV for type-varying attributes.** Maximally flexible, and it would make the
+catalog query — the portal's hottest path — a self-join over its largest table. The
+typed-columns-plus-validated-JSONB model in §5.4 keeps filterable attributes indexable.
 
 ## Canonical References
 
 | Alias | Path | Purpose |
 | --- | --- | --- |
+| `[TZ]` | `.drafts/booking.md` | §14–§22, §69, §94, §97, §102, §109, §121, §127–§131, §134 — requirements driving these selections. |
 | `[L1]` | `.design/main/specifications/l1-platform-foundation.md` | Invariants this stack must satisfy. |
-| `[L2-INTEGRATIONS]` | `.design/main/specifications/l2-third-party-integrations.md` | Auth, payment, and admin-panel selections that integrate into this stack. |
+| `[L2-INTEGRATIONS]` | `.design/main/specifications/l2-third-party-integrations.md` | Auth, storage, mail, queue, maps, and conditional payment selections. |
 
 ## Document History
 
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1.0 | 2026-07-30 | Initial draft; resolved framework and styling forks, proposed ORM addition, clarified "Fallow". |
-| 0.2.0 | 2026-07-30 | Reconciled §4 actor-roles and moderation-checkpoint rows against l2-third-party-integrations.md; added the admin and auth entries to §5.6; replaced the §6.4 auth block with the integration sequence. |
-| 0.3.0 | 2026-07-30 | Added §5.7 Component Architecture Principles (reusable, scalable, customizable, extensible UI elements) per explicit user direction; updated §5.6 to show the `components/ui/` split. |
-| 0.3.1 | 2026-07-30 | Clarification only: §5.6 now shows the `api/admin/` REST surface the admin panel reads, following the §5.3 tool change in l2-third-party-integrations.md v0.2.0. |
+| 0.2.0 | 2026-07-30 | Reconciled §4 against l2-third-party-integrations.md; added admin and auth entries to the structure. |
+| 0.3.0 | 2026-07-30 | Added Component Architecture Principles; showed the `components/ui/` split. |
+| 0.3.1 | 2026-07-30 | Clarification: showed the `api/admin/` REST surface. |
+| 1.0.0 | 2026-08-05 | Major restructure against the client technical specification. Added the verified dependency audit (§5.1, eleven removable packages), the admin-kit keep decision on requirement grounds (§5.2), three forced data-model decisions (§5.4), the missing-capability ledger (§5.5), the background-worker finding that triggers the first genuine second deployable (§5.6), and the deployment fork (§5.9). Restructured rather than delta-edited: the product premise the previous version resolved against no longer exists, leaving no section unaffected. |

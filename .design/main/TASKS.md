@@ -61,7 +61,7 @@ file-disjoint and read only tables Phase 1 already created, so both started
 immediately; `B01` (hotel profile page) and `C01` (blog pages) touched
 entirely different route trees and only depended on one Track A module each,
 so they ran in parallel. `B02` (hotel news + reviews + recently-viewed) was
-the one task with a genuine cross-track dependency — `l1-hotel-profile.md`
+the one task with a genuine cross-track dependency — `l1-object-profile.md`
 requires its news section to reuse `C01`'s article component rather than a
 bespoke one — so it was sequenced after both `B01` and `C01`. See
 `archives/tasks/phase-5.md` for the full track rationale, its five

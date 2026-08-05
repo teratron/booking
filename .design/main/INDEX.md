@@ -1,29 +1,59 @@
 # Workspace Specifications Registry
 
-**Version:** 1.0.0
+**Version:** 2.0.0
 **Status:** Active
 
 ## Overview
 
 Local registry of specifications for this workspace.
 
+The specification set was restructured on 2026-08-05 against the client technical
+specification (`.drafts/booking.md`), which redefined the product from a hotel
+booking marketplace to a multi-country tourism information portal. See
+[l1-platform-foundation.md](specifications/l1-platform-foundation.md) §5.3 for the
+scope-delta ledger.
+
+All specifications are `RFC` pending review of that restructure — they carry
+substantive new requirements and a number of open questions marked inline as `TBD`.
+
+Grouping below is editorial (Foundation → Public → Owner/Operator → Commerce →
+Optional → Implementation); the registry itself is flat.
+
 ## Domain Specifications
 
 | File | Description | Status | Layer | Version |
 | --- | --- | --- | --- | --- |
-| [l1-platform-foundation.md](specifications/l1-platform-foundation.md) | Cross-cutting platform requirements: responsive delivery, i18n, discoverability, hotel/room data foundation | Stable | 1 | 0.2.0 |
-| [l2-tech-stack.md](specifications/l2-tech-stack.md) | Concrete technology stack (Next.js, TypeScript, pnpm, Tailwind+shadcn/ui, Biome, Fallow, PostgreSQL, Drizzle) | Stable | 2 | 0.3.1 |
-| [l1-hotel-discovery.md](specifications/l1-hotel-discovery.md) | Home hero search, catalog filters/sort/pagination, map view | Stable | 1 | 0.1.0 |
-| [l1-hotel-profile.md](specifications/l1-hotel-profile.md) | Hotel detail page: gallery, amenities, location, reviews, news, recently viewed | Stable | 1 | 0.2.0 |
-| [l1-room-reservation.md](specifications/l1-room-reservation.md) | Room inventory, room detail popup, date/guest selection, paid reservation | Stable | 1 | 0.2.0 |
-| [l1-property-onboarding.md](specifications/l1-property-onboarding.md) | Add-Hotel intake flow for property owners (hotel + room submission) | Stable | 1 | 0.2.0 |
-| [l1-content-publishing.md](specifications/l1-content-publishing.md) | Blog listing/article and hotel-scoped news | Stable | 1 | 0.2.0 |
-| [l1-platform-shell.md](specifications/l1-platform-shell.md) | Shared header/nav, language switcher, footer, feedback popup, 404, privacy policy | Stable | 1 | 0.1.0 |
-| [l2-third-party-integrations.md](specifications/l2-third-party-integrations.md) | Auth (Better Auth), payment (Fondy/WayForPay), admin panel (react-admin via shadcn-admin-kit) | Stable | 2 | 0.2.0 |
+| [l1-platform-foundation.md](specifications/l1-platform-foundation.md) | Foundation. Cross-cutting invariants: delivery, reach, domain, governance, commerce, evolution, privacy | RFC | 1 | 1.1.0 |
+| [l1-feature-modules.md](specifications/l1-feature-modules.md) | Foundation. Administrator-toggleable capability modules; scoping ladder, dependencies, inertness contract | RFC | 1 | 0.1.0 |
+| [l1-localization.md](specifications/l1-localization.md) | Foundation. Countries, five languages, per-entity translation model, fallback policy | RFC | 1 | 0.1.0 |
+| [l1-geography.md](specifications/l1-geography.md) | Foundation. Recursive territory hierarchy, per-country level vocabularies, landing pages | RFC | 1 | 0.1.0 |
+| [l1-platform-shell.md](specifications/l1-platform-shell.md) | Public. Header, data-driven navigation, language and country switchers, footer, 404, legal pages | RFC | 1 | 0.2.0 |
+| [l1-object-catalog.md](specifications/l1-object-catalog.md) | Public. Object type registry, search, filters, tier-governed ordering, map | RFC | 1 | 1.1.0 |
+| [l1-object-profile.md](specifications/l1-object-profile.md) | Public. Object page; direct-contact conversion contract, rooms, prices, services, reviews | RFC | 1 | 1.1.0 |
+| [l1-availability-status.md](specifications/l1-availability-status.md) | Public. Owner-asserted "vacancies available" flag, staleness management | RFC | 1 | 0.2.0 |
+| [l1-content-publishing.md](specifications/l1-content-publishing.md) | Public. Articles, news, and promotions; shared publication pipeline | RFC | 1 | 1.0.0 |
+| [l1-seo.md](specifications/l1-seo.md) | Public. URL grammar, metadata, indexation policy, structured data, sitemaps, redirects | RFC | 1 | 0.1.0 |
+| [l1-object-onboarding.md](specifications/l1-object-onboarding.md) | Owner. Object submission and the full owner cabinet lifecycle | RFC | 1 | 1.1.0 |
+| [l1-back-office.md](specifications/l1-back-office.md) | Operator. Portal administration, scoped RBAC, bulk operations, import/export, settings | RFC | 1 | 0.1.0 |
+| [l1-moderation-governance.md](specifications/l1-moderation-governance.md) | Operator. Moderation modes and queue, audit journal, soft deletion, confirmation gates | RFC | 1 | 0.1.0 |
+| [l1-notifications.md](specifications/l1-notifications.md) | Operator. Notification model, channel adapters, automated schedules, broadcasts | RFC | 1 | 0.1.0 |
+| [l1-placement-monetization.md](specifications/l1-placement-monetization.md) | Commerce. Four placement tiers, packages, bump mechanics, expiry, financial ledger | RFC | 1 | 0.1.0 |
+| [l1-advertising.md](specifications/l1-advertising.md) | Commerce. Geo/language-targeted banners, slots, scheduling, promotional labels | RFC | 1 | 0.1.0 |
+| [l1-analytics.md](specifications/l1-analytics.md) | Commerce. Event model, aggregation, owner and operator reporting, privacy bounds | RFC | 1 | 0.1.0 |
+| [l1-room-reservation.md](specifications/l1-room-reservation.md) | Optional module — **disabled by default**. Booking: calendars, requests, prepaid checkout | RFC | 1 | 1.0.0 |
+| [l2-tech-stack.md](specifications/l2-tech-stack.md) | Implementation. Stack selection, dependency audit, missing-capability ledger, deployment fork | RFC | 2 | 1.0.0 |
+| [l2-third-party-integrations.md](specifications/l2-third-party-integrations.md) | Implementation. Auth, back office, storage, mail, queue, maps, conditional payment | RFC | 2 | 1.0.0 |
 
-<!-- Add your specifications here -->
+## Rename Map (2026-08-05)
+
+- `l1-hotel-discovery.md` → [l1-object-catalog.md](specifications/l1-object-catalog.md) — domain generalized from hotels to the administrator-managed object type registry.
+- `l1-hotel-profile.md` → [l1-object-profile.md](specifications/l1-object-profile.md) — same, plus the conversion path changed to direct contact.
+- `l1-property-onboarding.md` → [l1-object-onboarding.md](specifications/l1-object-onboarding.md) — same, plus widened from an intake form to the full owner cabinet.
+
+`l1-room-reservation.md` was **not** renamed or deprecated; it was re-scoped as an
+optional module (see [l1-feature-modules.md](specifications/l1-feature-modules.md)).
 
 ## Meta Information
 
 - **Maintainer**: Core Team
-- **Last Updated**: 2026-07-30
+- **Last Updated**: 2026-08-05
