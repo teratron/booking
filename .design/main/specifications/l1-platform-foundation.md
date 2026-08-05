@@ -1,6 +1,6 @@
 # Platform Foundation
 
-**Version:** 1.2.0
+**Version:** 1.3.0
 **Status:** RFC
 **Layer:** concept
 
@@ -33,6 +33,9 @@ composition only**, not for scope, domain model, or business rules.
 - [l1-analytics.md](l1-analytics.md) - Consumes the privacy-minimal measurement invariant.
 - [l1-notifications.md](l1-notifications.md) - Consumes the actor-role invariant.
 - [l1-seo.md](l1-seo.md) - Implements the public discoverability invariant.
+- [l1-home-page.md](l1-home-page.md) - [ADDED] Composition of the portal's front page.
+- [l1-public-api.md](l1-public-api.md) - [ADDED] Outward-facing REST contract, token authorization.
+- [l2-data-model.md](l2-data-model.md) - [ADDED] Consolidated table inventory and the client approval gate that precedes backend work.
 - [l1-content-publishing.md](l1-content-publishing.md) - Consumes discoverability + moderation invariants.
 - [l1-platform-shell.md](l1-platform-shell.md) - Consumes localization + responsive delivery invariants.
 - [l1-feature-modules.md](l1-feature-modules.md) - [ADDED] Implements the capability-module and configuration-over-code invariants.
@@ -300,6 +303,38 @@ request-without-payment flows.
 Two rows of the table above therefore describe a *default configuration*, not a
 capability boundary. Every other row is a genuine, irreversible scope change.
 
+### 5.4 Client-Stated Delivery Stages [ADDED — v1.3.0]
+
+`[TZ]` §23 names the stages the client expects, and §98 and §134 each place a gate
+inside them. Recorded here because they are planning input that would otherwise be
+lost between the specification layer and `PLAN.md`.
+
+```plaintext
+1. Проектирование   Design / specification      ← this layer; gated by [TZ] §98
+2. Дизайн           Visual design               ← Figma source exists
+3. Backend                                      ← BLOCKED until the §98 approval
+4. Frontend
+5. Личные кабинеты  Owner cabinets              -> l1-object-onboarding
+6. Админпанель      Back office                 -> l1-back-office §5.8 priority list
+7. SEO                                          -> l1-seo
+8. Тестирование     Testing
+9. Наполнение       Content population          ← see below
+10. Запуск          Launch
+```
+
+Two of these carry consequences that are easy to miss:
+
+- **Stage 3 is gated.** `[TZ]` §98 requires the client to approve the final database
+  structure before the main backend development begins
+  ([l2-data-model.md](l2-data-model.md) §5.7). That gate is itself blocked on the
+  deployment fork ([l2-tech-stack.md](l2-tech-stack.md) §5.9), so two decisions sit
+  on the critical path ahead of all backend work.
+- **Stage 9 is a real deliverable, not a formality.** A three-country catalog needs
+  its territory hierarchy, object types, amenity registry, placement packages, roles,
+  and seed objects loaded before launch. `[TZ]` §127's import pipeline exists for
+  exactly this ([l1-back-office.md](l1-back-office.md) §5.7), which is why import is
+  in `[TZ]` §134's mandatory first-release list rather than a later convenience.
+
 ## 7. Drawbacks & Alternatives
 
 **Amending in place vs. a new workspace.** The alternative was to treat the `[TZ]`
@@ -332,3 +367,4 @@ trade is no longer close.
 | 1.0.0 | 2026-08-05 | Major: reframed from hotel booking marketplace to multi-country tourism portal per the client technical specification. Replaced §3 with seven invariant groups, added the §5.3 scope-delta ledger, expanded the entity graph, and re-linked to twelve new/renamed domain specs. |
 | 1.1.0 | 2026-08-05 | Minor: booking and payment reclassified from removed scope to dormant, administrator-activatable modules per explicit product direction and `[TZ]` §63–64. Added the capability-module and disabling-never-destroys invariants to §3.6, restated the no-booking invariant as configuration-scoped, and settled the §5.3 disposition of the existing reservation implementation. |
 | 1.2.0 | 2026-08-05 | Minor: launch language set narrowed to English and Russian per explicit product direction, with the remaining three activated from the back office post-completion; §2 now forbids encoding either language count anywhere outside data. |
+| 1.3.0 | 2026-08-05 | Minor: second full requirements pass over `[TZ]`. Added §5.4 client-stated delivery stages with the §98 approval gate and the content-population stage; linked the three specs written to close gaps found in that pass — l1-home-page.md (§4/§5), l1-public-api.md (§19), l2-data-model.md (§21/§98). |

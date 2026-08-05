@@ -1,6 +1,6 @@
 # Feature Modules
 
-**Version:** 0.1.0
+**Version:** 0.2.0
 **Status:** RFC
 **Layer:** concept
 
@@ -228,6 +228,34 @@ This guarantee is what makes gating the already-built reservation capability the
 right call rather than a euphemism for shelving it: the work stays live, tested, and
 one administrator toggle away from production use.
 
+### 5.8 Candidate Modules [ADDED — v0.2.0]
+
+`[TZ]` §23 "Дополнительные предложения" recommends seven capabilities the client
+believes would make the portal materially stronger than competitors, and `[TZ]` §64
+names seven more as future scope. Neither list is a numbered requirement, so neither
+is in this release — but recording them as **candidates** rather than dropping them
+keeps the distinction between "decided against" and "not yet scoped" honest, and it
+gives each a home when it is scoped.
+
+| Candidate | Source | Status | Note |
+| --- | --- | --- | --- |
+| Owner page builder | `[TZ]` §23 | Candidate | Conflicts with the package-parity invariant ([l1-object-onboarding.md](l1-object-onboarding.md) §3) unless every package receives it; also with the minimal-authoring position in [l1-content-publishing.md](l1-content-publishing.md) §5.5 |
+| Tourist route catalog with maps and GPS tracks | `[TZ]` §23 | Candidate | A new content type with its own geometry storage, map rendering, and SEO surface — a domain spec of its own, not a module toggle |
+| Traffic-source analytics | `[TZ]` §23 | **Partially adopted** | See [l1-analytics.md](l1-analytics.md) §5.6 |
+| Reviews with moderation and owner replies | `[TZ]` §23 | **Adopted** | [l1-object-profile.md](l1-object-profile.md) §3.4 |
+| Self-service advertiser cabinet | `[TZ]` §23 | Candidate | Depends on `payment`; would introduce an advertiser account type absent from `[TZ]` §121's role list ([l1-advertising.md](l1-advertising.md) §2) |
+| Bulk import/export | `[TZ]` §23 | **Adopted** | [l1-back-office.md](l1-back-office.md) §5.7 |
+| Staleness reminders to owners | `[TZ]` §23 | **Adopted** | [l1-notifications.md](l1-notifications.md) §5.4 |
+| Guest accounts · online payment · online booking | `[TZ]` §64 | **Registered** | §5.2 — implemented and dormant |
+| Partner API | `[TZ]` §64 | **Registered** | [l1-public-api.md](l1-public-api.md) — contract specified, module disabled |
+| Native mobile client | `[TZ]` §64 | Candidate | Would consume [l1-public-api.md](l1-public-api.md); the API's read contract is shaped to permit it |
+| External tourism-registry integration · object import from external sources · CRM integration | `[TZ]` §64 | Candidate | Import infrastructure ([l1-back-office.md](l1-back-office.md) §5.7) is the shared foundation |
+
+Four of `[TZ]` §23's seven recommendations are already adopted into this release, one
+partially. That ratio is worth stating: the recommendations were not deferred
+wholesale, and the three that remain are each a domain of their own rather than a
+setting.
+
 ## 6. Implementation Notes
 
 1. Resolve module state once per request, at the boundary, and pass the result down.
@@ -277,3 +305,4 @@ all three.
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1.0 | 2026-08-05 | Initial draft. Introduces the module registry so the pre-existing reservation capability is preserved as an administrator-activatable module rather than deprecated. |
+| 0.2.0 | 2026-08-05 | Minor: added §5.8 Candidate Modules, cataloguing `[TZ]` §23's seven recommendations and §64's seven future capabilities with their adoption status — so deferred items are distinguishable from rejected ones. |

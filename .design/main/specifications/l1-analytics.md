@@ -1,6 +1,6 @@
 # Analytics
 
-**Version:** 0.1.0
+**Version:** 0.2.0
 **Status:** RFC
 **Layer:** concept
 
@@ -156,7 +156,7 @@ bump count, published promotion count, and pending moderation count.
 
 | Surface | Content | Source |
 | --- | --- | --- |
-| Owner cabinet — statistics | Page views, photo views, and per-channel contact clicks for the owner's object. All-time in release one. | `[TZ]` §40 |
+| Owner cabinet — statistics | Page views, photo views, per-channel contact clicks, favorite count, and traffic-source breakdown (§5.6) for the owner's object. All-time in release one. | `[TZ]` §40, §8, §23 |
 | Owner cabinet — dashboard | Views today / week / month / all-time, messenger clicks, website clicks. | `[TZ]` §31 |
 | Back office — dashboard | Portal counts and, with the finance permission, financial figures. | `[TZ]` §101 |
 | Back office — statistics | Period-scoped portal-wide reporting across every dimension in §5.3, exportable. | `[TZ]` §125 |
@@ -166,6 +166,39 @@ bump count, published promotion count, and pending moderation count.
 page. The dashboard's period figures (`[TZ]` §31) are a separate, smaller surface;
 the aggregate model serves both, so the restriction is a product decision that can be
 relaxed later without a data-model change.
+
+### 5.6 Traffic Sources & Page Popularity [ADDED — v0.2.0]
+
+`[TZ]` §23 recommends an owner statistics panel covering "аналитика просмотров,
+источников трафика и популярности страниц" — view analytics, **traffic sources**, and
+page popularity. Views and page popularity are already covered by §5.1 and §5.4;
+traffic source was not, and is added here.
+
+**What is recorded**, on the first event of a visit only:
+
+```plaintext
+StatEvent.source (nullable, coarse)
+├── channel     direct | search | social | referral | internal | campaign
+├── domain      referring host only, never the full URL
+└── campaign    campaign tag where present in the URL
+```
+
+**Why the shape is deliberately coarse.** A full referrer URL frequently carries the
+visitor's search query and, on some platforms, identifying path segments — storing it
+would breach the privacy-minimal invariant in §3.3 for a figure no owner needs at that
+resolution. An owner's actionable question is "do my visitors come from search, from
+social, or from the portal itself", and a channel plus a host answers it.
+
+**Internal is a first-class channel**, and the most valuable one commercially: it
+distinguishes a visitor who arrived from a territory page, a catalog listing, or a
+banner from one who came from outside. That is the closest the portal can get to
+demonstrating what a placement package actually delivered
+([l1-placement-monetization.md](l1-placement-monetization.md)), given the contact
+click is the only conversion signal available (§1).
+
+**Where it surfaces**: aggregated by channel in the owner's statistics
+([l1-object-onboarding.md](l1-object-onboarding.md) §5.1) and in the back office
+(`[TZ]` §125), never as a per-visitor list.
 
 ## 6. Implementation Notes
 
@@ -217,3 +250,4 @@ not a neutral simplification.
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1.0 | 2026-08-05 | Initial draft derived from the client technical specification. |
+| 0.2.0 | 2026-08-05 | Minor: added §5.6 traffic-source and page-popularity measurement per `[TZ]` §23, with a deliberately coarse channel+host shape to stay within the privacy-minimal invariant; added favorite count and source breakdown to the owner surface. |

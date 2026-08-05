@@ -202,6 +202,12 @@ AuditEntry
 └── outcome        success | failure
 ```
 
+`[TZ]` §48 states the same record from the moderation side — date, time, user, IP
+address, changed section, old value, new value, and moderation outcome, readable only
+by portal administration. It is the same journal, not a second one: a moderation
+decision is one kind of journalled mutation, and splitting them would leave two
+partial histories where the requirement asks for one.
+
 Per `[TZ]` §53 and §129 the journal records at minimum: sign-ins, object creation and
 edits, owner changes, package changes, position changes, bumps, border and badge
 changes, availability toggles, content publication, moderation decisions, data
@@ -273,7 +279,7 @@ restore a snapshot.
 
 | Alias | Path | Purpose |
 | --- | --- | --- |
-| `[TZ]` | `.drafts/booking.md` | §44–§53, §88, §91, §95, §119, §129, §133 — source requirements. |
+| `[TZ]` | `.drafts/booking.md` | §44–§48, §49–§53, §88, §91, §95, §119, §129, §133 — source requirements. |
 | `[L1]` | `.design/main/specifications/l1-platform-foundation.md` | Governance invariants. |
 
 ## Document History

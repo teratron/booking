@@ -1,6 +1,6 @@
 # Advertising
 
-**Version:** 0.1.0
+**Version:** 0.2.0
 **Status:** RFC
 **Layer:** concept
 
@@ -44,8 +44,15 @@ not entitlement.
 
 ## 2. Constraints & Assumptions
 
-- Banners are portal-operated inventory. No self-service advertiser purchase flow
-  exists; an administrator creates and schedules every banner (`[TZ]` §115).
+- Banners are portal-operated inventory **in this release**: an administrator creates
+  and schedules every banner (`[TZ]` §115). [MODIFIED — v0.2.0] This is a scoping
+  decision, not a rejection — `[TZ]` §23 "Дополнительные предложения" recommends "расширенный
+  рекламный кабинет с возможностью покупки VIP-размещения и баннеров", i.e. a
+  self-service advertiser cabinet. It is a client recommendation rather than a
+  numbered requirement, and it is deferred as a candidate module
+  ([l1-feature-modules.md](l1-feature-modules.md) §5.8) rather than excluded. The
+  earlier flat statement that "no self-service purchase flow exists" understated the
+  client's own position and is corrected here.
 - One banner may target several territory nodes at once (`[TZ]` §83).
 - Desktop and mobile creatives are separate assets for the same banner
   (`[TZ]` §24.2, §83).
@@ -54,7 +61,15 @@ not entitlement.
 - <!-- TBD: whether an advertiser ever receives direct access to their own campaign
      statistics (rather than an administrator-produced report) is not stated in [TZ].
      Modeled as administrator-reported only, since no advertiser account type exists
-     in [TZ] §121's role list. -->
+     in [TZ] §121's role list. Note this resolves together with the deferred
+     self-service advertiser cabinet above — an advertiser who can buy placement will
+     expect to see its performance. -->
+- <!-- TBD: [TZ] §115 lets a banner target an object category, and §57 lets it target
+     a language version, but neither states precedence when a broad-territory banner
+     and a narrow-category banner both qualify for one slot. §5.2 ranks by territory
+     specificity only; category and language specificity are treated as filters, not
+     as ranking terms. Confirm this matches commercial intent before selling
+     category-targeted inventory. -->
 
 ## 3. Core Invariants (Layer 1 only)
 
@@ -254,3 +269,4 @@ survive scrutiny. See [l1-analytics.md](l1-analytics.md) for the collection cont
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1.0 | 2026-08-05 | Initial draft derived from the client technical specification. |
+| 0.2.0 | 2026-08-05 | Minor: corrected §2's flat exclusion of a self-service advertiser purchase flow — `[TZ]` §23 recommends one, so it is now recorded as a deferred candidate module rather than silently excluded. Added a TBD on banner-selection precedence between territory, category, and language targeting. |

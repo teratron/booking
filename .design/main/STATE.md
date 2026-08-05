@@ -4,15 +4,15 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-05 06:11
+**Updated:** 2026-08-05 06:26
 **Phase:** 0 - Concept re-baseline (post-TZ restructure)
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Specification set restructured against the client technical specification (`.drafts/booking.md`). 9 specs → 20; INDEX.md v1.0.0 → v2.0.0.
-- **Spec:** All 20 are `RFC` pending review — see `l1-platform-foundation.md` §5.3 for the scope-delta ledger.
-- **Next Action:** Review the RFC set (start with `l1-platform-foundation.md` §5.3, then `l2-tech-stack.md` §5.1/§5.5/§5.9). Then `/magic.task main` to regenerate the plan.
+- **Task:** Specification set restructured against the client technical specification (`.drafts/booking.md`), then verified by a second line-by-line pass. 9 specs → 23; INDEX.md v1.0.0 → v2.0.0.
+- **Spec:** All 23 are `RFC` pending review — see `l1-platform-foundation.md` §5.3 for the scope-delta ledger. Coverage verified: all 134 TZ sections cited by at least one spec; registry parity and cross-links clean.
+- **Next Action:** Review the RFC set (`l1-platform-foundation.md` §5.3 → `l2-tech-stack.md` §5.1/§5.5/§5.9 → `l2-data-model.md` §5.7). Two decisions block backend work: the deployment fork and the §98 client schema approval. Then `/magic.task main`.
 
 ## Progress
 
@@ -25,7 +25,7 @@ Phase 4: [7/7]   ████████ 100%  DONE — archived
 Phase 5: [6/6]   ████████ 100%  DONE — archived
 Phase 6: [6/6]   ████████ 100%  DONE — archived
 
-Specification (current): [20/20] re-baselined, all RFC, review pending
+Specification (current): [23/23] re-baselined, all RFC, TZ coverage 134/134, review pending
 Plan: SUPERSEDED — awaiting /magic.task regeneration
 ```
 
@@ -33,6 +33,8 @@ Plan: SUPERSEDED — awaiting /magic.task regeneration
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
+- 2026-08-05 **Finding:** Second line-by-line TZ pass found **6 gaps** the first pass missed, all closed. New specs: `l1-public-api.md` (§19 — REST API/tokens/docs had zero coverage), `l1-home-page.md` (§4/§5 — 16-block composition unowned), `l2-data-model.md` (§21/§98). Amendments: favorites (§8), traffic-source analytics (§23), candidate-module catalogue (§23/§64). One was worse than a gap — `l1-advertising.md` §2 flatly excluded a self-service advertiser cabinet that TZ §23 actually *recommends*; corrected to a deferred candidate.
+- 2026-08-05 **BLOCKER (process):** `[TZ]` §98 — the client must approve the final DB structure **before main backend development starts**. That gate is itself blocked on the deployment fork (`l2-tech-stack.md` §5.9). Two decisions therefore sit on the critical path ahead of all backend work. Deliverable status in `l2-data-model.md` §5.7: 4 of 9 items complete, 3 need column-level detail, 1 (backup scheme) blocked on the fork.
 - 2026-08-05 **Decision:** Booking is **preserved, not deprecated**. Per explicit product direction and `[TZ]` §63–64, the reservation work (schema, `src/lib/reservation/`, checkout, Fondy) is retained behind an administrator-toggleable module registry (`l1-feature-modules.md`), disabled by default. Booking and payment are separate module rows, so "dated request + owner confirmation, no payment provider" is a supported intermediate state.
 - 2026-08-05 **Decision:** Launch locales narrowed to **English + Russian only**; Romanian, Ukrainian, Georgian deferred until after project completion and activated from the back office (`l1-localization.md` §5.6). Content decision, not a capability one — translation tables, per-language slugs, hreflang, and fallback still ship in the first migration. Consequence: no launch country's own primary language is active at release, so country records reference inactive languages and must resolve via fallback rather than fail validation.
 - 2026-08-05 **Decision:** Specs re-baselined against the client TZ. Product changed from hotel booking marketplace → 3-country multi-language tourism information portal. 3 renames (hotel-discovery→object-catalog, hotel-profile→object-profile, property-onboarding→object-onboarding), 10 new specs, 7 amended. All set to `RFC` (not auto-promoted to Stable) because the set carries unresolved TBDs — chiefly the deployment fork in `l2-tech-stack.md` §5.9.
@@ -45,7 +47,8 @@ Plan: SUPERSEDED — awaiting /magic.task regeneration
 
 <!-- Empty if none. Format: [severity] description -->
 
-(none)
+- **[high] Deployment fork unresolved** (`l2-tech-stack.md` §5.9) — self-hosted vs managed. Blocks the storage, queue, and mail selections, and the `[TZ]` §97 backup scheme.
+- **[high] `[TZ]` §98 client schema approval not started** (`l2-data-model.md` §5.7) — backend development cannot begin without it. Depends on the fork above.
 
 ## Blocking Constraints
 

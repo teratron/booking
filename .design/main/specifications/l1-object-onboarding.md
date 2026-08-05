@@ -1,6 +1,6 @@
 # Object Onboarding & Owner Cabinet
 
-**Version:** 1.1.0
+**Version:** 1.2.0
 **Status:** RFC
 **Layer:** concept
 
@@ -111,7 +111,7 @@ Services           -> §5.6
 Promotions         -> l1-content-publishing
 News               -> l1-content-publishing
 Reviews            -> §5.7
-Statistics         -> l1-analytics
+Statistics         -> l1-analytics   (includes favorite count, §5.6a)
 Bump object        -> l1-placement-monetization
 Settings           -> §5.8
 Sign out
@@ -179,6 +179,25 @@ The owner selects from the portal's amenity registry; they do not invent entries
 The registry is administrator-maintained and grouped (general, grounds, catering,
 rooms, pool and SPA, family, business, transport, accessibility, pets) per
 `[TZ]` §36, §78, §110. Only the groups applicable to the object's type are offered.
+
+### 5.6a Favorites [ADDED — v1.2.0]
+
+`[TZ]` §8 lists "Избранное" among the owner cabinet's capabilities without
+elaborating. It is modelled as a **visitor-facing favorite** whose count the owner
+sees, not as an owner-side bookmark: an owner already reaches their own objects
+through the object switcher (§5.1), so a bookmark would be redundant, while a favorite
+count is a genuine demand signal alongside views and contact clicks.
+
+The owner sees the favorite count for each of their objects in the dashboard (§5.2)
+and in statistics ([l1-analytics.md](l1-analytics.md) §5.4). They cannot see who
+favorited an object — that would be visitor personal data the portal has no reason to
+expose ([l1-platform-foundation.md](l1-platform-foundation.md) §3.7).
+
+Because the portal has no visitor accounts in its default configuration, favorites are
+browser-scoped and anonymous; they become account-scoped and cross-device only if the
+`guest_accounts` module is activated
+([l1-feature-modules.md](l1-feature-modules.md) §5.2). Storage shape and the open
+question are in [l2-data-model.md](l2-data-model.md) §5.5.
 
 ### 5.7 Reviews
 
@@ -277,3 +296,4 @@ the requirement.
 | 0.2.0 | 2026-07-30 | Resolved owner-account gate + admin moderation queue. |
 | 1.0.0 | 2026-08-05 | Major: renamed to `l1-object-onboarding.md`; widened from an intake form to the full owner cabinet (dashboard, media, rooms, prices, services, reviews, settings, notifications, staleness); generalized to type-declared field sets; added multi-object ownership, staff roles, and the package-independent-capability invariant. |
 | 1.1.0 | 2026-08-05 | Minor: added module-gated cabinet sections (calendar, rates, booking requests, booking settings), the owner opt-in invariant, and the separation of module gating from placement-package capability. |
+| 1.2.0 | 2026-08-05 | Minor: added §5.6a Favorites, closing the `[TZ]` §8 "Избранное" gap found during the second requirements pass — modelled as a visitor-facing favorite whose count the owner sees, not an owner-side bookmark. |
