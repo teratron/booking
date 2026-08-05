@@ -1,0 +1,56 @@
+# syntax=docker/dockerfile:1
+
+# Application runtime for the tourism portal.
+#
+# One image serves three roles — web (PHP-FPM), queue worker (Horizon), and the
+# CLI used for Composer, Artisan, and the test suite. Keeping them on one image
+# is what makes "the worker is a deployment mode, not a second deployable" true:
+# a worker that drifts from the web runtime fails in ways no test reproduces.
+
+FROM php:8.5-fpm AS base
+
+# The extension installer resolves system packages and build flags per
+# extension. Hand-rolling docker-php-ext-install for intl, imagick, and redis is
+# where these Dockerfiles usually go wrong.
+COPY --from=mlocati/php-extension-installer:latest /usr/bin/install-php-extensions /usr/local/bin/
+
+# intl      : required by Filament; also drives locale-aware formatting
+# pdo_pgsql : PostgreSQL driver (pgsql for the raw functions PostGIS work uses)
+# redis     : cache, session store, and the queue broker
+# imagick   : Media Library conversions — thumbnails, card, gallery derivatives
+# pcntl     : Horizon needs process signals to supervise workers
+# opcache   : not optional in any environment where response time is a budget
+RUN install-php-extensions \
+        intl \
+        pdo_pgsql \
+        pgsql \
+        redis \
+        imagick \
+        gd \
+        zip \
+        bcmath \
+        exif \
+        pcntl \
+        opcache
+
+COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
+
+# Node is present so the Vite build can run in the same image as the PHP
+# toolchain; the asset pipeline is part of the application, not a separate
+# deployable.
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && npm install -g pnpm@latest \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /var/www/html
+
+# Composer runs as root inside the container; the bind mount on the developer's
+# machine owns the files, so no user remapping is needed locally.
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
+COPY docker/app/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["php-fpm"]

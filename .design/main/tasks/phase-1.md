@@ -36,8 +36,8 @@ Track B lands. Track T consumes all three. Effective parallel degree is two, not
 
 ### Track A — Scaffold & Toolchain
 
-- [ ] [T-1A01] Scaffold the Laravel 13 + Filament 5 monolith
-- [ ] [T-1A02] Local Docker Compose stack with PostGIS, Redis, MinIO, Mailpit
+- [x] [T-1A01] Scaffold the Laravel 13 + Filament 5 monolith
+- [x] [T-1A02] Local Docker Compose stack with PostGIS, Redis, MinIO, Mailpit
 - [ ] [T-1A03] Quality toolchain and the `composer quality` gate
 - [ ] [T-1A04] Asset pipeline — Vite, Tailwind 4, Alpine, Livewire 4
 
@@ -75,20 +75,26 @@ Track B lands. Track T consumes all three. Effective parallel degree is two, not
 ### [T-1A01] Scaffold the Laravel 13 + Filament 5 monolith
 
 - **Spec:** l2-tech-stack.md §5.1, §5.2, §5.8, §6.1
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** `php artisan --version` reports Laravel 13.x; `php -v` reports 8.4+; `composer show filament/filament` reports 5.x; both panel providers resolve — `php artisan route:list --path=admin` and `--path=cabinet` each return at least one route.
+- **Changes:** Laravel 13.24.0 scaffolded at the repository root, PHP 8.5.9, Filament v5.7.5 with `AdminPanelProvider` (`/admin`) and `CabinetPanelProvider` (`/cabinet`) registered. §5.8 directory layout created; `strict_types` declared in all 17 source files; lang path pointed at `resources/lang`; `composer.json` renamed to `teratron/booking` with `php: ^8.4`.
+- **Evidence:** `php artisan --version && route:list` · exit 0 · Laravel 13.24.0, PHP 8.5.9, filament v5.7.5; admin 3 routes, cabinet 2 routes; langPath `/var/www/html/resources/lang` · no errors.
 - **Handoff:** T-1A02 (infrastructure the application connects to), T-1A03 (gates that run over it).
 - **Notes:** Directory layout per §5.8 — `app/{Models,Filament/Admin,Filament/Cabinet,Livewire,Services,Policies,Jobs,Console/Commands,Support}`. `declare(strict_types=1)` in every file from the first commit; retrofitting it later is a diff across the whole tree. Install the latest stable release of every package — do not pin back a major version.
 
 ### [T-1A02] Local Docker Compose stack with PostGIS, Redis, MinIO, Mailpit
 
 - **Spec:** l2-tech-stack.md §5.3, §5.10; l2-third-party-integrations.md §5.1, §5.4
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** `docker compose up -d` brings all services healthy; `docker compose exec postgres psql -U postgres -c "SELECT extname FROM pg_extension"` lists `postgis`, `pg_trgm`, and `unaccent`; `php artisan tinker --execute="DB::select('select postgis_version()')"` returns a version; Redis reachable via `php artisan tinker --execute="Cache::store('redis')->put('k',1); echo Cache::store('redis')->get('k');"`.
+- **Changes:** Completed the §5.10 topology — added `app` (PHP-FPM), `worker`, and `nginx` services plus `docker/app/Dockerfile` (PHP 8.5 with intl, pdo_pgsql, redis, imagick, pcntl, opcache), an entrypoint that fixes runtime-writable ownership, and `docker/nginx/default.conf`. Corrected the PostGIS image tag and moved two host ports out of a Windows reserved range.
+- **Evidence:** `docker compose ps` · exit 0 · 7/7 services up, postgres and redis healthy; `pg_extension` lists postgis, pg_trgm, unaccent; `postgis_version()` = 3.6 USE_GEOS=1 USE_PROJ=1 USE_STATS=1; Redis round-trip returned `ok`; `GET /up` and `GET /` both 200 · no errors.
 - **Handoff:** T-1B01 — no migration can run before the extensions exist.
 - **Notes:** Two environment facts already cost this project time and are recorded as constraints. The host's own PostgreSQL occupies port 5432, so map the container to **5433**. `postgres:18+` images store data under a major-version subdirectory of `/var/lib/postgresql`, **not** `/var/lib/postgresql/data` — a volume mounted at the old path silently produces an empty database. Extensions are created by the init SQL in `docker/`, not by a migration, because a migration cannot run before the extension it needs exists.
+- **Execution findings:** Three faults surfaced that had never been exercised, because this compose file was authored in an earlier session and never run. (1) `postgis/postgis:18-3.5-alpine` does not exist; the published tag is `18-3.6-alpine`, which still satisfies the spec's "3.5+". (2) Windows reserves TCP 7915–8114 on this machine, covering **both** the intended web port 8000 and Mailpit's 8025; they now bind 8300 and 8325, and `APP_URL` follows. (3) The `booking_postgres-data` volume dated 2026-07-30 still held the superseded v1 schema, so a non-empty `PGDATA` caused the entrypoint to skip `/docker-entrypoint-initdb.d` and no extension was ever created — the volume was dumped to the session scratchpad (15 tables, 21.7 KB, schema only) and recreated from empty.
+- **Recorded risk:** first-byte latency through the Windows bind mount measures 13.8 s on `/up` and 20.1 s on `/`, against a §5.9 budget of 400 ms. This is filesystem cost, not application cost, and it makes the developer machine unusable as a benchmark host for `T-1T05` without mitigation (named volume for `vendor/`, or measuring inside the container against a non-bind-mounted copy).
 
 ### [T-1A03] Quality toolchain and the `composer quality` gate
 

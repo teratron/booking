@@ -4,23 +4,22 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-05 15:47
+**Updated:** 2026-08-05 16:38
 **Phase:** 1 — Foundation, Schema & Authorization
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Plan generated. 7 phases across 23 specs, Bootstrap mode (tentative — nothing is `Stable`). Phase 1 decomposed into 21 atomic tasks across 5 tracks; Phases 2–7 carry scope and frontmatter only.
+- **Task:** T-1A02 Local Docker Compose stack with PostGIS, Redis, MinIO, Mailpit
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral and unchanged by the pivot; the 3 L2 documents were rewritten. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Execute T-1A01 Scaffold the Laravel 13 + Filament 5 monolith via /magic.run main
+- **Next Action:** Execute T-1A03 Quality toolchain and the `composer quality` gate via /magic.run main
 
 ## Progress
 
 ```
 Overall: [0/7] ░░░░░░░░ 0%
-Specification:  [23/23] re-baselined + re-targeted, all RFC, review pending
 Plan:           [7 phases] generated (Bootstrap, tentative); Phase 1 decomposed, 2-7 scoped
-Implementation: [0/21] Phase 1 tasks — new stack, no code yet (previous work at tag v0.1.34)
+Implementation: [2/21] Phase 1 — Track A: scaffold + local stack running; A03/A04 next
 ```
 
 ## Recent Decisions
@@ -39,7 +38,6 @@ Implementation: [0/21] Phase 1 tasks — new stack, no code yet (previous work a
 - 2026-08-05 **Finding:** Second line-by-line TZ pass found **6 gaps** the first pass missed, all closed. New specs: `l1-public-api.md` (§19 — REST API/tokens/docs had zero coverage), `l1-home-page.md` (§4/§5 — 16-block composition unowned), `l2-data-model.md` (§21/§98). Amendments: favorites (§8), traffic-source analytics (§23), candidate-module catalogue (§23/§64). One was worse than a gap — `l1-advertising.md` §2 flatly excluded a self-service advertiser cabinet that TZ §23 actually *recommends*; corrected to a deferred candidate.
 - 2026-08-05 **Decision:** Booking is **preserved, not deprecated**. Per explicit product direction and `[TZ]` §63–64, the reservation work (schema, checkout flow, Fondy adapter — preserved at tag `v0.1.34`) is retained behind an administrator-toggleable module registry (`l1-feature-modules.md`), disabled by default. Booking and payment are separate module rows, so "dated request + owner confirmation, no payment provider" is a supported intermediate state.
 - 2026-08-05 **Decision:** Launch locales narrowed to **English + Russian only**; Romanian, Ukrainian, Georgian deferred until after project completion and activated from the back office (`l1-localization.md` §5.6). Content decision, not a capability one — translation tables, per-language slugs, hreflang, and fallback still ship in the first migration. Consequence: no launch country's own primary language is active at release, so country records reference inactive languages and must resolve via fallback rather than fail validation.
-- 2026-08-05 **Decision:** Specs re-baselined against the client TZ. Product changed from hotel booking marketplace → 3-country multi-language tourism information portal. 3 renames (hotel-discovery→object-catalog, hotel-profile→object-profile, property-onboarding→object-onboarding), 10 new specs, 7 amended. All set to `RFC` (not auto-promoted to Stable) because the set carries unresolved TBDs (the deployment fork, since closed).
 
 ## Blockers
 
@@ -62,6 +60,19 @@ Implementation: [0/21] Phase 1 tasks — new stack, no code yet (previous work a
 - **Local Postgres occupies host port 5432** — the Docker service is mapped to
   5433. `postgres:18+` images store data under major-version subdirectories of
   `/var/lib/postgresql`, not `/var/lib/postgresql/data`.
+- **Windows reserves TCP 7915–8114 on this machine.** Both 8000 (web) and 8025
+  (Mailpit UI) fall inside it and fail to bind with a permissions error, not
+  "address in use". They are mapped to 8300 and 8325. Check
+  `netsh interface ipv4 show excludedportrange protocol=tcp` before picking any
+  new host port.
+- **No PHP or Composer on the host** — the entire PHP toolchain runs through the
+  `booking-app` image (`docker compose exec app …`). Never assume a bare `php`
+  or `composer` is available in a shell command.
+- **The Windows bind mount is not a benchmark host.** First-byte latency through
+  it measures 13–20 s against a 400 ms budget; that is filesystem cost, not
+  application cost. `T-1T05` must measure inside the container against a
+  non-bind-mounted copy, or the numbers describe Docker Desktop rather than the
+  portal.
 - **PostgreSQL ships no full-text dictionary for Georgian or Ukrainian.**
   Trigram matching carries name search; stemmed FTS will be incomplete.
   Escalation trigger to Typesense is recorded in `l2-tech-stack.md` §5.7.

@@ -1,8 +1,70 @@
 services:
+  app:
+    # PHP-FPM. The same image serves the queue worker and the CLI, so the
+    # runtime a job fails on is the runtime the request ran on.
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    restart: unless-stopped
+    volumes:
+      - .:/var/www/html
+    environment:
+      # Service names, not 127.0.0.1: inside the compose network the host's
+      # published ports are not what these containers talk to. .env keeps the
+      # host-side values so tooling run from Windows still connects.
+      DB_HOST: postgres
+      DB_PORT: 5432
+      REDIS_HOST: redis
+      AWS_ENDPOINT: http://minio:9000
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    # Queue and scheduled work as a deployment mode of the same image, never a
+    # second deployable. Horizon supersedes this command once installed.
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    restart: unless-stopped
+    command: php artisan queue:work --tries=3 --backoff=5
+    volumes:
+      - .:/var/www/html
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      REDIS_HOST: redis
+      AWS_ENDPOINT: http://minio:9000
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      # 8300, not 8000: Windows reserves 7915-8114 for Hyper-V dynamic ports on
+      # this machine, and a bind inside a reserved range fails with a
+      # permissions error rather than "address in use".
+      - "8300:80"
+    volumes:
+      - .:/var/www/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+
   postgres:
     # PostGIS bundle rather than plain postgres: the catalog needs bbox and
     # radius queries for the map, "nearby objects", and the distance filters.
-    image: postgis/postgis:18-3.5-alpine
+    image: postgis/postgis:18-3.6-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USERNAME:-booking}
@@ -63,7 +125,8 @@ services:
     restart: unless-stopped
     ports:
       - "1025:1025"
-      - "8025:8025"
+      # 8325, not 8025 — same Windows reserved range as the web port above.
+      - "8325:8025"
 
 volumes:
   postgres-data:
