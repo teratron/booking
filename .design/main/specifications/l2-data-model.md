@@ -1,6 +1,6 @@
 # Data Model
 
-**Version:** 0.2.0
+**Version:** 0.3.0
 **Status:** RFC
 **Layer:** implementation
 **Implements:** l1-platform-foundation.md
@@ -8,13 +8,13 @@
 ## Overview
 
 The consolidated table inventory, cross-cutting column conventions, relationship map,
-index plan, and deletion/archival rules for the whole portal — plus the **client
-approval gate** that `[TZ]` §98 places in front of backend development.
+index plan, and deletion/archival rules for the whole portal — plus the schema
+deliverables `[TZ]` §98 calls for, whose client-approval gate has been waived (§5.7).
 
 This spec exists because the data model is currently distributed across sixteen
 domain specifications, each stating its own entities correctly but none stating the
-whole. `[TZ]` §21 and §98 require exactly that whole, as a reviewable artefact,
-before backend work begins.
+whole. `[TZ]` §21 and §98 require exactly that whole as a reviewable artefact; the
+requirement stands even though the approval step does not (§5.7).
 
 ## Related Specifications
 
@@ -43,9 +43,11 @@ types, primary and foreign keys, indexes, deletion rules, archival rules, and ba
 scheme — and **the client approves the final database structure before the main
 backend development starts**.
 
-That is a contractual gate, not a documentation preference, and it is the single most
-schedule-relevant sentence in the specification. Missing it does not produce a bug; it
-produces backend work built on an unapproved schema that the client can decline.
+That was a contractual gate, not a documentation preference — and it was the single
+most schedule-relevant sentence in the specification. [MODIFIED — v0.3.0] The client
+has since waived the approval step (§5.7), which removes the schedule risk but leaves
+the artefacts themselves worth producing: they are what the migrations are written
+from, and what a later reader reconstructs the design's reasoning from.
 
 There is also a technical reason for consolidation independent of the gate. The
 portal's schema is unusually interconnected — translations touch a dozen entities,
@@ -60,14 +62,13 @@ spec states only its own tables, and they are exactly where inconsistency creeps
   stack and is preserved at git tag `v0.1.34`; the schema below is created from empty
   ([l2-tech-stack.md](l2-tech-stack.md) §6.2).
 - This spec fixes the **inventory, relationships, conventions, and rules**. Column-level
-  types and constraints per table are the deliverable that follows it and that §5.7
-  gates.
+  types and constraints per table are expressed as the migration set, not as a parallel
+  document (§5.7).
 - Modelling decisions are inherited from [l2-tech-stack.md](l2-tech-stack.md) §5.3 and
   the package set in §5.5; they are not re-litigated here.
-- <!-- TBD: [TZ] §98 requires client approval of the final structure. Neither the
-     approver, the review format, nor the turnaround is stated. This is a project-
-     management question that must be answered before backend scheduling, since it
-     sits on the critical path. -->
+- [MODIFIED — v0.3.0] `[TZ]` §98's client approval is **waived** by explicit client
+  direction — the database design is delegated to this project's engineering judgment.
+  See §5.7 for what that changes and what it costs.
 
 ## 5. Detailed Design
 
@@ -321,13 +322,26 @@ favorite
 Permanent deletion is restricted to the chief administrator and is itself journalled
 ([l1-moderation-governance.md](l1-moderation-governance.md) §3.3).
 
-### 5.7 Client Approval Gate [`[TZ]` §98]
+### 5.7 Schema Deliverables [`[TZ]` §98 — approval waived]
 
-**Backend development does not begin until the client approves the database
-structure.** `[TZ]` §98 states this directly, and it is recorded here as a gate rather
-than as advice.
+[MODIFIED — v0.3.0] `[TZ]` §98 requires that "окончательная структура базы данных
+утверждается заказчиком до начала основной backend-разработки". **The client has
+waived that approval**, delegating the database design to this project's engineering
+judgment.
 
-Deliverables required before that approval:
+The waiver removes the *gate*, not the *work*. The artefacts below are still produced —
+as the basis for migrations and as the record of what was built and why — but they no
+longer block the start of backend development, and there is no sign-off step.
+
+**What the waiver costs, stated plainly**: §98 existed to protect the client from a
+schema designed for the contractor's convenience rather than the product's needs. With
+no external reviewer, that protection now rests entirely on this specification layer —
+which is why the inventory, conventions, and rules in §5.1–§5.6 are written to be
+auditable by a reader who was not present for the decisions. The client can still
+reject the design at any point; nothing is irreversible until migrations are applied
+against production data.
+
+Deliverables:
 
 ```plaintext
 ☐ Final ER diagram
@@ -343,13 +357,18 @@ Deliverables required before that approval:
                                   application server, l2-tech-stack.md §5.10)
 ```
 
-[MODIFIED — v0.2.0] Five of nine are complete at this spec's granularity; three
-require column-level elaboration. The backup item is no longer blocked — the
-deployment target resolved to self-hosted with the stack decision.
+[MODIFIED — v0.3.0] Five of nine are complete at this spec's granularity. The three
+outstanding items — field list, data types, primary and foreign keys — are produced as
+**Laravel migrations plus the `migrate:fresh --seed` verification**, not as a separate
+document: a migration set that applies cleanly from empty *is* the field list, the type
+list, and the key list, and it cannot drift from the schema the way a parallel document
+would.
 
-**Sequencing consequence**: this gate is now the *only* thing on the critical path
-ahead of backend work, and it is unblocked. The remaining column-level elaboration is
-bounded and mechanical once the inventory is agreed with the client.
+The ER diagram is generated from the applied schema rather than hand-drawn, for the
+same reason.
+
+**Sequencing consequence**: nothing now blocks backend work. The critical path runs
+straight from specification review into scaffolding and the migration set.
 
 ## 6. Implementation Notes
 
@@ -404,3 +423,4 @@ failure the client wrote the clause to prevent.
 | --- | --- | --- |
 | 0.1.0 | 2026-08-05 | Initial draft. Closes the `[TZ]` §21/§98 gap found during the second requirements pass: consolidated table inventory, cross-cutting conventions, index plan, deletion and archival rules, the favorites model, and the client approval gate that precedes backend development. |
 | 0.2.0 | 2026-08-05 | Minor: realigned to the approved Laravel stack — Eloquent/Filament table naming, spatie Media Library and Auditing tables, spatie/laravel-permission plus this project's `role_scopes` addition, adjacency-list traversal in place of a materialized path, and PostGIS `geom` columns with GiST indexes. Marked the backup-scheme deliverable complete: the deployment fork it depended on is resolved. |
+| 0.3.0 | 2026-08-05 | Minor: `[TZ]` §98's client approval waived by explicit client direction. Reframed §5.7 from an approval gate to an engineering deliverable, recorded what the waiver costs, and resolved the three outstanding items into the migration set plus a generated ER diagram rather than a parallel document. Nothing now blocks backend work. |

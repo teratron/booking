@@ -25,21 +25,18 @@ preserved at git tag `v0.1.34`.
 
 ## Blocking Gates
 
-Two gates sit ahead of backend development and are not planning items — they are
-decisions and approvals.
+**None.** Both gates that previously stood ahead of backend development are closed.
 
-| Gate | Owner | Status | Blocks |
-| --- | --- | --- | --- |
-| Specification review (23 RFC documents) | Project | Open | All planning |
-| `[TZ]` §98 — client approval of the final database structure | Client | Open | All backend work |
+| Gate | Status |
+| --- | --- |
+| Deployment target (managed vs self-hosted) | **Closed** — self-hosted ([l2-tech-stack.md](specifications/l2-tech-stack.md) §5.10) |
+| `[TZ]` §98 — client approval of the database structure | **Waived** — the client delegates the design to engineering judgment ([l2-data-model.md](specifications/l2-data-model.md) §5.7) |
 
-`[TZ]` §98 is explicit: *"Окончательная структура базы данных утверждается заказчиком
-до начала основной backend-разработки."* The deliverable status is tracked in
-[l2-data-model.md](specifications/l2-data-model.md) §5.7 — five of nine items complete,
-three requiring column-level elaboration.
+The §98 waiver removes the approval step, not the artefacts: the field list, data
+types, and keys are expressed as the Laravel migration set verified by
+`migrate:fresh --seed`, and the ER diagram is generated from the applied schema.
 
-The deployment fork that previously blocked the backup-scheme deliverable is **closed**:
-self-hosted ([l2-tech-stack.md](specifications/l2-tech-stack.md) §5.10).
+The critical path now runs straight from specification review into scaffolding.
 
 ## Client-Stated Delivery Stages
 

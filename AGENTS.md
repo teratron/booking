@@ -101,6 +101,34 @@ docker/                     # Local infrastructure (Postgres init SQL, etc.)
   revision exists, so a rejected edit can never damage a live page.
 - Bulk actions require a confirmation naming the affected record count.
 
+## Design Source — Figma First
+
+Every page and component is built **against the Figma source**, not from a written
+description of it. Before writing markup for any screen:
+
+- File: `N2cVVIS5wvjHIviP27peuX` — <https://www.figma.com/design/N2cVVIS5wvjHIviP27peuX/Booking>
+- Local copy: `.drafts/Booking.fig`
+
+Workflow: load the `figma-design-to-code` guidance, then pull the node with the Figma
+MCP tools (`get_design_context` for layout and tokens, `get_screenshot` to verify,
+`get_metadata` to locate nodes). Adapt the returned reference code to Blade + Tailwind
+and this project's existing components — never paste it verbatim.
+
+Rules:
+
+- **Design tokens come from Figma**, not from invented values. Colours, spacing, radii,
+  and type scale go into the Tailwind theme once and are reused; no magic numbers in
+  templates.
+- **Extract shared components on second use**, not speculatively — the header, footer,
+  object card, badge, and filter controls repeat across nearly every frame.
+- **Figma governs visual language and page composition only.** Scope, domain rules, and
+  behaviour come from `.design/` specifications. Where the two disagree, the
+  specification wins and the divergence is noted.
+- Frames exist in desktop and mobile pairs; build one responsive template per page, not
+  two.
+- Frames with the node prefix `1306:*` belong to an unrelated pasted document and are
+  **out of scope**.
+
 ## Specification Layer
 
 `.design/` holds the specifications this project implements. Treat them as the source

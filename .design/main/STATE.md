@@ -4,7 +4,7 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-05 07:30
+**Updated:** 2026-08-05 07:41
 **Phase:** 0 - Concept re-baseline + stack pivot
 **Status:** Active
 
@@ -12,7 +12,7 @@
 
 - **Task:** Stack replaced. Laravel 13 + Filament 5 + PostgreSQL/PostGIS + Redis, self-hosted monolith. TypeScript implementation removed (275 files) and preserved at tag `v0.1.34`. Project version 0.1.34 → 0.2.0.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral and unchanged by the pivot; the 3 L2 documents were rewritten. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Review the RFC set, then `/magic.task main`. Backend work is gated by `[TZ]` §98 (client approval of the DB structure) — now the only remaining blocker.
+- **Next Action:** `/magic.task main` to generate the plan. No gates remain — §98 approval waived, deployment fork closed.
 
 ## Progress
 
@@ -26,6 +26,8 @@ Implementation: RESET — new stack, no code yet (previous work at tag v0.1.34)
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
+- 2026-08-05 **Decision:** `[TZ]` §98 client approval of the DB structure **WAIVED** — the client is not a DB specialist and delegates all technical decisions to engineering judgment. The gate is gone; the artefacts remain, expressed as the migration set (`migrate:fresh --seed` is the field/type/key list) plus a generated ER diagram. Consequence to hold: §98 existed to protect the client from a self-serving schema, so that protection now rests entirely on the specification layer being auditable by someone who was not present for the decisions.
+- 2026-08-05 **Standing instruction:** all page markup is built **from the Figma source via MCP**, never from a prose description. File `N2cVVIS5wvjHIviP27peuX`, page `0:1`; access verified working. Design tokens go into the Tailwind theme once; Figma governs visual language and composition only — behaviour comes from the specifications, and the specification wins on conflict.
 - 2026-08-05 **Decision:** **Stack replaced: Laravel 13 + Filament 5 + PostgreSQL/PostGIS + Redis**, self-hosted monolith. Rationale in `l2-tech-stack.md` §1. The v1.x argument for Next.js was wrong on two counts — it conflated SEO indexability with client interactivity (Blade renders equally crawlable HTML), and it anchored on an existing codebase whose schema needed full replacement anyway. Decisive factor: §99–134 + §29–43 (back office + owner cabinet) are more than a third of the TZ, and Filament delivers both from one toolkit; ten packages cover eleven TZ sections. Go was evaluated and rejected — no Filament-class admin toolkit, and the performance premise does not hold at ~30–60k objects behind Redis.
 - 2026-08-05 **Note:** Deployment fork CLOSED — self-hosted, driven by `[TZ]` §97/§131 (off-server backups, administrator-triggered restore). This unblocked the last of the three storage/queue/mail selections and the §98 backup-scheme deliverable.
 - 2026-08-05 **Finding:** Second line-by-line TZ pass found **6 gaps** the first pass missed, all closed. New specs: `l1-public-api.md` (§19 — REST API/tokens/docs had zero coverage), `l1-home-page.md` (§4/§5 — 16-block composition unowned), `l2-data-model.md` (§21/§98). Amendments: favorites (§8), traffic-source analytics (§23), candidate-module catalogue (§23/§64). One was worse than a gap — `l1-advertising.md` §2 flatly excluded a self-service advertiser cabinet that TZ §23 actually *recommends*; corrected to a deferred candidate.
@@ -41,7 +43,7 @@ Implementation: RESET — new stack, no code yet (previous work at tag v0.1.34)
 
 <!-- Empty if none. Format: [severity] description -->
 
-- **[high] `[TZ]` §98 client schema approval not started** (`l2-data-model.md` §5.7) — backend development cannot begin without it. Now unblocked and the only remaining gate: 5 of 9 deliverables complete, 3 need column-level detail.
+(none)
 
 ## Blocking Constraints
 
