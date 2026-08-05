@@ -1,25 +1,31 @@
 # Project Context
 
-**Generated:** 2026-08-01
+**Generated:** 2026-08-05
 
 ## Active Technologies
 
-- Node.js
+- Unknown (no manifest detected)
 
 ## Core Project Structure
 
 ```plaintext
 .
 ├── .claude/
-│   └── rules/
+│   ├── rules/
+│   └── scheduled_tasks.lock
 ├── .design/
 │   ├── .version
 │   ├── INDEX.md
 │   ├── RULES.md
 │   ├── main/
 │   └── workspace.json
+├── .drafts/
+│   ├── TODO.md
+│   └── booking.md
 ├── .env.example
-├── .fallowrc.jsonc
+├── .fallow/
+│   ├── .gitignore
+│   └── graph-cache.bin
 ├── .gitignore
 ├── .magic/
 ├── .markdownlint.json
@@ -27,32 +33,11 @@
 ├── CHANGELOG.md
 ├── CLAUDE.md
 ├── README.md
-├── biome.json
-├── components.json
+├── docker/
+│   └── postgres/
 ├── docker-compose.yml
-├── docs/
-│   └── README.md
-├── drizzle/
-│   ├── 0000_gorgeous_triton.sql
-│   ├── 0001_wonderful_korvac.sql
-│   └── meta/
-├── drizzle.config.ts
-├── messages/
-│   └── ru.json
-├── next.config.ts
-├── package.json
-├── pnpm-lock.yaml
-├── pnpm-workspace.yaml
-├── postcss.config.mjs
-├── src/
-│   ├── app/
-│   ├── components/
-│   ├── hooks/
-│   ├── i18n/
-│   ├── lib/
-│   └── no-hardcoded-copy.test.ts
-├── tsconfig.json
-└── vitest.config.ts
+└── docs/
+    └── README.md
 ```
 
 ## Recent Changes

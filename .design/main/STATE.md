@@ -4,28 +4,32 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-05 14:08
-**Phase:** 0 - Concept re-baseline + stack pivot
+**Updated:** 2026-08-05 15:47
+**Phase:** 1 — Foundation, Schema & Authorization
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Stack replaced. Laravel 13 + Filament 5 + PostgreSQL/PostGIS + Redis, self-hosted monolith. TypeScript implementation removed (275 files) and preserved at tag `v0.1.34`. Project version 0.1.34 → 0.2.0.
+- **Task:** Plan generated. 7 phases across 23 specs, Bootstrap mode (tentative — nothing is `Stable`). Phase 1 decomposed into 21 atomic tasks across 5 tracks; Phases 2–7 carry scope and frontmatter only.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral and unchanged by the pivot; the 3 L2 documents were rewritten. TZ coverage 134/134, registry parity clean.
-- **Next Action:** `/magic.task main` to generate the plan. No gates remain — §98 approval waived, deployment fork closed.
+- **Next Action:** Execute T-1A01 Scaffold the Laravel 13 + Filament 5 monolith via /magic.run main
 
 ## Progress
 
 ```
+Overall: [0/7] ░░░░░░░░ 0%
 Specification:  [23/23] re-baselined + re-targeted, all RFC, review pending
-Plan:           NOT GENERATED — awaiting spec review
-Implementation: RESET — new stack, no code yet (previous work at tag v0.1.34)
+Plan:           [7 phases] generated (Bootstrap, tentative); Phase 1 decomposed, 2-7 scoped
+Implementation: [0/21] Phase 1 tasks — new stack, no code yet (previous work at tag v0.1.34)
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
+- 2026-08-05 **Decision: plan generated in Bootstrap mode.** No specification reached `Stable`, so the C6 default (plan only `Stable`, backlog the rest) would have produced an empty plan. The Bootstrap Exception applies — zero `Stable` plus a `PLAN.md` with no active phases — and RFC specs qualify a fortiori, being strictly more mature than the `Draft` the rule names. `RFC → Stable` promotion was **withheld**: `RULES.md` §2 requires no open questions and the set carries twenty inline TBDs. Consequence: every phase is provisional and should be re-derived by `/magic.task` as specs mature. Phase 1 is the exception — only two of the twenty open questions touch it, both recorded in `PLAN.md` §Open Questions Carried into Phase 1, and the higher-value one (whether region-scoped permissions apply transitively) is worth closing before `T-1B01` because it changes the shape of `role_scopes`.
+- 2026-08-05 **Decision: back office is built before the public site**, inverting `[TZ]` §23's stages 4–6. Recorded as a divergence, not applied silently. The public site renders data that does not exist until the back office creates it; §134 puts import/export in the mandatory first release precisely because content population is a real deliverable; and `l2-tech-stack.md` §6.4–§6.5 require scoped authorization before any panel screen and order the panels by §134 priority. The client's list enumerates delivery stages, not a build order, and every stage is still delivered.
+- 2026-08-05 **Decision:** `l1-room-reservation.md` **to Backlog.** Its three tables and the `booking`/`payment`/`guest_accounts` registry rows ship **disabled** in Phase 1, and `T-1T04` proves the module is absent rather than hidden. The capability itself is outside `[TZ]` §134's mandatory first release, and the prior implementation is explicitly not a migration source — so building the flow is its own future phase rather than scope smuggled into release one.
 - 2026-08-05 **Decision:** `[TZ]` §98 client approval of the DB structure **WAIVED** — the client is not a DB specialist and delegates all technical decisions to engineering judgment. The gate is gone; the artefacts remain, expressed as the migration set (`migrate:fresh --seed` is the field/type/key list) plus a generated ER diagram. Consequence to hold: §98 existed to protect the client from a self-serving schema, so that protection now rests entirely on the specification layer being auditable by someone who was not present for the decisions.
 - 2026-08-05 **Language policy applied to `.design/`, archives included.** All prose is English with zero remaining Cyrillic, including quoted `[TZ]` excerpts (18 spec files, patch bumps) and the archived phase logs. The archives were edited by explicit client direction — the project may be sold, so every document must be readable by a developer anywhere, with no Russian text surviving anywhere in the tree — which overrides the engine's "archives are immutable" rule; the edit is recorded here so the log is not mistaken for silent tampering. Literal UI strings the deleted TypeScript app rendered (e.g. a "Sign in" button label) are now translated in place rather than quoted-and-glossed: an initial pass kept the original Cyrillic alongside a gloss, but the client confirmed the goal is full readability, not verbatim quotation, so the Russian original was dropped and only the English rendering kept. The one deliberate exception is `l1-geography.md` §5.2, which keeps per-country territory level names in their own languages because the section's entire point is that the vocabularies differ; English glosses are added there.
 - 2026-08-05 **Standing instruction: continuous quality gates.** Lint, format, static analysis, tests, benchmarks, convention checks and docs run after every meaningful change — not at task end. Wired as `composer quality` so local and CI are identical. Conventions enforced by Pest `arch()` tests rather than review, including the SDD-containment rule. Benchmarks run against seeded realistic volume, never fixtures. Documentation in English for the client's future maintainer. Detail in CLAUDE.md "Engineering Discipline"; budgets in `l2-tech-stack.md` §5.9.
