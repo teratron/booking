@@ -139,24 +139,124 @@ Never reference specification artefacts from product code: no task IDs, no phase
 names, no `.design/…` paths, no spec file names in comments, identifiers, or strings.
 If design rationale matters at a code site, restate it in plain language.
 
-## Verification
+## Engineering Discipline
 
-Run and verify before marking any task complete:
+Quality gates run **continuously, not terminally**. After every meaningful change —
+not once at the end of a task, and never only before a commit. A gate that runs late
+reports a pile of failures nobody wants to untangle; a gate that runs constantly
+reports one.
 
-- `vendor/bin/pint --test` — zero formatting violations.
-- `vendor/bin/phpstan analyse` — level 8, zero errors.
-- `php artisan test` — full suite green.
-- `php artisan migrate:fresh --seed` on a scratch database — migrations and seeders
-  apply cleanly from empty.
+### Toolchain
+
+Declared as Composer scripts so the commands are identical locally and in CI:
+
+| Command | What it runs |
+| --- | --- |
+| `composer fix` | `pint` — format the codebase |
+| `composer lint` | `pint --test` — fail on any formatting drift |
+| `composer analyse` | `phpstan analyse` — Larastan, level 8 |
+| `composer test` | `pest` — unit, feature, architecture |
+| `composer test:arch` | Architecture tests only (fast convention check) |
+| `composer test:coverage` | Coverage with the configured minimum |
+| `composer bench` | Performance benchmarks (§ below) |
+| `composer audit` | `composer audit` — known security advisories |
+| `composer unused` | Detect declared-but-unimported dependencies |
+| `composer quality` | All of the above, in order — the pre-commit gate |
+
+CI runs `composer quality` on every push. Set it up during scaffolding, not later.
+
+### Architecture Tests
+
+Conventions are enforced by Pest `arch()` tests, not by review discipline — a rule a
+machine cannot check is a rule that erodes. At minimum:
+
+- `declare(strict_types=1)` in every file.
+- No `dd`, `dump`, `var_dump`, `ray`, or `print_r` anywhere outside tests.
+- Models live only in `App\Models` and hold no business logic.
+- `App\Filament` and `App\Livewire` never use the `DB` facade directly — they go
+  through `App\Services`.
+- Controllers, jobs, and services are `final` unless deliberately extended.
+- **No `.design` path, task ID, phase name, or specification filename appears anywhere
+  in `app/`, `resources/`, or `database/`** — the containment rule below, made
+  mechanical.
+
+### Testing
+
+- Pest for unit and feature tests; browser tests for the flows a broken selector would
+  silently kill — contact-channel clicks, the availability toggle, moderation approve
+  and reject.
+- Every bug fix starts with a failing test that reproduces it.
+- Seeders produce **realistic volume** for the tests that care about volume. The
+  catalog ranking query behaves differently against 12 fixtures and against 50 000
+  objects; only the second tells you anything.
+- `php artisan migrate:fresh --seed` must apply cleanly from empty, every time.
+
+### Benchmarking & Performance Budgets
+
+`[TZ]` §18 and §94 make performance a requirement, not an aspiration. Budgets are
+measured, not assumed:
+
+| Surface | Budget |
+| --- | --- |
+| Catalog / territory page, cache hit | < 100 ms TTFB |
+| Catalog / territory page, cache miss | < 400 ms |
+| Object page, cache miss | < 300 ms |
+| Search, p95 | < 300 ms — the escalation trigger to Typesense |
+| Any single request | ≤ 30 queries |
+
+- **N+1 detection is enabled in development and fails the test run.** Eloquent plus
+  Filament plus nested relations is the exact shape that produces them, and they do not
+  announce themselves.
+- Benchmark the catalog ranking query and territory subtree expansion against seeded
+  volume whenever either changes — these are the portal's hottest paths.
+- Laravel Pulse in production for ongoing visibility.
+- Run a load test against catalog and territory pages before launch, not after.
+
+### Documentation
+
+Written in **English**, for a developer who did not build this and may be maintaining
+it for the client after handover.
+
+- **Docblocks on every public service method**: what it guarantees, what it throws,
+  what it assumes — not a line-by-line narration of the body.
+- **Comment the *why*, never the *what*.** Non-obvious constraints, business rules with
+  a surprising shape, and deliberate deviations get a sentence. Obvious code gets
+  nothing — noise costs more than it explains.
+- **`README.md`**: setup from zero to a running local instance, architecture map,
+  common tasks.
+- **`docs/`**: deployment, operations runbook, and the **backup and restore procedure**
+  — `[TZ]` §97 and §131 require a documented, rehearsed restore, not just working
+  backups.
+- Filament labels, table columns, and form fields go through translation keys, never
+  literal strings.
+
+### Cleanliness
+
+- **Delete, never comment out.** Git holds the history; commented-out blocks hold
+  confusion.
+- No dead code, no unused dependencies. The previous implementation of this project
+  accumulated eleven unused packages before anyone noticed — `composer unused` and
+  Rector's dead-code rules exist to prevent the repeat.
+- A `TODO` carries plain-language context and an owner, never a task ID or a
+  specification reference.
+- Migrations are never edited after being applied to a shared environment — add a new
+  one.
+- Prefer deleting an abstraction to generalizing it further.
 
 ## Completion Protocol (Mandatory Checklist)
 
 Before declaring any task complete, verify every item:
 
-- [ ] **Quality gates**: Pint, PHPStan level 8, Pest suite, and a clean `migrate:fresh --seed` all pass.
+- [ ] **Quality gates**: `composer quality` passes end to end — Pint, PHPStan level 8, Pest (including architecture tests), coverage minimum, `composer audit`, `composer unused`.
+- [ ] **Migrations**: `php artisan migrate:fresh --seed` applies cleanly from empty.
+- [ ] **Tests**: new behaviour has tests; every bug fix has a test that failed before it.
+- [ ] **Performance**: no N+1 introduced; touched hot paths still meet their budget.
+- [ ] **Documentation**: public service methods have docblocks; non-obvious decisions have a *why* comment; README and `docs/` updated if setup or operations changed.
 - [ ] **Language policy**: all code, identifiers, comments, documentation, and commit messages in English; all chat interaction in Russian.
 - [ ] **Architecture**: business logic in `app/Services/`; models thin; authorization enforced in Policies; no logic in Filament resources or Blade.
 - [ ] **Localization**: no hard-coded user-facing strings; no hard-coded language or country counts.
 - [ ] **Ordering**: placement-tier precedence preserved wherever objects are listed.
+- [ ] **Design fidelity**: markup built against the Figma node, tokens from the Tailwind theme, no magic values.
 - [ ] **Specification containment**: no `.design/` references, task IDs, or spec file names in product code.
+- [ ] **Cleanliness**: nothing commented out, no dead code, no stray `dd()`/`dump()`, no unused dependency added.
 - [ ] **Formatting**: no horizontal rules (`---`) in document bodies except in a footer.

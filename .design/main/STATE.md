@@ -4,7 +4,7 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-05 07:41
+**Updated:** 2026-08-05 07:51
 **Phase:** 0 - Concept re-baseline + stack pivot
 **Status:** Active
 
@@ -27,6 +27,7 @@ Implementation: RESET — new stack, no code yet (previous work at tag v0.1.34)
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
 - 2026-08-05 **Decision:** `[TZ]` §98 client approval of the DB structure **WAIVED** — the client is not a DB specialist and delegates all technical decisions to engineering judgment. The gate is gone; the artefacts remain, expressed as the migration set (`migrate:fresh --seed` is the field/type/key list) plus a generated ER diagram. Consequence to hold: §98 existed to protect the client from a self-serving schema, so that protection now rests entirely on the specification layer being auditable by someone who was not present for the decisions.
+- 2026-08-05 **Standing instruction: continuous quality gates.** Lint, format, static analysis, tests, benchmarks, convention checks and docs run after every meaningful change — not at task end. Wired as `composer quality` so local and CI are identical. Conventions enforced by Pest `arch()` tests rather than review, including the SDD-containment rule. Benchmarks run against seeded realistic volume, never fixtures. Documentation in English for the client's future maintainer. Detail in CLAUDE.md "Engineering Discipline"; budgets in `l2-tech-stack.md` §5.9.
 - 2026-08-05 **Standing instruction:** all page markup is built **from the Figma source via MCP**, never from a prose description. File `N2cVVIS5wvjHIviP27peuX`, page `0:1`; access verified working. Design tokens go into the Tailwind theme once; Figma governs visual language and composition only — behaviour comes from the specifications, and the specification wins on conflict.
 - 2026-08-05 **Decision:** **Stack replaced: Laravel 13 + Filament 5 + PostgreSQL/PostGIS + Redis**, self-hosted monolith. Rationale in `l2-tech-stack.md` §1. The v1.x argument for Next.js was wrong on two counts — it conflated SEO indexability with client interactivity (Blade renders equally crawlable HTML), and it anchored on an existing codebase whose schema needed full replacement anyway. Decisive factor: §99–134 + §29–43 (back office + owner cabinet) are more than a third of the TZ, and Filament delivers both from one toolkit; ten packages cover eleven TZ sections. Go was evaluated and rejected — no Filament-class admin toolkit, and the performance premise does not hold at ~30–60k objects behind Redis.
 - 2026-08-05 **Note:** Deployment fork CLOSED — self-hosted, driven by `[TZ]` §97/§131 (off-server backups, administrator-triggered restore). This unblocked the last of the three storage/queue/mail selections and the §98 backup-scheme deliverable.

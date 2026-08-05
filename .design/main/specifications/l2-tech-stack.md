@@ -1,6 +1,6 @@
 # Technology Stack
 
-**Version:** 2.0.0
+**Version:** 2.1.0
 **Status:** RFC
 **Layer:** implementation
 **Implements:** l1-platform-foundation.md
@@ -231,14 +231,43 @@ database/migrations|seeders/
 docker/                     # Postgres init SQL, local infrastructure
 ```
 
-### 5.9 Quality Tooling
+### 5.9 Quality Tooling & Performance Budgets
 
 | Tool | Purpose |
 | --- | --- |
-| **Pest** | Unit, feature, and browser tests. `[TZ]` §23 lists testing as a delivery stage. |
+| **Pest** | Unit, feature, browser, and **architecture** tests. `[TZ]` §23 lists testing as a delivery stage. |
 | **PHPStan + Larastan** | Level 8 static analysis. |
 | **Laravel Pint** | Formatting. |
-| **Rector** | Automated upgrades between framework majors. |
+| **Rector** | Dead-code rules and automated upgrades between framework majors. |
+| **Laravel Pulse** | Production performance visibility. |
+| **N+1 detector** | Development-time; fails the test run rather than warning. |
+
+Gates are wired as Composer scripts (`composer quality`) so local and CI invocation are
+identical, and they run continuously rather than at task boundaries. Conventions are
+enforced by Pest `arch()` tests rather than by review — including the
+specification-containment rule, which is mechanically checkable: no `.design` path,
+task ID, or specification filename may appear anywhere under `app/`, `resources/`, or
+`database/`.
+
+`[TZ]` §18 and §94 make performance a requirement rather than an aspiration, so the
+budgets are stated and measured:
+
+| Surface | Budget |
+| --- | --- |
+| Catalog / territory page, cache hit | < 100 ms TTFB |
+| Catalog / territory page, cache miss | < 400 ms |
+| Object page, cache miss | < 300 ms |
+| Search, p95 | < 300 ms — the §5.7 escalation trigger to Typesense |
+| Any single request | ≤ 30 queries |
+
+Benchmarks run against **seeded realistic volume** — tens of thousands of objects, not
+a dozen fixtures. The catalog ranking query (§5.6) and territory subtree expansion
+(§5.3) behave differently at scale, and a benchmark against fixtures measures nothing
+about either.
+
+Full working conventions live in [CLAUDE.md](../../../CLAUDE.md) under "Engineering
+Discipline"; this section fixes the tooling selection and the numeric budgets that the
+plan schedules work against.
 
 ### 5.10 Deployment
 
@@ -323,3 +352,4 @@ are moot now; Filament covers what they were being asked to cover, natively.
 | 1.0.0 | 2026-08-05 | Major restructure against the client technical specification: dependency audit, missing-capability ledger, background-worker finding, deployment fork. |
 | 1.0.1 | 2026-08-05 | Clarification: active-language phrasing. |
 | 2.0.0 | 2026-08-05 | **Stack replacement.** Laravel 13 + Filament 5 + PostgreSQL/PostGIS + Redis, self-hosted monolith. Records why the v1.x reasoning was wrong (SEO conflated with client interactivity; conclusion anchored on an existing codebase). Resolves the deployment fork to self-hosted. Replaces the missing-capability ledger with a package set covering eleven specification sections, and states the remaining bespoke surface explicitly. |
+| 2.1.0 | 2026-08-05 | Minor: expanded §5.9 with architecture tests, dead-code and N+1 tooling, Laravel Pulse, the `composer quality` gate, and numeric performance budgets tied to `[TZ]` §18/§94 — including the requirement that benchmarks run against seeded realistic volume rather than fixtures. |
