@@ -4,40 +4,33 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-05 16:38
+**Updated:** 2026-08-05 22:09
 **Phase:** 1 — Foundation, Schema & Authorization
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-1A02 Local Docker Compose stack with PostGIS, Redis, MinIO, Mailpit
+- **Task:** T-1A03 Quality toolchain and the composer quality gate
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral and unchanged by the pivot; the 3 L2 documents were rewritten. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Execute T-1A03 Quality toolchain and the `composer quality` gate via /magic.run main
+- **Next Action:** Execute T-1A04 Asset pipeline — Vite, Tailwind 4, Alpine, Livewire 4 via /magic.run main
 
 ## Progress
 
 ```
 Overall: [0/7] ░░░░░░░░ 0%
 Plan:           [7 phases] generated (Bootstrap, tentative); Phase 1 decomposed, 2-7 scoped
-Implementation: [2/21] Phase 1 — Track A: scaffold + local stack running; A03/A04 next
+Implementation: [3/21] Phase 1 — Track A: quality gate wired, `composer quality` green; A04 next
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-05 **Decision: plan generated in Bootstrap mode.** No specification reached `Stable`, so the C6 default (plan only `Stable`, backlog the rest) would have produced an empty plan. The Bootstrap Exception applies — zero `Stable` plus a `PLAN.md` with no active phases — and RFC specs qualify a fortiori, being strictly more mature than the `Draft` the rule names. `RFC → Stable` promotion was **withheld**: `RULES.md` §2 requires no open questions and the set carries twenty inline TBDs. Consequence: every phase is provisional and should be re-derived by `/magic.task` as specs mature. Phase 1 is the exception — only two of the twenty open questions touch it, both recorded in `PLAN.md` §Open Questions Carried into Phase 1, and the higher-value one (whether region-scoped permissions apply transitively) is worth closing before `T-1B01` because it changes the shape of `role_scopes`.
-- 2026-08-05 **Decision: back office is built before the public site**, inverting `[TZ]` §23's stages 4–6. Recorded as a divergence, not applied silently. The public site renders data that does not exist until the back office creates it; §134 puts import/export in the mandatory first release precisely because content population is a real deliverable; and `l2-tech-stack.md` §6.4–§6.5 require scoped authorization before any panel screen and order the panels by §134 priority. The client's list enumerates delivery stages, not a build order, and every stage is still delivered.
-- 2026-08-05 **Decision:** `l1-room-reservation.md` **to Backlog.** Its three tables and the `booking`/`payment`/`guest_accounts` registry rows ship **disabled** in Phase 1, and `T-1T04` proves the module is absent rather than hidden. The capability itself is outside `[TZ]` §134's mandatory first release, and the prior implementation is explicitly not a migration source — so building the flow is its own future phase rather than scope smuggled into release one.
-- 2026-08-05 **Decision:** `[TZ]` §98 client approval of the DB structure **WAIVED** — the client is not a DB specialist and delegates all technical decisions to engineering judgment. The gate is gone; the artefacts remain, expressed as the migration set (`migrate:fresh --seed` is the field/type/key list) plus a generated ER diagram. Consequence to hold: §98 existed to protect the client from a self-serving schema, so that protection now rests entirely on the specification layer being auditable by someone who was not present for the decisions.
-- 2026-08-05 **Language policy applied to `.design/`, archives included.** All prose is English with zero remaining Cyrillic, including quoted `[TZ]` excerpts (18 spec files, patch bumps) and the archived phase logs. The archives were edited by explicit client direction — the project may be sold, so every document must be readable by a developer anywhere, with no Russian text surviving anywhere in the tree — which overrides the engine's "archives are immutable" rule; the edit is recorded here so the log is not mistaken for silent tampering. Literal UI strings the deleted TypeScript app rendered (e.g. a "Sign in" button label) are now translated in place rather than quoted-and-glossed: an initial pass kept the original Cyrillic alongside a gloss, but the client confirmed the goal is full readability, not verbatim quotation, so the Russian original was dropped and only the English rendering kept. The one deliberate exception is `l1-geography.md` §5.2, which keeps per-country territory level names in their own languages because the section's entire point is that the vocabularies differ; English glosses are added there.
-- 2026-08-05 **Standing instruction: continuous quality gates.** Lint, format, static analysis, tests, benchmarks, convention checks and docs run after every meaningful change — not at task end. Wired as `composer quality` so local and CI are identical. Conventions enforced by Pest `arch()` tests rather than review, including the SDD-containment rule. Benchmarks run against seeded realistic volume, never fixtures. Documentation in English for the client's future maintainer. Detail in CLAUDE.md "Engineering Discipline"; budgets in `l2-tech-stack.md` §5.9.
-- 2026-08-05 **Standing instruction:** all page markup is built **from the Figma source via MCP**, never from a prose description. File `N2cVVIS5wvjHIviP27peuX`, page `0:1`; access verified working. Design tokens go into the Tailwind theme once; Figma governs visual language and composition only — behaviour comes from the specifications, and the specification wins on conflict.
-- 2026-08-05 **Decision:** **Stack replaced: Laravel 13 + Filament 5 + PostgreSQL/PostGIS + Redis**, self-hosted monolith. Rationale in `l2-tech-stack.md` §1. The v1.x argument for Next.js was wrong on two counts — it conflated SEO indexability with client interactivity (Blade renders equally crawlable HTML), and it anchored on an existing codebase whose schema needed full replacement anyway. Decisive factor: §99–134 + §29–43 (back office + owner cabinet) are more than a third of the TZ, and Filament delivers both from one toolkit; ten packages cover eleven TZ sections. Go was evaluated and rejected — no Filament-class admin toolkit, and the performance premise does not hold at ~30–60k objects behind Redis.
-- 2026-08-05 **Note:** Deployment fork CLOSED — self-hosted, driven by `[TZ]` §97/§131 (off-server backups, administrator-triggered restore). This unblocked the last of the three storage/queue/mail selections and the §98 backup-scheme deliverable.
-- 2026-08-05 **Finding:** Second line-by-line TZ pass found **6 gaps** the first pass missed, all closed. New specs: `l1-public-api.md` (§19 — REST API/tokens/docs had zero coverage), `l1-home-page.md` (§4/§5 — 16-block composition unowned), `l2-data-model.md` (§21/§98). Amendments: favorites (§8), traffic-source analytics (§23), candidate-module catalogue (§23/§64). One was worse than a gap — `l1-advertising.md` §2 flatly excluded a self-service advertiser cabinet that TZ §23 actually *recommends*; corrected to a deferred candidate.
-- 2026-08-05 **Decision:** Booking is **preserved, not deprecated**. Per explicit product direction and `[TZ]` §63–64, the reservation work (schema, checkout flow, Fondy adapter — preserved at tag `v0.1.34`) is retained behind an administrator-toggleable module registry (`l1-feature-modules.md`), disabled by default. Booking and payment are separate module rows, so "dated request + owner confirmation, no payment provider" is a supported intermediate state.
-- 2026-08-05 **Decision:** Launch locales narrowed to **English + Russian only**; Romanian, Ukrainian, Georgian deferred until after project completion and activated from the back office (`l1-localization.md` §5.6). Content decision, not a capability one — translation tables, per-language slugs, hreflang, and fallback still ship in the first migration. Consequence: no launch country's own primary language is active at release, so country records reference inactive languages and must resolve via fallback rather than fail validation.
+- 2026-08-05 **Decision: plan generated in Bootstrap mode.** No specification reached `Stable`, so the C6 default (plan only `Stable`, backlog the rest) would have produced an empty plan. The Bootstrap Exception applies. `RFC → Stable` promotion was **withheld** — `RULES.md` §2 requires no open questions and the set carries twenty inline TBDs. Two touch Phase 1, recorded in `PLAN.md` §Open Questions Carried into Phase 1; the higher-value one (region-scoped permission transitivity) is worth closing before `T-1B01`.
+- 2026-08-05 **Decision: back office before the public site**, inverting `[TZ]` §23's stages 4–6. The public site renders data that does not exist until the back office creates it; `l2-tech-stack.md` §6.4–§6.5 require scoped authorization before any panel screen. Recorded as a divergence, not applied silently — every stage is still delivered.
+- 2026-08-05 **Decision:** `l1-room-reservation.md` **to Backlog.** Ships disabled in Phase 1 (`T-1T04` proves absence, not hiding); outside `[TZ]` §134's mandatory release, prior implementation explicitly not a migration source.
+- 2026-08-05 **Standing instruction: continuous quality gates**, wired as `composer quality` (T-1A03) so local and CI are identical. Conventions enforced by Pest `arch()` tests, not review. Detail in CLAUDE.md "Engineering Discipline"; budgets in `l2-tech-stack.md` §5.9.
+- 2026-08-05 **Decision: Stack — Laravel 13 + Filament 5 + PostgreSQL/PostGIS + Redis**, self-hosted. Full rationale in `l2-tech-stack.md` §1; earlier decisions (§98 waiver, deployment-fork closure, TZ-gap findings, Figma-first instruction) are in git history and each spec's own Document History — not repeated here.
 
 ## Blockers
 
@@ -82,20 +75,23 @@ Implementation: [2/21] Phase 1 — Track A: scaffold + local stack running; A03/
 - **Catalog ordering is placement-tier first** — never "improve" it into
   relevance-first. A lower-tier object outranking a higher-tier one breaks the
   revenue model (`[TZ]` §25.2).
+- **A composer script named `audit` is silently skipped** — it collides with
+  Composer's own built-in command and is dropped with only a one-line warning,
+  not an error. Call `composer audit` directly inside `quality`'s array
+  instead of defining a wrapper script.
+- **Git hooks are versioned at `.githooks/`, not `.git/hooks/`.** A fresh clone
+  must run `git config core.hooksPath .githooks` once, or the pre-commit gate
+  (engine-integrity check + `pint --test` on staged PHP) silently never fires.
+- **Rector and Pint disagree on some formatting** (e.g. arrow-function
+  spacing). Always run `composer fix` after `composer rector` and re-check
+  `composer lint` before considering a refactor done.
 
 ## Session Continuity
 
-**Last Session Ended:** 2026-08-05 — specification re-baseline + stack pivot
-**Handoff File:** none (state is complete in this file, PLAN.md, and INDEX.md)
-**Bootstrap Mode:** false
-
-**Reading order for a fresh session:**
-
-1. This file — position, decisions, blockers, blocking constraints.
-2. `CLAUDE.md` — stack, conventions, Figma-first rule, engineering discipline.
-3. `.design/main/INDEX.md` — 23 specs, all RFC.
-4. `.design/main/PLAN.md` — no plan yet; gates all closed.
-5. `l2-tech-stack.md` §1 — why Laravel, and why the earlier Next.js answer was wrong.
+**Reading order for a fresh session:** this file (position, decisions,
+constraints) → `CLAUDE.md` (stack, conventions, engineering discipline) →
+`.design/main/PLAN.md` (7 phases, Bootstrap/tentative) →
+`.design/main/tasks/phase-1.md` (active phase, atomic tasks).
 
 **Do not carry forward** anything about Next.js, TypeScript, Drizzle, Better Auth,
 react-admin, or Vercel — that stack is superseded and preserved only at tag `v0.1.34`.

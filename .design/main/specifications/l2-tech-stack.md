@@ -97,7 +97,7 @@ stack.
 
 | Component | Target | Rationale |
 | --- | --- | --- |
-| **PHP** | 8.4+ | `declare(strict_types=1)` everywhere; typed properties throughout. |
+| **PHP** | 8.5+ | `declare(strict_types=1)` everywhere; typed properties throughout. |
 | **Laravel** | 13.x | Queues, scheduler, localization, policies, API resources, and mail in the framework core rather than assembled from packages. |
 | **Blade + Livewire** | 4.x | Server-rendered HTML with interactive catalog filters, pagination, and map updates — without a separate frontend application. |
 | **Alpine.js** | 3.x | Local interactivity where Livewire round trips are unnecessary. |

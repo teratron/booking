@@ -1,9 +1,12 @@
 <?php
 
 declare(strict_types=1);
+use App\Providers\AppServiceProvider;
+use App\Providers\Filament\AdminPanelProvider;
+use App\Providers\Filament\CabinetPanelProvider;
 
 return [
-    App\Providers\AppServiceProvider::class,
-    App\Providers\Filament\AdminPanelProvider::class,
-    App\Providers\Filament\CabinetPanelProvider::class,
+    AppServiceProvider::class,
+    AdminPanelProvider::class,
+    CabinetPanelProvider::class,
 ];

@@ -81,7 +81,11 @@ services:
       - postgres-data:/var/lib/postgresql
       - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-booking} -d ${DB_DATABASE:-booking}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USERNAME:-booking} -d ${DB_DATABASE:-booking}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 10

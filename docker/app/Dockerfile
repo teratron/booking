@@ -20,6 +20,10 @@ COPY --from=mlocati/php-extension-installer:latest /usr/bin/install-php-extensio
 # imagick   : Media Library conversions — thumbnails, card, gallery derivatives
 # pcntl     : Horizon needs process signals to supervise workers
 # opcache   : not optional in any environment where response time is a budget
+# pcov      : coverage driver for `composer test:coverage` — an order of
+#             magnitude faster than Xdebug because it only instruments files
+#             actually covered, which matters once the seeded-volume benchmark
+#             suite runs in the same pipeline as the coverage gate.
 RUN install-php-extensions \
         intl \
         pdo_pgsql \
@@ -31,7 +35,8 @@ RUN install-php-extensions \
         bcmath \
         exif \
         pcntl \
-        opcache
+        opcache \
+        pcov
 
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 

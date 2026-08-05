@@ -1,0 +1,41 @@
+#!/bin/sh
+# Versioned pre-commit hook. Installed via `git config core.hooksPath .githooks`
+# (see docs/README setup step) so every clone gets the same gate, unlike the
+# unversioned .git/hooks/ directory.
+#
+# No `set -e` here, deliberately: each check below inspects its own exit code
+# to print a specific, actionable message before exiting. `set -e` would abort
+# on the first non-zero status before that message ever printed.
+
+echo "[Magic Sync] Checking engine integrity..."
+node .magic/scripts/executor.js update-engine-meta --check
+if [ $? -ne 0 ]; then
+  echo "[Magic Sync] Engine drift detected in .magic/."
+  echo "[Magic Sync] If this is unintended: restore .magic/ from the magic-spec release archive."
+  echo "[Magic Sync] If this is an engine-improvement task: run 'node .magic/scripts/executor.js update-engine-meta' (developer install only)."
+  exit 1
+fi
+echo "[Magic Sync] Engine in sync."
+
+# Skip the PHP gate entirely when no staged file would be affected by it — a
+# .design/ or documentation-only commit should not need the Docker stack running.
+staged_php=$(git diff --cached --name-only --diff-filter=ACMR -- '*.php')
+if [ -z "$staged_php" ]; then
+  echo "[Quality] No staged PHP files — skipping the formatting gate."
+  exit 0
+fi
+
+if ! docker compose exec -T app true >/dev/null 2>&1; then
+  echo "[Quality] PHP files are staged but the 'app' container is not running."
+  echo "[Quality] Start the stack first: docker compose up -d"
+  exit 1
+fi
+
+echo "[Quality] Checking formatting (pint --test)..."
+if ! docker compose exec -T app vendor/bin/pint --test; then
+  echo "[Quality] Formatting check failed. Run 'docker compose exec app composer fix' and re-stage."
+  exit 1
+fi
+
+echo "[Quality] Formatting clean. Proceeding to commit..."
+exit 0
