@@ -1,6 +1,6 @@
 # Localization
 
-**Version:** 0.2.0
+**Version:** 0.2.1
 **Status:** RFC
 **Layer:** concept
 
@@ -52,8 +52,8 @@ the common cross-border browsing case impossible.
   grammar changes with the count of active languages.
 - Launch countries: Moldova, Ukraine, Georgia (`[TZ]` §1.3). Each carries its own
   currency, phone code, flag, and primary language (`[TZ]` §66).
-- `[TZ]` §66 enumerates country name columns per language ("название на украинском
-  языке", "название на русском языке", …). This spec deliberately **rejects that
+- `[TZ]` §66 enumerates country name columns per language ("name in Ukrainian",
+  "name in Russian", …). This spec deliberately **rejects that
   column-per-language shape** in favour of translation rows — see §7.
 - Machine translation is out of scope. Translations are authored or imported by
   people through the back office (`[TZ]` §108).
@@ -104,7 +104,7 @@ Country
 
 Language
 ├── code (BCP 47)
-├── short label ("Ру", "EN")
+├── short label ("EN", "RU")
 ├── icon / flag asset
 ├── text direction
 ├── active flag
@@ -173,7 +173,7 @@ the primary language.
 
 UI copy is externalized into per-language message catalogs, addressed by stable
 keys. Catalog entries are editable through the back office without a deployment
-(`[TZ]` §108 "редактировать переводы интерфейса"). Adding a language creates an
+(`[TZ]` §108 "edit interface translations"). Adding a language creates an
 empty catalog that resolves entirely through fallback until filled — the language is
 usable from the moment it is activated, not only once fully translated.
 
@@ -190,7 +190,7 @@ The back office ([l1-back-office.md](l1-back-office.md)) exposes, per `[TZ]` §1
 - publish a single language version of an entity independently of the others.
 
 Translation completeness per entity and per language is a reportable metric, since
-`[TZ]` §126 requires an "отсутствует перевод" SEO warning.
+`[TZ]` §126 requires a "translation missing" SEO warning.
 
 ### 5.6 Phased Language Activation [ADDED — v0.2.0]
 
@@ -294,3 +294,4 @@ stays possible.
 | --- | --- | --- |
 | 0.1.0 | 2026-08-05 | Initial draft derived from the client technical specification. |
 | 0.2.0 | 2026-08-05 | Minor: split the language set into launch (English, Russian) and eventual (plus Romanian, Ukrainian, Georgian) per explicit product direction; added §5.6 Phased Language Activation with the no-code-change trace, the inactive-primary-language consequence, and a definition of done for the deferral. |
+| 0.2.1 | 2026-08-05 | Patch: translated quoted `[TZ]` excerpts from Russian to English per the project's language policy; no meaning changed. |

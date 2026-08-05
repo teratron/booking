@@ -1,6 +1,6 @@
 # SEO
 
-**Version:** 0.1.1
+**Version:** 0.1.2
 **Status:** RFC
 **Layer:** concept
 
@@ -25,10 +25,11 @@ it healthy. Derived from `[TZ]` §13, §92, §126.
 ## 1. Motivation
 
 Organic search is the portal's acquisition channel. It has no booking funnel to
-retarget, no transactional email list, and no app; a visitor arrives from a query
-like "отели Буковель" or "cazare Chișinău" and either finds a territory page or does
-not. `[TZ]` §13 and §126 reflect that weight by treating SEO as a module with its own
-administration screen and its own specialist role, not as a set of meta tags.
+retarget, no transactional email list, and no app; a visitor arrives from a query —
+typed in their own language, such as "hotels Bukovel" or "cazare Chișinău" — and
+either finds a territory page or does not. `[TZ]` §13 and §126 reflect that weight by
+treating SEO as a module with its own administration screen and its own specialist
+role, not as a set of meta tags.
 
 The problem is also harder here than on a typical site, because three dimensions
 multiply. Every page exists in every active language — two at launch, five
@@ -64,7 +65,7 @@ to prevent that.
 - **Language is expressed in the URL**, consistently across every page type
   ([l1-localization.md](l1-localization.md) §3).
 - **Slugs are per language and stable.** Changing a slug creates a permanent redirect
-  from the old one; slugs are never silently reused (`[TZ]` §126 "перенаправления").
+  from the old one; slugs are never silently reused (`[TZ]` §126 "redirects").
 - **URLs are readable and hierarchical**, mirroring the territory tree so that a URL
   communicates position (`[TZ]` §13).
 
@@ -72,14 +73,14 @@ to prevent that.
 
 - **Filtered catalog views are not indexable by default.** A filter combination
   becomes indexable only by explicit administrator decision (`[TZ]` §126
-  "индексирование фильтров"). This is the portal's principal defence against
+  "filter indexation"). This is the portal's principal defence against
   near-duplicate proliferation.
 - **Paginated views declare their canonical relationship** so page 2 does not compete
   with page 1.
 - **Non-public content is excluded**: pending, rejected, archived, and hidden objects,
   and the entire owner cabinet and back office, are never indexable.
-- Indexability is an editable per-page attribute (`[TZ]` §92 "индексировать или не
-  индексировать").
+- Indexability is an editable per-page attribute (`[TZ]` §92 "index or do not
+  index").
 
 ### 3.3 Metadata
 
@@ -88,14 +89,14 @@ to prevent that.
   text block (`[TZ]` §92).
 - **Templates fill the gaps.** Where an entity has no explicit title or description,
   an administrator-defined template generates one from the entity's data
-  (`[TZ]` §126 "шаблоны SEO-заголовков"). Empty metadata is never shipped.
+  (`[TZ]` §126 "SEO title templates"). Empty metadata is never shipped.
 - Every page declares its alternates in all active languages, plus a default
   ([l1-localization.md](l1-localization.md) §3).
 
 ### 3.4 Structured Data & Navigation
 
 - Object, territory, article, and promotion pages emit structured data appropriate to
-  their type (`[TZ]` §13 "Schema.org", "Микроразметка").
+  their type (`[TZ]` §13 "Schema.org", "structured markup").
 - **Structured data must not overstate.** Where the booking module is inactive, an
   object page must not emit offer availability it cannot honour
   ([l1-room-reservation.md](l1-room-reservation.md) §5.6).
@@ -249,3 +250,4 @@ moment pages are indexed; retrofitting them means mass redirects and a ranking r
 | --- | --- | --- |
 | 0.1.0 | 2026-08-05 | Initial draft derived from the client technical specification. |
 | 0.1.1 | 2026-08-05 | Clarification only: restated language references as "active languages" (two at launch, five eventually) following l1-localization.md v0.2.0; no rule changed. |
+| 0.1.2 | 2026-08-05 | Patch: translated quoted `[TZ]` excerpts and the §1 sample search query from Russian to English per the project's language policy; no rule changed. |

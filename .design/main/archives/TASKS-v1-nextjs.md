@@ -17,12 +17,12 @@ tasks; later phases are decomposed when they become active.
 
 | Phase | Description | Status |
 | --- | --- | --- |
-| [Phase 1](archives/tasks/phase-1.md) | Project scaffold, complete entity model, and the app shell every route inherits | `Done (Archived)` (14/14) |
-| [Phase 2](archives/tasks/phase-2.md) | Better Auth identity for guest/owner/admin, plus the react-admin moderation back office | `Done (Archived)` (11/11) |
-| [Phase 3](archives/tasks/phase-3.md) | Owner-gated Add-Hotel intake flow with moderation lifecycle | `Done (Archived)` (8/8) |
-| [Phase 4](archives/tasks/phase-4.md) | Home hero search, catalog filters/sort/pagination/map, shared with Home's default list | `Done (Archived)` (7/7) |
-| [Phase 5](archives/tasks/phase-5.md) | Hotel profile aggregation and the article/news content pipeline | `Done (Archived)` (6/6) |
-| [Phase 6](archives/tasks/phase-6.md) | Room reservation detail, availability, and the paid booking flow | `Done (Archived)` (6/6) |
+| [Phase 1](tasks/phase-1.md) | Project scaffold, complete entity model, and the app shell every route inherits | `Done (Archived)` (14/14) |
+| [Phase 2](tasks/phase-2.md) | Better Auth identity for guest/owner/admin, plus the react-admin moderation back office | `Done (Archived)` (11/11) |
+| [Phase 3](tasks/phase-3.md) | Owner-gated Add-Hotel intake flow with moderation lifecycle | `Done (Archived)` (8/8) |
+| [Phase 4](tasks/phase-4.md) | Home hero search, catalog filters/sort/pagination/map, shared with Home's default list | `Done (Archived)` (7/7) |
+| [Phase 5](tasks/phase-5.md) | Hotel profile aggregation and the article/news content pipeline | `Done (Archived)` (6/6) |
+| [Phase 6](tasks/phase-6.md) | Room reservation detail, availability, and the paid booking flow | `Done (Archived)` (6/6) |
 
 Phase 1 ran `A → (B ‖ C) → T` and is summarized in `.design/main/CHANGELOG.md`.
 

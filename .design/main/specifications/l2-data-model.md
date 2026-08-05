@@ -1,6 +1,6 @@
 # Data Model
 
-**Version:** 0.3.0
+**Version:** 0.3.1
 **Status:** RFC
 **Layer:** implementation
 **Implements:** l1-platform-foundation.md
@@ -280,14 +280,14 @@ article      n ── n  object · territory
 
 ### 5.5 Favorites [`[TZ]` §8]
 
-`[TZ]` §8 lists "Избранное" among owner-cabinet capabilities, without elaboration.
+`[TZ]` §8 lists "Favorites" among owner-cabinet capabilities, without elaboration.
 Two readings are possible and they imply different tables:
 
 - A visitor-facing favorites feature, with the owner seeing how many visitors
   favorited their object;
 - An owner-side bookmark within the cabinet.
 
-Modelled as the first, since it is the reading that makes "Избранное" a *cabinet
+Modelled as the first, since it is the reading that makes "Favorites" a *cabinet
 statistic* rather than a redundant navigation aid, and because it composes with
 [l1-analytics.md](l1-analytics.md):
 
@@ -299,7 +299,7 @@ favorite
 └── Uniqueness: (object, owner) or (object, browser token)
 ```
 
-<!-- TBD: [TZ] §8 names "Избранное" once with no description, and the portal has no
+<!-- TBD: [TZ] §8 names "Favorites" once with no description, and the portal has no
      visitor accounts in its default configuration (guest_accounts is a dormant
      module). Anonymous, browser-scoped favorites are assumed above so the feature
      works without accounts; confirm with the client whether favorites are expected
@@ -324,8 +324,8 @@ Permanent deletion is restricted to the chief administrator and is itself journa
 
 ### 5.7 Schema Deliverables [`[TZ]` §98 — approval waived]
 
-[MODIFIED — v0.3.0] `[TZ]` §98 requires that "окончательная структура базы данных
-утверждается заказчиком до начала основной backend-разработки". **The client has
+[MODIFIED — v0.3.0] `[TZ]` §98 requires that "the final database structure is
+approved by the client before the main backend development begins". **The client has
 waived that approval**, delegating the database design to this project's engineering
 judgment.
 
@@ -424,3 +424,4 @@ failure the client wrote the clause to prevent.
 | 0.1.0 | 2026-08-05 | Initial draft. Closes the `[TZ]` §21/§98 gap found during the second requirements pass: consolidated table inventory, cross-cutting conventions, index plan, deletion and archival rules, the favorites model, and the client approval gate that precedes backend development. |
 | 0.2.0 | 2026-08-05 | Minor: realigned to the approved Laravel stack — Eloquent/Filament table naming, spatie Media Library and Auditing tables, spatie/laravel-permission plus this project's `role_scopes` addition, adjacency-list traversal in place of a materialized path, and PostGIS `geom` columns with GiST indexes. Marked the backup-scheme deliverable complete: the deployment fork it depended on is resolved. |
 | 0.3.0 | 2026-08-05 | Minor: `[TZ]` §98's client approval waived by explicit client direction. Reframed §5.7 from an approval gate to an engineering deliverable, recorded what the waiver costs, and resolved the three outstanding items into the migration set plus a generated ER diagram rather than a parallel document. Nothing now blocks backend work. |
+| 0.3.1 | 2026-08-05 | Patch: translated quoted `[TZ]` excerpts from Russian to English per the project's language policy; no meaning changed. |

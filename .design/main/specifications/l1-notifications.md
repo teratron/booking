@@ -1,6 +1,6 @@
 # Notifications
 
-**Version:** 0.1.0
+**Version:** 0.1.1
 **Status:** RFC
 **Layer:** concept
 
@@ -46,7 +46,7 @@ rides the same mechanism.
 - Every notification persists in a history (`[TZ]` §43).
 - Owners may disable notifications and configure receipt of administration messages
   (`[TZ]` §42).
-- Email templates are administrator-editable (`[TZ]` §130 "шаблоны писем").
+- Email templates are administrator-editable (`[TZ]` §130 "email templates").
 - <!-- TBD: which notification classes, if any, are non-disableable is not stated.
      Modeled below with a transactional/optional distinction — placement expiry and
      moderation outcomes are consequential enough that suppressing them harms the
@@ -120,9 +120,9 @@ Per `[TZ]` §43, §49, §62, §90:
 | Object status changed | transactional | Administrator changed publication state |
 | System message | transactional | System event affecting the account |
 
-`[TZ]` §49 gives the rejection messages their intended register — "Изменения
-опубликованы", "Изменения требуют доработки", "Фотография не соответствует
-требованиям", "Проверьте контактную информацию". Templates are editable
+`[TZ]` §49 gives the rejection messages their intended register — "Changes
+published", "Changes require revision", "The photograph does not meet the
+requirements", "Please check the contact information". Templates are editable
 (`[TZ]` §130), so this wording is seed content, not fixed strings.
 
 ### 5.3 Dispatch Flow
@@ -216,3 +216,4 @@ administrator edits a template.
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1.0 | 2026-08-05 | Initial draft derived from the client technical specification. |
+| 0.1.1 | 2026-08-05 | Patch: translated quoted `[TZ]` excerpts and seed message wording from Russian to English per the project's language policy; no meaning changed. |

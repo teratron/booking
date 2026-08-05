@@ -1,6 +1,6 @@
 # Object Onboarding & Owner Cabinet
 
-**Version:** 1.2.0
+**Version:** 1.2.1
 **Status:** RFC
 **Layer:** concept
 
@@ -10,7 +10,7 @@ Everything an object owner does: registering, submitting an object, and then run
 it day to day from a private cabinet — editing information, managing photos, rooms,
 prices and services, publishing news and promotions, replying to reviews, toggling
 availability, bumping the object, reading statistics, and receiving notifications.
-Derived from `[TZ]` §3 (Владелец объекта), §8, §29–§43.
+Derived from `[TZ]` §3 (Object Owner), §8, §29–§43.
 
 [MODIFIED — v1.0.0] Renamed from `l1-property-onboarding.md` and widened from a
 one-shot intake form to the full owner lifecycle. `[TZ]` dedicates fifteen sections
@@ -56,7 +56,7 @@ silently.
   ([l1-moderation-governance.md](l1-moderation-governance.md) §5.1).
 - The cabinet must be usable without technical knowledge; it is not a CMS
   (`[TZ]` §29.1).
-- <!-- TBD: [TZ] "Дополнительные предложения" proposes a no-code page builder for
+- <!-- TBD: [TZ] §23's "Additional Proposals" proposes a no-code page builder for
      owners. It is listed as a competitive enhancement, not a requirement, and it
      conflicts with §25's "all packages have identical page capability" unless every
      package gets it. Recorded as a candidate for a later spec, not scoped here. -->
@@ -182,7 +182,7 @@ rooms, pool and SPA, family, business, transport, accessibility, pets) per
 
 ### 5.6a Favorites [ADDED — v1.2.0]
 
-`[TZ]` §8 lists "Избранное" among the owner cabinet's capabilities without
+`[TZ]` §8 lists "Favorites" among the owner cabinet's capabilities without
 elaborating. It is modelled as a **visitor-facing favorite** whose count the owner
 sees, not as an owner-side bookmark: an owner already reaches their own objects
 through the object switcher (§5.1), so a bookmark would be redundant, while a favorite
@@ -296,4 +296,5 @@ the requirement.
 | 0.2.0 | 2026-07-30 | Resolved owner-account gate + admin moderation queue. |
 | 1.0.0 | 2026-08-05 | Major: renamed to `l1-object-onboarding.md`; widened from an intake form to the full owner cabinet (dashboard, media, rooms, prices, services, reviews, settings, notifications, staleness); generalized to type-declared field sets; added multi-object ownership, staff roles, and the package-independent-capability invariant. |
 | 1.1.0 | 2026-08-05 | Minor: added module-gated cabinet sections (calendar, rates, booking requests, booking settings), the owner opt-in invariant, and the separation of module gating from placement-package capability. |
-| 1.2.0 | 2026-08-05 | Minor: added §5.6a Favorites, closing the `[TZ]` §8 "Избранное" gap found during the second requirements pass — modelled as a visitor-facing favorite whose count the owner sees, not an owner-side bookmark. |
+| 1.2.0 | 2026-08-05 | Minor: added §5.6a Favorites, closing the `[TZ]` §8 "Favorites" gap found during the second requirements pass — modelled as a visitor-facing favorite whose count the owner sees, not an owner-side bookmark. |
+| 1.2.1 | 2026-08-05 | Patch: translated quoted `[TZ]` excerpts from Russian to English per the project's language policy; no meaning changed. |

@@ -43,16 +43,16 @@ The critical path now runs straight from specification review into scaffolding.
 `[TZ]` §23, recorded in [l1-platform-foundation.md](specifications/l1-platform-foundation.md) §5.4:
 
 ```plaintext
-1. Проектирование   Specification              ← current; 23 specs at RFC
-2. Дизайн           Visual design              ← Figma source exists
-3. Backend                                     ← gated by [TZ] §98
+1. Specification         ← current; 23 specs at RFC
+2. Visual design         ← Figma source exists
+3. Backend
 4. Frontend
-5. Личные кабинеты  Owner cabinet              -> Filament cabinet panel
-6. Админпанель      Back office                -> [TZ] §134 priority order
+5. Owner cabinet         -> Filament cabinet panel
+6. Back office           -> [TZ] §134 priority order
 7. SEO
-8. Тестирование
-9. Наполнение       Content population         ← import pipeline is release-one scope
-10. Запуск          Launch
+8. Testing
+9. Content population    ← import pipeline is release-one scope
+10. Launch
 ```
 
 ## Next Step
@@ -64,5 +64,5 @@ Recommended reading order:
 
 1. [l1-platform-foundation.md](specifications/l1-platform-foundation.md) §5.3 — what changed and why
 2. [l2-tech-stack.md](specifications/l2-tech-stack.md) §1, §5.5 — stack rationale and package set
-3. [l2-data-model.md](specifications/l2-data-model.md) §5.7 — the client approval gate
+3. [l2-data-model.md](specifications/l2-data-model.md) §5.7 — schema deliverables (approval waived)
 4. [l1-back-office.md](specifications/l1-back-office.md) §5.8 — first-release scope per `[TZ]` §134

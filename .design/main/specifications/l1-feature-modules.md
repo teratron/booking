@@ -1,6 +1,6 @@
 # Feature Modules
 
-**Version:** 0.2.0
+**Version:** 0.2.1
 **Status:** RFC
 **Layer:** concept
 
@@ -30,10 +30,10 @@ activatable rather than discarded.
 Two pressures meet here.
 
 The first is the client's own requirement. `[TZ]` §63 demands that an administrator
-be able to "включать и отключать отдельные услуги" without a programmer, and §64
+be able to "enable and disable individual services" without a programmer, and §64
 names seven capabilities — guest accounts, online payment, online booking, a partner
 API, external-registry integration, CRM integration, a mobile client — that must be
-reachable "без изменения архитектуры". `[TZ]` §87 already exercises this pattern by
+reachable "without changing the architecture". `[TZ]` §87 already exercises this pattern by
 making the review module conditional. A registry is what turns those scattered
 statements into one mechanism instead of seven ad-hoc flags.
 
@@ -230,7 +230,7 @@ one administrator toggle away from production use.
 
 ### 5.8 Candidate Modules [ADDED — v0.2.0]
 
-`[TZ]` §23 "Дополнительные предложения" recommends seven capabilities the client
+`[TZ]` §23's "Additional Proposals" recommends seven capabilities the client
 believes would make the portal materially stronger than competitors, and `[TZ]` §64
 names seven more as future scope. Neither list is a numbered requirement, so neither
 is in this release — but recording them as **candidates** rather than dropping them
@@ -306,3 +306,4 @@ all three.
 | --- | --- | --- |
 | 0.1.0 | 2026-08-05 | Initial draft. Introduces the module registry so the pre-existing reservation capability is preserved as an administrator-activatable module rather than deprecated. |
 | 0.2.0 | 2026-08-05 | Minor: added §5.8 Candidate Modules, cataloguing `[TZ]` §23's seven recommendations and §64's seven future capabilities with their adoption status — so deferred items are distinguishable from rejected ones. |
+| 0.2.1 | 2026-08-05 | Patch: translated quoted `[TZ]` excerpts from Russian to English per the project's language policy; no meaning changed. |

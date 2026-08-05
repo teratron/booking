@@ -11,7 +11,7 @@
 > twenty specifications on 2026-08-05 against the client technical specification
 > (`INDEX.md` v2.0.0). Phases 1–6 below are a truthful record of completed work, but
 > they no longer describe the product being built — see
-> [l1-platform-foundation.md](specifications/l1-platform-foundation.md) §5.3 for the
+> [l1-platform-foundation.md](../specifications/l1-platform-foundation.md) §5.3 for the
 > scope delta.
 >
 > Spec links below were rewritten to the renamed files so they resolve; the phase
@@ -53,21 +53,21 @@ graph TD
 *Abstract specifications — technology-agnostic contracts.*
 *Must reach Stable before Phase 1 can begin.*
 
-- [x] **Platform Foundation** ([l1-platform-foundation.md](specifications/l1-platform-foundation.md)) [L1]
-- [x] **Platform Shell** ([l1-platform-shell.md](specifications/l1-platform-shell.md)) [L1]
-- [x] **Object Catalog** ([l1-object-catalog.md](specifications/l1-object-catalog.md)) [L1]
-- [x] **Object Profile** ([l1-object-profile.md](specifications/l1-object-profile.md)) [L1]
-- [x] **Room Reservation** ([l1-room-reservation.md](specifications/l1-room-reservation.md)) [L1]
-- [x] **Object Onboarding** ([l1-object-onboarding.md](specifications/l1-object-onboarding.md)) [L1]
-- [x] **Content Publishing** ([l1-content-publishing.md](specifications/l1-content-publishing.md)) [L1]
+- [x] **Platform Foundation** ([l1-platform-foundation.md](../specifications/l1-platform-foundation.md)) [L1]
+- [x] **Platform Shell** ([l1-platform-shell.md](../specifications/l1-platform-shell.md)) [L1]
+- [x] **Object Catalog** ([l1-object-catalog.md](../specifications/l1-object-catalog.md)) [L1]
+- [x] **Object Profile** ([l1-object-profile.md](../specifications/l1-object-profile.md)) [L1]
+- [x] **Room Reservation** ([l1-room-reservation.md](../specifications/l1-room-reservation.md)) [L1]
+- [x] **Object Onboarding** ([l1-object-onboarding.md](../specifications/l1-object-onboarding.md)) [L1]
+- [x] **Content Publishing** ([l1-content-publishing.md](../specifications/l1-content-publishing.md)) [L1]
 
 ## Phase 1 — Platform Foundation — ✅ Done (2026-07-30)
 
 *Project scaffold, the complete entity model, and the shell every route inherits.*
 
-- [x] **Platform Foundation** ([l1-platform-foundation.md](specifications/l1-platform-foundation.md)) [L1]
-- [x] **Platform Shell** ([l1-platform-shell.md](specifications/l1-platform-shell.md)) [L1]
-- [x] **Technology Stack** ([l2-tech-stack.md](specifications/l2-tech-stack.md)) [L2]
+- [x] **Platform Foundation** ([l1-platform-foundation.md](../specifications/l1-platform-foundation.md)) [L1]
+- [x] **Platform Shell** ([l1-platform-shell.md](../specifications/l1-platform-shell.md)) [L1]
+- [x] **Technology Stack** ([l2-tech-stack.md](../specifications/l2-tech-stack.md)) [L2]
 
 The entity model authored here is the shared write surface for all later phases.
 It must cover the full relationship graph in `l1-platform-foundation.md` §5.2 in
@@ -81,8 +81,8 @@ restructuring it.
 *Authentication for three actor roles, and the moderation queue that gates
 externally-submitted content.*
 
-- [x] **Third-Party Integrations** §5.1 — authentication ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
-- [x] **Third-Party Integrations** §5.3 — moderation back office ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
+- [x] **Third-Party Integrations** §5.1 — authentication ([l2-third-party-integrations.md](../specifications/l2-third-party-integrations.md)) [L2]
+- [x] **Third-Party Integrations** §5.3 — moderation back office ([l2-third-party-integrations.md](../specifications/l2-third-party-integrations.md)) [L2]
 
 Sequenced immediately after the foundation because every subsequent phase either
 gates on an authenticated actor (onboarding, reviews, reservation) or renders only
@@ -104,7 +104,7 @@ group before the back office mounts.
 
 *The owner-gated intake flow that puts hotels and rooms into the marketplace.*
 
-- [x] **Object Onboarding** ([l1-object-onboarding.md](specifications/l1-object-onboarding.md)) [L1]
+- [x] **Object Onboarding** ([l1-object-onboarding.md](../specifications/l1-object-onboarding.md)) [L1]
 
 Produces the data every guest-facing surface reads. The amenity taxonomy defined
 here is shared verbatim with the room detail popup in Phase 6.
@@ -118,7 +118,7 @@ Actions, routes, and UI) over an already-complete data layer.
 
 *Hero search, catalog with filters/sort/pagination, and the map view.*
 
-- [x] **Object Catalog** ([l1-object-catalog.md](specifications/l1-object-catalog.md)) [L1]
+- [x] **Object Catalog** ([l1-object-catalog.md](../specifications/l1-object-catalog.md)) [L1]
 
 Depends on the Phase 1 schema (hotels must carry resolvable coordinates), not on
 the Phase 3 intake UI — seed data is sufficient to build and verify it. Kept
@@ -128,8 +128,8 @@ parallel-eligible with Phase 3 rather than serialized behind it.
 
 *The conversion surface and the editorial content it embeds.*
 
-- [x] **Object Profile** ([l1-object-profile.md](specifications/l1-object-profile.md)) [L1]
-- [x] **Content Publishing** ([l1-content-publishing.md](specifications/l1-content-publishing.md)) [L1]
+- [x] **Object Profile** ([l1-object-profile.md](../specifications/l1-object-profile.md)) [L1]
+- [x] **Content Publishing** ([l1-content-publishing.md](../specifications/l1-content-publishing.md)) [L1]
 
 Paired in one phase because the hotel news feed is articles filtered by hotel
 association — one content pipeline, one article component, rendered in two places.
@@ -138,8 +138,8 @@ association — one content pipeline, one article component, rendered in two pla
 
 *Room inventory detail, date/guest selection, and the paid booking flow.*
 
-- [x] **Room Reservation** ([l1-room-reservation.md](specifications/l1-room-reservation.md)) [L1]
-- [x] **Third-Party Integrations** §5.2 ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
+- [x] **Room Reservation** ([l1-room-reservation.md](../specifications/l1-room-reservation.md)) [L1]
+- [x] **Third-Party Integrations** §5.2 ([l2-third-party-integrations.md](../specifications/l2-third-party-integrations.md)) [L2]
 
 Last by design: payment integration must not precede a reservation model with a
 concrete paid state to transition into.

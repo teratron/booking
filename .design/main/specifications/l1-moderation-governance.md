@@ -1,6 +1,6 @@
 # Moderation & Governance
 
-**Version:** 0.1.0
+**Version:** 0.1.1
 **Status:** RFC
 **Layer:** concept
 
@@ -28,7 +28,7 @@ protect administrators from their own bulk operations. Derived from `[TZ]` §44�
 The portal's catalog is written almost entirely by people the operator does not
 employ. Its value therefore rests on a claim it must be able to enforce — that the
 information is accurate and the presentation is consistent. `[TZ]` §44 opens with
-exactly this framing ("для обеспечения высокого качества информации").
+exactly this framing ("to ensure a high quality of information").
 
 But `[TZ]` immediately refuses to fix the strictness: §44.1 requires two modes,
 selectable per portal, per country, per object category, per owner, and per object.
@@ -52,7 +52,7 @@ decision has no history and a mistake has no undo.
   be able to delete the record of their own actions.
 - Physical deletion is a chief-administrator action only (`[TZ]` §95).
 - <!-- TBD: [TZ] §47 lists partial acceptance of a change set as optional
-     ("частично принять изменения (опционально)"). Modeled below as field-level
+     ("partially accept changes (optional)"). Modeled below as field-level
      selection, which is materially more complex than whole-request approval;
      recorded as an explicit scope decision rather than assumed into the first
      release. -->
@@ -214,7 +214,7 @@ changes, availability toggles, content publication, moderation decisions, data
 exports, settings changes, module toggles, and deletions and restorations.
 
 Retention and archiving of old journal entries are administrator-configured
-(`[TZ]` §94 "архивирование старых журналов") — the journal grows without bound
+(`[TZ]` §94 "archiving of old logs") — the journal grows without bound
 otherwise, and it is the highest-volume table in the system after statistics.
 
 ### 5.5 Archive
@@ -287,3 +287,4 @@ restore a snapshot.
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1.0 | 2026-08-05 | Initial draft derived from the client technical specification. |
+| 0.1.1 | 2026-08-05 | Patch: translated quoted `[TZ]` excerpts from Russian to English per the project's language policy; no meaning changed. |

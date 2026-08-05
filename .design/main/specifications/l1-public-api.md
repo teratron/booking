@@ -1,6 +1,6 @@
 # Public API
 
-**Version:** 0.1.0
+**Version:** 0.1.1
 **Status:** RFC
 **Layer:** concept
 
@@ -24,8 +24,8 @@ with issued tokens, how it is versioned, rate-limited, and documented. Derived f
 ## 1. Motivation
 
 `[TZ]` lists an API twice — once in §2 among the architecture deliverables ("API")
-and once as its own numbered requirement in §19 ("REST API. Документация.
-Авторизация. Токены."). `[TZ]` §64 then names a partner API among the capabilities
+and once as its own numbered requirement in §19 ("REST API. Documentation.
+Authorization. Tokens."). `[TZ]` §64 then names a partner API among the capabilities
 the architecture must grow into without a rewrite.
 
 Those three mentions are terse, and it would be easy to read them as the same future
@@ -237,3 +237,4 @@ portal's ordering for the same reason the website does.
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1.0 | 2026-08-05 | Initial draft. Closes the `[TZ]` §19 coverage gap found during the second requirements pass. |
+| 0.1.1 | 2026-08-05 | Patch: translated the quoted `[TZ]` §19 excerpt from Russian to English per the project's language policy; no meaning changed. |

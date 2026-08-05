@@ -1,6 +1,6 @@
 # Geography
 
-**Version:** 0.1.0
+**Version:** 0.1.1
 **Status:** RFC
 **Layer:** concept
 
@@ -36,7 +36,7 @@ above recommended objects in Bukovel, independently of every other territory.
 ## 2. Constraints & Assumptions
 
 - One self-referencing hierarchy of unbounded depth, not a fixed ladder of tables
-  (`[TZ]` §68 "родительская связь позволит создавать иерархию любой глубины").
+  (`[TZ]` §68 "a parent relation will allow a hierarchy of any depth").
 - Level vocabularies are per country and administrator-editable (`[TZ]` §24.1).
   The union observed in `[TZ]` §68 and §107 is: country, region/oblast, autonomous
   territory, district, municipality, city, resort, town, village, microdistrict.
@@ -106,9 +106,17 @@ TerritoryLevel
 └── translations      -> singular name, plural name
 
 Example (Ukraine)   : область → район → місто / курорт → село
+                      (oblast → raion → city / resort → village)
 Example (Moldova)   : raion → municipiu → oraș → sat
+                      (district → municipality → town → village)
 Example (Georgia)   : რეგიონი → მუნიციპალიტეტი → ქალაქი → კურორტი
+                      (region → municipality → city → resort)
 ```
+
+The level names above are stored **data**, shown in each country's own language to
+make the point concrete: the vocabularies genuinely differ, which is why they are a
+per-country registry rather than a fixed ladder. English glosses are for this
+document's readers only and are not part of the model.
 
 `depth rank` orders the vocabulary for the administrator's convenience and drives
 breadcrumb labelling. It does **not** constrain the tree: a resort at rank 4 may
@@ -212,3 +220,4 @@ source* for the administrative levels — see §6.1.
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1.0 | 2026-08-05 | Initial draft derived from the client technical specification. |
+| 0.1.1 | 2026-08-05 | Patch: translated the quoted `[TZ]` excerpt to English per the project's language policy. §5.2's per-country level names are retained in their own languages — they are stored data, not prose — and now carry English glosses. |

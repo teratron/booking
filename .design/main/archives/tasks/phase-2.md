@@ -327,7 +327,7 @@ reference points at the old IDs and no traceability is lost.
     returned `null`. Signed back in with the same credential on `/sign-in` →
     redirected to `/` → session resolved to the same user again. Also checked
     the wrong-password path live: the form stayed in place, showed
-    "Не удалось войти. Проверьте почту и пароль." via `role="alert"`, no
+    "Sign-in failed. Check your email and password." via `role="alert"`, no
     navigation. Test row deleted after verification — `select count(*) from
     "user"` = 0.
   - **Bug caught in my own test setup, not the app:** the project's
@@ -389,7 +389,7 @@ reference points at the old IDs and no traceability is lost.
     1. After a client-side sign-up/sign-in redirect (`router.push("/")`),
        Next.js's Router Cache reuses the shared `(marketing)` layout's
        previously-fetched Header RSC payload rather than re-rendering it —
-       the header kept showing "Войти" even though the session cookie was
+       the header kept showing "Sign in" even though the session cookie was
        genuinely set (confirmed via a direct `get-session` fetch while the UI
        was stale). A plain `fetch()`-based auth call gives Next.js no signal
        to invalidate the cache the way a Server Action does. Fixed by calling
@@ -403,16 +403,16 @@ reference points at the old IDs and no traceability is lost.
        sign-out set `pending=true`, the success path only called
        `router.refresh()` without resetting it, and the stale `true`
        resurfaced the next time the same fiber rendered the authenticated
-       branch again (showing a permanently-disabled "Выход…" button after a
-       later sign-in). Fixed by resetting `pending` in the `onSuccess`
+       branch again (showing a permanently-disabled "Signing out…" button
+       after a later sign-in). Fixed by resetting `pending` in the `onSuccess`
        callback too, not only `onError`. Caught by hard-reloading between
        steps to rule out stale HMR-preserved state before concluding it was a
        real bug, then reproducing the full sign-out → sign-in cycle again
        post-fix to confirm.
   - **Verified against a live `pnpm dev` (chrome-devtools MCP):** unauthenticated
-    `/` and `/sign-in` show "Войти"; signed in → `/` and `/privacy-policy`
-    (nested route) both show the user's name and an enabled "Выйти"; clicking
-    it clears the session and reverts the header immediately, no stale
+    `/` and `/sign-in` show "Sign in"; signed in → `/` and `/privacy-policy`
+    (nested route) both show the user's name and an enabled "Sign out";
+    clicking it clears the session and reverts the header immediately, no stale
     disabled state on a subsequent sign-in. Test row deleted after
     verification — `select count(*) from "user"` = 0.
   - `pnpm test` — 17 files / 25 tests (2 new), exit 0. `pnpm exec tsc --noEmit`,

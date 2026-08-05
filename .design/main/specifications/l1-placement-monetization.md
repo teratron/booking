@@ -1,6 +1,6 @@
 # Placement & Monetization
 
-**Version:** 0.1.0
+**Version:** 0.1.1
 **Status:** RFC
 **Layer:** concept
 
@@ -8,7 +8,7 @@
 
 How the portal earns: four placement tiers that determine an object's position in
 every catalog, administrator-defined packages that grant a tier for a period, the
-bump ("поднятие") mechanic that reorders an object within its own tier, package
+bump mechanic that reorders an object within its own tier, package
 expiry handling, and the financial ledger that records what was sold. Derived from
 `[TZ]` §25, §26, §54–§63, §79–§81, §111–§112, §122–§123.
 
@@ -47,9 +47,9 @@ narrow, and is called out as such rather than allowed to grow.
   outside the system; the portal records the transaction, it does not process it
   (`[TZ]` §122). A full accounting system is explicitly out of scope
   (`[TZ]` §122).
-- `[TZ]` presents the tier scheme twice with different working names (§25 "Премиум /
-  Приоритет / Расширенная / Базовая", then §25.1 "VIP / Рекомендовано / Приоритетное
-  размещение / Стандартное"). Both are working names; §25 states they are
+- `[TZ]` presents the tier scheme twice with different working names (§25 "Premium /
+  Priority / Extended / Basic", then §25.1 "VIP / Recommended / Priority Placement /
+  Standard"). Both are working names; §25 states they are
   administrator-editable. This spec models **four ranks with editable labels** and
   treats neither naming as canonical.
 - Package definitions may differ per object category — hotels, restaurants,
@@ -292,3 +292,4 @@ a technical one.
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1.0 | 2026-08-05 | Initial draft derived from the client technical specification. |
+| 0.1.1 | 2026-08-05 | Patch: translated quoted `[TZ]` tier names and terminology from Russian to English per the project's language policy; no meaning changed. |

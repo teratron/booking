@@ -1,6 +1,6 @@
 # Back Office
 
-**Version:** 0.1.0
+**Version:** 0.1.1
 **Status:** RFC
 **Layer:** concept
 
@@ -31,7 +31,7 @@ priority that separates the first release from everything after. Derived from
 
 `[TZ]` devotes thirty-six sections to this panel — roughly a third of the entire
 specification — and §63 states the governing requirement: every monetization,
-presentation, and structural parameter must be changeable "без участия программиста".
+presentation, and structural parameter must be changeable "without a programmer".
 The back office is not an internal tool bolted onto the product. It *is* how the
 product is configured, and its coverage determines whether the portal can be operated
 at all after handover.
@@ -65,8 +65,8 @@ actions, and saved filters is not a hand-built surface
 ### 3.1 Authorization
 
 - **Every action is permission-checked server-side.** Hiding a control is a usability
-  affordance and never an access control (`[TZ]` §73 "каждое действие должно
-  проверяться системой прав доступа").
+  affordance and never an access control (`[TZ]` §73 "every action must be checked
+  by the access-control system").
 - **Permissions are scopable.** A grant may be unrestricted or bounded to a country,
   a territory subtree, or an object category (`[TZ]` §121). A country administrator
   for Georgia cannot edit a Moldovan object, by enforcement rather than by
@@ -321,3 +321,4 @@ journal cannot be backfilled — the events it needs will already have happened.
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1.0 | 2026-08-05 | Initial draft derived from the client technical specification. |
+| 0.1.1 | 2026-08-05 | Patch: translated quoted `[TZ]` excerpts from Russian to English per the project's language policy; no meaning changed. |

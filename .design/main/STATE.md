@@ -4,7 +4,7 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-05 07:51
+**Updated:** 2026-08-05 14:08
 **Phase:** 0 - Concept re-baseline + stack pivot
 **Status:** Active
 
@@ -27,6 +27,7 @@ Implementation: RESET — new stack, no code yet (previous work at tag v0.1.34)
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
 - 2026-08-05 **Decision:** `[TZ]` §98 client approval of the DB structure **WAIVED** — the client is not a DB specialist and delegates all technical decisions to engineering judgment. The gate is gone; the artefacts remain, expressed as the migration set (`migrate:fresh --seed` is the field/type/key list) plus a generated ER diagram. Consequence to hold: §98 existed to protect the client from a self-serving schema, so that protection now rests entirely on the specification layer being auditable by someone who was not present for the decisions.
+- 2026-08-05 **Language policy applied to `.design/`, archives included.** All prose is English with zero remaining Cyrillic, including quoted `[TZ]` excerpts (18 spec files, patch bumps) and the archived phase logs. The archives were edited by explicit client direction — the project may be sold, so every document must be readable by a developer anywhere, with no Russian text surviving anywhere in the tree — which overrides the engine's "archives are immutable" rule; the edit is recorded here so the log is not mistaken for silent tampering. Literal UI strings the deleted TypeScript app rendered (e.g. a "Sign in" button label) are now translated in place rather than quoted-and-glossed: an initial pass kept the original Cyrillic alongside a gloss, but the client confirmed the goal is full readability, not verbatim quotation, so the Russian original was dropped and only the English rendering kept. The one deliberate exception is `l1-geography.md` §5.2, which keeps per-country territory level names in their own languages because the section's entire point is that the vocabularies differ; English glosses are added there.
 - 2026-08-05 **Standing instruction: continuous quality gates.** Lint, format, static analysis, tests, benchmarks, convention checks and docs run after every meaningful change — not at task end. Wired as `composer quality` so local and CI are identical. Conventions enforced by Pest `arch()` tests rather than review, including the SDD-containment rule. Benchmarks run against seeded realistic volume, never fixtures. Documentation in English for the client's future maintainer. Detail in CLAUDE.md "Engineering Discipline"; budgets in `l2-tech-stack.md` §5.9.
 - 2026-08-05 **Standing instruction:** all page markup is built **from the Figma source via MCP**, never from a prose description. File `N2cVVIS5wvjHIviP27peuX`, page `0:1`; access verified working. Design tokens go into the Tailwind theme once; Figma governs visual language and composition only — behaviour comes from the specifications, and the specification wins on conflict.
 - 2026-08-05 **Decision:** **Stack replaced: Laravel 13 + Filament 5 + PostgreSQL/PostGIS + Redis**, self-hosted monolith. Rationale in `l2-tech-stack.md` §1. The v1.x argument for Next.js was wrong on two counts — it conflated SEO indexability with client interactivity (Blade renders equally crawlable HTML), and it anchored on an existing codebase whose schema needed full replacement anyway. Decisive factor: §99–134 + §29–43 (back office + owner cabinet) are more than a third of the TZ, and Filament delivers both from one toolkit; ten packages cover eleven TZ sections. Go was evaluated and rejected — no Filament-class admin toolkit, and the performance premise does not hold at ~30–60k objects behind Redis.
@@ -34,11 +35,7 @@ Implementation: RESET — new stack, no code yet (previous work at tag v0.1.34)
 - 2026-08-05 **Finding:** Second line-by-line TZ pass found **6 gaps** the first pass missed, all closed. New specs: `l1-public-api.md` (§19 — REST API/tokens/docs had zero coverage), `l1-home-page.md` (§4/§5 — 16-block composition unowned), `l2-data-model.md` (§21/§98). Amendments: favorites (§8), traffic-source analytics (§23), candidate-module catalogue (§23/§64). One was worse than a gap — `l1-advertising.md` §2 flatly excluded a self-service advertiser cabinet that TZ §23 actually *recommends*; corrected to a deferred candidate.
 - 2026-08-05 **Decision:** Booking is **preserved, not deprecated**. Per explicit product direction and `[TZ]` §63–64, the reservation work (schema, checkout flow, Fondy adapter — preserved at tag `v0.1.34`) is retained behind an administrator-toggleable module registry (`l1-feature-modules.md`), disabled by default. Booking and payment are separate module rows, so "dated request + owner confirmation, no payment provider" is a supported intermediate state.
 - 2026-08-05 **Decision:** Launch locales narrowed to **English + Russian only**; Romanian, Ukrainian, Georgian deferred until after project completion and activated from the back office (`l1-localization.md` §5.6). Content decision, not a capability one — translation tables, per-language slugs, hreflang, and fallback still ship in the first migration. Consequence: no launch country's own primary language is active at release, so country records reference inactive languages and must resolve via fallback rather than fail validation.
-- 2026-08-05 **Decision:** Specs re-baselined against the client TZ. Product changed from hotel booking marketplace → 3-country multi-language tourism information portal. 3 renames (hotel-discovery→object-catalog, hotel-profile→object-profile, property-onboarding→object-onboarding), 10 new specs, 7 amended. All set to `RFC` (not auto-promoted to Stable) because the set carries unresolved TBDs — chiefly the deployment fork in `l2-tech-stack.md` §5.9.
-- 2026-08-05 **Finding:** Stack audit by import analysis, not manifest reading: **11 packages are removable today with zero code change** (10 unused `@radix-ui/*` from the incomplete Base UI migration, plus `vaul`); `shadcn` CLI is misplaced in `dependencies`. Conversely **12 TZ-required capabilities have no dependency at all** (Redis, job queue, mail, image derivatives, map clustering, XLSX, 2FA/CAPTCHA, scoped RBAC, audit, soft delete, the `en` locale catalog). The stack is mis-provisioned, not excessive.
-- 2026-08-05 **Decision:** Phase 6 (and the full 6-phase plan) closed. T-6T01's live browser check surfaced and fixed two real defects no automated test caught: a Base UI `nativeButton` console error on the "Оплатить" button-as-Link, and a genuinely deterministic (not flaky) bug in `reservation-query.test.ts` — every test in that file shares one fixed `guestId` but only cleaned up in one file-level `afterAll`, so an earlier test's own rows leaked into a later exact-count assertion. Full suite: 52 files / 158 tests, 0 failures.
-- 2026-08-04 **Note:** Docker/Postgres access RESTORED — `docker` CLI reappeared on PATH, daemon was stopped, started via Docker Desktop + `docker compose up -d`; the named `postgres-data` volume preserved the schema through container recreation.
-- 2026-08-04 **Decision:** T-6C01 (payment) built via an orchestrated multi-agent workflow (Ultracode posture) — 4 agents built provider/persistence/UI/tests in dependency order, 3 agents adversarially reviewed (correctness, auth, conventions) and found 8 real issues, all confirmed and fixed. See `archives/tasks/phase-6.md` T-6C01 Changes.
+- 2026-08-05 **Decision:** Specs re-baselined against the client TZ. Product changed from hotel booking marketplace → 3-country multi-language tourism information portal. 3 renames (hotel-discovery→object-catalog, hotel-profile→object-profile, property-onboarding→object-onboarding), 10 new specs, 7 amended. All set to `RFC` (not auto-promoted to Stable) because the set carries unresolved TBDs (the deployment fork, since closed).
 
 ## Blockers
 
@@ -57,7 +54,7 @@ Implementation: RESET — new stack, no code yet (previous work at tag v0.1.34)
 - **Public OSM tile servers are prohibited in production** by the OSMF Tile
   Usage Policy. Never ship pointing at `tile.openstreetmap.org` — use MapTiler,
   Stadia, or self-hosted tiles. The previous implementation shipped this
-  violation unnoticed.
+  violation unnoticed, which is how it was found.
 - **Local Postgres occupies host port 5432** — the Docker service is mapped to
   5433. `postgres:18+` images store data under major-version subdirectories of
   `/var/lib/postgresql`, not `/var/lib/postgresql/data`.
@@ -73,6 +70,17 @@ Implementation: RESET — new stack, no code yet (previous work at tag v0.1.34)
 
 ## Session Continuity
 
-**Last Session Ended:** 2026-07-30 19:54
-**Handoff File:** none
+**Last Session Ended:** 2026-08-05 — specification re-baseline + stack pivot
+**Handoff File:** none (state is complete in this file, PLAN.md, and INDEX.md)
 **Bootstrap Mode:** false
+
+**Reading order for a fresh session:**
+
+1. This file — position, decisions, blockers, blocking constraints.
+2. `CLAUDE.md` — stack, conventions, Figma-first rule, engineering discipline.
+3. `.design/main/INDEX.md` — 23 specs, all RFC.
+4. `.design/main/PLAN.md` — no plan yet; gates all closed.
+5. `l2-tech-stack.md` §1 — why Laravel, and why the earlier Next.js answer was wrong.
+
+**Do not carry forward** anything about Next.js, TypeScript, Drizzle, Better Auth,
+react-admin, or Vercel — that stack is superseded and preserved only at tag `v0.1.34`.

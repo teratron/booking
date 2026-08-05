@@ -1,6 +1,6 @@
 # Object Profile
 
-**Version:** 1.1.0
+**Version:** 1.1.1
 **Status:** RFC
 **Layer:** concept
 
@@ -15,7 +15,7 @@ into the owner's phone and messengers. Derived from `[TZ]` §6–7, §26, §39, 
 
 [MODIFIED — v1.0.0] Renamed from `l1-hotel-profile.md` and re-centred. The
 conversion action is no longer a paid reservation; it is a direct hand-off to the
-owner with no intermediary (`[TZ]` §7, §Общая информация). Contact channels are
+owner with no intermediary (`[TZ]` §7, §General Information). Contact channels are
 therefore promoted from a footnote to the page's primary contract.
 
 ## Related Specifications
@@ -38,8 +38,8 @@ therefore promoted from a footnote to the page's primary contract.
 Everything upstream — catalog, territory pages, search, banners — exists to deliver a
 visitor here, and this page has exactly one job: give the visitor enough to decide,
 then hand them to the owner. `[TZ]` states the portal's whole value proposition in
-one sentence ("предоставить пользователю максимально полную информацию об объекте и
-обеспечить прямую связь с владельцем без посредников и комиссий"), and this page is
+one sentence ("give the user the fullest possible information about an object and
+provide direct contact with its owner, without intermediaries or commission"), and this page is
 where both halves of it happen.
 
 Because there is no booking funnel to measure, **the contact click is the conversion
@@ -56,10 +56,10 @@ capture it.
 - Section presence is driven by the object's type declaration
   ([l1-object-catalog.md](l1-object-catalog.md) §5.5): a restaurant page has no room
   inventory and no availability badge.
-- `[TZ]` §87 makes the review module conditional ("в случае включения модуля
-  отзывов"). Reviews are specified here as an optional, portal-configurable module.
+- `[TZ]` §87 makes the review module conditional ("if the review module is
+  enabled"). Reviews are specified here as an optional, portal-configurable module.
 - <!-- TBD: whether a review author must be a registered visitor or may post as a
-     named guest is unresolved — [TZ] §87 stores "пользователь или имя автора",
+     named guest is unresolved — [TZ] §87 stores "user or author name",
      which permits both. This interacts with the deferred guest-account module
      ([TZ] §64) and with spam exposure; recorded rather than assumed. -->
 
@@ -75,7 +75,7 @@ capture it.
   the owner enters a phone number, not a `viber://` URI (`[TZ]` §74).
 - Activating a contact channel takes the visitor **directly** to that channel. The
   portal does not proxy, relay, mask, or intermediate the conversation, and takes no
-  commission on what follows (`[TZ]` §Общая информация, §7).
+  commission on what follows (`[TZ]` §General Information, §7).
 - Contact channels remain functional regardless of the object's availability status,
   and regardless of its placement tier (`[TZ]` §26, §27.1).
 - **Contact is never displaced** [ADDED — v1.1.0]. If the optional booking module
@@ -186,7 +186,7 @@ ContactChannelType
 ```
 
 Modelling the *type* as a registry rather than an enum is what makes `[TZ]` §74's
-"другие социальные сети" and §64's channel extensibility true without a migration.
+"other social networks" and §64's channel extensibility true without a migration.
 The link template lives with the type, so adding a channel is one data row.
 
 ### 5.3 Contact Interaction Flow
@@ -205,7 +205,7 @@ may never cost the visitor the hand-off it exists to measure.
 
 Step F is stated explicitly because it is a product decision, not an omission: the
 portal deliberately has no visibility into what happens after the hand-off. This is
-what "без посредников и комиссий" costs, and it is why the click itself is the only
+what "without intermediaries or commission" costs, and it is why the click itself is the only
 conversion signal the portal will ever have.
 
 ### 5.4 Review Lifecycle
@@ -259,7 +259,7 @@ beyond it.
 **Fixed contact columns on the object table.** Simpler, and how `[TZ]` §32 informally
 describes the owner's edit form. Rejected on §74's own requirement for a separate
 contacts table with ordering and extensibility — a column-per-channel model cannot
-express "другие социальные сети" or per-channel ordering.
+express "other social networks" or per-channel ordering.
 
 **Reviews as their own top-level domain with a dedicated queue.** Defensible, and
 deferred: `[TZ]` §87 makes the module optional, so folding it into this page keeps
@@ -282,3 +282,4 @@ tooling.
 | 0.2.0 | 2026-07-30 | Resolved review-authorship via l2-third-party-integrations.md. |
 | 1.0.0 | 2026-08-05 | Major: renamed to `l1-object-profile.md`; replaced the reservation conversion path with the direct-contact contract (§3.1, §5.2, §5.3); generalized to type-varying composition; added period-aware prices, the no-occupancy-calendar constraint, owner review replies, and the media model. |
 | 1.1.0 | 2026-08-05 | Minor: scoped the no-occupancy-calendar constraint to the default configuration and added the contact-is-never-displaced invariant, so an activated booking module composes additively rather than replacing the page's conversion path. |
+| 1.1.1 | 2026-08-05 | Patch: translated quoted `[TZ]` excerpts from Russian to English per the project's language policy; no meaning changed. |

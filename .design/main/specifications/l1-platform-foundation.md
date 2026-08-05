@@ -1,6 +1,6 @@
 # Platform Foundation
 
-**Version:** 1.4.0
+**Version:** 1.4.1
 **Status:** RFC
 **Layer:** concept
 
@@ -35,7 +35,7 @@ composition only**, not for scope, domain model, or business rules.
 - [l1-seo.md](l1-seo.md) - Implements the public discoverability invariant.
 - [l1-home-page.md](l1-home-page.md) - [ADDED] Composition of the portal's front page.
 - [l1-public-api.md](l1-public-api.md) - [ADDED] Outward-facing REST contract, token authorization.
-- [l2-data-model.md](l2-data-model.md) - [ADDED] Consolidated table inventory and the client approval gate that precedes backend work.
+- [l2-data-model.md](l2-data-model.md) - [ADDED] Consolidated table inventory and schema deliverables.
 - [l1-content-publishing.md](l1-content-publishing.md) - Consumes discoverability + moderation invariants.
 - [l1-platform-shell.md](l1-platform-shell.md) - Consumes localization + responsive delivery invariants.
 - [l1-feature-modules.md](l1-feature-modules.md) - [ADDED] Implements the capability-module and configuration-over-code invariants.
@@ -127,7 +127,7 @@ specs from each carrying their own private theory of what the product is.
   vacancy. Booking is not absent from the architecture, however — it exists as a
   **disabled-by-default module** ([l1-room-reservation.md](l1-room-reservation.md))
   that an administrator may activate, satisfying `[TZ]` §64's requirement that
-  online booking be reachable "как отдельный модуль" without an architectural
+  online booking be reachable "as a separate module" without an architectural
   rewrite. While that module is off, every statement in this invariant holds
   literally and is enforced server-side
   ([l1-feature-modules.md](l1-feature-modules.md) §3).
@@ -311,25 +311,26 @@ inside them. Recorded here because they are planning input that would otherwise 
 lost between the specification layer and `PLAN.md`.
 
 ```plaintext
-1. Проектирование   Design / specification      ← this layer; gated by [TZ] §98
-2. Дизайн           Visual design               ← Figma source exists
-3. Backend                                      ← BLOCKED until the §98 approval
+1. Design / specification    ← this layer
+2. Visual design             ← Figma source exists
+3. Backend
 4. Frontend
-5. Личные кабинеты  Owner cabinets              -> l1-object-onboarding
-6. Админпанель      Back office                 -> l1-back-office §5.8 priority list
-7. SEO                                          -> l1-seo
-8. Тестирование     Testing
-9. Наполнение       Content population          ← see below
-10. Запуск          Launch
+5. Owner cabinets            -> l1-object-onboarding
+6. Back office               -> l1-back-office §5.8 priority list
+7. SEO                       -> l1-seo
+8. Testing
+9. Content population        ← see below
+10. Launch
 ```
 
 Two of these carry consequences that are easy to miss:
 
-- **Stage 3 is gated.** `[TZ]` §98 requires the client to approve the final database
-  structure before the main backend development begins
-  ([l2-data-model.md](l2-data-model.md) §5.7). That gate is itself blocked on the
-  deployment fork ([l2-tech-stack.md](l2-tech-stack.md) §5.9), so two decisions sit
-  on the critical path ahead of all backend work.
+- **Stage 3 was gated, and no longer is.** `[TZ]` §98 required the client to approve
+  the final database structure before backend development began. The client has
+  **waived** that approval, delegating the design to engineering judgment
+  ([l2-data-model.md](l2-data-model.md) §5.7); the deployment fork that also stood in
+  front of it is closed ([l2-tech-stack.md](l2-tech-stack.md) §5.10). Nothing now sits
+  on the critical path ahead of backend work.
 - **Stage 9 is a real deliverable, not a formality.** A three-country catalog needs
   its territory hierarchy, object types, amenity registry, placement packages, roles,
   and seed objects loaded before launch. `[TZ]` §127's import pipeline exists for
@@ -370,3 +371,4 @@ trade is no longer close.
 | 1.2.0 | 2026-08-05 | Minor: launch language set narrowed to English and Russian per explicit product direction, with the remaining three activated from the back office post-completion; §2 now forbids encoding either language count anywhere outside data. |
 | 1.3.0 | 2026-08-05 | Minor: second full requirements pass over `[TZ]`. Added §5.4 client-stated delivery stages with the §98 approval gate and the content-population stage; linked the three specs written to close gaps found in that pass — l1-home-page.md (§4/§5), l1-public-api.md (§19), l2-data-model.md (§21/§98). |
 | 1.4.0 | 2026-08-05 | Minor: closed the deployment-target TBD in §2 — resolved to self-hosted following the approved stack change to Laravel 13 + Filament 5. This spec's invariants are otherwise unaffected by that change, being technology-neutral by construction. |
+| 1.4.1 | 2026-08-05 | Patch: translated the §5.4 delivery-stage list and quoted `[TZ]` excerpts from Russian to English per the project's language policy, and corrected the stage-3 note — the `[TZ]` §98 approval is waived and the deployment fork closed, so no gate precedes backend work. |

@@ -7,7 +7,7 @@ owner's phone or messenger. Revenue is paid placement sold to object owners.
 ## Tech Stack
 
 - **Language**: PHP 8.4+, `declare(strict_types=1)` in every file.
-- **Framework**: Laravel 13 — monolith. Blade + Livewire for the public site; no separate frontend application.
+- **Framework**: Laravel 13 — monolith. Blade + Livewire 4 for the public site; no separate frontend application.
 - **Admin & owner cabinet**: Filament 5 — two panels from one toolkit (`/admin` for staff, `/cabinet` for object owners).
 - **Database**: PostgreSQL 18 + PostGIS. Extensions: `postgis`, `pg_trgm`, `unaccent`.
 - **Cache / queue / session**: Redis 8; queues via Laravel Horizon.

@@ -99,7 +99,7 @@ stack.
 | --- | --- | --- |
 | **PHP** | 8.4+ | `declare(strict_types=1)` everywhere; typed properties throughout. |
 | **Laravel** | 13.x | Queues, scheduler, localization, policies, API resources, and mail in the framework core rather than assembled from packages. |
-| **Blade + Livewire** | 3.x | Server-rendered HTML with interactive catalog filters, pagination, and map updates — without a separate frontend application. |
+| **Blade + Livewire** | 4.x | Server-rendered HTML with interactive catalog filters, pagination, and map updates — without a separate frontend application. |
 | **Alpine.js** | 3.x | Local interactivity where Livewire round trips are unnecessary. |
 | **Tailwind CSS** | 4.x | The Figma design translates directly into utility classes. |
 | **Vite** | latest | Asset pipeline. pnpm is used here and nowhere else. |

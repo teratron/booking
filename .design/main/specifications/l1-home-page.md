@@ -1,6 +1,6 @@
 # Home Page
 
-**Version:** 0.1.0
+**Version:** 0.1.1
 **Status:** RFC
 **Layer:** concept
 
@@ -26,8 +26,8 @@ editorially controlled versus computed. Derived from `[TZ]` §4 (preamble) and �
 
 ## 1. Motivation
 
-`[TZ]` names the home page twice and, in §5, asks explicitly for "полное описание
-каждого блока" with appearance, behaviour, responsiveness, and mobile treatment
+`[TZ]` names the home page twice and, in §5, asks explicitly for "a full description
+of every block" with appearance, behaviour, responsiveness, and mobile treatment
 specified per block. It is the only page the specification treats that way, which is
 a fair reflection of its role: it is the portal's front door, its highest-authority
 SEO surface, and the page where every other domain's content competes for attention.
@@ -44,7 +44,7 @@ and editorial controls scattered across the back office.
   sources, and behaviour, not layout aesthetics
   ([l1-platform-foundation.md](l1-platform-foundation.md) §2).
 - `[TZ]` §4 and §5 enumerate overlapping but not identical block lists. §5.1 below is
-  their union, which is the safe reading — §5 prefixes its list with "Например",
+  their union, which is the safe reading — §5 prefixes its list with "For example",
   marking it as illustrative rather than exhaustive.
 - Every object listing block renders the **same card component** as the catalog
   ([l1-object-catalog.md](l1-object-catalog.md) §3.4). The home page introduces no
@@ -227,3 +227,4 @@ unpredictable, which is a poor trade for the portal's highest-authority page.
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1.0 | 2026-08-05 | Initial draft. Closes the `[TZ]` §4/§5 home-page composition gap found during the second requirements pass. |
+| 0.1.1 | 2026-08-05 | Patch: translated quoted `[TZ]` excerpts from Russian to English per the project's language policy; no meaning changed. |

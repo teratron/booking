@@ -1,6 +1,6 @@
 # Object Catalog
 
-**Version:** 1.1.0
+**Version:** 1.1.1
 **Status:** RFC
 **Layer:** concept
 
@@ -51,7 +51,7 @@ implementation taste.
 - Object types are administrator-managed data with a parent-child relationship, their
   own icon, their own field set, and their own applicable amenity list
   (`[TZ]` §69, §109).
-- `[TZ]` §15 offers "Google Maps / OpenStreetMap (на выбор)" — the choice is an L2
+- `[TZ]` §15 offers "Google Maps / OpenStreetMap (either one)" — the choice is an L2
   concern; this spec constrains only behavior (pins, clustering, filtering, routing).
 - <!-- TBD: whether the home page's object list is the same query as the catalog
      (a scoped subset) or an independently curated editorial feed is not stated.
@@ -131,7 +131,7 @@ Stay          catering type · holiday type
 ```
 
 The amenity facets are **not a fixed list** — they are the subset of the amenity
-registry flagged as filterable (`[TZ]` §110 "возможность использования в фильтре").
+registry flagged as filterable (`[TZ]` §110 "usable as a filter").
 Adding a filterable amenity is an administrator action.
 
 [ADDED — v1.1.0] **Module-gated facets.** Where the optional booking module
@@ -156,7 +156,7 @@ graph TD
     G --> I[Map pins, clustered]
 ```
 
-Banner injection between result blocks (`[TZ]` §24.2 "между объектами каталога") is
+Banner injection between result blocks (`[TZ]` §24.2 "between catalog objects") is
 applied after pagination, so a banner never displaces a result from its page.
 
 ### 5.3 Result Ordering Contract
@@ -260,3 +260,4 @@ are data, but a type's declaration is structured.
 | 0.1.0 | 2026-07-30 | Initial draft derived from Figma Home/Catalog frames (as `l1-hotel-discovery.md`). |
 | 1.0.0 | 2026-08-05 | Major: renamed to `l1-object-catalog.md`; generalized from hotels to the admin-managed object type registry; added tier-governed ordering, bump scoping, type-varying rendering, banner injection, and the full `[TZ]` filter set. |
 | 1.1.0 | 2026-08-05 | Minor: added module-gated date-range and party-size facets, present only where the optional booking module is active for the viewed scope and absent (not disabled) elsewhere. |
+| 1.1.1 | 2026-08-05 | Patch: translated quoted `[TZ]` excerpts from Russian to English per the project's language policy; no meaning changed. |

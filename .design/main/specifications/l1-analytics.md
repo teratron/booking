@@ -1,6 +1,6 @@
 # Analytics
 
-**Version:** 0.2.0
+**Version:** 0.2.1
 **Status:** RFC
 **Layer:** concept
 
@@ -51,7 +51,7 @@ and nothing more about the visitor.
   ([l1-advertising.md](l1-advertising.md) §7).
 - <!-- TBD: whether the portal integrates an external analytics product (Google
      Analytics, Matomo, Plausible) alongside its own measurement is left open;
-     [TZ] §130 lists "подключение аналитики" as a setting. First-party events remain
+     [TZ] §130 lists "analytics integration" as a setting. First-party events remain
      mandatory regardless — an external product cannot serve per-object owner
      statistics or advertiser billing figures. -->
 
@@ -86,8 +86,8 @@ and nothing more about the visitor.
 - **No visitor profile is built.** The portal does not store identifiers linking a
   visitor's activity across objects or sessions beyond what deduplication requires
   (`[TZ]` §89).
-- Statistics storage is separated from operational data (`[TZ]` §94 "отдельное
-  хранение статистики").
+- Statistics storage is separated from operational data (`[TZ]` §94 "separate
+  storage of statistics").
 
 ### 3.4 Access
 
@@ -169,10 +169,9 @@ relaxed later without a data-model change.
 
 ### 5.6 Traffic Sources & Page Popularity [ADDED — v0.2.0]
 
-`[TZ]` §23 recommends an owner statistics panel covering "аналитика просмотров,
-источников трафика и популярности страниц" — view analytics, **traffic sources**, and
-page popularity. Views and page popularity are already covered by §5.1 and §5.4;
-traffic source was not, and is added here.
+`[TZ]` §23 recommends an owner statistics panel covering view analytics,
+**traffic sources**, and page popularity. Views and page popularity are already
+covered by §5.1 and §5.4; traffic source was not, and is added here.
 
 **What is recorded**, on the first event of a visit only:
 
@@ -251,3 +250,4 @@ not a neutral simplification.
 | --- | --- | --- |
 | 0.1.0 | 2026-08-05 | Initial draft derived from the client technical specification. |
 | 0.2.0 | 2026-08-05 | Minor: added §5.6 traffic-source and page-popularity measurement per `[TZ]` §23, with a deliberately coarse channel+host shape to stay within the privacy-minimal invariant; added favorite count and source breakdown to the owner surface. |
+| 0.2.1 | 2026-08-05 | Patch: translated quoted `[TZ]` excerpts from Russian to English per the project's language policy; removed a resulting duplicated clause in §5.6. No meaning changed. |

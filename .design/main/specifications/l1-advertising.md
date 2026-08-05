@@ -1,6 +1,6 @@
 # Advertising
 
-**Version:** 0.2.0
+**Version:** 0.2.1
 **Status:** RFC
 **Layer:** concept
 
@@ -38,7 +38,7 @@ an advertiser who may not own any object at all. Modelling them together would
 force one of the two into the wrong shape.
 
 The promotional badges in §5.4 are the exception that connects them: an administrator
-can grant an object a temporary "Новинка" or "Выбор туристов" label without changing
+can grant an object a temporary "New" or "Tourist's Choice" label without changing
 its package (`[TZ]` §58). They live here because they are advertising decoration,
 not entitlement.
 
@@ -46,10 +46,10 @@ not entitlement.
 
 - Banners are portal-operated inventory **in this release**: an administrator creates
   and schedules every banner (`[TZ]` §115). [MODIFIED — v0.2.0] This is a scoping
-  decision, not a rejection — `[TZ]` §23 "Дополнительные предложения" recommends "расширенный
-  рекламный кабинет с возможностью покупки VIP-размещения и баннеров", i.e. a
-  self-service advertiser cabinet. It is a client recommendation rather than a
-  numbered requirement, and it is deferred as a candidate module
+  decision, not a rejection — `[TZ]` §23's "Additional Proposals" recommends "an
+  extended advertising cabinet with the ability to purchase VIP placement and
+  banners", i.e. a self-service advertiser cabinet. It is a client recommendation
+  rather than a numbered requirement, and it is deferred as a candidate module
   ([l1-feature-modules.md](l1-feature-modules.md) §5.8) rather than excluded. The
   earlier flat statement that "no self-service purchase flow exists" understated the
   client's own position and is corrected here.
@@ -92,7 +92,7 @@ not entitlement.
   home page, country/region/city/resort pages, category pages, object pages, news,
   and articles (`[TZ]` §57).
 - A slot may hold several eligible banners; display order is administrator-set, with
-  rotation among equals (`[TZ]` §24.2 "устанавливать порядок показа").
+  rotation among equals (`[TZ]` §24.2 "set the display order").
 - **Banners never displace content.** Injection between catalog results happens after
   pagination, so a banner never pushes a result off the page
   ([l1-object-catalog.md](l1-object-catalog.md) §5.2).
@@ -142,8 +142,8 @@ BannerSlot
 ```
 
 Slots are a registry rather than an enum so that adding an inventory position is a
-data operation, consistent with `[TZ]` §59's "все рекламные места должны настраиваться
-через административную панель".
+data operation, consistent with `[TZ]` §59's "all advertising slots must be
+configurable through the admin panel".
 
 ### 5.2 Selection
 
@@ -183,8 +183,8 @@ PromotionLabel
 ├── border colour · text colour · background colour · icon
 ├── position on card
 ├── active flag
-└── translations -> text ("VIP", "Рекомендовано", "Популярное",
-                          "Проверено", "Выбор туристов", "Новинка", "Акция")
+└── translations -> text ("VIP", "Recommended", "Popular",
+                          "Verified", "Tourist's Choice", "New", "Promotion")
 
 ObjectPromotion
 ├── object    -> Object
@@ -251,7 +251,7 @@ office. The registry costs one table.
 **Merging promotional labels into placement tiers.** Tempting, since both decorate a
 card, and rejected because `[TZ]` §58 lets an administrator grant a label
 *temporarily and independently* of what the owner bought. Folding them together would
-make every editorial "Новинка" a package change with billing consequences.
+make every editorial "New" label a package change with billing consequences.
 
 **Client-side impression counting only.** Cheapest and least defensible: ad blockers
 and script failures systematically undercount, and advertiser-facing numbers must
@@ -270,3 +270,4 @@ survive scrutiny. See [l1-analytics.md](l1-analytics.md) for the collection cont
 | --- | --- | --- |
 | 0.1.0 | 2026-08-05 | Initial draft derived from the client technical specification. |
 | 0.2.0 | 2026-08-05 | Minor: corrected §2's flat exclusion of a self-service advertiser purchase flow — `[TZ]` §23 recommends one, so it is now recorded as a deferred candidate module rather than silently excluded. Added a TBD on banner-selection precedence between territory, category, and language targeting. |
+| 0.2.1 | 2026-08-05 | Patch: translated quoted `[TZ]` excerpts and label examples from Russian to English per the project's language policy; no meaning or structure changed. |

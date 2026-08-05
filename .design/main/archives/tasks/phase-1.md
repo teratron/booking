@@ -436,8 +436,8 @@ the scaffold to exist first. Track T validates.
     Rewrote the three tests to assert catalog-key completeness instead
     (`messages.Header.navCatalog` etc. resolve, no render attempted), and
     proved actual rendering via a live `pnpm dev` request — response body
-    contains every Russian string (`Каталог`, `Блог`, `О нас`, `Ру`, etc.) and
-    `lang="ru"`.
+    contains every Russian string translated ("Catalog", "Blog", "About us",
+    "Ru", etc.) and `lang="ru"`.
   - Added `src/no-hardcoded-copy.test.ts` — a permanent regression guard
     scanning every non-test `.ts`/`.tsx` under `app/` and `components/` for
     Cyrillic characters (none should remain outside `messages/`). This is the
@@ -489,8 +489,8 @@ the scaffold to exist first. Track T validates.
     `@testing-library/user-event` (newly installed): dialog absent → click
     trigger → dialog + description visible → click Cancel → dialog gone.
   - Two-route smoke test via live `pnpm dev`: `/some/nested/route` → HTTP 404,
-    body contains "Страница не найдена"/"На главную"; `/privacy-policy` → HTTP
-    200, body contains "Политика конфиденциальности". Server stopped after.
+    body contains "Page not found" / "Back to home"; `/privacy-policy` → HTTP
+    200, body contains "Privacy policy". Server stopped after.
   - `pnpm test` — exit 0 — 9 files / 10 tests, no regression.
   - `pnpm exec tsc --noEmit`, `pnpm exec biome check .` (32 files, reformatted
     the shadcn-generated `dialog.tsx` into the project's own style) — exit 0.
@@ -525,9 +525,9 @@ the scaffold to exist first. Track T validates.
   - **Real breakpoint verification via chrome-devtools MCP** (live `pnpm dev`,
     not curl — this needed actual CSS evaluation): at 375px, mobile trigger
     visible / desktop nav hidden / footer `flex-direction: column`; clicking
-    the trigger genuinely expands Каталог/Карта/Блог (verified via the a11y
-    snapshot, not just class presence). At 1280px: mobile trigger hidden /
-    desktop nav visible / footer `flex-direction: row`.
+    the trigger genuinely expands Catalog/Map/Blog (verified via the a11y
+    snapshot, not just class presence). At 1280px:
+    mobile trigger hidden / desktop nav visible / footer `flex-direction: row`.
   - **Caught and fixed a bug in my own first verification pass**: an initial
     `getComputedStyle(el).display !== 'none'` check reported the mobile
     trigger as "visible" at 1280px, which was wrong — `getComputedStyle` on an

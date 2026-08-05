@@ -1,6 +1,6 @@
 # Room Reservation (Optional Module)
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 **Status:** RFC
 **Layer:** concept
 
@@ -14,9 +14,9 @@ off.
 
 [MODIFIED — v1.0.0] This spec previously described the platform's mandatory
 conversion path. The client technical specification removed booking from the product
-("Портал не является системой онлайн-бронирования", `[TZ]` §Общая информация) while
-simultaneously requiring that it remain reachable "как отдельный модуль, если
-потребуется" (`[TZ]` §64). The spec is therefore **re-scoped, not deprecated**: it
+("The portal is not an online booking system", `[TZ]` §General Information) while
+simultaneously requiring that it remain reachable "as a separate module, if
+required" (`[TZ]` §64). The spec is therefore **re-scoped, not deprecated**: it
 now defines a module that ships dormant and that an administrator can activate, at
 which point the portal becomes a booking portal with all the consequences catalogued
 in §5.6.
@@ -284,7 +284,7 @@ decision sits at the top.
 
 | Alias | Path | Purpose |
 | --- | --- | --- |
-| `[TZ]` | `.drafts/booking.md` | §Общая информация, §64, §76 — booking excluded from launch, named as a future module. |
+| `[TZ]` | `.drafts/booking.md` | §General Information, §64, §76 — booking excluded from launch, named as a future module. |
 | `[MODULES]` | `.design/main/specifications/l1-feature-modules.md` | Registry, scoping, and inertness contract. |
 | `[FIGMA-ROOMS]` | `https://www.figma.com/design/N2cVVIS5wvjHIviP27peuX/Booking?node-id=1101-1196` | Room inventory layout. |
 | `[FIGMA-ROOM-POPUP]` | `https://www.figma.com/design/N2cVVIS5wvjHIviP27peuX/Booking?node-id=85-558` | Room detail popup layout. |
@@ -296,3 +296,4 @@ decision sits at the top.
 | 0.1.0 | 2026-07-30 | Initial draft; flagged inquiry-vs-booking as the primary open question. |
 | 0.2.0 | 2026-07-30 | Resolved: reservations are paid bookings; require guest auth. |
 | 1.0.0 | 2026-08-05 | Major: re-scoped from a mandatory conversion path to an optional, disabled-by-default module governed by l1-feature-modules.md, per the client specification's exclusion of booking at launch and its §64 requirement that booking remain reachable as a future module. Added the request-without-payment flow, calendar model, activation-consequence ledger, and the availability-flag override contract. Not deprecated — the existing implementation is retained under the module gate. |
+| 1.0.1 | 2026-08-05 | Patch: translated quoted `[TZ]` excerpts from Russian to English per the project's language policy; no meaning changed. |
