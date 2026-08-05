@@ -42,9 +42,11 @@ COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 
 # Node is present so the Vite build can run in the same image as the PHP
 # toolchain; the asset pipeline is part of the application, not a separate
-# deployable.
+# deployable. git is required at runtime, not just at image-build time — the
+# JS quality gate (fallow audit/review) diffs against a base branch, and
+# Composer's own VCS-based installs fall back to it too.
 RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs \
+    && apt-get install -y --no-install-recommends nodejs git \
     && npm install -g pnpm@latest \
     && rm -rf /var/lib/apt/lists/*
 

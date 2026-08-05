@@ -189,3 +189,4 @@ copilot-instructions.md
 .design/.cache/
 .design/.graph-cache/
 .design/wiki/
+.fallow/

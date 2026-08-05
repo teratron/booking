@@ -1,0 +1,56 @@
+{
+  // This file is JSONC: fallow reads these comments; generic JSON tools may not.
+  "$schema": "./node_modules/fallow/schema.json",
+  "entry": [
+    // Both entries match vite.config.js's `input` array exactly — the CSS
+    // entry is a real Vite build root, not a file imported from JS, so it
+    // needs listing here too or fallow reports it as an unreachable dead file.
+    "resources/js/app.js",
+    "resources/css/app.css"
+  ],
+  "duplicates": {
+    // Hide pair-only clones; focus on widespread copy-paste
+    // worth refactoring. Lower to 2 to report every duplicate pair.
+    "minOccurrences": 3
+  },
+  "rules": {
+    // Cleanup rules promoted from the warn default to error, matching the
+    // project-wide convention that a gate fails rather than warns — a warning
+    // in a passing suite is a warning nobody reads (see the N+1 detector and
+    // Rector wiring on the PHP side for the same rule).
+    "unused-dev-dependencies": "error",
+    "unused-optional-dependencies": "error",
+    "css-duplicate-block": "error",
+    "css-selector-complexity": "error",
+    "css-dead-surface": "error",
+    "css-broken-reference": "error",
+    "re-export-cycle": "error",
+    "type-only-dependencies": "error",
+    "test-only-dependencies": "error",
+    "stale-suppressions": "error"
+
+    // dev-dependencies-in-production is deliberately LEFT AT its warn default,
+    // not promoted — tried and reverted. It is a package-level, whole-graph
+    // check (reported by package name, not file:line), so neither an inline
+    // `fallow-ignore-next-line` comment nor a per-file `overrides` entry
+    // affects it; both were tested against `@import 'tailwindcss'` in
+    // resources/css/app.css and neither suppressed the finding. Tailwind is a
+    // build-time CSS processor consumed by the Vite plugin — the compiled
+    // bundle carries no runtime dependency on the npm package, unlike a JS
+    // import that ships executable code — so this is the correct, standard
+    // Laravel+Tailwind pattern, not a real defect. Promoting this rule
+    // project-wide would make the gate permanently, unfixably red.
+
+    // css-token-drift is deliberately left at its warn default: the design
+    // tokens themselves have not been pulled from Figma yet, so drift against
+    // a theme that does not exist yet cannot be a merge-blocking signal.
+    // Promote it once Phase 5 lands the real Tailwind theme.
+
+    // Framework-specific rules (Vue/Svelte store members, injects, server
+    // actions, load-data-keys, component props/emits/inputs/outputs) are left
+    // at their defaults untouched — this project has no such framework
+    // (frameworks_present: [] per `fallow recommend`), so they never fire
+    // either way; overriding them here would document a decision that was
+    // never actually live.
+  }
+}

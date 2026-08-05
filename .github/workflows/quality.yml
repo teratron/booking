@@ -11,6 +11,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          # Full history, not the default shallow clone — fallow's PR-diff
+          # commands (`audit`, `review`) need the base branch's commits to
+          # walk, which a fetch-depth: 1 checkout does not provide.
+          fetch-depth: 0
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -38,8 +43,41 @@ jobs:
           cp .env.example .env
           php artisan key:generate --ansi
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+
+      - name: Install Node dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Whole-project JS/CSS gate — formatting, linting, dead code, dependency
+      # hygiene. Runs before the build so a cheap static check fails fast
+      # ahead of a slower Vite build.
+      - name: Run the JS quality gate
+        run: pnpm run quality
+
+      # PR-scoped: reviews only the files this PR actually changed, and
+      # distinguishes newly introduced findings from pre-existing debt on the
+      # base branch. Meaningless on a plain push with no base to diff against.
+      - name: Audit changed files (pull request only)
+        if: github.event_name == 'pull_request'
+        run: pnpm run audit
+
+      # Built before the PHP quality gate: the Pest suite includes a
+      # permanent check that public/build/manifest.json exists, matching the
+      # assertion a developer's own `pnpm build` satisfies locally.
+      - name: Build assets
+        run: pnpm build
+
       # One command, deliberately — this is the same command a developer runs
       # locally (composer.json's `quality` script). Two separate invocations of
       # the same gate is how "passes in CI, fails locally" divergence starts.
-      - name: Run the quality gate
+      - name: Run the PHP quality gate
         run: composer quality

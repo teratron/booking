@@ -17,25 +17,40 @@ if [ $? -ne 0 ]; then
 fi
 echo "[Magic Sync] Engine in sync."
 
-# Skip the PHP gate entirely when no staged file would be affected by it — a
-# .design/ or documentation-only commit should not need the Docker stack running.
 staged_php=$(git diff --cached --name-only --diff-filter=ACMR -- '*.php')
-if [ -z "$staged_php" ]; then
-  echo "[Quality] No staged PHP files — skipping the formatting gate."
+staged_js=$(git diff --cached --name-only --diff-filter=ACMR -- '*.js' '*.css')
+
+if [ -z "$staged_php" ] && [ -z "$staged_js" ]; then
+  echo "[Quality] No staged PHP or JS/CSS files — skipping the formatting gates."
   exit 0
 fi
 
 if ! docker compose exec -T app true >/dev/null 2>&1; then
-  echo "[Quality] PHP files are staged but the 'app' container is not running."
-  echo "[Quality] Start the stack first: docker compose up -d"
+  echo "[Quality] Staged files need the 'app' container to check. Start the stack first: docker compose up -d"
   exit 1
 fi
 
-echo "[Quality] Checking formatting (pint --test)..."
-if ! docker compose exec -T app vendor/bin/pint --test; then
-  echo "[Quality] Formatting check failed. Run 'docker compose exec app composer fix' and re-stage."
+failed=0
+
+if [ -n "$staged_php" ]; then
+  echo "[Quality] Checking PHP formatting (pint --test)..."
+  if ! docker compose exec -T app vendor/bin/pint --test; then
+    echo "[Quality] PHP formatting check failed. Run 'docker compose exec app composer fix' and re-stage."
+    failed=1
+  fi
+fi
+
+if [ -n "$staged_js" ]; then
+  echo "[Quality] Checking JS/CSS formatting and lint (biome check)..."
+  if ! docker compose exec -T app pnpm run lint; then
+    echo "[Quality] JS/CSS check failed. Run 'docker compose exec app pnpm run fix' and re-stage."
+    failed=1
+  fi
+fi
+
+if [ "$failed" -ne 0 ]; then
   exit 1
 fi
 
-echo "[Quality] Formatting clean. Proceeding to commit..."
+echo "[Quality] All checks clean. Proceeding to commit..."
 exit 0

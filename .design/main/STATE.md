@@ -4,22 +4,22 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-05 22:09
+**Updated:** 2026-08-05 23:04
 **Phase:** 1 — Foundation, Schema & Authorization
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-1A03 Quality toolchain and the composer quality gate
+- **Task:** T-1A04 Asset pipeline — Vite, Tailwind 4, Alpine, Livewire 4
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral and unchanged by the pivot; the 3 L2 documents were rewritten. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Execute T-1A04 Asset pipeline — Vite, Tailwind 4, Alpine, Livewire 4 via /magic.run main
+- **Next Action:** Execute T-1B01 Migrations: identity, access, localization, geography, taxonomy via /magic.run main
 
 ## Progress
 
 ```
 Overall: [0/7] ░░░░░░░░ 0%
 Plan:           [7 phases] generated (Bootstrap, tentative); Phase 1 decomposed, 2-7 scoped
-Implementation: [3/21] Phase 1 — Track A: quality gate wired, `composer quality` green; A04 next
+Implementation: [4/21] Phase 1 — Track A DONE (scaffold, stack, PHP+JS quality gates); Track B next
 ```
 
 ## Recent Decisions
@@ -53,11 +53,9 @@ Implementation: [3/21] Phase 1 — Track A: quality gate wired, `composer qualit
 - **Local Postgres occupies host port 5432** — the Docker service is mapped to
   5433. `postgres:18+` images store data under major-version subdirectories of
   `/var/lib/postgresql`, not `/var/lib/postgresql/data`.
-- **Windows reserves TCP 7915–8114 on this machine.** Both 8000 (web) and 8025
-  (Mailpit UI) fall inside it and fail to bind with a permissions error, not
-  "address in use". They are mapped to 8300 and 8325. Check
-  `netsh interface ipv4 show excludedportrange protocol=tcp` before picking any
-  new host port.
+- **Windows reserves TCP 7915–8114 on this machine** — 8000/8025 fail to bind
+  with a permissions error, not "in use"; mapped to 8300/8325 instead. Check
+  `netsh interface ipv4 show excludedportrange protocol=tcp` before any new port.
 - **No PHP or Composer on the host** — the entire PHP toolchain runs through the
   `booking-app` image (`docker compose exec app …`). Never assume a bare `php`
   or `composer` is available in a shell command.
@@ -75,16 +73,21 @@ Implementation: [3/21] Phase 1 — Track A: quality gate wired, `composer qualit
 - **Catalog ordering is placement-tier first** — never "improve" it into
   relevance-first. A lower-tier object outranking a higher-tier one breaks the
   revenue model (`[TZ]` §25.2).
-- **A composer script named `audit` is silently skipped** — it collides with
-  Composer's own built-in command and is dropped with only a one-line warning,
-  not an error. Call `composer audit` directly inside `quality`'s array
-  instead of defining a wrapper script.
+- **A composer script named `audit` is silently skipped** (collides with
+  Composer's built-in command — call `composer audit` directly). **Rector and
+  Pint disagree on some formatting** — always `composer fix` after
+  `composer rector`.
 - **Git hooks are versioned at `.githooks/`, not `.git/hooks/`.** A fresh clone
   must run `git config core.hooksPath .githooks` once, or the pre-commit gate
-  (engine-integrity check + `pint --test` on staged PHP) silently never fires.
-- **Rector and Pint disagree on some formatting** (e.g. arrow-function
-  spacing). Always run `composer fix` after `composer rector` and re-check
-  `composer lint` before considering a refactor done.
+  (engine sync + staged-PHP `pint --test` + staged-JS/CSS `biome check`)
+  silently never fires.
+- **`fallow`'s `dev-dependencies-in-production` rule cannot be suppressed
+  per-file** — neither an inline `fallow-ignore-next-line` comment nor an
+  `overrides` entry affects it (whole-graph rule, verified both ways). Left at
+  its `warn` default; `tailwindcss` in devDependencies is correct, not a bug.
+- **`git` must be in the app image** for `fallow audit`/`review` (PR-diff
+  tools) — added to `docker/app/Dockerfile`; was missing, is easy to drop
+  again on a future rebuild from a stale layer.
 
 ## Session Continuity
 

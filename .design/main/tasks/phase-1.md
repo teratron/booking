@@ -39,7 +39,7 @@ Track B lands. Track T consumes all three. Effective parallel degree is two, not
 - [x] [T-1A01] Scaffold the Laravel 13 + Filament 5 monolith
 - [x] [T-1A02] Local Docker Compose stack with PostGIS, Redis, MinIO, Mailpit
 - [x] [T-1A03] Quality toolchain and the `composer quality` gate
-- [ ] [T-1A04] Asset pipeline — Vite, Tailwind 4, Alpine, Livewire 4
+- [x] [T-1A04] Asset pipeline — Vite, Tailwind 4, Alpine, Livewire 4
 
 ### Track B — Schema
 
@@ -111,11 +111,14 @@ Track B lands. Track T consumes all three. Effective parallel degree is two, not
 ### [T-1A04] Asset pipeline — Vite, Tailwind 4, Alpine, Livewire 4
 
 - **Spec:** l2-tech-stack.md §5.1
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** `pnpm build` produces a manifest Laravel resolves; a scratch Blade view rendering one Livewire component and one Alpine directive returns 200 with both hydrated (assert via a Pest feature test on the rendered HTML).
+- **Changes:** Confirmed the Laravel 13 scaffold already ships Tailwind CSS 4 + Vite 8 correctly wired (`@tailwindcss/vite`, `laravel-vite-plugin`); no changes needed there. Added the `alpine:init` listener scaffold to `resources/js/app.js` — Livewire 4.3.5 bundles its own Alpine instance and exposes `window.Alpine`, so no separate `alpinejs` package is installed (would start a second, conflicting instance). Added a permanent `tests/Feature/ViteManifestTest.php` asserting `public/build/manifest.json` exists with both entry points. Extended `.github/workflows/quality.yml` to install pnpm/Node and run `pnpm build` before the PHP gate. Additionally wired a JS-side quality gate — `@biomejs/biome` (format + lint) and `fallow` (dead-code, dependency hygiene, complexity, CSS drift, PR-diff audit) — per explicit direction, with `biome.json` and `.fallowrc.jsonc` scoped to this project's actual layout rather than their auto-generated monorepo-shaped templates. `package.json` scripts renamed to mirror `composer.json` (`fix`/`lint`/`analyse`/`quality`); CI runs `pnpm run quality` on every push and `pnpm run audit` (PR-diff scoped) on `pull_request`. The `.githooks/pre-commit` gate now checks staged PHP and staged JS/CSS independently. `git` added to the runtime image — required by `fallow audit`/`review`, previously absent.
+- **Evidence:** `pnpm build` · exit 0 · `public/build/manifest.json` contains both `resources/css/app.css` and `resources/js/app.js` entries. A throwaway Livewire component + Alpine `x-data` on one Blade page, rendered and inspected directly (not just asserted): the response HTML showed `wire:snapshot`/`wire:effects`/`wire:id` and `x-data="{ open: false }"` on the same root element, plus the built `app-*.css`/`app-*.js` `<link>`/`<script>` tags in `<head>` and the Livewire script tag before `</body>` — full proof, then the fixture (component, view, page, test) was deleted per the task's own "scratch" wording, leaving only the permanent manifest test. `pnpm run quality` · exit 0 (Biome 0 issues across 6 files; fallow: 0 gating findings, 3 files analyzed, MI 99.4). `composer quality` · exit 0 · 11 tests passed, 100% coverage. Pre-commit hook tested against a real badly-formatted staged `.js` file (caught, exit 1) and against a clean staged state (exit 0), same as the existing PHP-side test from `T-1A03`.
 - **Handoff:** T-1T02 (architecture tests cover `resources/`), Phase 5 (all public markup).
 - **Notes:** pnpm is used here and nowhere else — PHP dependencies stay on Composer. Design tokens are **not** invented in this task: they arrive from the Figma source in Phase 5 and land in the Tailwind theme once. Leave the theme minimal rather than guessing values that will be replaced.
+- **Execution findings:** (1) `resources/css/app.css` is a genuine Vite entry point (declared in `vite.config.js`'s `input` array) but not reachable from any JS `import`, so it had to be listed in `fallow`'s `entry` config explicitly or it read as dead code. (2) `tailwindcss` is flagged by fallow's `dev-dependencies-in-production` rule because `@import 'tailwindcss'` reaches a production CSS entry — a real pattern, not a bug, since Tailwind is a build-time processor with no runtime footprint in the compiled bundle; this is the standard, correct Laravel+Tailwind shape. Both an inline `fallow-ignore-next-line` comment and a per-file `overrides` entry were tried and verified (via `fallow config` and `fallow suppressions`) to load correctly, yet neither suppressed the finding — it is a package-level, whole-graph check, not a per-file one, matching the class of rules the schema documents as override-immune. The rule was reverted to its `warn` default project-wide rather than left permanently, unfixably red. (3) `fallow audit`/`review` need `git`, which the runtime image did not have; added and rebuilt.
 
 ### [T-1B01] Migrations: identity, access, localization, geography, taxonomy
 
