@@ -1,12 +1,12 @@
 # SEO
 
-**Version:** 0.1.0
+**Version:** 0.1.1
 **Status:** RFC
 **Layer:** concept
 
 ## Overview
 
-How the portal is found: the URL grammar across five languages and three countries,
+How the portal is found: the URL grammar across the active languages and three countries,
 per-entity metadata, cross-language alternates, structured data, sitemaps, redirects,
 indexation policy for filtered views, and the administrator-facing warnings that keep
 it healthy. Derived from `[TZ]` §13, §92, §126.
@@ -31,16 +31,20 @@ not. `[TZ]` §13 and §126 reflect that weight by treating SEO as a module with 
 administration screen and its own specialist role, not as a set of meta tags.
 
 The problem is also harder here than on a typical site, because three dimensions
-multiply. Every page exists in five languages; every object sits in a territory
-hierarchy several levels deep; and catalog views can be filtered along a dozen axes.
+multiply. Every page exists in every active language — two at launch, five
+eventually ([l1-localization.md](l1-localization.md) §5.6); every object sits in a
+territory hierarchy several levels deep; and catalog views can be filtered along a
+dozen axes.
 Left ungoverned, that produces enormous volumes of near-duplicate URLs — the single
 most common way a catalog site damages its own search performance. Most of §3 exists
 to prevent that.
 
 ## 2. Constraints & Assumptions
 
-- Five languages, three countries, one domain at launch
-  ([l1-localization.md](l1-localization.md) §7).
+- Three countries, one domain, and two active languages at launch — English and
+  Russian, growing to five ([l1-localization.md](l1-localization.md) §5.6, §7).
+  Sitemaps, alternate links, and slug uniqueness are all built per active language,
+  so the growth adds volume without changing any rule in this spec.
 - SEO fields are per entity **and** per language (`[TZ]` §92).
 - Entities requiring SEO data: countries, regions, districts, cities, resorts,
   categories, objects, news, promotions, articles (`[TZ]` §92).
@@ -244,3 +248,4 @@ moment pages are indexed; retrofitting them means mass redirects and a ranking r
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1.0 | 2026-08-05 | Initial draft derived from the client technical specification. |
+| 0.1.1 | 2026-08-05 | Clarification only: restated language references as "active languages" (two at launch, five eventually) following l1-localization.md v0.2.0; no rule changed. |

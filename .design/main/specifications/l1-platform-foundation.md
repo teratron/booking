@@ -1,6 +1,6 @@
 # Platform Foundation
 
-**Version:** 1.1.0
+**Version:** 1.2.0
 **Status:** RFC
 **Layer:** concept
 
@@ -43,8 +43,8 @@ composition only**, not for scope, domain model, or business rules.
 ## 1. Motivation
 
 Before any single feature is designed it must be established, once, what every
-page owes the platform: how it renders across devices, which of five languages it
-speaks, which of three countries' geography it sits in, whether it must be
+page owes the platform: how it renders across devices, which of the active languages
+it speaks, which of three countries' geography it sits in, whether it must be
 discoverable outside the app shell, how a visitor reaches the object's owner, and
 how the central entity (the tourism object) relates to everything else.
 Duplicating these statements into every domain spec would violate the
@@ -64,9 +64,13 @@ specs from each carrying their own private theory of what the product is.
 - **The portal brokers information, not transactions.** No guest-facing money
   movement exists in this release. Revenue is business-to-business: object owners
   purchase placement (see [l1-placement-monetization.md](l1-placement-monetization.md)).
-- Launch geography is Moldova, Ukraine, and Georgia; launch languages are English,
-  Russian, Romanian, Ukrainian, and Georgian. Neither list is closed — see the
-  extensibility invariant in §3.
+- Launch geography is Moldova, Ukraine, and Georgia. [MODIFIED — v1.2.0] Launch
+  languages are **English and Russian only**; Romanian, Ukrainian, and Georgian are
+  activated from the back office after the project is complete
+  ([l1-localization.md](l1-localization.md) §5.6). Neither list is closed — see the
+  extensibility invariant in §3. No specification, schema, or template may encode
+  either count: the reduced launch set is a content decision, and the difference
+  between two active languages and five must be visible only in data.
 - <!-- TBD: [TZ] §22 lists Redis, queues, cron, and file storage as server
      requirements, and §97/§131 require database and media backups with a restore
      procedure. Whether the portal is self-hosted (VPS/Docker) or deployed to a
@@ -327,3 +331,4 @@ trade is no longer close.
 | 0.2.0 | 2026-07-30 | Resolved actor-roles and moderation-checkpoint TBDs via l2-third-party-integrations.md. |
 | 1.0.0 | 2026-08-05 | Major: reframed from hotel booking marketplace to multi-country tourism portal per the client technical specification. Replaced §3 with seven invariant groups, added the §5.3 scope-delta ledger, expanded the entity graph, and re-linked to twelve new/renamed domain specs. |
 | 1.1.0 | 2026-08-05 | Minor: booking and payment reclassified from removed scope to dormant, administrator-activatable modules per explicit product direction and `[TZ]` §63–64. Added the capability-module and disabling-never-destroys invariants to §3.6, restated the no-booking invariant as configuration-scoped, and settled the §5.3 disposition of the existing reservation implementation. |
+| 1.2.0 | 2026-08-05 | Minor: launch language set narrowed to English and Russian per explicit product direction, with the remaining three activated from the back office post-completion; §2 now forbids encoding either language count anywhere outside data. |

@@ -1,6 +1,6 @@
 # Localization
 
-**Version:** 0.1.0
+**Version:** 0.2.0
 **Status:** RFC
 **Layer:** concept
 
@@ -42,9 +42,14 @@ the common cross-border browsing case impossible.
 
 ## 2. Constraints & Assumptions
 
-- Launch languages: English, Russian, Romanian, Ukrainian, Georgian (`[TZ]` §1.4,
-  §67). All five are left-to-right; the language record still carries a text
-  direction field so a future RTL language is a data change (`[TZ]` §67).
+- **Eventual** language set: English, Russian, Romanian, Ukrainian, Georgian
+  (`[TZ]` §1.4, §67). All five are left-to-right; the language record still carries a
+  text direction field so a future RTL language is a data change (`[TZ]` §67).
+- **Launch** language set [ADDED — v0.2.0]: **English and Russian only**. Romanian,
+  Ukrainian, and Georgian are activated after the project is complete, through the
+  back office — see §5.6. This is a content-cost decision by explicit product
+  direction, not a capability reduction: nothing in this spec's model, schema, or URL
+  grammar changes with the count of active languages.
 - Launch countries: Moldova, Ukraine, Georgia (`[TZ]` §1.3). Each carries its own
   currency, phone code, flag, and primary language (`[TZ]` §66).
 - `[TZ]` §66 enumerates country name columns per language ("название на украинском
@@ -187,10 +192,65 @@ The back office ([l1-back-office.md](l1-back-office.md)) exposes, per `[TZ]` §1
 Translation completeness per entity and per language is a reportable metric, since
 `[TZ]` §126 requires an "отсутствует перевод" SEO warning.
 
+### 5.6 Phased Language Activation [ADDED — v0.2.0]
+
+The launch set is English and Russian; the remaining three are activated later from
+the back office. This section states what makes that a data operation rather than a
+project, so the deferral is safe to rely on.
+
+**What activating a language does**, end to end:
+
+```mermaid
+graph TD
+    A[Administrator activates a language] --> B[Language row: active = true]
+    B --> C[Appears in the switcher and in the country/owner language pickers]
+    B --> D[Empty interface catalog created]
+    D --> E[Every UI string resolves through fallback — page is usable immediately]
+    B --> F[Language becomes a valid URL prefix]
+    F --> G[Alternate links and sitemaps include it]
+    B --> H[Translation editors for every entity gain a new target column]
+    H --> I[Untranslated-material report lists what is missing]
+    I --> J[Content filled in progressively; no redeployment at any point]
+```
+
+**Why no code change is required** — each guarantee traces to an existing rule:
+
+| Concern | Why it holds | Source |
+| --- | --- | --- |
+| No language code in templates or routes | Language is data; hard-coding is forbidden | §3 |
+| Schema needs no migration | Translations are rows keyed on `(entity, language)`, not columns | §5.2, §7 |
+| Pages render before translation exists | Interface strings always fall back, never hide | §5.3 |
+| URLs work immediately | Language is a URL segment resolved from the registry | §3, [l1-seo.md](l1-seo.md) §5.1 |
+| Partial content is not a broken page | Per-entity fallback or hide policy | §3, §5.3 |
+| Progress is measurable | Untranslated-material report and SEO warnings | §5.5, [l1-seo.md](l1-seo.md) §5.6 |
+
+**Two consequences worth stating plainly**, since they are visible at launch:
+
+1. **No launch country's own primary language is active.** The launch markets are
+   Moldova, Ukraine, and Georgia, whose primary languages are Romanian, Ukrainian, and
+   Georgian respectively. `[TZ]` §66 requires each country record to name a primary
+   language, so at launch those records reference **inactive** languages. The system
+   must treat that as a normal, resolvable state — falling back to the visitor's
+   chosen active language — not as a validation error. Practically, Moldovan and
+   Ukrainian visitors are served in Russian or English, and Georgian visitors in
+   English.
+2. **Translation infrastructure ships regardless.** Translation tables, per-language
+   slugs, alternate links, and the fallback policy are built in the first migration
+   with two languages active, exactly as they would be with five. Building them "when
+   the other languages arrive" is the failure mode §1 exists to prevent, and the
+   deferral must not be read as permission to defer them.
+
+**Definition of done for the deferral**: activating Romanian on a running portal, with
+no deployment, produces a working Romanian version of every page — untranslated
+content resolving through fallback — and lists exactly what remains to be translated.
+If that is not true, the deferral was not implemented as specified.
+
 ## 6. Implementation Notes
 
 1. Model the translation tables in the same migration pass as the entities they
-   localize. Retrofitting is the failure mode this spec exists to prevent.
+   localize, **with two languages active exactly as with five** (§5.6). Retrofitting is
+   the failure mode this spec exists to prevent, and a reduced launch set is the
+   circumstance most likely to invite it.
 2. Index every translation table on `(language, slug)` and on `(entity id,
    language)` — both are hot paths (URL resolution and page render respectively).
 3. Cache keys for any rendered page must include the language and the browsing
@@ -233,3 +293,4 @@ stays possible.
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1.0 | 2026-08-05 | Initial draft derived from the client technical specification. |
+| 0.2.0 | 2026-08-05 | Minor: split the language set into launch (English, Russian) and eventual (plus Romanian, Ukrainian, Georgian) per explicit product direction; added §5.6 Phased Language Activation with the no-code-change trace, the inactive-primary-language consequence, and a definition of done for the deferral. |

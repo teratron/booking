@@ -4,7 +4,7 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-05 05:44
+**Updated:** 2026-08-05 06:11
 **Phase:** 0 - Concept re-baseline (post-TZ restructure)
 **Status:** Active
 
@@ -25,7 +25,7 @@ Phase 4: [7/7]   ████████ 100%  DONE — archived
 Phase 5: [6/6]   ████████ 100%  DONE — archived
 Phase 6: [6/6]   ████████ 100%  DONE — archived
 
-Specification (current): [20/20] Stable→RFC re-baseline complete, review pending
+Specification (current): [20/20] re-baselined, all RFC, review pending
 Plan: SUPERSEDED — awaiting /magic.task regeneration
 ```
 
@@ -34,8 +34,9 @@ Plan: SUPERSEDED — awaiting /magic.task regeneration
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
 - 2026-08-05 **Decision:** Booking is **preserved, not deprecated**. Per explicit product direction and `[TZ]` §63–64, the reservation work (schema, `src/lib/reservation/`, checkout, Fondy) is retained behind an administrator-toggleable module registry (`l1-feature-modules.md`), disabled by default. Booking and payment are separate module rows, so "dated request + owner confirmation, no payment provider" is a supported intermediate state.
-- 2026-08-05 **Decision:** Specs re-baselined against the client TZ. Product changed from hotel booking marketplace → 3-country / 5-language tourism information portal. 3 renames (hotel-discovery→object-catalog, hotel-profile→object-profile, property-onboarding→object-onboarding), 10 new specs, 7 amended. All set to `RFC` (not auto-promoted to Stable) because the set carries unresolved TBDs — chiefly the deployment fork in `l2-tech-stack.md` §5.9.
-- 2026-08-05 **Finding:** Stack audit by import analysis, not manifest reading: **11 packages are removable today with zero code change** (10 unused `@radix-ui/*` from the incomplete Base UI migration, plus `vaul`); `shadcn` CLI is misplaced in `dependencies`. Conversely **12 TZ-required capabilities have no dependency at all** (Redis, job queue, mail, image derivatives, map clustering, XLSX, 2FA/CAPTCHA, scoped RBAC, audit, soft delete, 4 of 5 locales). The stack is mis-provisioned, not excessive.
+- 2026-08-05 **Decision:** Launch locales narrowed to **English + Russian only**; Romanian, Ukrainian, Georgian deferred until after project completion and activated from the back office (`l1-localization.md` §5.6). Content decision, not a capability one — translation tables, per-language slugs, hreflang, and fallback still ship in the first migration. Consequence: no launch country's own primary language is active at release, so country records reference inactive languages and must resolve via fallback rather than fail validation.
+- 2026-08-05 **Decision:** Specs re-baselined against the client TZ. Product changed from hotel booking marketplace → 3-country multi-language tourism information portal. 3 renames (hotel-discovery→object-catalog, hotel-profile→object-profile, property-onboarding→object-onboarding), 10 new specs, 7 amended. All set to `RFC` (not auto-promoted to Stable) because the set carries unresolved TBDs — chiefly the deployment fork in `l2-tech-stack.md` §5.9.
+- 2026-08-05 **Finding:** Stack audit by import analysis, not manifest reading: **11 packages are removable today with zero code change** (10 unused `@radix-ui/*` from the incomplete Base UI migration, plus `vaul`); `shadcn` CLI is misplaced in `dependencies`. Conversely **12 TZ-required capabilities have no dependency at all** (Redis, job queue, mail, image derivatives, map clustering, XLSX, 2FA/CAPTCHA, scoped RBAC, audit, soft delete, the `en` locale catalog). The stack is mis-provisioned, not excessive.
 - 2026-08-05 **Decision:** Phase 6 (and the full 6-phase plan) closed. T-6T01's live browser check surfaced and fixed two real defects no automated test caught: a Base UI `nativeButton` console error on the "Оплатить" button-as-Link, and a genuinely deterministic (not flaky) bug in `reservation-query.test.ts` — every test in that file shares one fixed `guestId` but only cleaned up in one file-level `afterAll`, so an earlier test's own rows leaked into a later exact-count assertion. Full suite: 52 files / 158 tests, 0 failures.
 - 2026-08-04 **Note:** Docker/Postgres access RESTORED — `docker` CLI reappeared on PATH, daemon was stopped, started via Docker Desktop + `docker compose up -d`; the named `postgres-data` volume preserved the schema through container recreation.
 - 2026-08-04 **Decision:** T-6C01 (payment) built via an orchestrated multi-agent workflow (Ultracode posture) — 4 agents built provider/persistence/UI/tests in dependency order, 3 agents adversarially reviewed (correctness, auth, conventions) and found 8 real issues, all confirmed and fixed. See `archives/tasks/phase-6.md` T-6C01 Changes.

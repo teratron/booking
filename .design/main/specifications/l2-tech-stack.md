@@ -1,6 +1,6 @@
 # Technology Stack
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 **Status:** RFC
 **Layer:** implementation
 **Implements:** l1-platform-foundation.md
@@ -62,7 +62,7 @@ only subtracted would have left the project further from deliverable than it sta
 | L1 Invariant | Implementation |
 | --- | --- |
 | Responsive parity (4 viewports) | One Next.js component tree per page, styled mobile-first; Tailwind breakpoints cover phone/tablet/laptop/desktop from a single template. |
-| Localization-completeness | `next-intl` for interface catalogs; per-entity translation **tables** in PostgreSQL for content ([l1-localization.md](l1-localization.md) §5.2). The former exists; the latter does not yet — see §5.5. |
+| Localization-completeness | `next-intl` for interface catalogs; per-entity translation **tables** in PostgreSQL for content ([l1-localization.md](l1-localization.md) §5.2). The former exists; the latter does not yet — see §5.5. Both are built to the full model regardless of how many languages are active, since the launch set (`en` + `ru`) is a content decision, not a schema one. |
 | Public discoverability | App Router Server Components render catalog, territory, object, and article pages as crawlable HTML with no separate rendering layer. |
 | Geographic scoping | Recursive territory hierarchy resolved via a materialized path column with a GIN-indexed ancestor lookup — see §5.4. |
 | Object as central entity, type-varying attributes | Typed core columns plus a validated JSONB attribute bag keyed by the type's declared field set — see §5.4. |
@@ -146,7 +146,7 @@ Unchanged and re-confirmed against the new requirements.
 
 - **Next.js (App Router)** — latest stable **16.2.x**, **React 19**. The
   discoverability invariant is now larger, not smaller: territory landing pages across
-  three countries and five languages are the portal's primary organic surface
+  three countries and every active language are the portal's primary organic surface
   ([l1-seo.md](l1-seo.md)). Server-rendered HTML without a separate rendering layer is
   the right answer, and more clearly so than before.
 - **TypeScript** — strict, **7.x** (the Go-native compiler; substantially faster
@@ -214,7 +214,7 @@ a technical-specification requirement with **nothing currently behind it**.
 | Two-factor, rate limiting, CAPTCHA | `[TZ]` §17, §100, §130 | None | Better Auth plugins — no new vendor |
 | Scoped RBAC | `[TZ]` §73, §121 | `role` enum only | Own schema — [l1-back-office.md](l1-back-office.md) §5.2 |
 | Audit journal, soft delete | `[TZ]` §91, §95 | None | Own schema, no dependency |
-| Four of five locales | `[TZ]` §1.4 | Only `messages/ru.json` exists | Content, not dependency |
+| English locale catalog | `[TZ]` §1.4 | Only `messages/ru.json` exists | Content, not dependency — launch set is `en` + `ru` ([l1-localization.md](l1-localization.md) §5.6) |
 
 Two entries deserve emphasis.
 
@@ -363,7 +363,7 @@ Sequenced by dependency, not by visibility.
 **Rebuilding on a different stack entirely.** The product definition changed enough to
 make the question fair. It does not survive contact with the audit: Next.js, Drizzle,
 PostgreSQL, Tailwind, Better Auth, and react-admin are all *more* justified under the
-new requirements than the old ones — five languages, deep SEO, twenty-four admin
+new requirements than the old ones — multi-language routing, deep SEO, twenty-four admin
 sections, and runtime-configurable everything all play to this stack's strengths. What
 changed is the data model and the missing infrastructure, and neither is a framework
 problem.
@@ -408,3 +408,4 @@ typed-columns-plus-validated-JSONB model in §5.4 keeps filterable attributes in
 | 0.3.0 | 2026-07-30 | Added Component Architecture Principles; showed the `components/ui/` split. |
 | 0.3.1 | 2026-07-30 | Clarification: showed the `api/admin/` REST surface. |
 | 1.0.0 | 2026-08-05 | Major restructure against the client technical specification. Added the verified dependency audit (§5.1, eleven removable packages), the admin-kit keep decision on requirement grounds (§5.2), three forced data-model decisions (§5.4), the missing-capability ledger (§5.5), the background-worker finding that triggers the first genuine second deployable (§5.6), and the deployment fork (§5.9). Restructured rather than delta-edited: the product premise the previous version resolved against no longer exists, leaving no section unaffected. |
+| 1.0.1 | 2026-08-05 | Clarification only: language references restated as "active languages" following l1-localization.md v0.2.0's launch set of English and Russian; the §5.5 locale gap row narrowed from four missing catalogs to one. No selection changed. |

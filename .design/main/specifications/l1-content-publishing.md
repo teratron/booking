@@ -219,7 +219,7 @@ inconsistent object pages, invites layout and font abuse, expands the sanitizati
 surface, and multiplies translation cost. Rejected on `[TZ]` §29.1.
 
 **Shipping comments because `[TZ]` §10 mentions them.** An unmoderated comment
-surface across three countries and five languages is a moderation liability that a
+surface across three countries and multiple languages is a moderation liability that a
 single unelaborated line does not justify. Raised as a question (§2) rather than
 designed from an inference.
 
