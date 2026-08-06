@@ -81,8 +81,8 @@
             "@analyse",
             "@test",
             "@test:coverage",
-            "@unused",
-            "composer audit"
+            "composer audit",
+            "@unused"
         ],
         "rector:dry": "rector process --dry-run",
         "rector": "rector process",

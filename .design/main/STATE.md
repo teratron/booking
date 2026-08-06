@@ -4,22 +4,22 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-06 06:21
+**Updated:** 2026-08-06 10:47
 **Phase:** 1 — Foundation, Schema & Authorization
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-1B02 Migrations: object, media, rooms, prices, reviews, contacts, favorites
+- **Task:** T-1B03 Migrations: placement and finance, advertising, content, governance
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral and unchanged by the pivot; the 3 L2 documents were rewritten. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Execute T-1B03 Migrations: placement and finance, advertising, content, governance via /magic.run main
+- **Next Action:** Execute T-1B04 Migrations: notifications, analytics, platform, dormant booking via /magic.run main
 
 ## Progress
 
 ```
 Overall: [0/7] ░░░░░░░░ 0%
 Plan:           [7 phases] generated (Bootstrap, tentative); Phase 1 decomposed, 2-7 scoped
-Implementation: [6/21] Phase 1 — Track A DONE; Track B: T-1B01, T-1B02 done (34 migrations); T-1B03 next
+Implementation: [7/21] Phase 1 — Track A DONE; Track B: T-1B01-T-1B03 done (63 migrations); T-1B04 next
 ```
 
 ## Recent Decisions
@@ -29,7 +29,6 @@ Implementation: [6/21] Phase 1 — Track A DONE; Track B: T-1B01, T-1B02 done (3
 - 2026-08-05 **Decision: plan generated in Bootstrap mode.** No specification reached `Stable`, so the C6 default (plan only `Stable`, backlog the rest) would have produced an empty plan. The Bootstrap Exception applies. `RFC → Stable` promotion was **withheld** — `RULES.md` §2 requires no open questions and the set carries twenty inline TBDs. Two touch Phase 1, recorded in `PLAN.md` §Open Questions Carried into Phase 1; the higher-value one (region-scoped permission transitivity) is worth closing before `T-1B01`.
 - 2026-08-05 **Decision: back office before the public site**, inverting `[TZ]` §23's stages 4–6. The public site renders data that does not exist until the back office creates it; `l2-tech-stack.md` §6.4–§6.5 require scoped authorization before any panel screen. Recorded as a divergence, not applied silently — every stage is still delivered.
 - 2026-08-05 **Decision:** `l1-room-reservation.md` **to Backlog.** Ships disabled in Phase 1 (`T-1T04` proves absence, not hiding); outside `[TZ]` §134's mandatory release, prior implementation explicitly not a migration source.
-- 2026-08-05 **Standing instruction: continuous quality gates**, wired as `composer quality` (T-1A03) so local and CI are identical. Conventions enforced by Pest `arch()` tests, not review. Detail in CLAUDE.md "Engineering Discipline"; budgets in `l2-tech-stack.md` §5.9.
 
 ## Blockers
 
@@ -48,11 +47,9 @@ Implementation: [6/21] Phase 1 — Track A DONE; Track B: T-1B01, T-1B02 done (3
 - **Public OSM tile servers are prohibited in production** (OSMF Tile Usage
   Policy) — never `tile.openstreetmap.org`; use MapTiler, Stadia, or
   self-hosted tiles.
-- **Host port conflicts**: 5432 (native Postgres → mapped to 5433) and TCP
-  7915–8114 reserved by Windows (8000/8025 fail with a permissions error →
-  8300/8325). Check `netsh interface ipv4 show excludedportrange protocol=tcp`
-  before any new port. `postgres:18+` stores data under a major-version
-  subdirectory of `/var/lib/postgresql`, not `.../data`.
+- **Host port conflicts**: Postgres native→5433, web 8300, Mailpit 8325 (Win
+  TCP 7915–8114 reserved; check `netsh ... excludedportrange` first).
+  `postgres:18+` data lives under a major-version subdir, not `.../data`.
 - **No PHP/Composer on the host** — toolchain runs through `docker compose
   exec app …`. Never assume bare `php`/`composer` in a shell command.
 - **The Windows bind mount is not a benchmark host** (13–20s first-byte vs a
@@ -70,7 +67,10 @@ Implementation: [6/21] Phase 1 — Track A DONE; Track B: T-1B01, T-1B02 done (3
   `composer fix` after `composer rector`; `fallow`'s
   `dev-dependencies-in-production` cannot be suppressed per-file (whole-graph
   rule) — left at `warn`, `tailwindcss` in devDependencies is correct; `git`
-  must be in the app image for `fallow audit`/`review`.
+  must be in the app image for `fallow audit`/`review`. Composer's array-form
+  scripts abort at the first non-zero step — `unused` sat before `audit` in
+  `quality`, silently skipping `audit` every run since `T-1A03` until
+  reordered (`T-1B03`).
 - **Git hooks are versioned at `.githooks/`** — `git config core.hooksPath
   .githooks` once per clone, or the pre-commit gate silently never fires.
 - **Tests run against real Postgres (`booking_testing`), not SQLite** — the

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -19,8 +21,8 @@ return new class extends Migration
             $morphPrefix = config('audit.user.morph_prefix', 'user');
 
             $table->bigIncrements('id');
-            $table->string($morphPrefix . '_type')->nullable();
-            $table->unsignedBigInteger($morphPrefix . '_id')->nullable();
+            $table->string($morphPrefix.'_type')->nullable();
+            $table->unsignedBigInteger($morphPrefix.'_id')->nullable();
             $table->string('event');
             $table->morphs('auditable');
             $table->text('old_values')->nullable();
@@ -31,7 +33,7 @@ return new class extends Migration
             $table->string('tags')->nullable();
             $table->timestamps();
 
-            $table->index([$morphPrefix . '_id', $morphPrefix . '_type']);
+            $table->index([$morphPrefix.'_id', $morphPrefix.'_type']);
         });
     }
 
