@@ -38,52 +38,52 @@ final class RoleSeeder extends Seeder
             [
                 'key' => 'country_administrator', 'system' => true,
                 'name' => ['en' => 'Country Administrator', 'ru' => 'Администратор страны'],
-                'permissions' => ['object.*', 'content.*', 'moderation.*', 'user_management'],
+                'permissions' => ['object.*', 'content.*', 'moderation.*', 'user_management', 'admin_panel_access', 'audit.view'],
             ],
             [
                 'key' => 'region_administrator', 'system' => true,
                 'name' => ['en' => 'Region Administrator', 'ru' => 'Региональный администратор'],
-                'permissions' => ['object.view', 'object.edit', 'object.publish', 'content.view', 'content.edit', 'content.publish'],
+                'permissions' => ['object.view', 'object.edit', 'object.publish', 'content.view', 'content.edit', 'content.publish', 'admin_panel_access'],
             ],
             [
                 'key' => 'moderator', 'system' => true,
                 'name' => ['en' => 'Moderator', 'ru' => 'Модератор'],
-                'permissions' => ['object.view', 'object.edit', 'object.publish', 'moderation.*'],
+                'permissions' => ['object.view', 'object.edit', 'object.publish', 'moderation.*', 'admin_panel_access', 'audit.view'],
             ],
             [
                 'key' => 'content_manager', 'system' => true,
                 'name' => ['en' => 'Content Manager', 'ru' => 'Контент-менеджер'],
-                'permissions' => ['content.*'],
+                'permissions' => ['content.*', 'admin_panel_access'],
             ],
             [
                 'key' => 'seo_specialist', 'system' => true,
                 'name' => ['en' => 'SEO Specialist', 'ru' => 'SEO-специалист'],
-                'permissions' => ['object.view', 'object.edit', 'content.view', 'content.edit'],
+                'permissions' => ['object.view', 'object.edit', 'content.view', 'content.edit', 'admin_panel_access'],
             ],
             [
                 'key' => 'advertising_manager', 'system' => true,
                 'name' => ['en' => 'Advertising Manager', 'ru' => 'Менеджер по рекламе'],
-                'permissions' => ['content.*', 'object.view'],
+                'permissions' => ['content.*', 'object.view', 'admin_panel_access'],
             ],
             [
                 'key' => 'finance_manager', 'system' => true,
                 'name' => ['en' => 'Finance Manager', 'ru' => 'Финансовый менеджер'],
-                'permissions' => ['finance.*', 'financial_access'],
+                'permissions' => ['finance.*', 'financial_access', 'admin_panel_access'],
             ],
             [
                 'key' => 'technical_support', 'system' => true,
                 'name' => ['en' => 'Technical Support', 'ru' => 'Техническая поддержка'],
-                'permissions' => ['settings.view', 'settings_management'],
+                'permissions' => ['settings.view', 'settings_management', 'admin_panel_access', 'audit.view', 'impersonate'],
             ],
             [
                 'key' => 'object_owner', 'system' => true,
                 'name' => ['en' => 'Object Owner', 'ru' => 'Владелец объекта'],
-                'permissions' => ['object.view', 'object.edit'],
+                'permissions' => ['object.view', 'object.edit', 'cabinet_access'],
             ],
             [
                 'key' => 'object_staff_member', 'system' => true,
                 'name' => ['en' => 'Object Staff Member', 'ru' => 'Сотрудник объекта'],
-                'permissions' => ['object.view'],
+                'permissions' => ['object.view', 'cabinet_access'],
             ],
         ];
 

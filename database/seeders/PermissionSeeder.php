@@ -33,10 +33,27 @@ final class PermissionSeeder extends Seeder
         return $keys;
     }
 
-    /** @return list<string> */
+    /**
+     * Capabilities that name a gate rather than a resource CRUD action.
+     *
+     * `admin_panel_access` and `cabinet_access` are the two panel doors. They
+     * exist as permissions rather than as a role-name check because roles are
+     * data an administrator may rename or restructure at any time, and a door
+     * keyed to a role name silently opens or closes the moment they do.
+     *
+     * @return list<string>
+     */
     public static function standaloneKeys(): array
     {
-        return ['financial_access', 'user_management', 'settings_management'];
+        return [
+            'financial_access',
+            'user_management',
+            'settings_management',
+            'admin_panel_access',
+            'cabinet_access',
+            'impersonate',
+            'audit.view',
+        ];
     }
 
     public function run(): void

@@ -27,7 +27,11 @@ class CabinetPanelProvider extends PanelProvider
     {
         return $panel
             ->id('cabinet')
-            ->path('cabinet')
+            ->path(config('booking.panels.cabinet.path'))
+            ->login()
+            ->brandName(fn (): string => __('panel.cabinet_brand'))
+            ->strictAuthorization()
+            ->unsavedChangesAlerts()
             ->colors([
                 'primary' => Color::Amber,
             ])

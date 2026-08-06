@@ -65,6 +65,90 @@ final class ScopeAuthorizer
         return false;
     }
 
+    /**
+     * The same grant resolution as `authorize()`, expressed as a set rather
+     * than a yes/no about one target — what a list query needs in order to be
+     * narrowed before it runs.
+     *
+     * Deciding per row would mean loading every row first, which defeats both
+     * pagination and the point: a country administrator must not be able to
+     * learn how many objects another country holds by reading a page count.
+     */
+    public function constraintFor(User $user, string $permission): ScopeConstraint
+    {
+        if (! $user->can($permission)) {
+            return ScopeConstraint::nothing();
+        }
+
+        $roleIds = $user->roles()
+            ->whereHas('permissions', fn ($query) => $query->where('name', $permission))
+            ->pluck('id');
+
+        if ($roleIds->isEmpty()) {
+            return ScopeConstraint::nothing();
+        }
+
+        $scopes = DB::table('role_scopes')
+            ->where('user_id', $user->id)
+            ->whereIn('role_id', $roleIds)
+            ->get(['scope_kind', 'scope_reference_id']);
+
+        $countryIds = [];
+        $territoryRoots = [];
+        $categoryIds = [];
+
+        foreach ($scopes as $scope) {
+            // One unrestricted grant subsumes every other: no narrowing the
+            // remaining grants could add would exclude anything it admits.
+            if ($scope->scope_kind === 'none') {
+                return ScopeConstraint::unrestricted();
+            }
+
+            match ($scope->scope_kind) {
+                'country' => $countryIds[] = (int) $scope->scope_reference_id,
+                'territory' => $territoryRoots[] = (int) $scope->scope_reference_id,
+                'category' => $categoryIds[] = (int) $scope->scope_reference_id,
+                default => null,
+            };
+        }
+
+        return new ScopeConstraint(
+            isUnrestricted: false,
+            countryIds: array_values(array_unique($countryIds)),
+            territoryIds: $this->expandSubtrees(array_values(array_unique($territoryRoots))),
+            categoryIds: array_values(array_unique($categoryIds)),
+        );
+    }
+
+    /**
+     * Every node at or beneath the given roots, in one recursive CTE rather
+     * than one per root — the territory tree is the portal's hottest path and
+     * a per-root walk multiplies its cost by the number of grants.
+     *
+     * @param  list<int>  $rootIds
+     * @return list<int>
+     */
+    private function expandSubtrees(array $rootIds): array
+    {
+        if ($rootIds === []) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($rootIds), '?'));
+
+        /** @var list<object{id: int|string}> $rows */
+        $rows = DB::select(<<<SQL
+            with recursive subtree as (
+                select id from territories where id in ({$placeholders})
+                union all
+                select t.id from territories t inner join subtree s on t.parent_id = s.id
+            )
+            select distinct id from subtree
+            SQL, $rootIds);
+
+        return array_map(static fn (object $row): int => (int) $row->id, $rows);
+    }
+
     private function scopeCovers(
         string $scopeKind,
         ?int $scopeReferenceId,
