@@ -15,6 +15,7 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\Fixtures\Filament\ContractProbeResource;
 use Tests\Fixtures\Filament\GlobalProbeResource;
+use Tests\Fixtures\Filament\PolicylessProbeResource;
 use Tests\Fixtures\Filament\TableHost;
 
 uses(RefreshDatabase::class);
@@ -220,5 +221,8 @@ it('throws rather than allowing when a resource has no policy', function (): voi
     seedContractFixture();
     actorScoped('none', null);
 
-    ContractProbeResource::canViewAny();
+    // The toolkit's own default here is to permit — a resource whose author
+    // forgot the policy is fully open, with no symptom until someone finds
+    // the section. Strict mode turns that into a failure at the first request.
+    PolicylessProbeResource::canViewAny();
 })->throws(LogicException::class);

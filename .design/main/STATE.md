@@ -10,16 +10,16 @@
 
 ## Current Position
 
-- **Task:** Phase 2 Track A complete (5/25). Tracks B, C, D are now unblocked and three-wide parallel.
+- **Task:** Phase 2 Track A complete plus T-2B01 (6/25). Tracks B, C, D are now unblocked and three-wide parallel.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral and unchanged by the pivot; the 3 L2 documents were rewritten. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Execute T-2B01 (object list), T-2C01 (territory administration), and T-2D01 (moderation mode resolution) — Track D first within its own track
+- **Next Action:** Execute T-2D01 (moderation mode resolution — first within Track D, and a prerequisite of T-2B02), then T-2B02 and T-2C01 in parallel
 
 ## Progress
 
 ```
 Overall: [1/7] █░░░░░░░ 14%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1 archived, Phase 2 decomposed, 3-7 scoped
-Implementation: [21/21] Phase 1 DONE · [5/25] Phase 2 — Track A DONE (panel, contract, settings, modules, dashboard)
+Implementation: [21/21] Phase 1 DONE · [6/25] Phase 2 — Track A DONE + object list
 ```
 
 ## Recent Decisions

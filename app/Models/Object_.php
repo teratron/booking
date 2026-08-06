@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Concerns\FiltersModeration;
+use App\Policies\Object_Policy;
 use Astrotomic\Translatable\Contracts\Translatable as TranslatableContract;
 use Astrotomic\Translatable\Translatable;
+use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Override;
 use OwenIt\Auditing\Auditable;
@@ -24,6 +27,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * closest valid name to the table and the domain vocabulary, not a
  * deliberate rename.
  */
+#[UsePolicy(Object_Policy::class)]
 class Object_ extends Model implements AuditableContract, HasMedia, TranslatableContract
 {
     use Auditable;
@@ -103,5 +107,13 @@ class Object_ extends Model implements AuditableContract, HasMedia, Translatable
     public function country(): BelongsTo
     {
         return $this->belongsTo(Country::class);
+    }
+
+    /**
+     * @return HasMany<ContactChannel, $this>
+     */
+    public function contactChannels(): HasMany
+    {
+        return $this->hasMany(ContactChannel::class);
     }
 }

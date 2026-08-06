@@ -33,6 +33,48 @@ return [
         'expiring_placements' => 'Истекают в течение 14 дней',
     ],
 
+    'objects' => [
+        'title' => 'Объекты',
+        'model_label' => 'объект',
+
+        'columns' => [
+            'name' => 'Название',
+            'type' => 'Тип',
+            'country' => 'Страна',
+            'territory' => 'Территория',
+            'owner' => 'Владелец',
+            'status' => 'Публикация',
+            'moderation_status' => 'Модерация',
+            'availability' => 'Наличие мест',
+            'availability_confirmed' => 'Наличие подтверждено',
+            'identifier' => 'Идентификатор',
+        ],
+
+        'status' => [
+            'draft' => 'Черновик',
+            'published' => 'Опубликован',
+            'hidden' => 'Скрыт',
+            'archived' => 'В архиве',
+        ],
+
+        'moderation' => [
+            'pending' => 'Ожидает проверки',
+            'approved' => 'Одобрено',
+            'rejected' => 'Отклонено',
+            'revision_requested' => 'Возвращено на доработку',
+        ],
+
+        'availability' => [
+            'available' => 'Есть свободные места',
+            'unavailable' => 'Мест нет',
+            'unspecified' => 'Не указано',
+        ],
+
+        'filters' => [
+            'contact' => 'Телефон, email или мессенджер',
+        ],
+    ],
+
     'modules' => [
         'title' => 'Модули',
         'model_label' => 'модуль',

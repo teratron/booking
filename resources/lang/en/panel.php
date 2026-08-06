@@ -33,6 +33,48 @@ return [
         'expiring_placements' => 'Expiring within 14 days',
     ],
 
+    'objects' => [
+        'title' => 'Objects',
+        'model_label' => 'object',
+
+        'columns' => [
+            'name' => 'Name',
+            'type' => 'Type',
+            'country' => 'Country',
+            'territory' => 'Territory',
+            'owner' => 'Owner',
+            'status' => 'Publication',
+            'moderation_status' => 'Moderation',
+            'availability' => 'Availability',
+            'availability_confirmed' => 'Availability confirmed',
+            'identifier' => 'Identifier',
+        ],
+
+        'status' => [
+            'draft' => 'Draft',
+            'published' => 'Published',
+            'hidden' => 'Hidden',
+            'archived' => 'Archived',
+        ],
+
+        'moderation' => [
+            'pending' => 'Awaiting review',
+            'approved' => 'Approved',
+            'rejected' => 'Rejected',
+            'revision_requested' => 'Revision requested',
+        ],
+
+        'availability' => [
+            'available' => 'Vacancies available',
+            'unavailable' => 'No vacancies',
+            'unspecified' => 'Not stated',
+        ],
+
+        'filters' => [
+            'contact' => 'Phone, email or messenger',
+        ],
+    ],
+
     'modules' => [
         'title' => 'Modules',
         'model_label' => 'module',
