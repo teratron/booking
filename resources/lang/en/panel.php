@@ -20,6 +20,44 @@ return [
         'system' => 'System',
     ],
 
+    'modules' => [
+        'title' => 'Modules',
+        'model_label' => 'module',
+        'applied' => 'Module state updated.',
+        'refused' => 'Change refused',
+        'confirm' => 'Setting :module at :scope scope affects :count object(s).',
+
+        'scope' => [
+            'portal' => 'portal',
+            'country' => 'country',
+        ],
+
+        'state' => [
+            'enabled' => 'Enabled',
+            'disabled' => 'Disabled',
+        ],
+
+        'columns' => [
+            'key' => 'Key',
+            'name' => 'Module',
+            'default_state' => 'Default',
+            'effective' => 'Effective (portal)',
+            'dependencies' => 'Requires',
+            'registered' => 'Registered',
+        ],
+
+        'actions' => [
+            'enable_portal' => 'Enable portal-wide',
+            'disable_portal' => 'Disable portal-wide',
+            'set_for_country' => 'Set for a country',
+        ],
+
+        'fields' => [
+            'country' => 'Country',
+            'state' => 'State',
+        ],
+    ],
+
     'settings' => [
         'title' => 'Portal settings',
         'save' => 'Save settings',

@@ -52,6 +52,19 @@ abstract class ScopedResource extends Resource
     protected static ?string $categoryColumn = null;
 
     /**
+     * Relations any column on the list reads through.
+     *
+     * Declared rather than lazy-loaded: strict mode turns a lazy load into a
+     * thrown exception instead of one extra query per row, and a table plus
+     * translations plus media is the exact shape that produces them. Naming
+     * them here means the failure is a missing line in one place, not a
+     * scattered performance regression nobody measures.
+     *
+     * @var list<string>
+     */
+    protected static array $eagerLoad = [];
+
+    /**
      * Table defaults every resource inherits. Call from a resource's own
      * `table()` before adding columns, so persistence is never re-declared and
      * never accidentally omitted.
@@ -70,7 +83,7 @@ abstract class ScopedResource extends Resource
     #[Override]
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()->with(static::$eagerLoad);
 
         // The moderation global scope exists to keep pending, rejected, and
         // revision-requested rows off public pages. The staff panel is the

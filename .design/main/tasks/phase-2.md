@@ -49,7 +49,7 @@ Track D and the edge never becomes a stall.
 - [x] [T-2A01] Admin panel shell — protected path, sign-in hardening, permission-filtered navigation
 - [x] [T-2A02] Shared resource contract — policy binding, persisted filters, unsaved-change guard, counted bulk confirmation
 - [x] [T-2A03] Portal settings registry and the settings screen
-- [ ] [T-2A04] Module management screen with per-scope toggles and blast-radius confirmation
+- [x] [T-2A04] Module management screen with per-scope toggles and blast-radius confirmation
 - [ ] [T-2A05] Dashboard — state counters, operational widgets, permission-gated finance block
 
 ### Track B — Objects, Owners & Availability
@@ -127,8 +127,11 @@ Track D and the edge never becomes a stall.
 ### [T-2A04] Module management screen with per-scope toggles and blast-radius confirmation
 
 - **Spec:** l1-feature-modules.md §5.3, §5.5, §5.6, §5.7; l1-back-office.md §5.6
-- **Status:** Todo
+- **Status:** Done `[Bootstrap]`
 - **Assignment:** Agent
+- **Changes:** `Module`, `ModuleTranslation`, and `ModuleSetting` models; a `ModuleAdministrator` service that reads effective state through the existing resolver rather than re-deriving the ladder, counts a toggle's blast radius against the object table, refuses an enable that would leave a dependency off or a conflict on, and journals every change with the affected count; a list-only Filament resource with portal-wide and per-country toggles, each behind a confirmation naming that count.
+- **Evidence:** `pest tests/Feature/Admin/ModuleAdministrationTest.php` · exit 0 · 6 passed (15 assertions) — blast radius counted per scope, an enable with an unmet dependency refused with nothing written, country scope resolving more specifically than portal, a reservation row byte-identical across a disable/re-enable cycle, and the registry invisible to a country-bounded grant · no errors. `composer analyse && test` · exit 0 · PHPStan level 8 zero errors; Pest 154 passed.
+- **Execution findings:** Two guards fired during this task and both were correct. Strict mode threw on the translations relation the moment the list rendered — the N+1 shape the phase notes predicted — which moved eager loading into the shared contract as a declared `$eagerLoad` list rather than a per-resource override. The architecture suite then rejected a `DB` facade call used to populate a country select; swapped to the Eloquent model, which is what the rule intends. There is no create or edit screen: a module exists because code implements it, so a row an administrator could add would register a capability nothing delivers.
 - **Verify:** `docker compose exec app ./vendor/bin/pest --filter=ModuleAdministration` proves: the screen lists every `modules` row with its effective state resolved at each scope of the ladder; toggling at portal or country scope is refused unless the confirmation is acknowledged, and the confirmation text contains the count of affected objects; a toggle writes a journal entry; enabling a module whose dependency is disabled is refused with the unmet dependency named; disabling and re-enabling the booking module leaves its `reservations` rows byte-identical.
 - **Handoff:** T-2T01 — the module gate is part of the authorization matrix.
 - **Notes:** Resolution reuses Phase 1's `ModuleResolver` ladder (object → owner → category → country → portal → default); this screen must not re-implement it. The blast-radius count is a real query against the affected scope, not an estimate — "enabling booking for Ukraine affects 412 objects" is the required form and a wrong number is worse than none. The re-enablement guarantee is what makes the dormant booking module defensible, so it is verified here rather than assumed.
