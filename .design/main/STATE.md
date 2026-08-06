@@ -4,22 +4,22 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-06 11:17
+**Updated:** 2026-08-06 11:41
 **Phase:** 1 — Foundation, Schema & Authorization
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-1B04 Migrations: notifications, analytics, platform, dormant booking
+- **Task:** T-1B05 Index plan — composite, spatial, trigram, GIN, partial
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral and unchanged by the pivot; the 3 L2 documents were rewritten. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Execute T-1B05 Index plan — composite, spatial, trigram, GIN, partial via /magic.run main
+- **Next Action:** Execute T-1B06 Retention rules — soft delete, moderation scopes, append-only privileges via /magic.run main
 
 ## Progress
 
 ```
 Overall: [0/7] ░░░░░░░░ 0%
 Plan:           [7 phases] generated (Bootstrap, tentative); Phase 1 decomposed, 2-7 scoped
-Implementation: [8/21] Phase 1 — Track A DONE; Track B: T-1B01-T-1B04 done (85 migrations); T-1B05 next
+Implementation: [9/21] Phase 1 — Track A DONE; Track B: T-1B01-T-1B05 done (86 migrations); T-1B06 next
 ```
 
 ## Recent Decisions
@@ -60,6 +60,9 @@ Implementation: [8/21] Phase 1 — Track A DONE; Track B: T-1B01-T-1B04 done (85
   access control — permissions (`[TZ]` §121, scoped by country/territory/
   category) are enforced in Policies, server-side. Catalog ordering is
   placement-tier first, never "improved" into relevance-first (`[TZ]` §25.2).
+  **`objects.rating` does not exist** — the ordering contract's tie-break
+  references it, but the index plan omits it; add as a maintained
+  aggregate (like territory/type object counts) when a task needs it.
 - **Tooling quirks (verified, not guessed):** a composer script named `audit`
   is silently skipped (collides with Composer's own command — call
   `composer audit` directly); Rector and Pint disagree on formatting, run
@@ -77,12 +80,10 @@ Implementation: [8/21] Phase 1 — Track A DONE; Track B: T-1B01-T-1B04 done (85
   `phpunit.xml` + CI service container both point at it; local db created via
   `docker/postgres/init/00-create-testing-database.sql` (volume recreate
   needed to pick it up).
-- **Spatie packages built on Laravel Package Tools don't auto-run migrations**
-  (`spatie/laravel-permission`, `spatie/laravel-medialibrary`) — publish
-  explicitly; tag is `Str::after(package-name, 'laravel-')` + `-migrations`
-  (`permission-migrations`, `medialibrary-migrations`, not the full package
-  name). **`astrotomic/laravel-translatable` expects a `locale` string
-  column** matching `languages.code`, not a `language_id` FK.
+- **Spatie packages (permission, medialibrary) don't auto-run migrations** —
+  publish explicitly, tag `Str::after(name,'laravel-')` + `-migrations`.
+  **`astrotomic/laravel-translatable`** uses a `locale` string column
+  matching `languages.code`, not a `language_id` FK.
 - **`make:migration` timestamps don't know about FK dependencies** — a table
   created before the one it references will fail. Check dependency order
   before writing content, not after (`object_user` → `objects` bit this in
