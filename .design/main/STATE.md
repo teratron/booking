@@ -4,7 +4,7 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-06 19:02
+**Updated:** 2026-08-06 22:13
 **Phase:** 2 — Back Office Core
 **Status:** Active
 
@@ -12,7 +12,7 @@
 
 - **Task:** Phase 2 Track A complete plus T-2B01 (6/25). Tracks B, C, D are now unblocked and three-wide parallel.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral and unchanged by the pivot; the 3 L2 documents were rewritten. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Execute T-2D01 (moderation mode resolution — first within Track D, and a prerequisite of T-2B02), then T-2B02 and T-2C01 in parallel
+- **Next Action:** Execute T-2D01 first — moderation mode resolution is a declared prerequisite of T-2B02's return-for-revision action. Then T-2B02 and T-2C01 run in parallel.
 
 ## Progress
 
@@ -29,7 +29,6 @@ Implementation: [21/21] Phase 1 DONE · [6/25] Phase 2 — Track A DONE + object
 - 2026-08-05 **Decision: plan generated in Bootstrap mode.** No specification reached `Stable`, so the C6 default (plan only `Stable`, backlog the rest) would have produced an empty plan. The Bootstrap Exception applies. `RFC → Stable` promotion stays **withheld** — `RULES.md` §2 requires no open questions and the set carries twenty inline TBDs.
 - 2026-08-06 **Decision: Phase 2's Track A is a hard gate, not a suggestion.** `T-2A02` (shared resource contract — policy binding, scope narrowing, persisted filters, unsaved-change guard, counted bulk confirmation) is upstream of all 22 remaining tasks. Tracks B/C/D are three-wide parallel only after it lands; a contract changed after ten resources adopt it is a ten-file rewrite. One cross-track edge is scheduled rather than discovered: `T-2D01` before `T-2B02`.
 - 2026-08-06 **Decision: field-level partial acceptance of a moderated change set is implemented behind a portal setting, defaulting off** (`T-2D03`). The client specification marks it optional and the snapshot model already supports it, so gating costs a setting read rather than a redesign. Whole-request-only would remove the setting and move nothing else.
-- 2026-08-07 **Decision: three toolkit defaults inverted panel-wide in `T-2A02`.** Strict authorization on (a resource with no policy is *permitted* by default — now it throws); the moderation global scope lifted for the panel (a queue that cannot see pending content has nothing to moderate); list queries narrowed before they run (a policy refuses a record but leaves it counted, so an unnarrowed list discloses other countries' volumes). Eager-load relations are declared per resource via `$eagerLoad`, because strict mode throws on the first lazy load.
 
 ## Blockers
 
