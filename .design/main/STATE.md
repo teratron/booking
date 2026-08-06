@@ -4,22 +4,22 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-06 11:41
-**Phase:** 1 — Foundation, Schema & Authorization
+**Updated:** 2026-08-06 18:39
+**Phase:** 2 — Back Office Core
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-1B05 Index plan — composite, spatial, trigram, GIN, partial
+- **Task:** Phase 1 complete (21/21 tasks, all four tracks). Phase 2 not yet decomposed.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral and unchanged by the pivot; the 3 L2 documents were rewritten. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Execute T-1B06 Retention rules — soft delete, moderation scopes, append-only privileges via /magic.run main
+- **Next Action:** Run /magic.task main to decompose Phase 2 into atomic tasks — no queued task exists yet for /magic.run to execute.
 
 ## Progress
 
 ```
-Overall: [0/7] ░░░░░░░░ 0%
+Overall: [1/7] █░░░░░░░ 14%
 Plan:           [7 phases] generated (Bootstrap, tentative); Phase 1 decomposed, 2-7 scoped
-Implementation: [9/21] Phase 1 — Track A DONE; Track B: T-1B01-T-1B05 done (86 migrations); T-1B06 next
+Implementation: [21/21] Phase 1 — ALL TRACKS DONE (102 migrations, 11 models, full auth+module layer)
 ```
 
 ## Recent Decisions
@@ -43,58 +43,58 @@ Implementation: [9/21] Phase 1 — Track A DONE; Track B: T-1B01-T-1B05 done (86
 - **Engine bug:** `executor.js update-state` corrupts STATE.md fields on nearly
   every invocation (top-level `**Status:**`, `## Progress`). Always re-open
   STATE.md after `update-state`/`finalize` and manually verify both.
-- **Public OSM tile servers are prohibited in production** (OSMF Tile Usage
-  Policy) — never `tile.openstreetmap.org`; use MapTiler, Stadia, or
-  self-hosted tiles.
+- **Public OSM tile servers are prohibited in production** (OSMF policy) —
+  never `tile.openstreetmap.org`; use MapTiler, Stadia, or self-hosted.
 - **Host port conflicts**: Postgres native→5433, web 8300, Mailpit 8325 (Win
-  TCP 7915–8114 reserved; check `netsh ... excludedportrange` first).
-  `postgres:18+` data lives under a major-version subdir, not `.../data`.
+  TCP 7915–8114 reserved; check first). `postgres:18+` data lives under a
+  major-version subdir, not `.../data`.
 - **No PHP/Composer on the host** — toolchain runs through `docker compose
   exec app …`. Never assume bare `php`/`composer` in a shell command.
-- **The Windows bind mount is not a benchmark host** (13–20s first-byte vs a
-  400ms budget — filesystem cost, not app cost). `T-1T05` measures inside the
-  container against a non-bind-mounted copy. **PostgreSQL has no full-text
-  dictionary for Georgian/Ukrainian** — trigram carries name search; FTS
-  escalates to Typesense per `l2-tech-stack.md` §5.7 if it proves inadequate.
+- **The Windows bind mount is not a benchmark host** — benchmark inside the
+  container, non-bind-mounted. **No Postgres FT dictionary for
+  Georgian/Ukrainian** — trigram carries name search; escalates to
+  Typesense (`l2-tech-stack.md` §5.7) if inadequate.
+- **`.design/main/archives/tasks/phase-1.md`–`phase-6.md` are leftovers from
+  the superseded Next.js stack**, not this project's own archives — do not
+  read them for context or let `archive-phases` overwrite them.
 - **Domain invariants:** hiding a Filament action/Blade block is never an
-  access control — permissions (`[TZ]` §121, scoped by country/territory/
-  category) are enforced in Policies, server-side. Catalog ordering is
-  placement-tier first, never "improved" into relevance-first (`[TZ]` §25.2).
-  **`objects.rating` does not exist** — the ordering contract's tie-break
-  references it, but the index plan omits it; add as a maintained
-  aggregate (like territory/type object counts) when a task needs it.
-- **Tooling quirks (verified, not guessed):** a composer script named `audit`
-  is silently skipped (collides with Composer's own command — call
-  `composer audit` directly); Rector and Pint disagree on formatting, run
-  `composer fix` after `composer rector`; `fallow`'s
-  `dev-dependencies-in-production` cannot be suppressed per-file (whole-graph
-  rule) — left at `warn`, `tailwindcss` in devDependencies is correct; `git`
-  must be in the app image for `fallow audit`/`review`. Composer's array-form
-  scripts abort at the first non-zero step — `unused` sat before `audit` in
-  `quality`, silently skipping `audit` every run since `T-1A03` until
-  reordered (`T-1B03`).
+  access control — Policies enforce scoped permissions server-side. Catalog
+  ordering is placement-tier first, never relevance-first. **`objects.rating`
+  does not exist** — add as a maintained aggregate later.
+- **Tooling quirks:** a composer script named `audit` is silently skipped
+  (collides with Composer's own command); Rector/Pint disagree — `composer
+  fix` after `composer rector`. Array-form scripts abort at the first
+  non-zero step, so order matters. `process-timeout: 900` — suite outgrew 300s.
+- **Postgres role topology has a hard ceiling:** `booking` is table owner
+  and bootstrap superuser — both bypass `GRANT`/`REVOKE`. Enforce "no role
+  can do X" with a `BEFORE`-trigger instead. `migrate:fresh` drops tables
+  but not functions/triggers — `CREATE OR REPLACE` both.
 - **Git hooks are versioned at `.githooks/`** — `git config core.hooksPath
   .githooks` once per clone, or the pre-commit gate silently never fires.
 - **Tests run against real Postgres (`booking_testing`), not SQLite** — the
   schema has geography columns and partial indexes SQLite cannot represent.
-  `phpunit.xml` + CI service container both point at it; local db created via
-  `docker/postgres/init/00-create-testing-database.sql` (volume recreate
-  needed to pick it up).
+  `phpunit.xml` + CI both point at it; local db via
+  `docker/postgres/init/00-create-testing-database.sql` (volume recreate needed).
 - **Spatie packages (permission, medialibrary) don't auto-run migrations** —
   publish explicitly, tag `Str::after(name,'laravel-')` + `-migrations`.
   **`astrotomic/laravel-translatable`** uses a `locale` string column
-  matching `languages.code`, not a `language_id` FK.
+  matching `languages.code`, not a `language_id` FK. **`laravel-permission`'s
+  cache**: `DatabaseSeeder`'s `WithoutModelEvents` suppresses the `saved`
+  event it invalidates on — call `PermissionRegistrar::forgetCachedPermissions()`
+  before `givePermissionTo()` in a seeder, or it reads stale/empty state.
+- **`Object` is a reserved PHP class name** — model is `Object_`, with
+  `$translationModel`/`$translationForeignKey` set explicitly. **`shouldBeStrict()`
+  breaks astrotomic's optional `$this->x ?: default()` properties** — declare
+  them as real null properties (`Concerns\TranslatableDefaults`).
 - **`make:migration` timestamps don't know about FK dependencies** — a table
-  created before the one it references will fail. Check dependency order
-  before writing content, not after (`object_user` → `objects` bit this in
-  `T-1B02`, fixed by renaming the file).
+  created before the one it references will fail; check dependency order first.
 
 ## Session Continuity
 
 **Reading order for a fresh session:** this file (position, decisions,
 constraints) → `CLAUDE.md` (stack, conventions, engineering discipline) →
 `.design/main/PLAN.md` (7 phases, Bootstrap/tentative) →
-`.design/main/tasks/phase-1.md` (active phase, atomic tasks).
+`.design/main/tasks/phase-2.md` (active phase — scoped, not yet decomposed).
 
 **Do not carry forward** anything about Next.js, TypeScript, Drizzle, Better Auth,
 react-admin, or Vercel — that stack is superseded and preserved only at tag `v0.1.34`.

@@ -559,9 +559,9 @@
 
 ## 22. Требования к серверу
 
-- Go, Rust, Python, TypeScript, PHP/Laravel или другая согласованная технология.
-- PostgreSQL.
-- Redis.
+- PHP/Laravel, Go, Rust, Python, TypeScript или другая согласованная технология.
+- PostgreSQL, MySQL.
+- Redis, MongoDB.
 - Очереди.
 - Cron.
 - Хранилище файлов.

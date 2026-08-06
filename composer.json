@@ -70,11 +70,12 @@
         "analyse": "phpstan analyse --memory-limit=1G",
         "test": [
             "@php artisan config:clear --ansi",
-            "pest"
+            "pest --exclude-group=slow"
         ],
         "test:arch": "pest --testsuite=Architecture",
-        "test:coverage": "pest --coverage --min=80",
-        "bench": "echo \"No benchmarks defined yet — the harness lands with the schema and seeded volume it measures. Not part of 'composer quality' until it does.\"",
+        "test:coverage": "pest --coverage --min=80 --exclude-group=slow",
+        "test:slow": "pest --group=slow",
+        "bench": "@php artisan bench:run",
         "unused": "composer-unused",
         "quality": [
             "@lint",
@@ -111,6 +112,7 @@
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
+        "process-timeout": 900,
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,

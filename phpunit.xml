@@ -19,6 +19,13 @@
         <include>
             <directory>app</directory>
         </include>
+        <exclude>
+            <!-- Its real logic only runs meaningfully against realistic
+                 seeded volume — a `slow`-tagged, opt-in concern excluded
+                 from the default coverage run for the same reason
+                 DemoVolumeSeeder itself is never measured. -->
+            <file>app/Console/Commands/RunBenchmarks.php</file>
+        </exclude>
     </source>
     <php>
         <env name="APP_ENV" value="testing" />
