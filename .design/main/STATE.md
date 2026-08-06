@@ -4,22 +4,22 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-06 05:15
+**Updated:** 2026-08-06 06:21
 **Phase:** 1 — Foundation, Schema & Authorization
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-1B01 Migrations: identity, access, localization, geography, taxonomy
+- **Task:** T-1B02 Migrations: object, media, rooms, prices, reviews, contacts, favorites
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral and unchanged by the pivot; the 3 L2 documents were rewritten. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Execute T-1B02 Migrations: object, media, rooms, prices, reviews, contacts, favorites via /magic.run main
+- **Next Action:** Execute T-1B03 Migrations: placement and finance, advertising, content, governance via /magic.run main
 
 ## Progress
 
 ```
 Overall: [0/7] ░░░░░░░░ 0%
 Plan:           [7 phases] generated (Bootstrap, tentative); Phase 1 decomposed, 2-7 scoped
-Implementation: [5/21] Phase 1 — Track A DONE; Track B: T-1B01 schema done (21 migrations); T-1B02 next
+Implementation: [6/21] Phase 1 — Track A DONE; Track B: T-1B01, T-1B02 done (34 migrations); T-1B03 next
 ```
 
 ## Recent Decisions
@@ -48,22 +48,18 @@ Implementation: [5/21] Phase 1 — Track A DONE; Track B: T-1B01 schema done (21
 - **Public OSM tile servers are prohibited in production** (OSMF Tile Usage
   Policy) — never `tile.openstreetmap.org`; use MapTiler, Stadia, or
   self-hosted tiles.
-- **Host port conflicts on this machine**: 5432 (native Postgres, service
-  mapped to 5433) and TCP 7915–8114 reserved by Windows (8000/8025 fail to
-  bind with a permissions error; mapped to 8300/8325). Check
-  `netsh interface ipv4 show excludedportrange protocol=tcp` before any new
-  port. `postgres:18+` stores data under a major-version subdirectory of
-  `/var/lib/postgresql`, not `.../data`.
+- **Host port conflicts**: 5432 (native Postgres → mapped to 5433) and TCP
+  7915–8114 reserved by Windows (8000/8025 fail with a permissions error →
+  8300/8325). Check `netsh interface ipv4 show excludedportrange protocol=tcp`
+  before any new port. `postgres:18+` stores data under a major-version
+  subdirectory of `/var/lib/postgresql`, not `.../data`.
 - **No PHP/Composer on the host** — toolchain runs through `docker compose
   exec app …`. Never assume bare `php`/`composer` in a shell command.
-- **The Windows bind mount is not a benchmark host.** First-byte latency through
-  it measures 13–20 s against a 400 ms budget; that is filesystem cost, not
-  application cost. `T-1T05` must measure inside the container against a
-  non-bind-mounted copy, or the numbers describe Docker Desktop rather than the
-  portal.
-- **PostgreSQL ships no full-text dictionary for Georgian or Ukrainian.**
-  Trigram matching carries name search; stemmed FTS will be incomplete.
-  Escalation trigger to Typesense is recorded in `l2-tech-stack.md` §5.7.
+- **The Windows bind mount is not a benchmark host** (13–20s first-byte vs a
+  400ms budget — filesystem cost, not app cost). `T-1T05` measures inside the
+  container against a non-bind-mounted copy. **PostgreSQL has no full-text
+  dictionary for Georgian/Ukrainian** — trigram carries name search; FTS
+  escalates to Typesense per `l2-tech-stack.md` §5.7 if it proves inadequate.
 - **Domain invariants:** hiding a Filament action/Blade block is never an
   access control — permissions (`[TZ]` §121, scoped by country/territory/
   category) are enforced in Policies, server-side. Catalog ordering is
@@ -82,11 +78,16 @@ Implementation: [5/21] Phase 1 — Track A DONE; Track B: T-1B01 schema done (21
   `phpunit.xml` + CI service container both point at it; local db created via
   `docker/postgres/init/00-create-testing-database.sql` (volume recreate
   needed to pick it up).
-- **`spatie/laravel-permission`'s migration does not auto-run** — publish it
-  explicitly (`vendor:publish --tag=permission-migrations`, not
-  `laravel-permission-migrations`). **`astrotomic/laravel-translatable`
-  expects a `locale` string column** (matching `languages.code`), not a
-  `language_id` FK — confirmed from the package's own `locale_key` config.
+- **Spatie packages built on Laravel Package Tools don't auto-run migrations**
+  (`spatie/laravel-permission`, `spatie/laravel-medialibrary`) — publish
+  explicitly; tag is `Str::after(package-name, 'laravel-')` + `-migrations`
+  (`permission-migrations`, `medialibrary-migrations`, not the full package
+  name). **`astrotomic/laravel-translatable` expects a `locale` string
+  column** matching `languages.code`, not a `language_id` FK.
+- **`make:migration` timestamps don't know about FK dependencies** — a table
+  created before the one it references will fail. Check dependency order
+  before writing content, not after (`object_user` → `objects` bit this in
+  `T-1B02`, fixed by renaming the file).
 
 ## Session Continuity
 
