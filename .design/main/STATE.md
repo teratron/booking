@@ -4,22 +4,22 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-05 23:04
+**Updated:** 2026-08-06 05:15
 **Phase:** 1 — Foundation, Schema & Authorization
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-1A04 Asset pipeline — Vite, Tailwind 4, Alpine, Livewire 4
+- **Task:** T-1B01 Migrations: identity, access, localization, geography, taxonomy
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral and unchanged by the pivot; the 3 L2 documents were rewritten. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Execute T-1B01 Migrations: identity, access, localization, geography, taxonomy via /magic.run main
+- **Next Action:** Execute T-1B02 Migrations: object, media, rooms, prices, reviews, contacts, favorites via /magic.run main
 
 ## Progress
 
 ```
 Overall: [0/7] ░░░░░░░░ 0%
 Plan:           [7 phases] generated (Bootstrap, tentative); Phase 1 decomposed, 2-7 scoped
-Implementation: [4/21] Phase 1 — Track A DONE (scaffold, stack, PHP+JS quality gates); Track B next
+Implementation: [5/21] Phase 1 — Track A DONE; Track B: T-1B01 schema done (21 migrations); T-1B02 next
 ```
 
 ## Recent Decisions
@@ -30,7 +30,6 @@ Implementation: [4/21] Phase 1 — Track A DONE (scaffold, stack, PHP+JS quality
 - 2026-08-05 **Decision: back office before the public site**, inverting `[TZ]` §23's stages 4–6. The public site renders data that does not exist until the back office creates it; `l2-tech-stack.md` §6.4–§6.5 require scoped authorization before any panel screen. Recorded as a divergence, not applied silently — every stage is still delivered.
 - 2026-08-05 **Decision:** `l1-room-reservation.md` **to Backlog.** Ships disabled in Phase 1 (`T-1T04` proves absence, not hiding); outside `[TZ]` §134's mandatory release, prior implementation explicitly not a migration source.
 - 2026-08-05 **Standing instruction: continuous quality gates**, wired as `composer quality` (T-1A03) so local and CI are identical. Conventions enforced by Pest `arch()` tests, not review. Detail in CLAUDE.md "Engineering Discipline"; budgets in `l2-tech-stack.md` §5.9.
-- 2026-08-05 **Decision: Stack — Laravel 13 + Filament 5 + PostgreSQL/PostGIS + Redis**, self-hosted. Full rationale in `l2-tech-stack.md` §1; earlier decisions (§98 waiver, deployment-fork closure, TZ-gap findings, Figma-first instruction) are in git history and each spec's own Document History — not repeated here.
 
 ## Blockers
 
@@ -46,19 +45,17 @@ Implementation: [4/21] Phase 1 — Track A DONE (scaffold, stack, PHP+JS quality
 - **Engine bug:** `executor.js update-state` corrupts STATE.md fields on nearly
   every invocation (top-level `**Status:**`, `## Progress`). Always re-open
   STATE.md after `update-state`/`finalize` and manually verify both.
-- **Public OSM tile servers are prohibited in production** by the OSMF Tile
-  Usage Policy. Never ship pointing at `tile.openstreetmap.org` — use MapTiler,
-  Stadia, or self-hosted tiles. The previous implementation shipped this
-  violation unnoticed, which is how it was found.
-- **Local Postgres occupies host port 5432** — the Docker service is mapped to
-  5433. `postgres:18+` images store data under major-version subdirectories of
-  `/var/lib/postgresql`, not `/var/lib/postgresql/data`.
-- **Windows reserves TCP 7915–8114 on this machine** — 8000/8025 fail to bind
-  with a permissions error, not "in use"; mapped to 8300/8325 instead. Check
-  `netsh interface ipv4 show excludedportrange protocol=tcp` before any new port.
-- **No PHP or Composer on the host** — the entire PHP toolchain runs through the
-  `booking-app` image (`docker compose exec app …`). Never assume a bare `php`
-  or `composer` is available in a shell command.
+- **Public OSM tile servers are prohibited in production** (OSMF Tile Usage
+  Policy) — never `tile.openstreetmap.org`; use MapTiler, Stadia, or
+  self-hosted tiles.
+- **Host port conflicts on this machine**: 5432 (native Postgres, service
+  mapped to 5433) and TCP 7915–8114 reserved by Windows (8000/8025 fail to
+  bind with a permissions error; mapped to 8300/8325). Check
+  `netsh interface ipv4 show excludedportrange protocol=tcp` before any new
+  port. `postgres:18+` stores data under a major-version subdirectory of
+  `/var/lib/postgresql`, not `.../data`.
+- **No PHP/Composer on the host** — toolchain runs through `docker compose
+  exec app …`. Never assume bare `php`/`composer` in a shell command.
 - **The Windows bind mount is not a benchmark host.** First-byte latency through
   it measures 13–20 s against a 400 ms budget; that is filesystem cost, not
   application cost. `T-1T05` must measure inside the container against a
@@ -67,27 +64,29 @@ Implementation: [4/21] Phase 1 — Track A DONE (scaffold, stack, PHP+JS quality
 - **PostgreSQL ships no full-text dictionary for Georgian or Ukrainian.**
   Trigram matching carries name search; stemmed FTS will be incomplete.
   Escalation trigger to Typesense is recorded in `l2-tech-stack.md` §5.7.
-- **Hiding a Filament action or Blade block is never an access control.**
-  `[TZ]` §121 permissions are scoped by country/territory/category and must be
-  enforced in Policies, server-side, on every read and write.
-- **Catalog ordering is placement-tier first** — never "improve" it into
-  relevance-first. A lower-tier object outranking a higher-tier one breaks the
-  revenue model (`[TZ]` §25.2).
-- **A composer script named `audit` is silently skipped** (collides with
-  Composer's built-in command — call `composer audit` directly). **Rector and
-  Pint disagree on some formatting** — always `composer fix` after
-  `composer rector`.
-- **Git hooks are versioned at `.githooks/`, not `.git/hooks/`.** A fresh clone
-  must run `git config core.hooksPath .githooks` once, or the pre-commit gate
-  (engine sync + staged-PHP `pint --test` + staged-JS/CSS `biome check`)
-  silently never fires.
-- **`fallow`'s `dev-dependencies-in-production` rule cannot be suppressed
-  per-file** — neither an inline `fallow-ignore-next-line` comment nor an
-  `overrides` entry affects it (whole-graph rule, verified both ways). Left at
-  its `warn` default; `tailwindcss` in devDependencies is correct, not a bug.
-- **`git` must be in the app image** for `fallow audit`/`review` (PR-diff
-  tools) — added to `docker/app/Dockerfile`; was missing, is easy to drop
-  again on a future rebuild from a stale layer.
+- **Domain invariants:** hiding a Filament action/Blade block is never an
+  access control — permissions (`[TZ]` §121, scoped by country/territory/
+  category) are enforced in Policies, server-side. Catalog ordering is
+  placement-tier first, never "improved" into relevance-first (`[TZ]` §25.2).
+- **Tooling quirks (verified, not guessed):** a composer script named `audit`
+  is silently skipped (collides with Composer's own command — call
+  `composer audit` directly); Rector and Pint disagree on formatting, run
+  `composer fix` after `composer rector`; `fallow`'s
+  `dev-dependencies-in-production` cannot be suppressed per-file (whole-graph
+  rule) — left at `warn`, `tailwindcss` in devDependencies is correct; `git`
+  must be in the app image for `fallow audit`/`review`.
+- **Git hooks are versioned at `.githooks/`** — `git config core.hooksPath
+  .githooks` once per clone, or the pre-commit gate silently never fires.
+- **Tests run against real Postgres (`booking_testing`), not SQLite** — the
+  schema has geography columns and partial indexes SQLite cannot represent.
+  `phpunit.xml` + CI service container both point at it; local db created via
+  `docker/postgres/init/00-create-testing-database.sql` (volume recreate
+  needed to pick it up).
+- **`spatie/laravel-permission`'s migration does not auto-run** — publish it
+  explicitly (`vendor:publish --tag=permission-migrations`, not
+  `laravel-permission-migrations`). **`astrotomic/laravel-translatable`
+  expects a `locale` string column** (matching `languages.code`), not a
+  `language_id` FK — confirmed from the package's own `locale_key` config.
 
 ## Session Continuity
 

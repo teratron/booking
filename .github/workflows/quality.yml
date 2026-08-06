@@ -8,6 +8,31 @@ jobs:
   quality:
     runs-on: ubuntu-latest
 
+    # The Pest suite runs against real PostgreSQL/PostGIS, not SQLite — the
+    # schema uses geography columns and Postgres-only partial indexes SQLite
+    # cannot represent. Same image tag as the local docker-compose stack, so
+    # a schema change that passes here behaves identically for a developer.
+    services:
+      postgres:
+        image: postgis/postgis:18-3.6-alpine
+        env:
+          POSTGRES_USER: booking
+          POSTGRES_PASSWORD: booking
+          POSTGRES_DB: booking
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U booking -d booking"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    # .env.example's DB_PORT (5433) is a local-machine accommodation for a
+    # port conflict this runner does not have; DB_HOST's 127.0.0.1 default
+    # already matches the service port mapping above.
+    env:
+      DB_PORT: 5432
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -42,6 +67,22 @@ jobs:
         run: |
           cp .env.example .env
           php artisan key:generate --ansi
+
+      # The service container's own init only creates the default POSTGRES_DB
+      # (booking); the dedicated test database and its extensions — the same
+      # ones docker/postgres/init/ provisions locally — are created here
+      # instead, since GitHub's `services:` containers do not mount init
+      # scripts the way docker-compose does.
+      - name: Prepare test database
+        run: |
+          php -r '
+            $pdo = new PDO("pgsql:host=127.0.0.1;port=5432;dbname=booking", "booking", "booking");
+            $pdo->exec("CREATE DATABASE booking_testing");
+            $testPdo = new PDO("pgsql:host=127.0.0.1;port=5432;dbname=booking_testing", "booking", "booking");
+            $testPdo->exec("CREATE EXTENSION IF NOT EXISTS postgis");
+            $testPdo->exec("CREATE EXTENSION IF NOT EXISTS pg_trgm");
+            $testPdo->exec("CREATE EXTENSION IF NOT EXISTS unaccent");
+          '
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4

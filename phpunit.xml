@@ -26,8 +26,14 @@
         <env name="BCRYPT_ROUNDS" value="4" />
         <env name="BROADCAST_CONNECTION" value="null" />
         <env name="CACHE_STORE" value="array" />
-        <env name="DB_CONNECTION" value="sqlite" />
-        <env name="DB_DATABASE" value=":memory:" />
+        <!-- Real PostgreSQL/PostGIS, not SQLite: the schema uses geography
+             columns and Postgres-only partial indexes SQLite cannot
+             represent. Host, port, and credentials are inherited from the
+             application's own environment (docker-compose's DB_HOST=postgres
+             override) — only the connection driver and database name change
+             for the test run, pointed at a database dedicated to tests. -->
+        <env name="DB_CONNECTION" value="pgsql" />
+        <env name="DB_DATABASE" value="booking_testing" />
         <env name="DB_URL" value="" />
         <env name="MAIL_MAILER" value="array" />
         <env name="QUEUE_CONNECTION" value="sync" />
