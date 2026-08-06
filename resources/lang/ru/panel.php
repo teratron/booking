@@ -20,6 +20,19 @@ return [
         'system' => 'Система',
     ],
 
+    'dashboard' => [
+        'objects_total' => 'Объекты',
+        'objects_breakdown' => 'опубликовано: :published · скрыто: :hidden · в архиве: :archived',
+        'pending_moderation' => 'Ожидают проверки',
+        'reporting_vacancies' => 'Сообщают о наличии мест',
+        'owners' => 'Владельцы',
+        'geography_breakdown' => 'стран: :countries · территорий: :territories',
+        'recorded_amount' => 'Учтённые платежи',
+        'recorded_amount_window' => 'За последние 30 дней',
+        'active_placements' => 'Активные размещения',
+        'expiring_placements' => 'Истекают в течение 14 дней',
+    ],
+
     'modules' => [
         'title' => 'Модули',
         'model_label' => 'модуль',

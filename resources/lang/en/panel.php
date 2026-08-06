@@ -20,6 +20,19 @@ return [
         'system' => 'System',
     ],
 
+    'dashboard' => [
+        'objects_total' => 'Objects',
+        'objects_breakdown' => ':published published · :hidden hidden · :archived archived',
+        'pending_moderation' => 'Awaiting review',
+        'reporting_vacancies' => 'Reporting vacancies',
+        'owners' => 'Owners',
+        'geography_breakdown' => ':countries countries · :territories territories',
+        'recorded_amount' => 'Recorded payments',
+        'recorded_amount_window' => 'Last 30 days',
+        'active_placements' => 'Active placements',
+        'expiring_placements' => 'Expiring within 14 days',
+    ],
+
     'modules' => [
         'title' => 'Modules',
         'model_label' => 'module',

@@ -50,7 +50,7 @@ Track D and the edge never becomes a stall.
 - [x] [T-2A02] Shared resource contract — policy binding, persisted filters, unsaved-change guard, counted bulk confirmation
 - [x] [T-2A03] Portal settings registry and the settings screen
 - [x] [T-2A04] Module management screen with per-scope toggles and blast-radius confirmation
-- [ ] [T-2A05] Dashboard — state counters, operational widgets, permission-gated finance block
+- [x] [T-2A05] Dashboard — state counters, operational widgets, permission-gated finance block
 
 ### Track B — Objects, Owners & Availability
 
@@ -139,8 +139,11 @@ Track D and the edge never becomes a stall.
 ### [T-2A05] Dashboard — state counters, operational widgets, permission-gated finance block
 
 - **Spec:** l1-back-office.md §5.3
-- **Status:** Todo
+- **Status:** Done `[Bootstrap]`
 - **Assignment:** Agent
+- **Changes:** `DashboardMetrics` service resolving object counts by state, work awaiting review, objects reporting vacancies, and registry sizes — every object figure narrowed through the same scoper the lists use, cached for sixty seconds. Two widgets: a portal overview gated on `object.view`, and a finance block gated on `financial_access` whose queries never run for an account without it. Both render inline rather than deferred.
+- **Evidence:** `pest tests/Feature/Admin/AdminDashboardTest.php` · exit 0 · 4 passed (13 assertions) — a Moldova-scoped actor counts 3 of 4 objects, the pending-review figure is 1 while the plain model query sees 0, the finance labels are absent from the response body without the grant, and the whole page resolves in ≤30 queries · no errors. `composer analyse && test && test:coverage && unused` · exit 0 · PHPStan level 8 zero errors; Pest 158 passed; coverage 91.1%; no unused packages.
+- **Design decisions:** Widgets are non-lazy. Deferred loading buys nothing for cached aggregates, and a widget that arrives after the page cannot be reasoned about from the response — including by the assertion that the finance block is absent rather than styled away. Campaign spend and paid bumps are **not** shown as zeroes pending the commerce phase: a zero meaning "not built" is indistinguishable from a zero meaning "none", and only the second is information.
 - **Verify:** `docker compose exec app ./vendor/bin/pest --filter=AdminDashboard` proves each counter named in the specification renders, that counts respect the actor's scope (a Georgia-scoped administrator sees Georgian objects only), that the finance widgets are absent from the response body — not merely hidden by CSS — for an actor without the finance permission, and that the whole dashboard resolves within the phase query budget. Quick actions are asserted by route, not by label.
 - **Handoff:** Phase 3 extends this dashboard with commerce widgets; the finance block's permission gate is the seam it plugs into.
 - **Notes:** Counters over the seeded volume are aggregate queries and must be cached with a short TTL rather than computed per page load; the dashboard is the panel's most frequently hit screen. Widgets whose data source arrives in a later phase (active campaigns, paid bumps) are not stubbed with zeroes — a zero that means "not built yet" is indistinguishable from a zero that means "none", and the second is information.
