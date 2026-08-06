@@ -20,27 +20,297 @@ duration_minutes: ~
 owners, geography, taxonomy, translations, moderation, and the action journal — built
 on Phase 1's scoped authorization rather than around it.
 
+## Track Ordering
+
+Phase 2 is the first phase with genuine parallelism, but not four-way:
+
+```plaintext
+A (panel foundation)  →  B (objects, owners, availability)
+                      →  C (geography, taxonomy, translations)   ∥
+                      →  D (moderation, journal, archive)
+                      →  T (validation)
+```
+
+Track A is a hard prerequisite for all three: every resource in B, C, and D plugs into
+the shared resource contract from `T-2A02`, and a resource written before that contract
+exists has to be rewritten to adopt it. Once A lands, B, C, and D touch disjoint
+directories under `app/Filament/Admin/Resources/` and run concurrently. Effective
+parallel degree is three.
+
+One cross-track edge is real and is scheduled rather than discovered: `T-2D01` (mode
+resolution and the change-request pipeline) must land before `T-2B02`'s
+return-for-revision action, which enqueues into it. Sequence `T-2D01` first within
+Track D and the edge never becomes a stall.
+
 ## Atomic Checklist
 
-Not yet decomposed. See §Scope.
+### Track A — Panel Foundation
 
-## Scope
+- [ ] [T-2A01] Admin panel shell — protected path, sign-in hardening, permission-filtered navigation
+- [ ] [T-2A02] Shared resource contract — policy binding, persisted filters, unsaved-change guard, counted bulk confirmation
+- [ ] [T-2A03] Portal settings registry and the settings screen
+- [ ] [T-2A04] Module management screen with per-scope toggles and blast-radius confirmation
+- [ ] [T-2A05] Dashboard — state counters, operational widgets, permission-gated finance block
 
-Delivered in `[TZ]` §134 priority order, as Filament resources rather than custom pages.
+### Track B — Objects, Owners & Availability
 
-| Area | Spec |
-| --- | --- |
-| Panel shell, navigation filtered by permission, dashboard | l1-back-office.md §5.1, §5.3 |
-| Object management — list, tabbed form, bulk operations | l1-back-office.md §5.4 |
-| Owner management, including journalled impersonation | l1-back-office.md §5.5 |
-| Portal settings and the module management screen | l1-back-office.md §5.6; l1-feature-modules.md §5.6 |
-| Moderation queue, side-by-side diff review, decisions | l1-moderation-governance.md §5.1–§5.3 |
-| Action journal — search, filter, before/after, export | l1-moderation-governance.md §5.4 |
-| Archive, restore, permanent deletion, confirmation gates | l1-moderation-governance.md §3.3, §3.4, §5.5 |
-| Object type registry administration | l1-object-catalog.md §3.1 |
-| Territory administration with guarded reparenting | l1-geography.md §5.5 |
-| Interface catalogs and translation management | l1-localization.md §5.4, §5.5 |
-| Availability override, staleness filters, bulk reset | l1-availability-status.md §5.4, §5.5 |
+- [ ] [T-2B01] Object list — columns, filters, and search across every stated dimension
+- [ ] [T-2B02] Object form — tabbed editor and the full lifecycle action set
+- [ ] [T-2B03] Object bulk operations behind counted confirmations
+- [ ] [T-2B04] Owner management — accounts, object attachment, access control
+- [ ] [T-2B05] Support-mode impersonation, journalled without exception
+- [ ] [T-2B06] Availability administration — override, history, revert
+- [ ] [T-2B07] Availability staleness — cadence, quick filters, bulk reset, optional auto-reset
+
+### Track C — Geography, Taxonomy & Translations
+
+- [ ] [T-2C01] Territory administration with guarded reparenting
+- [ ] [T-2C02] Object type registry administration
+- [ ] [T-2C03] Language registry and the interface catalog editor
+- [ ] [T-2C04] Translation management and the untranslated-material report
+
+### Track D — Moderation & Governance
+
+- [ ] [T-2D01] Moderation mode resolution and the change-request pipeline
+- [ ] [T-2D02] Moderation queue — listing, filtering, assignment
+- [ ] [T-2D03] Side-by-side review and the decision set
+- [ ] [T-2D04] Action journal — search, filter, before/after, export
+- [ ] [T-2D05] Archive — restore, transfer, permanent deletion
+
+### Track T — Validation
+
+- [ ] [T-2T01] Panel authorization matrix — every resource denies out of scope
+- [ ] [T-2T02] Moderation invariants — a rejected edit cannot touch the published record
+- [ ] [T-2T03] Journal completeness and append-only enforcement
+- [ ] [T-2T04] Panel query budget under seeded volume
+
+## Detailed Tracking
+
+### [T-2A01] Admin panel shell — protected path, sign-in hardening, permission-filtered navigation
+
+- **Spec:** l1-back-office.md §2, §5.1, §6.5; l1-moderation-governance.md §3.2
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app php artisan route:list --path=admin` lists the configured protected path, not `/admin`, and no route resolves at the old path. `docker compose exec app ./vendor/bin/pest --filter=AdminPanelShell` proves: an account with no permissions sees zero navigation groups; an account holding only `object.view` sees the Objects group and no other; six consecutive failed sign-ins lock the account and write a failure record; a successful sign-in, a sign-out, and a lockout each produce a journal row carrying IP and user agent; the chief administrator's second factor is required and other roles' is optional.
+- **Handoff:** T-2A02 — the resource contract registers into this panel's navigation.
+- **Notes:** Navigation groups follow the §5.1 section list in `[TZ]` §134 priority order; sections whose backing resource arrives in Phase 3 or later are simply absent, not stubbed. Sign-in records are **not** model mutations, so `owen-it/laravel-auditing` will not capture them by observing Eloquent — write them explicitly against the same `audits` table so §5.4's journal stays single rather than split in two. Second factor uses the `two_factor_secrets` table and `pragmarx/google2fa-laravel`, both already present. Brute-force protection is a rate limiter on the login route plus an account lockout; the lockout is the part that must be journalled.
+
+### [T-2A02] Shared resource contract — policy binding, persisted filters, unsaved-change guard, counted bulk confirmation
+
+- **Spec:** l1-back-office.md §3.1, §3.2, §6.1, §6.2; l1-moderation-governance.md §3.4, §5.6
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app ./vendor/bin/pest --filter=ResourceContract` proves, against a throwaway resource built on the contract: the list query is narrowed by the actor's scope without the resource declaring anything scope-aware itself; a bulk action refuses to execute without a confirmation whose text contains the exact affected record count; a table filter set on one request is still applied after signing out and back in; navigating away from a dirty form raises the guard. `docker compose exec app php artisan about` plus a grep proves no resource class references the `DB` facade — the architecture test from Phase 1 already fails the suite if one does.
+- **Handoff:** Every resource in Tracks B, C, and D. Nothing in those tracks starts before this lands.
+- **Notes:** This is the task that decides whether the panel is twenty-four sections or twenty-four rewrites. Scope narrowing delegates to Phase 1's `ScopeAuthorizer`/`ScopedPolicy`; the resource base class supplies the query narrowing and the policy binding so an author cannot forget either. `Model::shouldBeStrict()` is on from Phase 1, which means every table column reaching through a relation must be eager-loaded explicitly — Filament plus translatable plus media is precisely the shape that produces N+1, and here it throws rather than degrading quietly. Permissions register as Filament resource policies, never as inline `visible()` closures: a hidden control is a usability affordance and never an access control.
+
+### [T-2A03] Portal settings registry and the settings screen
+
+- **Spec:** l1-back-office.md §3.3, §5.6; l1-platform-foundation.md §3
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app ./vendor/bin/pest --filter=PortalSettings` proves every key named in the specification's runtime-configuration list resolves through the settings service with a typed default, that a write is journalled, and that a key flagged critical is rejected for a non-chief administrator at the service boundary — not only hidden in the form. `docker compose exec app php artisan tinker --execute="dump(app(\App\Services\Settings\SettingsRepository::class)->get('moderation.default_mode'));"` returns the seeded default on a database with an empty `settings` table.
+- **Handoff:** T-2A04, T-2B07, T-2D01 — module scopes, the staleness cadence, and the default moderation mode are all settings reads.
+- **Notes:** The `settings` table is a flat `key`/`jsonb` pair, which is deliberate and also a trap: reading it raw scatters string keys through the codebase and loses typing. A typed repository with declared defaults is the interface; the table is an implementation detail behind it. Values are cached in Redis and the cache is invalidated on write, because settings are read on nearly every request.
+
+### [T-2A04] Module management screen with per-scope toggles and blast-radius confirmation
+
+- **Spec:** l1-feature-modules.md §5.3, §5.5, §5.6, §5.7; l1-back-office.md §5.6
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app ./vendor/bin/pest --filter=ModuleAdministration` proves: the screen lists every `modules` row with its effective state resolved at each scope of the ladder; toggling at portal or country scope is refused unless the confirmation is acknowledged, and the confirmation text contains the count of affected objects; a toggle writes a journal entry; enabling a module whose dependency is disabled is refused with the unmet dependency named; disabling and re-enabling the booking module leaves its `reservations` rows byte-identical.
+- **Handoff:** T-2T01 — the module gate is part of the authorization matrix.
+- **Notes:** Resolution reuses Phase 1's `ModuleResolver` ladder (object → owner → category → country → portal → default); this screen must not re-implement it. The blast-radius count is a real query against the affected scope, not an estimate — "enabling booking for Ukraine affects 412 objects" is the required form and a wrong number is worse than none. The re-enablement guarantee is what makes the dormant booking module defensible, so it is verified here rather than assumed.
+
+### [T-2A05] Dashboard — state counters, operational widgets, permission-gated finance block
+
+- **Spec:** l1-back-office.md §5.3
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app ./vendor/bin/pest --filter=AdminDashboard` proves each counter named in the specification renders, that counts respect the actor's scope (a Georgia-scoped administrator sees Georgian objects only), that the finance widgets are absent from the response body — not merely hidden by CSS — for an actor without the finance permission, and that the whole dashboard resolves within the phase query budget. Quick actions are asserted by route, not by label.
+- **Handoff:** Phase 3 extends this dashboard with commerce widgets; the finance block's permission gate is the seam it plugs into.
+- **Notes:** Counters over the seeded volume are aggregate queries and must be cached with a short TTL rather than computed per page load; the dashboard is the panel's most frequently hit screen. Widgets whose data source arrives in a later phase (active campaigns, paid bumps) are not stubbed with zeroes — a zero that means "not built yet" is indistinguishable from a zero that means "none", and the second is information.
+
+### [T-2B01] Object list — columns, filters, and search across every stated dimension
+
+- **Spec:** l1-back-office.md §5.4 (`[TZ]` §103); l1-object-catalog.md §3.1
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app ./vendor/bin/pest --filter=ObjectResourceList` proves every column and every filter dimension named in §5.4 is present and functional, that search matches on name, phone, email, and object identifier, that the list renders only the fields the object's type declares, and that a country-scoped administrator's list excludes other countries' objects at the query level. `docker compose exec app ./vendor/bin/pest --group=slow --filter=ObjectResourceList` runs the same list against the seeded 52,800-object volume and asserts the phase query budget.
+- **Handoff:** T-2B02, T-2B03, T-2B06, T-2B07 — the form, the bulk actions, and both availability surfaces attach to this list.
+- **Notes:** The model is `Object_`, not `Object` — `Object` is a reserved PHP class name. Cover photo, package, position, and moderation status each reach through a relation, so the list query needs explicit eager loading or strict mode throws. Filters persist through the contract from `T-2A02`; this task configures them, it does not build persistence.
+
+### [T-2B02] Object form — tabbed editor and the full lifecycle action set
+
+- **Spec:** l1-back-office.md §5.4 (`[TZ]` §104); l1-moderation-governance.md §3.1, §3.3
+- **Status:** Todo
+- **Assignment:** Agent
+- **Requires:** T-2D01
+- **Verify:** `docker compose exec app ./vendor/bin/pest --filter=ObjectResourceForm` proves every tab named in §5.4 exists and saves, that each lifecycle action (save as draft, publish, hide, return for revision, archive, restore, duplicate, transfer ownership) performs its stated state change and writes a journal entry, that return-for-revision enqueues a moderation request carrying the reason, that transfer of ownership reassigns every dependent record rather than only the foreign key, and that an administrator scoped to one category cannot save an object of another — asserted at the policy, with the request rejected rather than the field hidden.
+- **Handoff:** T-2B03 (bulk equivalents of these actions), T-2T02 (moderation invariants).
+- **Notes:** An administrator's own edits publish directly; moderation governs owner-submitted changes, and conflating the two would put staff work in a queue staff themselves clear. Translated fields render per active language against the existing `object_translations` table — `astrotomic/laravel-translatable` keys on a `locale` string matching `languages.code`, not on a language foreign key. Duplicating an object must not duplicate its placement or its statistics; copy the descriptive record and leave the commercial one to be assigned.
+
+### [T-2B03] Object bulk operations behind counted confirmations
+
+- **Spec:** l1-back-office.md §5.4 (`[TZ]` §105); l1-moderation-governance.md §3.4, §5.6
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app ./vendor/bin/pest --filter=ObjectBulkActions` proves each of the eleven operations in §5.4 executes over a selection, that every one presents a confirmation naming the affected count before executing, that a selection spanning outside the actor's scope is rejected in full rather than partially applied, that each operation writes one journal entry per affected record, and that a bulk run over a thousand-record selection dispatches to the queue rather than executing in the request.
+- **Handoff:** T-2T01, T-2T03.
+- **Notes:** Partial application is the failure mode to design against: an administrator who selects 200 objects, 40 of which are outside their scope, must get a refusal naming the problem, not 160 silent successes. "Notify owners" and "export the selection" are long-running by nature and belong on the queue with a progress report; the others are fast enough to run inline below the queue threshold.
+
+### [T-2B04] Owner management — accounts, object attachment, access control
+
+- **Spec:** l1-back-office.md §5.5 (`[TZ]` §106)
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app ./vendor/bin/pest --filter=OwnerResource` proves the list carries every column named in §5.5 including object count and overdue placements, that an administrator can create an account, edit contacts, attach and detach objects, block and restore access, and send a password-reset link, that a blocked owner's session is terminated and subsequent sign-in refused, and that each of those actions is journalled. Overdue placements are asserted against seeded data with a known expiry, not against a hand-set flag.
+- **Handoff:** T-2B05 — impersonation acts on the account this resource manages.
+- **Notes:** Owners are `users` rows distinguished by role, not a separate table; the resource scopes its query to the owner role rather than assuming it. Detaching an object leaves it ownerless rather than deleting it — an ownerless object is a real state the portal has to render, and the alternative loses data on a routine administrative action.
+
+### [T-2B05] Support-mode impersonation, journalled without exception
+
+- **Spec:** l1-back-office.md §5.5; l1-moderation-governance.md §3.2
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app ./vendor/bin/pest --filter=Impersonation` proves: entering support mode authenticates the administrator as the target owner in the cabinet panel; a journal entry is written naming both the actor and the target before the session switches; the session carries a visible banner and a return path that restores the original identity; every mutation made while impersonating is journalled against the administrator, not against the owner; impersonation requires its own permission and is refused for an owner-scoped account; and the journal entry is written even when the subsequent session switch fails.
+- **Handoff:** T-2T03 — impersonation is one of the journal completeness assertions.
+- **Notes:** This is the single most sensitive capability in the panel: it grants an administrator the full authority of another account, which is exactly why the record of it is unconditional. Attributing the impersonated session's mutations to the owner would make the journal actively misleading — worse than absent — so the actor is resolved from the impersonator, not from the authenticated user. The cabinet panel exists from Phase 1 as a shell; its resources arrive in Phase 4, and impersonation into an empty cabinet is still the correct thing to build now, because the journal contract is what is being established.
+
+### [T-2B06] Availability administration — override, history, revert
+
+- **Spec:** l1-availability-status.md §5.1, §5.5 (`[TZ]` §28, §114); l1-moderation-governance.md §3.1
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app ./vendor/bin/pest --filter=AvailabilityAdministration` proves an administrator sees current status, change time, actor, last confirmation time, and the full toggle history for any object; that an override writes both the object columns and an `availability_histories` row with `source: administrator` in one transaction; that revert-to-previous restores the prior value and appends a further history row rather than deleting one; that the write path never enqueues a moderation request; and that a status write invalidates the catalog, territory, and object-page caches.
+- **Handoff:** T-2B07, and Phase 4's owner-facing toggle, which shares this service.
+- **Notes:** The write path is narrow by design. Routing it through the general object-edit path drags in moderation, validation, and full-object cache invalidation, all three of which this operation must avoid — the availability toggle is the one owner action that bypasses moderation unconditionally, and the administrator's override has to honour the same shape. `last_confirmed_at` is distinct from `changed_at` on purpose: re-affirming an unchanged value must reset the staleness clock, and a single timestamp cannot express that.
+
+### [T-2B07] Availability staleness — cadence, quick filters, bulk reset, optional auto-reset
+
+- **Spec:** l1-availability-status.md §5.4, §5.5 (`[TZ]` §27.3, §114)
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app ./vendor/bin/pest --filter=AvailabilityStaleness` proves the confirmation cadence is a settings-backed value and not a constant, that the object list offers each quick filter named in §5.5, that bulk reset presents a counted confirmation and writes one history row per affected object, that auto-reset is off in a freshly seeded database, and that when enabled its rows carry `source: automatic`. `docker compose exec app php artisan schedule:list` shows the staleness sweep registered as a scheduled job and no sweep code is reachable from a web route.
+- **Handoff:** Phase 3's notification track sends the owner reminder this sweep raises.
+- **Notes:** Auto-reset is genuinely double-edged — resetting a stale `unavailable` back to `available` manufactures exactly the false vacancy claim the feature exists to prevent — so it ships off, is enabled per portal, and records its own provenance so a resulting badge is never mistaken for an owner's assertion. Scheduled work runs as a job dispatched by the scheduler, never during a web request.
+
+### [T-2C01] Territory administration with guarded reparenting
+
+- **Spec:** l1-geography.md §5.5 (`[TZ]` §107); l1-moderation-governance.md §5.6
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app ./vendor/bin/pest --filter=TerritoryAdministration` proves an administrator can create and edit a territory at any depth setting every field named in §5.5 including per-language names and slugs; that reparenting a node with attached objects or descendants is refused until a confirmation naming both counts is acknowledged; that the confirmation counts are computed over the whole subtree, not the immediate children; that reparenting rewrites the denormalized country and the cached slug path for every descendant in one transaction; that a cycle-forming reparent is rejected; and that deactivating a territory removes it from navigation while leaving its objects attached and reachable by their own URLs.
+- **Handoff:** Phase 5's territory landing pages consume the slug paths this task maintains.
+- **Notes:** Subtree counts and descendant rewrites go through `staudenmeir/laravel-adjacency-list` recursive CTEs; a per-node walk at this depth is the wrong cost and the seeded 6,270-territory tree will show it. `country` is denormalized onto every node deliberately, which means reparenting across a country boundary has to repair it — the field is immutable in practice, not immutable in fact.
+
+### [T-2C02] Object type registry administration
+
+- **Spec:** l1-object-catalog.md §3.1 (`[TZ]` §69, §109)
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app ./vendor/bin/pest --filter=ObjectTypeRegistry` proves an administrator can create a type, nest it under a parent, assign its icon, choose its applicable field set and amenity groups, and set its SEO defaults, all without a code change; that a type's declared field set actually governs which fields the object form in `T-2B02` renders; that deactivating a type hides it from the public catalog without detaching its objects; and that no code path branches on a hard-coded type key.
+- **Handoff:** T-2B02 — the object form reads its tab and field composition from this registry.
+- **Notes:** The registry being data is not decoration: an accommodation type exposes rooms, prices, and availability while a dining type exposes cuisine, average cheque, and opening hours, and the difference has to survive an administrator adding a type nobody anticipated. The architecture test that forbids hard-coded language and country counts extends naturally here; add the type-key case to it rather than trusting review.
+
+### [T-2C03] Language registry and the interface catalog editor
+
+- **Spec:** l1-localization.md §5.1, §5.4, §5.6 (`[TZ]` §67, §108)
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app ./vendor/bin/pest --filter=LanguageAdministration` proves an administrator can toggle a language, set exactly one primary, and reorder the switcher; that deactivating a language hides it from the switcher and from alternate links while leaving its translation rows intact so reactivation is lossless; that an interface catalog entry edited in the panel changes the rendered string on the next request with no deployment and no cache clear command; that a key absent from a catalog falls back to the primary language rather than rendering a raw key; and that activating a third language produces a usable site immediately, resolving entirely through fallback.
+- **Handoff:** T-2C04 — the untranslated report reads the same catalogs.
+- **Notes:** File-based catalogs under `resources/lang` cannot satisfy "editable without a deployment", so a database-backed loader overlays the files: files supply the shipped defaults, database rows supply the administrator's overrides, and the loader merges with the database winning. Launch activates English and Russian only; the remaining three are a data operation, and this task is what makes that claim true. UI strings always fall back and never hide — a missing button is worse than a button in the wrong language.
+
+### [T-2C04] Translation management and the untranslated-material report
+
+- **Spec:** l1-localization.md §5.5 (`[TZ]` §108, §126)
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app ./vendor/bin/pest --filter=TranslationManagement` proves the report lists untranslated material across every translatable entity class rather than a hard-coded subset; that the object list can be filtered to objects lacking a translation in a chosen language; that copy-from-primary populates a target language as an editable starting point and marks the result untranslated rather than translated; that a single language version of an entity can be published independently of the others; and that completeness per entity and per language is reported as a number the SEO warning in Phase 6 can consume.
+- **Handoff:** Phase 6's SEO track raises the "translation missing" warning from this metric.
+- **Notes:** "Across all entity classes" is the requirement that decides the implementation: enumerating translatable models by convention (the trait they carry) keeps the report correct when Phase 3 adds articles, news, and promotions; enumerating them by hand guarantees it is wrong by the end of Phase 3. Copy-from-primary marking its output untranslated is what keeps the completeness metric honest — otherwise the first bulk copy reports one hundred percent coverage of text nobody has translated.
+
+### [T-2D01] Moderation mode resolution and the change-request pipeline
+
+- **Spec:** l1-moderation-governance.md §3.1, §5.1, §5.2
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app ./vendor/bin/pest --filter=ModerationResolution` proves the mode resolves down the full ladder (object → owner → category → country → portal default) with most-specific winning, that each rung is exercised by its own case; that a change to a type not on the moderated list publishes immediately regardless of mode; that an enqueued request stores the published state and the proposed state as independent snapshots on the request itself; that the availability toggle never enqueues; and that the moderated-change-type list is configuration read at runtime rather than a constant.
+- **Handoff:** T-2D02, T-2D03, and T-2B02's return-for-revision action. This is Track D's first task.
+- **Notes:** The previous-state snapshot lives on the request, not as a reference to the live record. If the live record changes between submission and review, a reference-based diff shows the moderator a comparison that never existed — and the moderator would have no way to tell. The ladder is shared with feature modules; resolution logic is one service used by both, not two implementations that drift.
+
+### [T-2D02] Moderation queue — listing, filtering, assignment
+
+- **Spec:** l1-moderation-governance.md §5.2 (`[TZ]` §46, §119)
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app ./vendor/bin/pest --filter=ModerationQueue` proves the queue shows change date, owner, object, section, change summary, and status per entry; that it filters by country, object, owner, change type, and date; that a moderator may reassign an entry to a colleague and the reassignment is journalled; that a country-scoped moderator sees only their country's entries; and that the queue's default ordering surfaces the oldest pending request first.
+- **Handoff:** T-2D03 — opening an entry from this queue is the review screen's entry point.
+- **Notes:** Oldest-first is the ordering that prevents a queue from developing a permanently unreviewed tail; any recency-first default quietly starves the entries that have waited longest. Scope filtering happens in the query, not in the view, for the same reason it does everywhere else in this panel.
+
+### [T-2D03] Side-by-side review and the decision set
+
+- **Spec:** l1-moderation-governance.md §5.3 (`[TZ]` §47, §49); l1-moderation-governance.md §2
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app ./vendor/bin/pest --filter=ModerationReview` proves the screen renders published and proposed values side by side with changed values marked and before/after images where media changed; that approve applies the proposed data, publishes without a second manual step, and journals; that reject leaves the published record byte-identical and requires a reason that reaches the owner; that request-revision returns the change to the owner in an editable state with the comment attached; that partial acceptance applies only the selected fields and returns the remainder; and that partial acceptance is refused when its portal setting is off.
+- **Handoff:** T-2T02 — the rejection invariant is the phase's most important assertion.
+- **Notes:** Partial acceptance is marked optional in the client specification and modelled as field-level selection in the spec. Resolved here as: implemented, behind a portal setting, defaulting off. The snapshot model already supports it, so gating it costs a setting read rather than a redesign, and shipping it on by default would make every moderator decision a field-by-field one. A rejected edit being unable to damage a live page is the practical reason moderation acts over changes rather than over records — it is verified, not assumed.
+
+### [T-2D04] Action journal — search, filter, before/after, export
+
+- **Spec:** l1-moderation-governance.md §3.2, §5.4 (`[TZ]` §53, §91, §94, §129)
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app ./vendor/bin/pest --filter=ActionJournal` proves the journal renders actor, action, target, previous value, new value, timestamp, IP, device, and outcome; that it searches and filters across each of those; that reading it requires its own permission distinct from every other panel permission; that export respects the active filter set and requires the export permission; and that retention and archival of old entries is an administrator-configured setting with a scheduled job that honours it. `docker compose exec app php artisan schedule:list` shows the archival job registered.
+- **Handoff:** T-2T03 — completeness and append-only enforcement are asserted there.
+- **Notes:** One journal, not two. A moderation decision is one kind of journalled mutation, and splitting the moderation log from the action log leaves two partial histories where the requirement asks for one. Journal entries are written in the same transaction as the mutation they describe — a journal written afterwards has gaps exactly where failures occurred, which are the cases it most needs to record. Append-only is already enforced by the Phase 1 database trigger; this task must not add a UI-level guard and call it enforcement. The journal is the highest-volume table after statistics, so archival is scoped in now rather than after the first slow query.
+
+### [T-2D05] Archive — restore, transfer, permanent deletion
+
+- **Spec:** l1-moderation-governance.md §3.3, §5.5 (`[TZ]` §51, §75, §95, §131)
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app ./vendor/bin/pest --filter=ArchiveGovernance` proves a soft-deleted object, user, news item, promotion, or banner disappears from public queries, appears in the archive, and is restorable with its media intact; that an archived object can be transferred to another owner; that permanent deletion is refused for every role but the chief administrator; that it requires re-authentication rather than a confirmation click; that it is journalled; and that soft-delete filtering is applied by a global scope so no individual query can forget it. One case asserts the negative directly: a raw query without the scope returns the archived row, proving the scope is doing the work.
+- **Handoff:** T-2T01, T-2T03.
+- **Notes:** Soft-delete filtering belongs in the shared query layer because a single forgotten filter republishes archived content and that failure is silent — nothing errors, the page simply shows what it should not. Media survives its parent until final deletion, so restoring an archived object must restore a complete record rather than a text skeleton. Re-authentication is a stronger gate than confirmation and the specification asks for it by name on the highest-impact targets.
+
+### [T-2T01] Panel authorization matrix — every resource denies out of scope
+
+- **Goal:** Prove that Phase 1's scoped authorization actually governs Phase 2's panel, on every resource, through the request rather than through the interface.
+- **Spec:** l1-back-office.md §3.1; l1-feature-modules.md §5.5; l2-tech-stack.md §5.6
+- **Status:** Todo
+- **Assignment:** Agent
+- **Method:** `docker compose exec app ./vendor/bin/pest --filter=PanelAuthorizationMatrix` iterates every registered admin resource against every scope kind (`none`, `country`, `territory`, `category`) and every permission verb, asserting for each combination that an out-of-scope request is refused at the policy. Refusal is asserted by issuing the request directly at the resource action URL with navigation bypassed entirely — a test that only checks a hidden menu item proves nothing. One case covers each: a Georgia-scoped administrator against a Moldovan object, a region-scoped administrator against a city outside their subtree, a category-scoped administrator against another category, and an actor whose module is disabled against that module's resource.
+- **Verify:** The matrix is generated from the resource registry rather than enumerated by hand, so a resource added in a later phase is covered without editing the test; a deliberately unpoliced scratch resource makes the suite fail, then is removed.
+
+### [T-2T02] Moderation invariants — a rejected edit cannot touch the published record
+
+- **Goal:** Verify the three moderation invariants that the design rests on and that a plausible implementation can violate without any visible symptom.
+- **Spec:** l1-moderation-governance.md §3.1, §5.3
+- **Status:** Todo
+- **Assignment:** Agent
+- **Method:** `docker compose exec app ./vendor/bin/pest --filter=ModerationInvariants` asserts: a pending request never mutates the published record, checked by hashing the published row before submission and after rejection; approval publishes with no second manual step; the availability toggle bypasses moderation in every mode including the strictest; and a request whose target is edited by an administrator between submission and review still shows the moderator the snapshot that was submitted against.
+- **Verify:** Each invariant is proven capable of failing before it is proven to hold — the implementation is temporarily broken in the way the invariant forbids, the assertion fails citing the case, and the break is reverted.
+
+### [T-2T03] Journal completeness and append-only enforcement
+
+- **Goal:** Verify that every event class the specification enumerates actually reaches the journal, and that no ordinary administrator can alter it.
+- **Spec:** l1-moderation-governance.md §3.2, §5.4 (`[TZ]` §53, §129)
+- **Status:** Todo
+- **Assignment:** Agent
+- **Method:** `docker compose exec app ./vendor/bin/pest --filter=JournalCompleteness` performs one action per enumerated event class — sign-in, object creation, object edit, owner change, availability toggle, content publication, moderation decision, data export, settings change, module toggle, deletion, restoration, impersonation — and asserts each produced exactly one journal row with a populated previous and new value. A second case attempts `UPDATE` and `DELETE` against `audits` as the application's own database role and asserts both are refused by the Phase 1 trigger, not by application code.
+- **Verify:** The event class list in the test is asserted against the specification's enumeration so an unimplemented class fails loudly rather than being silently omitted; package changes, position changes, and bumps belong to Phase 3 and are marked skipped with that reason rather than dropped from the list.
+
+### [T-2T04] Panel query budget under seeded volume
+
+- **Goal:** Prove the panel meets its query budget against realistic volume rather than against fixtures, before Phase 3 adds more surface to it.
+- **Spec:** l2-tech-stack.md §5.9
+- **Status:** Todo
+- **Assignment:** Agent
+- **Method:** `docker compose exec app ./vendor/bin/pest --group=slow --filter=PanelQueryBudget` loads each resource list, the dashboard, the moderation queue, and the action journal against the seeded 52,800 objects and 6,270 territories, asserting each stays within thirty queries and that strict mode raises no lazy-loading violation.
+- **Verify:** Measured inside the container against a non-bind-mounted copy — the Windows bind mount measures filesystem cost rather than application cost and is not a valid benchmark host. Findings are recorded as numbers in the task's evidence line, not as a pass/fail claim.
 
 ## Standing Constraints
 
@@ -53,8 +323,62 @@ Delivered in `[TZ]` §134 priority order, as Filament resources rather than cust
 - Bulk actions require a confirmation naming the affected record count.
 - Impersonation is journalled without exception — it grants an administrator the full
   authority of another account.
+- Every user-facing string goes through a translation key. No literal copy in a Filament
+  label, table column, or form field.
+- Business logic lives in `app/Services/`. A Filament resource that reaches for the `DB`
+  facade fails the architecture suite.
+- `composer quality` runs after every meaningful change, not at task boundaries.
 
-## Decomposition Trigger
+## Planning Audit
 
-Decomposed into atomic `T-2XXX` tasks by `/magic.task main` once Phase 1 completes,
-against the specification set as it stands at that point.
+Findings from the adversarial review of this decomposition, recorded rather than
+resolved silently.
+
+**Optimism bias.** Twenty-five tasks is the largest phase in the plan, and the estimate
+most likely to be wrong is `T-2A02`. It reads like plumbing and is in fact the task that
+decides whether the remaining twenty-two resources are configuration or construction.
+Its scope was deliberately widened to include the unsaved-change guard and the counted
+bulk confirmation — both look like per-resource concerns and both become twenty-four
+copies of a subtle bug if they are. The second underestimation risk is `T-2C03`: a
+database-backed translation loader overlaying file catalogs is a small amount of code in
+an unusually load-bearing position, and it is the only task in the phase that changes how
+every string in the application resolves.
+
+**Hidden dependencies.** The tracks are genuinely independent only after `T-2A02`, which
+is why the ordering is stated as a hard gate rather than a suggestion. One further edge
+crosses tracks — `T-2D01` before `T-2B02` — and it is scheduled first within Track D so
+it never blocks. A third dependency is on Phase 1 rather than within Phase 2: every
+availability, module, and scope task consumes a Phase 1 service, and none of them
+re-implements it. The seam most likely to be violated is the module ladder, because
+re-deriving it inside the administration screen looks locally simpler than reading it.
+
+**Cascade risk.** `T-2A02` is the single highest-cascade task in the phase: it is
+upstream of every resource in three tracks, and a contract that has to change after ten
+resources adopt it is a ten-file rewrite. `T-2D01` is second — the queue, the review
+screen, and one object action all consume its output, and its snapshot semantics cannot
+be retrofitted once requests exist in the table. `T-2A01` has the least code and a
+disproportionate blast radius in the other direction: the sign-in journal cannot be
+backfilled, so a panel shipped without it loses the records permanently.
+
+**Plan stability.** Every specification behind this phase is still `RFC`, and two of the
+set's open questions land here rather than in Phase 1. Region-scoped permission
+transitivity governs `T-2T01`'s territory case directly — the matrix is written against
+the transitive reading, and the explicit-per-node alternative would change both the test
+and `role_scopes`. Partial acceptance of a moderated change set is resolved inside
+`T-2D03` as implemented-but-off; if the client settles it as whole-request-only, the
+setting is removed and nothing else moves.
+
+## Instruction Quality Review
+
+The task units above were reviewed as executor-facing instructions. Verdict:
+**PASS-WITH-REWRITES**, applied inline. Three classes of rewrite were made.
+
+Verify lines that named a test without naming what it must prove were expanded into
+their assertion sets — `T-2A01`, `T-2B03`, `T-2C01`, and `T-2D05` each carried a
+verifiable-sounding command whose failure condition was undefined. Four tasks asserted
+absence through the interface and were rewritten to assert it through the request, since
+"the button is hidden" and "the action is refused" are different claims and only the
+second is the requirement. And the three validation tasks were given falsifiability
+clauses — an assertion never observed failing is an assertion of unknown value, which
+Phase 1 established as the standard when it deliberately broke each architecture rule
+before trusting it.

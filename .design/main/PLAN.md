@@ -1,6 +1,6 @@
 # Implementation Plan
 
-**Version:** 3.0.0
+**Version:** 3.1.0
 **Generated:** 2026-08-05
 **Based on:** .design/main/INDEX.md v2.4.2
 **Based on RULES:** .design/RULES.md v1.4.0
@@ -90,22 +90,22 @@ still delivered, and `[TZ]` §134's mandatory scope governs what release one con
 - [ ] **Data Model** ([l2-data-model.md](specifications/l2-data-model.md)) [L2]
 - [ ] **Third-Party Integrations** ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
 
-## Phase 1 — Foundation, Schema & Authorization `[Bootstrap]`
+## Phase 1 — Foundation, Schema & Authorization `[Bootstrap]` — **Done**
 
 *Everything that must exist before a single screen is built. The whole schema in one
 pass from empty, the registries as data, and scoped authorization before any panel.*
 
-- [ ] **Technology Stack** §5.1–§5.4, §5.8–§5.10, §6.1 — scaffold, Docker stack, asset pipeline ([l2-tech-stack.md](specifications/l2-tech-stack.md)) [L2]
-- [ ] **Technology Stack** §5.9 — quality gates and benchmark harness ([l2-tech-stack.md](specifications/l2-tech-stack.md)) [L2]
-- [ ] **Data Model** — full migration set, index plan, deletion and retention rules ([l2-data-model.md](specifications/l2-data-model.md)) [L2]
-- [ ] **Localization** §5.1–§5.2, §6 — translation tables alongside their parents, language and country registries ([l1-localization.md](specifications/l1-localization.md)) [L1]
-- [ ] **Geography** §5.1–§5.2 — recursive territory hierarchy, per-country level vocabularies ([l1-geography.md](specifications/l1-geography.md)) [L1]
-- [ ] **Back Office** §5.2 — roles, permissions, scoped grants ([l1-back-office.md](specifications/l1-back-office.md)) [L1]
-- [ ] **Feature Modules** §5.1–§5.3, §5.7 — registry, resolution ladder, server-side gate ([l1-feature-modules.md](specifications/l1-feature-modules.md)) [L1]
-- [ ] **Platform Foundation** §3 — invariants made mechanically checkable ([l1-platform-foundation.md](specifications/l1-platform-foundation.md)) [L1]
-- [ ] **Third-Party Integrations** §5.1, §5.4 — local storage and mail equivalents ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
+- [x] **Technology Stack** §5.1–§5.4, §5.8–§5.10, §6.1 — scaffold, Docker stack, asset pipeline ([l2-tech-stack.md](specifications/l2-tech-stack.md)) [L2]
+- [x] **Technology Stack** §5.9 — quality gates and benchmark harness ([l2-tech-stack.md](specifications/l2-tech-stack.md)) [L2]
+- [x] **Data Model** — full migration set, index plan, deletion and retention rules ([l2-data-model.md](specifications/l2-data-model.md)) [L2]
+- [x] **Localization** §5.1–§5.2, §6 — translation tables alongside their parents, language and country registries ([l1-localization.md](specifications/l1-localization.md)) [L1]
+- [x] **Geography** §5.1–§5.2 — recursive territory hierarchy, per-country level vocabularies ([l1-geography.md](specifications/l1-geography.md)) [L1]
+- [x] **Back Office** §5.2 — roles, permissions, scoped grants ([l1-back-office.md](specifications/l1-back-office.md)) [L1]
+- [x] **Feature Modules** §5.1–§5.3, §5.7 — registry, resolution ladder, server-side gate ([l1-feature-modules.md](specifications/l1-feature-modules.md)) [L1]
+- [x] **Platform Foundation** §3 — invariants made mechanically checkable ([l1-platform-foundation.md](specifications/l1-platform-foundation.md)) [L1]
+- [x] **Third-Party Integrations** §5.1, §5.4 — local storage and mail equivalents ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
 
-## Phase 2 — Back Office Core
+## Phase 2 — Back Office Core — **Active**
 
 *The staff panel in `[TZ]` §134 priority order, up to the point where a portal can be
 operated: objects, owners, geography, taxonomy, moderation, and the action journal.*
@@ -116,6 +116,11 @@ operated: objects, owners, geography, taxonomy, moderation, and the action journ
 - [ ] **Geography** §5.5 — territory administration, guarded reparenting ([l1-geography.md](specifications/l1-geography.md)) [L1]
 - [ ] **Localization** §5.4–§5.5 — interface catalogs, translation management, untranslated-material report ([l1-localization.md](specifications/l1-localization.md)) [L1]
 - [ ] **Availability Status** §5.4–§5.5 — administrator override, staleness filters, bulk reset ([l1-availability-status.md](specifications/l1-availability-status.md)) [L1]
+- [ ] **Feature Modules** §5.6 — module management screen, per-scope toggles, blast-radius confirmation ([l1-feature-modules.md](specifications/l1-feature-modules.md)) [L1]
+
+Decomposed into 25 atomic tasks across five tracks in [tasks/phase-2.md](tasks/phase-2.md),
+which carries this phase's own planning audit — the shared resource contract, not the
+resource count, is the task that decides the phase.
 
 ## Phase 3 — Commerce, Advertising & Platform Services
 
@@ -204,25 +209,26 @@ set carries, only two touch Phase 1, and both are listed below. Phases 2 through
 should be re-derived by `/magic.task` as the specifications mature, not treated as
 settled.
 
-## Open Questions Carried into Phase 1
+## Open Questions Carried into Phases 1 and 2
 
-Two of the specification set's open questions affect Phase 1 schema decisions. Both are
-modelled to satisfy either reading, but the second is the one that would cost a
-migration.
+Both questions that touched Phase 1's schema are now Phase 2 behaviour questions. The
+schema was modelled to satisfy either reading, so neither costs a migration; both change
+code and one changes a test matrix.
 
-| Question | Spec | Phase 1 exposure |
+| Question | Spec | Exposure |
 | --- | --- | --- |
-| Do region-scoped permissions apply transitively down the territory subtree, or as explicit per-node grants? | [l1-back-office.md](specifications/l1-back-office.md) §2 | Modelled transitively, matching the geography spec's scoping semantics. The alternative changes the shape of `role_scopes`. This is the highest-value question to close before `T-1B01`. |
-| Is partial acceptance of a moderated change set field-level, or whole-request only? | [l1-moderation-governance.md](specifications/l1-moderation-governance.md) §2 | `moderation_requests` stores previous and proposed data as snapshots, which supports both. Field-level selection is a Phase 2 UI concern, not a Phase 1 schema one. Low exposure. |
+| Do region-scoped permissions apply transitively down the territory subtree, or as explicit per-node grants? | [l1-back-office.md](specifications/l1-back-office.md) §2 | Phase 1 modelled it transitively, matching the geography spec's scoping semantics, and `role_scopes` shipped that way. Phase 2 exposure is `T-2T01`'s territory case, which asserts the transitive reading directly. Still the highest-value question to close. |
+| Is partial acceptance of a moderated change set field-level, or whole-request only? | [l1-moderation-governance.md](specifications/l1-moderation-governance.md) §2 | `moderation_requests` stores previous and proposed data as snapshots, which supports both. Resolved inside `T-2D03` as implemented behind a portal setting, defaulting off. Whole-request-only would remove the setting and nothing else. |
 
-The remaining eighteen open questions land in Phases 2 and later and are not on the
-critical path out of Phase 1.
+The remaining eighteen open questions land in Phase 3 and later and are not on the
+critical path out of Phase 2.
 
 ## Next Step
 
-`/magic.run main` — execute Phase 1. Atomic tasks are in
-[tasks/phase-1.md](tasks/phase-1.md); phase registry in [TASKS.md](TASKS.md).
+`/magic.run main` — execute Phase 2. Atomic tasks are in
+[tasks/phase-2.md](tasks/phase-2.md); phase registry in [TASKS.md](TASKS.md). Phase 1 is
+complete and archived at [archives/tasks/phase-1.md](archives/tasks/phase-1.md).
 
-Phases 2 through 7 carry frontmatter and scope only. They are decomposed into atomic
+Phases 3 through 7 carry frontmatter and scope only. They are decomposed into atomic
 tasks by the `/magic.task` invocation that activates each, so the decomposition is
 derived from the specification set as it stands then rather than as it stands now.

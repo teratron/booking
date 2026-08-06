@@ -31,7 +31,7 @@ feature that reads or writes them.
 
 All nine registered specifications are `Stable` and the backlog is empty. Phases 1,
 2, 3, 4, and 5 are complete and archived; Phase 6 is decomposed and active (see
-`tasks/phase-6.md`).
+`archives/tasks/v1-nextjs/phase-6.md`).
 
 ### Phase Dependency Graph
 

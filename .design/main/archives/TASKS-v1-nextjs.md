@@ -17,12 +17,12 @@ tasks; later phases are decomposed when they become active.
 
 | Phase | Description | Status |
 | --- | --- | --- |
-| [Phase 1](tasks/phase-1.md) | Project scaffold, complete entity model, and the app shell every route inherits | `Done (Archived)` (14/14) |
-| [Phase 2](tasks/phase-2.md) | Better Auth identity for guest/owner/admin, plus the react-admin moderation back office | `Done (Archived)` (11/11) |
-| [Phase 3](tasks/phase-3.md) | Owner-gated Add-Hotel intake flow with moderation lifecycle | `Done (Archived)` (8/8) |
-| [Phase 4](tasks/phase-4.md) | Home hero search, catalog filters/sort/pagination/map, shared with Home's default list | `Done (Archived)` (7/7) |
-| [Phase 5](tasks/phase-5.md) | Hotel profile aggregation and the article/news content pipeline | `Done (Archived)` (6/6) |
-| [Phase 6](tasks/phase-6.md) | Room reservation detail, availability, and the paid booking flow | `Done (Archived)` (6/6) |
+| [Phase 1](tasks/v1-nextjs/phase-1.md) | Project scaffold, complete entity model, and the app shell every route inherits | `Done (Archived)` (14/14) |
+| [Phase 2](tasks/v1-nextjs/phase-2.md) | Better Auth identity for guest/owner/admin, plus the react-admin moderation back office | `Done (Archived)` (11/11) |
+| [Phase 3](tasks/v1-nextjs/phase-3.md) | Owner-gated Add-Hotel intake flow with moderation lifecycle | `Done (Archived)` (8/8) |
+| [Phase 4](tasks/v1-nextjs/phase-4.md) | Home hero search, catalog filters/sort/pagination/map, shared with Home's default list | `Done (Archived)` (7/7) |
+| [Phase 5](tasks/v1-nextjs/phase-5.md) | Hotel profile aggregation and the article/news content pipeline | `Done (Archived)` (6/6) |
+| [Phase 6](tasks/v1-nextjs/phase-6.md) | Room reservation detail, availability, and the paid booking flow | `Done (Archived)` (6/6) |
 
 Phase 1 ran `A → (B ‖ C) → T` and is summarized in `.design/main/CHANGELOG.md`.
 
@@ -37,7 +37,7 @@ Phase 3 ran `(A01 ‖ A02 ‖ B01 ‖ C01) → B02 → B03 → C02 → T`. Track
 persistence foundation) and `T-3B01` (upload route) were mutually file-disjoint
 and dispatchable immediately; `T-3C01` (owner dashboard) only needed `T-3A02`'s
 data model, not the form, so it ran parallel with `T-3B02`/`T-3B03`. See
-`archives/tasks/phase-3.md` for the full track rationale, including the
+`archives/tasks/v1-nextjs/phase-3.md` for the full track rationale, including the
 `T-3B02`/`T-3B03` split a Planning Audit pass surfaced, and the Server
 Action file-split pattern (schema/persistence/actions) T-3B02 established
 after a build break only a live dev-server request caught.
@@ -46,7 +46,7 @@ Phase 4 ran `(A01 ‖ A02) → (B01 ‖ C01 ‖ C02) → C03 → T`. Track A (th
 catalog-query contract and the reusable date/guest-count widgets) had no
 Phase 3 dependency and started immediately; `T-4C02` (filter sidebar) only
 needed the URL-param contract `T-4A01` defines, not its runtime output, so it
-ran parallel with `T-4C01` rather than behind it. See `archives/tasks/phase-4.md`
+ran parallel with `T-4C01` rather than behind it. See `archives/tasks/v1-nextjs/phase-4.md`
 for the full track rationale, its four planning-stage `[DR]` resolutions
 (Home-as-shared-query, category shortcuts as filter presets not new schema,
 Leaflet/OSM as the map provider, and the catalog map plotting the full
@@ -64,7 +64,7 @@ so they ran in parallel. `B02` (hotel news + reviews + recently-viewed) was
 the one task with a genuine cross-track dependency — `l1-object-profile.md`
 requires its news section to reuse `C01`'s article component rather than a
 bespoke one — so it was sequenced after both `B01` and `C01`. See
-`archives/tasks/phase-5.md` for the full track rationale, its five
+`archives/tasks/v1-nextjs/phase-5.md` for the full track rationale, its five
 planning-stage `[DR]` resolutions (room summary renders without a functional
 booking CTA since Phase 6 owns that popup, no synthetic nearby-POI data
 without a registered provider, review submission and article authoring both
@@ -85,7 +85,7 @@ needed `B01`'s popup to collect room/dates/guests from; `C01` (payment)
 needed `B02`'s `pending` reservation to attach a payment attempt to — a
 linear checkout funnel from there on, an honest reflection of this phase's
 narrower, deeper shape versus Phase 4/5's broader parallel surfaces. See
-`archives/tasks/phase-6.md` for the full track rationale, its four
+`archives/tasks/v1-nextjs/phase-6.md` for the full track rationale, its four
 planning-stage `[DR]` resolutions (payment built behind a swappable provider
 interface with a simulated implementation, since no real Fondy credentials
 exist — real Fondy wiring is a later drop-in swap, not a rewrite; guest

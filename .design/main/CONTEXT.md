@@ -1,10 +1,10 @@
 # Project Context
 
-**Generated:** 2026-08-05
+**Generated:** 2026-08-06
 
 ## Active Technologies
 
-- Unknown (no manifest detected)
+- Node.js
 
 ## Core Project Structure
 
@@ -22,22 +22,99 @@
 ├── .drafts/
 │   ├── TODO.md
 │   └── booking.md
+├── .editorconfig
 ├── .env.example
-├── .fallow/
-│   ├── .gitignore
-│   └── graph-cache.bin
+├── .fallowrc.jsonc
+├── .gitattributes
+├── .githooks/
+│   └── pre-commit
+├── .github/
+│   └── workflows/
 ├── .gitignore
 ├── .magic/
 ├── .markdownlint.json
+├── .npmrc
 ├── AGENTS.md
 ├── CHANGELOG.md
 ├── CLAUDE.md
 ├── README.md
+├── app/
+│   ├── Console/
+│   ├── Exceptions/
+│   ├── Filament/
+│   ├── Http/
+│   ├── Jobs/
+│   ├── Livewire/
+│   ├── Models/
+│   ├── Policies/
+│   ├── Providers/
+│   ├── Services/
+│   └── Support/
+├── artisan
+├── biome.json
+├── bootstrap/
+│   ├── app.php
+│   ├── cache/
+│   └── providers.php
+├── composer.json
+├── composer.lock
+├── config/
+│   ├── app.php
+│   ├── audit.php
+│   ├── auth.php
+│   ├── cache.php
+│   ├── database.php
+│   ├── filesystems.php
+│   ├── logging.php
+│   ├── mail.php
+│   ├── permission.php
+│   ├── queue.php
+│   ├── services.php
+│   ├── session.php
+│   └── translatable.php
+├── database/
+│   ├── .gitignore
+│   ├── factories/
+│   ├── migrations/
+│   └── seeders/
 ├── docker/
+│   ├── app/
+│   ├── nginx/
 │   └── postgres/
 ├── docker-compose.yml
-└── docs/
-    └── README.md
+├── docs/
+│   ├── README.md
+│   └── database-schema.md
+├── package.json
+├── phpstan.neon
+├── phpunit.xml
+├── pint.json
+├── pnpm-lock.yaml
+├── public/
+│   ├── .htaccess
+│   ├── favicon.ico
+│   ├── index.php
+│   └── robots.txt
+├── rector.php
+├── resources/
+│   ├── css/
+│   ├── js/
+│   ├── lang/
+│   └── views/
+├── routes/
+│   ├── console.php
+│   └── web.php
+├── storage/
+│   ├── app/
+│   ├── framework/
+│   └── logs/
+├── tests/
+│   ├── Architecture/
+│   ├── Feature/
+│   ├── Pest.php
+│   ├── TestCase.php
+│   └── Unit/
+└── vite.config.js
 ```
 
 ## Recent Changes
