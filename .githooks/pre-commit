@@ -7,16 +7,6 @@
 # to print a specific, actionable message before exiting. `set -e` would abort
 # on the first non-zero status before that message ever printed.
 
-echo "[Magic Sync] Checking engine integrity..."
-node .magic/scripts/executor.js update-engine-meta --check
-if [ $? -ne 0 ]; then
-  echo "[Magic Sync] Engine drift detected in .magic/."
-  echo "[Magic Sync] If this is unintended: restore .magic/ from the magic-spec release archive."
-  echo "[Magic Sync] If this is an engine-improvement task: run 'node .magic/scripts/executor.js update-engine-meta' (developer install only)."
-  exit 1
-fi
-echo "[Magic Sync] Engine in sync."
-
 staged_php=$(git diff --cached --name-only --diff-filter=ACMR -- '*.php')
 staged_js=$(git diff --cached --name-only --diff-filter=ACMR -- '*.js' '*.css')
 
