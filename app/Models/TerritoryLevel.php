@@ -11,6 +11,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Override;
 
+/**
+ * @property-read ?string $singular_name virtual, proxied through the active translation
+ * @property-read ?string $plural_name virtual, proxied through the active translation
+ */
 class TerritoryLevel extends Model implements TranslatableContract
 {
     use Translatable;

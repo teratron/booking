@@ -111,6 +111,40 @@ return [
         ],
     ],
 
+    'territories' => [
+        'title' => 'Территории',
+        'model_label' => 'территория',
+
+        'columns' => [
+            'name' => 'Название',
+            'level' => 'Уровень',
+            'country' => 'Страна',
+            'parent' => 'Родитель',
+            'active' => 'Активна',
+        ],
+
+        'status' => [
+            'active' => 'Активна',
+            'inactive' => 'Неактивна',
+        ],
+
+        'form' => [
+            'display_order' => 'Порядок отображения',
+            'name' => 'Название',
+            'slug' => 'URL-слаг',
+            'short_description' => 'Краткое описание',
+            'seo_title' => 'SEO-заголовок',
+        ],
+
+        'actions' => [
+            'reparent' => 'Перенести к другому родителю',
+            'new_parent' => 'Новая родительская территория',
+            'no_parent' => 'Нет — сделать корнем страны',
+            'reparent_confirm' => 'Перенос затронет дочерних территорий: :descendants, объектов: :objects.',
+            'cycle_refused' => 'Перенос отклонён',
+        ],
+    ],
+
     'modules' => [
         'title' => 'Модули',
         'model_label' => 'модуль',

@@ -111,6 +111,40 @@ return [
         ],
     ],
 
+    'territories' => [
+        'title' => 'Territories',
+        'model_label' => 'territory',
+
+        'columns' => [
+            'name' => 'Name',
+            'level' => 'Level',
+            'country' => 'Country',
+            'parent' => 'Parent',
+            'active' => 'Active',
+        ],
+
+        'status' => [
+            'active' => 'Active',
+            'inactive' => 'Inactive',
+        ],
+
+        'form' => [
+            'display_order' => 'Display order',
+            'name' => 'Name',
+            'slug' => 'URL slug',
+            'short_description' => 'Short description',
+            'seo_title' => 'SEO title',
+        ],
+
+        'actions' => [
+            'reparent' => 'Move to another parent',
+            'new_parent' => 'New parent territory',
+            'no_parent' => 'None — make this a country root',
+            'reparent_confirm' => 'This moves :descendants descendant territories and :objects attached objects.',
+            'cycle_refused' => 'Move refused',
+        ],
+    ],
+
     'modules' => [
         'title' => 'Modules',
         'model_label' => 'module',

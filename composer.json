@@ -69,11 +69,11 @@
         "analyse": "phpstan analyse --memory-limit=1G",
         "test": [
             "@php artisan config:clear --ansi",
-            "pest --exclude-group=slow"
+            "@php -d memory_limit=1G vendor/bin/pest --exclude-group=slow"
         ],
-        "test:arch": "pest --testsuite=Architecture",
+        "test:arch": "@php -d memory_limit=1G vendor/bin/pest --testsuite=Architecture",
         "test:coverage": "@php -d memory_limit=1G vendor/bin/pest --coverage --min=80 --exclude-group=slow",
-        "test:slow": "pest --group=slow",
+        "test:slow": "@php -d memory_limit=1G vendor/bin/pest --group=slow",
         "bench": "@php artisan bench:run",
         "unused": "composer-unused",
         "quality": [

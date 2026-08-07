@@ -38,12 +38,12 @@ final class RoleSeeder extends Seeder
             [
                 'key' => 'country_administrator', 'system' => true,
                 'name' => ['en' => 'Country Administrator', 'ru' => 'Администратор страны'],
-                'permissions' => ['object.*', 'content.*', 'moderation.*', 'user_management', 'admin_panel_access', 'audit.view'],
+                'permissions' => ['object.*', 'content.*', 'moderation.*', 'geography.*', 'user_management', 'admin_panel_access', 'audit.view'],
             ],
             [
                 'key' => 'region_administrator', 'system' => true,
                 'name' => ['en' => 'Region Administrator', 'ru' => 'Региональный администратор'],
-                'permissions' => ['object.view', 'object.edit', 'object.publish', 'content.view', 'content.edit', 'content.publish', 'admin_panel_access'],
+                'permissions' => ['object.view', 'object.edit', 'object.publish', 'content.view', 'content.edit', 'content.publish', 'geography.view', 'geography.edit', 'admin_panel_access'],
             ],
             [
                 'key' => 'moderator', 'system' => true,

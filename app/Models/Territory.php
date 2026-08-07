@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Concerns\TranslatableDefaults;
+use App\Policies\TerritoryPolicy;
 use Astrotomic\Translatable\Contracts\Translatable as TranslatableContract;
 use Astrotomic\Translatable\Translatable;
+use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -19,7 +21,13 @@ use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
  * `staudenmeir/laravel-adjacency-list`'s expected column name, so the
  * recursive subtree/ancestor queries this model exposes need no further
  * configuration.
+ *
+ * @property-read ?string $name virtual, proxied through the active translation
+ * @property-read ?string $slug virtual, proxied through the active translation
+ * @property ?int $parent_id
+ * @property int $country_id
  */
+#[UsePolicy(TerritoryPolicy::class)]
 class Territory extends Model implements TranslatableContract
 {
     use HasRecursiveRelationships;

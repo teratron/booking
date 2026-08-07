@@ -10,25 +10,25 @@
 
 ## Current Position
 
-- **Task:** Phase 2 Track A + T-2B01 + T-2D01 + T-2B02 done (8/25). T-2C01 (territory administration) is next — the only remaining task with no unmet dependency.
+- **Task:** Phase 2 Track A + T-2B01 + T-2D01 + T-2B02 + T-2C01 done (9/25). Track B (B03-B07), Track C (C02-C04), Track D (D02-D05) all remain, no cross-track blockers left.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral and unchanged by the pivot; the 3 L2 documents were rewritten. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Execute T-2C01 (territory administration); T-2B03/B04/B05/B06/B07 and T-2C02/C03/C04 and T-2D02+ all remain open within their tracks.
+- **Next Action:** Any of T-2B03/B04/B05/B06/B07, T-2C02/C03/C04, T-2D02+ — pick by track order (B → C ∥ D → T per phase-2.md).
 
 ## Progress
 
 ```
 Overall: [1/7] █░░░░░░░ 14%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1 archived, Phase 2 decomposed, 3-7 scoped
-Implementation: [21/21] Phase 1 DONE · [8/25] Phase 2 — Track A + object list/form + moderation resolution
+Implementation: [21/21] Phase 1 DONE · [9/25] Phase 2 — Track A + object list/form + moderation + territories
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-07 **Decision: `pragmarx/google2fa-laravel` removed** (user-authorized dependency cleanup). Filament's own MFA provider depends on `pragmarx/google2fa` directly and never called the Laravel wrapper; confirmed unused before removal, full suite green after. `CLAUDE.md`'s required-packages table updated.
-- 2026-08-07 **Decision: `ModerationModeResolver` and `ModuleResolver` stay separate**, reversing this phase's planning note. The two ladders diverge enough (module FK + dependency graph vs. no portal row at all) that unifying would force-fit an abstraction. **Plan gap surfaced:** no task decomposes a `moderation_settings` write screen; flagged for the next `/magic.task` pass.
-- 2026-08-07 **Decision: rooms & prices excluded from `T-2B02`'s object form**, matching `l1-back-office.md` §5.1's own separation of "Rooms & prices" from "Objects" into distinct back-office sections. No task in this phase claims that section either — second plan gap, alongside `moderation_settings`, both flagged rather than absorbed silently into whichever task touched them first.
+- 2026-08-07 **Decision: `ModerationModeResolver` and `ModuleResolver` stay separate**, reversing this phase's planning note. **Plan gap surfaced:** no task decomposes a `moderation_settings` write screen; flagged for the next `/magic.task` pass.
+- 2026-08-07 **Decision: rooms & prices excluded from `T-2B02`'s object form**, matching the spec's own separation of "Rooms & prices" from "Objects" into distinct back-office sections. No task claims that section either — second plan gap, flagged not absorbed.
+- 2026-08-07 **Decision: `territory_translations` gets a cached `full_slug_path` column** rather than computing it on read — matches the spec's own caching note and avoids a recursive walk per URL resolution. Recomputed on reparent and on any slug edit (own or ancestor's, since editing any territory recomputes its whole descendant set).
 
 ## Blockers
 
@@ -85,6 +85,8 @@ Implementation: [21/21] Phase 1 DONE · [8/25] Phase 2 — Track A + object list
   them as real null properties (`Concerns\TranslatableDefaults`).
 - **`make:migration` timestamps don't know about FK dependencies** — a table
   created before the one it references will fail; check dependency order first.
+- **Larastan types every `BelongsTo` as non-nullable** regardless of the FK's real nullability — a legitimate nullsafe (`?->`) on a genuinely-nullable relation gets flagged "unnecessary"; check the FK column directly instead of removing the nullsafe.
+- **`composer test`/`test:coverage`/`test:arch`/`test:slow` all run at a raised `memory_limit=1G`** — the suite outgrew PHP's 128 MB default as it passed ~190 tests.
 
 ## Session Continuity
 

@@ -64,7 +64,7 @@ Track D and the edge never becomes a stall.
 
 ### Track C — Geography, Taxonomy & Translations
 
-- [ ] [T-2C01] Territory administration with guarded reparenting
+- [x] [T-2C01] Territory administration with guarded reparenting
 - [ ] [T-2C02] Object type registry administration
 - [ ] [T-2C03] Language registry and the interface catalog editor
 - [ ] [T-2C04] Translation management and the untranslated-material report
@@ -224,11 +224,14 @@ Track D and the edge never becomes a stall.
 ### [T-2C01] Territory administration with guarded reparenting
 
 - **Spec:** l1-geography.md §5.5 (`[TZ]` §107); l1-moderation-governance.md §5.6
-- **Status:** Todo
+- **Status:** Done `[Bootstrap]`
 - **Assignment:** Agent
 - **Verify:** `docker compose exec app ./vendor/bin/pest --filter=TerritoryAdministration` proves an administrator can create and edit a territory at any depth setting every field named in §5.5 including per-language names and slugs; that reparenting a node with attached objects or descendants is refused until a confirmation naming both counts is acknowledged; that the confirmation counts are computed over the whole subtree, not the immediate children; that reparenting rewrites the denormalized country and the cached slug path for every descendant in one transaction; that a cycle-forming reparent is rejected; and that deactivating a territory removes it from navigation while leaving its objects attached and reachable by their own URLs.
+- **Changes:** New `moderation_settings`-sibling design decision reversed here too — a `full_slug_path` column added to `territory_translations` (nullable, cached per language) rather than a computed-on-read value, per the spec's own caching note. `TerritoryAdministrator` service: `blastRadius()` (whole-subtree counts), `reparent()` (cycle guard, denormalized-country cascade, slug-path recompute, one transaction), `recomputeSlugPaths()`. `TerritoryPolicy` bound; a new `geography` permission resource added to `PermissionSeeder` (the seeder's own docblock authorizes exactly this: growing the set when a new gate is written). Territory resource scoped on country **and** on the territory's own id — a region-scoped grant reaches every descendant through the same subtree-expansion `ScopeAuthorizer` already provides.
+- **Evidence:** `pest tests/Feature/Admin/TerritoryAdministrationTest.php` · exit 0 · 9 passed (28 assertions) — blast radius counts 2 descendants and 2 objects across a three-level subtree (not just immediate children); a reparent onto a grandchild or onto itself is refused; a cross-country reparent rewrites `country_id` on every descendant; slug paths recompute and contain every ancestor segment; the reparent journal entry carries both affected counts; deactivating a territory leaves its objects attached; a region-scoped grant reaches a resort two levels down and not a sibling region; the list renders a country-root territory (no parent) without crashing. Falsification: the cycle guard's descendant check was replaced with a hardcoded `false`; rather than merely failing an assertion, it produced a genuine infinite-recursion hang in Postgres (a real cycle in the adjacency-list CTE), which is stronger evidence of necessity than a clean test failure — the hung backend was terminated and the fix restored. `composer analyse && test && test:coverage && audit && unused` · exit 0 · PHPStan level 8 zero errors; Pest 190 passed; coverage 91.5%; no advisories; no unused packages. `migrate:fresh --seed` applies cleanly.
 - **Handoff:** Phase 5's territory landing pages consume the slug paths this task maintains.
 - **Notes:** Subtree counts and descendant rewrites go through `staudenmeir/laravel-adjacency-list` recursive CTEs; a per-node walk at this depth is the wrong cost and the seeded 6,270-territory tree will show it. `country` is denormalized onto every node deliberately, which means reparenting across a country boundary has to repair it — the field is immutable in practice, not immutable in fact.
+- **Execution findings:** Two platform quirks worth keeping in mind for later resource tasks. (1) Larastan types every `BelongsTo` relation as non-nullable regardless of the foreign key's own nullability — it flags a legitimate nullsafe operator (`$territory->parent?->name`, where `parent_id` genuinely can be null for a country root) as "unnecessary." Silencing it by removing the nullsafe would have been a real regression; the fix checks the foreign key column directly instead, which Larastan does understand as nullable. (2) `composer test` itself — not only `composer test:coverage` — began exhausting PHP's 128 MB default as the suite passed 190 tests; the `test`, `test:arch`, and `test:slow` scripts now all raise the limit the same way `test:coverage` already did.
 
 ### [T-2C02] Object type registry administration
 
