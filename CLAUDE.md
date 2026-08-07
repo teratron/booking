@@ -37,7 +37,7 @@ Each maps to a specification requirement — do not hand-build what these alread
 | `laravel/sanctum` | API tokens |
 | `laravel/horizon` | Queue monitoring |
 | `laravel/scout` | Search abstraction (Postgres driver first, Typesense later) |
-| `pragmarx/google2fa-laravel` | Two-factor authentication |
+| `filament/filament`'s native multi-factor auth | Two-factor authentication — built on `pragmarx/google2fa`, which Filament already depends on directly; the separate `pragmarx/google2fa-laravel` wrapper (facade, config, middleware) was removed as dead weight once the panel was wired to the native implementation instead |
 | Filament import/export actions | XLSX / CSV import and export |
 
 ## Project Structure

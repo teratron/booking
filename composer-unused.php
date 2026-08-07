@@ -19,13 +19,5 @@ return static function (Configuration $config): Configuration {
         // ships with the schema and the package is named in the project's
         // required set. Remove this filter when the first token-guarded route
         // is added; the scanner will then see the usage itself.
-        ->addNamedFilter(NamedFilter::fromString('laravel/sanctum'))
-
-        // Supplies the TOTP facade and middleware for Laravel. The panel
-        // toolkit ships its own multi-factor implementation over the same
-        // underlying `pragmarx/google2fa` algorithm package, and that is what
-        // the staff panel uses — so the Laravel wrapper is currently carried
-        // rather than called. Flagged for removal review: nothing in the
-        // requirements needs the facade if the toolkit's implementation holds.
-        ->addNamedFilter(NamedFilter::fromString('pragmarx/google2fa-laravel'));
+        ->addNamedFilter(NamedFilter::fromString('laravel/sanctum'));
 };
