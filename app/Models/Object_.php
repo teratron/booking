@@ -27,6 +27,8 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * `Cannot use "Object" as a class name as it is reserved`), so this is the
  * closest valid name to the table and the domain vocabulary, not a
  * deliberate rename.
+ *
+ * @property-read ?string $name virtual, proxied through the active translation
  */
 #[UsePolicy(Object_Policy::class)]
 class Object_ extends Model implements AuditableContract, HasMedia, TranslatableContract

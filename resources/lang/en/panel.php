@@ -74,6 +74,28 @@ return [
             'contact' => 'Phone, email or messenger',
         ],
 
+        'bulk' => [
+            'publish' => 'Publish',
+            'hide' => 'Hide',
+            'draft' => 'Set to draft',
+            'archive' => 'Archive',
+            'assign_promotion_label' => 'Assign promotional label',
+            'move_territory' => 'Move to another territory',
+            'assign_manager' => 'Assign a manager',
+            'notify_owners' => 'Notify owners',
+            'export' => 'Export selection',
+            'promotion_label' => 'Promotional label',
+            'starts_at' => 'Starts on',
+            'ends_at' => 'Ends on',
+            'territory' => 'Target territory',
+            'manager' => 'Manager',
+            'notification_title' => 'Message title',
+            'notification_body' => 'Message body',
+            'queued' => 'Queued for processing. You will be notified once it completes.',
+            'completed' => 'Done.',
+            'scope_denied' => 'Selection refused',
+        ],
+
         'form' => [
             'tabs' => [
                 'core' => 'Core information',

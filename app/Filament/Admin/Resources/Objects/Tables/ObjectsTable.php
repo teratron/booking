@@ -4,16 +4,30 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources\Objects\Tables;
 
+use App\Exceptions\BulkSelectionScopeException;
+use App\Filament\Admin\Support\CountedBulkAction;
+use App\Jobs\ExecuteObjectBulkActionJob;
 use App\Models\Country;
 use App\Models\Object_;
 use App\Models\ObjectType;
+use App\Models\PromotionLabel;
+use App\Models\Territory;
+use App\Models\User;
+use App\Services\Objects\ObjectBulkActionService;
+use App\Services\Settings\SettingsRepository;
 use Filament\Actions\EditAction;
+use Filament\Facades\Filament;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * The object list, carrying every dimension the requirements name for it.
@@ -35,6 +49,7 @@ class ObjectsTable
             ->columns(self::columns())
             ->filters(self::filters())
             ->recordActions([EditAction::make()])
+            ->groupedBulkActions(self::bulkActions())
             ->defaultSort('updated_at', 'desc');
     }
 
@@ -160,5 +175,234 @@ class ObjectsTable
                     );
                 }),
         ];
+    }
+
+    /**
+     * Nine bulk actions, grouped under one toolbar dropdown. Publish, hide,
+     * and set-to-draft are three thin wrappers around the single
+     * `change_status` operation the service exposes — the fixed `status`
+     * parameter is the only thing distinguishing them, mirroring how the
+     * single-object edit page collapses the same three transitions onto one
+     * status-changing method.
+     *
+     * @return list<CountedBulkAction>
+     */
+    private static function bulkActions(): array
+    {
+        return [
+            self::publishBulkAction(),
+            self::hideBulkAction(),
+            self::draftBulkAction(),
+            self::archiveBulkAction(),
+            self::assignPromotionLabelBulkAction(),
+            self::moveTerritoryBulkAction(),
+            self::assignManagerBulkAction(),
+            self::notifyOwnersBulkAction(),
+            self::exportBulkAction(),
+        ];
+    }
+
+    private static function publishBulkAction(): CountedBulkAction
+    {
+        return CountedBulkAction::make('publish')
+            ->label(__('panel.objects.bulk.publish'))
+            ->authorize(fn (): bool => (bool) auth()->user()?->can('object.publish'))
+            ->action(fn (Collection $records) => self::runBulkOperation(
+                $records,
+                'change_status',
+                ['status' => 'published'],
+            ));
+    }
+
+    private static function hideBulkAction(): CountedBulkAction
+    {
+        return CountedBulkAction::make('hide')
+            ->label(__('panel.objects.bulk.hide'))
+            ->authorize(fn (): bool => (bool) auth()->user()?->can('object.edit'))
+            ->action(fn (Collection $records) => self::runBulkOperation(
+                $records,
+                'change_status',
+                ['status' => 'hidden'],
+            ));
+    }
+
+    private static function draftBulkAction(): CountedBulkAction
+    {
+        return CountedBulkAction::make('draft')
+            ->label(__('panel.objects.bulk.draft'))
+            ->authorize(fn (): bool => (bool) auth()->user()?->can('object.edit'))
+            ->action(fn (Collection $records) => self::runBulkOperation(
+                $records,
+                'change_status',
+                ['status' => 'draft'],
+            ));
+    }
+
+    private static function archiveBulkAction(): CountedBulkAction
+    {
+        return CountedBulkAction::make('archive')
+            ->label(__('panel.objects.bulk.archive'))
+            ->authorize(fn (): bool => (bool) auth()->user()?->can('object.delete'))
+            ->action(fn (Collection $records) => self::runBulkOperation($records, 'archive', []));
+    }
+
+    private static function assignPromotionLabelBulkAction(): CountedBulkAction
+    {
+        return CountedBulkAction::make('assign_promotion_label')
+            ->label(__('panel.objects.bulk.assign_promotion_label'))
+            ->authorize(fn (): bool => (bool) auth()->user()?->can('object.edit'))
+            ->schema([
+                Select::make('promotion_label_id')
+                    ->label(__('panel.objects.bulk.promotion_label'))
+                    ->options(fn (): array => PromotionLabel::query()
+                        ->where('is_active', true)
+                        ->with('translations')
+                        ->get()
+                        ->mapWithKeys(fn (PromotionLabel $label): array => [$label->id => $label->text ?? "#{$label->id}"])
+                        ->all())
+                    ->required(),
+                DatePicker::make('starts_at')
+                    ->label(__('panel.objects.bulk.starts_at'))
+                    ->required(),
+                DatePicker::make('ends_at')
+                    ->label(__('panel.objects.bulk.ends_at'))
+                    ->required(),
+            ])
+            ->action(fn (Collection $records, array $data) => self::runBulkOperation($records, 'assign_promotion_label', [
+                'promotion_label_id' => (int) $data['promotion_label_id'],
+                'starts_at' => $data['starts_at'],
+                'ends_at' => $data['ends_at'],
+            ]));
+    }
+
+    private static function moveTerritoryBulkAction(): CountedBulkAction
+    {
+        return CountedBulkAction::make('move_territory')
+            ->label(__('panel.objects.bulk.move_territory'))
+            ->authorize(fn (): bool => (bool) auth()->user()?->can('object.edit'))
+            ->schema([
+                Select::make('territory_id')
+                    ->label(__('panel.objects.bulk.territory'))
+                    ->options(fn (): array => Territory::query()->with('translations')->get()
+                        ->mapWithKeys(fn (Territory $territory): array => [$territory->id => $territory->name ?? "#{$territory->id}"])
+                        ->all())
+                    ->required()
+                    ->searchable(),
+            ])
+            ->action(fn (Collection $records, array $data) => self::runBulkOperation($records, 'move_territory', [
+                'territory_id' => (int) $data['territory_id'],
+            ]));
+    }
+
+    private static function assignManagerBulkAction(): CountedBulkAction
+    {
+        return CountedBulkAction::make('assign_manager')
+            ->label(__('panel.objects.bulk.assign_manager'))
+            ->authorize(fn (): bool => (bool) auth()->user()?->can('object.edit'))
+            ->schema([
+                Select::make('manager_id')
+                    ->label(__('panel.objects.bulk.manager'))
+                    ->options(fn (): array => User::query()->pluck('name', 'id')->all())
+                    ->required()
+                    ->searchable(),
+            ])
+            ->action(fn (Collection $records, array $data) => self::runBulkOperation($records, 'assign_manager', [
+                'manager_id' => (int) $data['manager_id'],
+            ]));
+    }
+
+    /**
+     * Always queued: creating one notification row per selected object is
+     * cheap, but the operation's cost belongs off the request thread on the
+     * same grounds `export` does — a bulk administrative action a browser
+     * tab should not be made to wait on.
+     */
+    private static function notifyOwnersBulkAction(): CountedBulkAction
+    {
+        return CountedBulkAction::make('notify_owners')
+            ->label(__('panel.objects.bulk.notify_owners'))
+            ->authorize(fn (): bool => (bool) auth()->user()?->can('object.edit'))
+            ->schema([
+                TextInput::make('title')
+                    ->label(__('panel.objects.bulk.notification_title'))
+                    ->required(),
+                Textarea::make('body')
+                    ->label(__('panel.objects.bulk.notification_body'))
+                    ->required(),
+            ])
+            ->action(fn (Collection $records, array $data) => self::runBulkOperation($records, 'notify_owners', [
+                'title' => $data['title'],
+                'body' => $data['body'],
+            ], forceQueue: true));
+    }
+
+    /**
+     * Always queued: a CSV write over the whole selection is exactly the
+     * cost a request thread should not carry, regardless of how small the
+     * selection happens to be.
+     */
+    private static function exportBulkAction(): CountedBulkAction
+    {
+        return CountedBulkAction::make('export')
+            ->label(__('panel.objects.bulk.export'))
+            ->authorize(fn (): bool => (bool) auth()->user()?->can('object.export'))
+            ->action(fn (Collection $records) => self::runBulkOperation($records, 'export', [], forceQueue: true));
+    }
+
+    /**
+     * Runs one bulk operation over the selected records — inline through
+     * {@see ObjectBulkActionService::execute()} when the selection sits at or
+     * under the configured threshold, or handed to the queued job above it.
+     * A whole-selection scope failure is caught here rather than left to
+     * surface as a request error: the administrator who triggered it needs
+     * to see why nothing happened, not a generic failure page.
+     *
+     * @param  Collection<int, Object_>  $records
+     * @param  array<string, mixed>  $parameters
+     */
+    private static function runBulkOperation(
+        Collection $records,
+        string $operation,
+        array $parameters,
+        bool $forceQueue = false,
+    ): void {
+        $actor = Filament::auth()->user();
+
+        if (! $actor instanceof User) {
+            return;
+        }
+
+        /** @var list<int> $objectIds */
+        $objectIds = $records->modelKeys();
+
+        $threshold = (int) app(SettingsRepository::class)->get('back_office.bulk_queue_threshold');
+
+        if ($forceQueue || count($objectIds) > $threshold) {
+            ExecuteObjectBulkActionJob::dispatch($operation, $objectIds, $parameters, $actor->id);
+
+            Notification::make()
+                ->title(__('panel.objects.bulk.queued'))
+                ->success()
+                ->send();
+
+            return;
+        }
+
+        try {
+            app(ObjectBulkActionService::class)->execute($operation, $objectIds, $parameters, $actor);
+        } catch (BulkSelectionScopeException $exception) {
+            Notification::make()
+                ->danger()
+                ->title(__('panel.objects.bulk.scope_denied'))
+                ->body($exception->getMessage())
+                ->send();
+
+            return;
+        }
+
+        Notification::make()
+            ->title(__('panel.objects.bulk.completed'))
+            ->success()
+            ->send();
     }
 }

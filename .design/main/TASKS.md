@@ -30,7 +30,7 @@ archival would have overwritten them.
 | Phase | Description | Status |
 | --- | --- | --- |
 | [Phase 1](archives/tasks/phase-1.md) | Foundation, schema, registries, scoped authorization, module gating, quality gates | `Done (Archived)` |
-| [Phase 2](tasks/phase-2.md) | Back office core — staff panel, objects, owners, geography, taxonomy, moderation, action journal | `In Progress` (10/25) |
+| [Phase 2](tasks/phase-2.md) | Back office core — staff panel, objects, owners, geography, taxonomy, moderation, action journal | `In Progress` (11/25) |
 | [Phase 3](tasks/phase-3.md) | Commerce, advertising, analytics ingest, notifications, content pipeline | `Todo` |
 | [Phase 4](tasks/phase-4.md) | Owner cabinet — the second Filament panel, owner-scoped throughout | `Todo` |
 | [Phase 5](tasks/phase-5.md) | Public site — shell, home, catalog, object profile, territory pages, built from Figma | `Todo` |

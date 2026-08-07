@@ -91,6 +91,13 @@ final class SettingsRegistry
             new SettingDefinition('moderation.partial_acceptance_enabled', 'moderation', 'bool', false),
             new SettingDefinition('moderation.stale_object_days', 'moderation', 'int', 180),
 
+            // Above this many selected records, a bulk operation dispatches
+            // to a queued job instead of running inline in the request —
+            // the inline path is a fine default for the ordinary case, but
+            // a request that blocks on thousands of row mutations is the
+            // wrong cost to impose on an administrator's browser tab.
+            new SettingDefinition('back_office.bulk_queue_threshold', 'back_office', 'int', 1000),
+
             new SettingDefinition('availability.confirmation_period_days', 'availability', 'int', 14),
             // Off by default: resetting a stale "no vacancies" back to
             // "available" manufactures exactly the false claim the feature
