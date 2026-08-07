@@ -7,15 +7,15 @@ owner's phone or messenger. Revenue is paid placement sold to object owners.
 ## Tech Stack
 
 - **Language**: PHP 8.5+, `declare(strict_types=1)` in every file.
-- **Framework**: Laravel 13 — monolith. Blade + Livewire 4 for the public site; no separate frontend application.
-- **Admin & owner cabinet**: Filament 5 — two panels from one toolkit (`/admin` for staff, `/cabinet` for object owners).
-- **Database**: PostgreSQL 18 + PostGIS. Extensions: `postgis`, `pg_trgm`, `unaccent`.
-- **Cache / queue / session**: Redis 8; queues via Laravel Horizon.
+- **Framework**: Laravel 13+ — monolith. Blade + Livewire 4+ for the public site; no separate frontend application.
+- **Admin & owner cabinet**: Filament 5+ — two panels from one toolkit (`/admin` for staff, `/cabinet` for object owners).
+- **Database**: PostgreSQL 18+ + PostGIS. Extensions: `postgis`, `pg_trgm`, `unaccent`.
+- **Cache / queue / session**: Redis 8+; queues via Laravel Horizon.
 - **Object storage**: S3-compatible (MinIO locally, Cloudflare R2 / Backblaze B2 in production).
-- **Frontend**: Blade + Livewire 4 + Alpine.js + Tailwind CSS 4, bundled by Vite.
+- **Frontend**: Blade + Livewire 4+ + Alpine.js + Tailwind CSS 4+, bundled by Vite.
 - **Maps**: MapLibre GL JS with a paid or self-hosted tile provider.
 - **Package manager**: Composer (PHP), pnpm (asset pipeline only).
-- **Quality**: Pest (tests), PHPStan level 8 via Larastan, Laravel Pint (formatting), Rector (upgrades).
+- **Quality**: Pest (tests), PHPStan level 8+ via Larastan, Laravel Pint (formatting), Rector (upgrades).
 
 Always install the latest stable release of every package; do not pin back a major
 version as a precaution.
