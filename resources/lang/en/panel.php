@@ -73,6 +73,42 @@ return [
         'filters' => [
             'contact' => 'Phone, email or messenger',
         ],
+
+        'form' => [
+            'tabs' => [
+                'core' => 'Core information',
+                'geography' => 'Geography',
+                'seo' => 'SEO',
+                'contacts' => 'Contacts',
+                'services' => 'Services',
+                'owner_staff' => 'Owner & staff',
+            ],
+            'name' => 'Name',
+            'short_description' => 'Short description',
+            'full_description' => 'Full description',
+            'address' => 'Address',
+            'seo_slug' => 'URL slug',
+            'seo_title' => 'SEO title',
+            'seo_description' => 'SEO description',
+            'contact_value' => 'Value',
+            'contact_label' => 'Label',
+            'out_of_scope' => 'This country or category is outside your assigned scope.',
+        ],
+
+        'lifecycle' => [
+            'save_as_draft' => 'Save as draft',
+            'publish' => 'Publish',
+            'hide' => 'Hide',
+            'return_for_revision' => 'Return for revision',
+            'archive' => 'Archive',
+            'restore' => 'Restore',
+            'duplicate' => 'Duplicate',
+            'transfer_ownership' => 'Transfer ownership',
+            'applied' => 'Done.',
+            'section' => 'Section needing revision',
+            'reason' => 'Reason',
+            'new_owner' => 'New owner',
+        ],
     ],
 
     'modules' => [

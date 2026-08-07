@@ -73,6 +73,42 @@ return [
         'filters' => [
             'contact' => 'Телефон, email или мессенджер',
         ],
+
+        'form' => [
+            'tabs' => [
+                'core' => 'Основная информация',
+                'geography' => 'География',
+                'seo' => 'SEO',
+                'contacts' => 'Контакты',
+                'services' => 'Услуги',
+                'owner_staff' => 'Владелец и сотрудники',
+            ],
+            'name' => 'Название',
+            'short_description' => 'Краткое описание',
+            'full_description' => 'Полное описание',
+            'address' => 'Адрес',
+            'seo_slug' => 'URL-слаг',
+            'seo_title' => 'SEO-заголовок',
+            'seo_description' => 'SEO-описание',
+            'contact_value' => 'Значение',
+            'contact_label' => 'Подпись',
+            'out_of_scope' => 'Эта страна или категория вне вашей зоны ответственности.',
+        ],
+
+        'lifecycle' => [
+            'save_as_draft' => 'Сохранить как черновик',
+            'publish' => 'Опубликовать',
+            'hide' => 'Скрыть',
+            'return_for_revision' => 'Вернуть на доработку',
+            'archive' => 'В архив',
+            'restore' => 'Восстановить',
+            'duplicate' => 'Дублировать',
+            'transfer_ownership' => 'Передать владельцу',
+            'applied' => 'Готово.',
+            'section' => 'Раздел, требующий доработки',
+            'reason' => 'Причина',
+            'new_owner' => 'Новый владелец',
+        ],
     ],
 
     'modules' => [

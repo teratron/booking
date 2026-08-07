@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources\Objects;
 
+use App\Filament\Admin\Resources\Objects\Pages\CreateObject;
+use App\Filament\Admin\Resources\Objects\Pages\EditObject;
 use App\Filament\Admin\Resources\Objects\Pages\ListObjects;
+use App\Filament\Admin\Resources\Objects\Schemas\ObjectForm;
 use App\Filament\Admin\Resources\Objects\Tables\ObjectsTable;
 use App\Filament\Admin\Support\ScopedResource;
 use App\Models\Object_;
 use BackedEnum;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use UnitEnum;
@@ -73,11 +77,18 @@ class ObjectResource extends ScopedResource
         return ObjectsTable::configure(self::applyTableDefaults($table));
     }
 
+    public static function form(Schema $schema): Schema
+    {
+        return ObjectForm::configure($schema);
+    }
+
     /** @return array<string, mixed> */
     public static function getPages(): array
     {
         return [
             'index' => ListObjects::route('/'),
+            'create' => CreateObject::route('/create'),
+            'edit' => EditObject::route('/{record}/edit'),
         ];
     }
 }

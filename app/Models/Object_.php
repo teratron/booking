@@ -11,6 +11,7 @@ use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Override;
@@ -114,6 +115,30 @@ class Object_ extends Model implements AuditableContract, HasMedia, Translatable
      */
     public function contactChannels(): HasMany
     {
-        return $this->hasMany(ContactChannel::class);
+        // Explicit FK, not the package convention: guessed from the class
+        // name `Object_`, Laravel's own convention would look for the
+        // malformed `object__id` (the trailing underscore doubled by the
+        // relation helper's own `_id` suffix) — the same pitfall the
+        // translation relations on this model are already declared against.
+        return $this->hasMany(ContactChannel::class, 'object_id');
+    }
+
+    /**
+     * @return BelongsToMany<Amenity, $this>
+     */
+    public function amenities(): BelongsToMany
+    {
+        // Explicit pivot keys for the same reason contactChannels() needs an
+        // explicit FK: Laravel would guess this model's own pivot column as
+        // `object__id`, not `object_id`.
+        return $this->belongsToMany(Amenity::class, 'amenity_object', 'object_id', 'amenity_id');
+    }
+
+    /**
+     * @return BelongsToMany<User, $this>
+     */
+    public function staff(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'object_user', 'object_id', 'user_id')->withPivot('permissions');
     }
 }

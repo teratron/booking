@@ -10,26 +10,25 @@
 
 ## Current Position
 
-- **Task:** Phase 2 Track A + T-2B01 + T-2D01 done (7/25). T-2B02 and T-2C01 now unblocked, run next.
+- **Task:** Phase 2 Track A + T-2B01 + T-2D01 + T-2B02 done (8/25). T-2C01 (territory administration) is next — the only remaining task with no unmet dependency.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral and unchanged by the pivot; the 3 L2 documents were rewritten. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Execute T-2B02 (object form) and T-2C01 (territory administration) in parallel; both were blocked only on T-2D01, now clear.
+- **Next Action:** Execute T-2C01 (territory administration); T-2B03/B04/B05/B06/B07 and T-2C02/C03/C04 and T-2D02+ all remain open within their tracks.
 
 ## Progress
 
 ```
 Overall: [1/7] █░░░░░░░ 14%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1 archived, Phase 2 decomposed, 3-7 scoped
-Implementation: [21/21] Phase 1 DONE · [7/25] Phase 2 — Track A + object list + moderation resolution
+Implementation: [21/21] Phase 1 DONE · [8/25] Phase 2 — Track A + object list/form + moderation resolution
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-05 **Decision: plan generated in Bootstrap mode.** No specification reached `Stable`. `RFC → Stable` promotion stays **withheld** — `RULES.md` §2 requires no open questions and the set carries twenty inline TBDs.
-- 2026-08-06 **Decision: field-level partial acceptance of a moderated change set is implemented behind a portal setting, defaulting off** (`T-2D03`). The client specification marks it optional and the snapshot model already supports it, so gating costs a setting read rather than a redesign.
-- 2026-08-07 **Decision: `pragmarx/google2fa-laravel` removed** (user-authorized dependency cleanup). Filament's own MFA provider depends on `pragmarx/google2fa` directly and never called the Laravel wrapper's facade/middleware; confirmed unused before removal, full suite green after. `CLAUDE.md`'s required-packages table updated to match.
-- 2026-08-07 **Decision: `ModerationModeResolver` and `ModuleResolver` stay separate**, reversing this phase's own planning note that predicted one shared service. Built concretely, the two ladders diverge enough (module_settings carries a module FK plus dependency-graph walking; moderation_settings has no portal row at all, unlike module_settings) that unifying them would force an abstraction to fit. **Plan gap surfaced, not filled unilaterally:** no task in this phase decomposes an admin write screen for `moderation_settings`; the natural write points (object form, owner management, category registry) don't claim it either. Flagged for the next `/magic.task` pass rather than invented here.
+- 2026-08-07 **Decision: `pragmarx/google2fa-laravel` removed** (user-authorized dependency cleanup). Filament's own MFA provider depends on `pragmarx/google2fa` directly and never called the Laravel wrapper; confirmed unused before removal, full suite green after. `CLAUDE.md`'s required-packages table updated.
+- 2026-08-07 **Decision: `ModerationModeResolver` and `ModuleResolver` stay separate**, reversing this phase's planning note. The two ladders diverge enough (module FK + dependency graph vs. no portal row at all) that unifying would force-fit an abstraction. **Plan gap surfaced:** no task decomposes a `moderation_settings` write screen; flagged for the next `/magic.task` pass.
+- 2026-08-07 **Decision: rooms & prices excluded from `T-2B02`'s object form**, matching `l1-back-office.md` §5.1's own separation of "Rooms & prices" from "Objects" into distinct back-office sections. No task in this phase claims that section either — second plan gap, alongside `moderation_settings`, both flagged rather than absorbed silently into whichever task touched them first.
 
 ## Blockers
 

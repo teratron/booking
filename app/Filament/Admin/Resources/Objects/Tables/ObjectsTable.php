@@ -7,6 +7,7 @@ namespace App\Filament\Admin\Resources\Objects\Tables;
 use App\Models\Country;
 use App\Models\Object_;
 use App\Models\ObjectType;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
@@ -33,6 +34,7 @@ class ObjectsTable
         return $table
             ->columns(self::columns())
             ->filters(self::filters())
+            ->recordActions([EditAction::make()])
             ->defaultSort('updated_at', 'desc');
     }
 
