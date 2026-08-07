@@ -4,32 +4,32 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-07 14:20
+**Updated:** 2026-08-07 15:10
 **Phase:** 2 — Back Office Core
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Phase 2 Track A + T-2B01 + T-2D01 + T-2B02 + T-2C01 + T-2C02 + T-2B03 done (11/25). Track B (B04-B07), Track C (C03-C04), Track D (D02-D05) all remain, no cross-track blockers left.
+- **Task:** Phase 2 Track A + T-2B01 + T-2D01 + T-2B02 + T-2C01 + T-2C02 + T-2B03 + T-2B04 done (12/25). Track B (B05-B07), Track C (C03-C04), Track D (D02-D05) all remain, no cross-track blockers left.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral and unchanged by the pivot; the 3 L2 documents were rewritten. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Any of T-2B04/B05/B06/B07, T-2C03/C04, T-2D02+ — pick by track order (B → C ∥ D → T per phase-2.md).
+- **Next Action:** Any of T-2B05/B06/B07, T-2C03/C04, T-2D02+ — pick by track order (B → C ∥ D → T per phase-2.md).
 
 ## Progress
 
 ```
 Overall: [1/7] █░░░░░░░ 14%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1 archived, Phase 2 decomposed, 3-7 scoped
-Implementation: [21/21] Phase 1 DONE · [11/25] Phase 2 — Track A + object list/form/bulk + moderation + territories + object types
+Implementation: [21/21] Phase 1 DONE · [12/25] Phase 2 — Track A + object list/form/bulk + owners + moderation + territories + object types
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
+- 2026-08-07 **Decision: a blocked owner's "session termination" is enforced via `canAccessPanel()`**, re-checked by Filament on every request, rather than by hunting down Redis-backed session keys (this project's session store has no per-user index to walk). Also: `objects.owner_id` is now nullable with `ON DELETE SET NULL` — "ownerless" is a real, renderable state, not data loss.
 - 2026-08-07 **Decision: `T-2B03`'s bulk actions collapse "assign a promotional caption" and "change border colour" into one operation** — border colour is a property of the `promotion_labels` row an administrator picks, not an independent per-object field. "Change package" excluded from this task; placement/package mechanics stay a distinct later concern.
 - 2026-08-07 **Decision: `T-2C02`'s `attribute_schema` renders straight onto `objects.attributes`**, a JSONB array-cast column rather than a relation — no translation-style reconciliation step needed, unlike every other per-language field on the object form.
 - 2026-08-07 **Decision: `ModerationModeResolver` and `ModuleResolver` stay separate**, reversing this phase's planning note. **Plan gap surfaced:** no task decomposes a `moderation_settings` write screen; flagged for the next `/magic.task` pass.
-- 2026-08-07 **Decision: rooms & prices excluded from `T-2B02`'s object form**, matching the spec's own separation of "Rooms & prices" from "Objects" into distinct back-office sections. No task claims that section either — second plan gap, flagged not absorbed.
 
 ## Blockers
 

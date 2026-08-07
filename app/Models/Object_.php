@@ -29,6 +29,8 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * deliberate rename.
  *
  * @property-read ?string $name virtual, proxied through the active translation
+ * @property ?int $owner_id null once an owner has been deliberately detached, or
+ *                          whenever a user row backing a previous owner is removed
  */
 #[UsePolicy(Object_Policy::class)]
 class Object_ extends Model implements AuditableContract, HasMedia, TranslatableContract

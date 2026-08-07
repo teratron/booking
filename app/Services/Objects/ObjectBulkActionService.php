@@ -369,6 +369,13 @@ final class ObjectBulkActionService
 
         DB::transaction(function () use ($objects, $title, $body, $notificationTypeId, $locale, $actor): void {
             foreach ($objects as $object) {
+                // An ownerless object has no one to notify — recipient_id on
+                // the notifications table is not nullable, so this is a
+                // silent skip, not a failure of the whole batch.
+                if ($object->owner_id === null) {
+                    continue;
+                }
+
                 Notification::query()->create([
                     'recipient_id' => $object->owner_id,
                     'notification_type_id' => $notificationTypeId,

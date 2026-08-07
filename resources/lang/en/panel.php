@@ -134,6 +134,62 @@ return [
         ],
     ],
 
+    'owners' => [
+        'title' => 'Owners',
+        'model_label' => 'owner',
+
+        'columns' => [
+            'name' => 'Name',
+            'company' => 'Company',
+            'phone' => 'Phone',
+            'email' => 'Email',
+            'country' => 'Country',
+            'objects_count' => 'Objects',
+            'overdue_placements' => 'Overdue placements',
+            'registered_at' => 'Registered',
+            'last_sign_in_at' => 'Last sign-in',
+            'status' => 'Status',
+        ],
+
+        'status' => [
+            'active' => 'Active',
+            'blocked' => 'Blocked',
+        ],
+
+        'filters' => [
+            'status_all' => 'All',
+        ],
+
+        'form' => [
+            'name' => 'Name',
+            'email' => 'Email',
+            'company' => 'Company',
+            'phone' => 'Phone',
+            'country' => 'Country',
+            'out_of_scope' => 'This country is outside your assigned scope.',
+        ],
+
+        'actions' => [
+            'block' => 'Block',
+            'block_confirm' => 'This refuses the account admission to every panel until restored.',
+            'restore' => 'Restore',
+            'restore_confirm' => 'This lifts the suspension and restores panel access.',
+            'send_password_reset_link' => 'Send password reset link',
+            'password_reset_link_sent' => 'Password reset link sent.',
+            'applied' => 'Done.',
+        ],
+
+        'objects' => [
+            'title' => 'Attached objects',
+            'attach' => 'Attach object',
+            'object' => 'Object',
+            'detach' => 'Detach',
+            'detach_confirm' => 'This clears the object\'s owner. It becomes ownerless until reassigned.',
+            'detachment_refused' => 'Detachment refused',
+            'applied' => 'Done.',
+        ],
+    ],
+
     'territories' => [
         'title' => 'Territories',
         'model_label' => 'territory',
