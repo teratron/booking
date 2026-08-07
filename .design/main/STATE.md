@@ -10,25 +10,26 @@
 
 ## Current Position
 
-- **Task:** Phase 2 Track A complete plus T-2B01 (6/25). Tracks B, C, D are now unblocked and three-wide parallel.
+- **Task:** Phase 2 Track A + T-2B01 + T-2D01 done (7/25). T-2B02 and T-2C01 now unblocked, run next.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral and unchanged by the pivot; the 3 L2 documents were rewritten. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Execute T-2D01 first — moderation mode resolution is a declared prerequisite of T-2B02's return-for-revision action. Then T-2B02 and T-2C01 run in parallel.
+- **Next Action:** Execute T-2B02 (object form) and T-2C01 (territory administration) in parallel; both were blocked only on T-2D01, now clear.
 
 ## Progress
 
 ```
 Overall: [1/7] █░░░░░░░ 14%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1 archived, Phase 2 decomposed, 3-7 scoped
-Implementation: [21/21] Phase 1 DONE · [6/25] Phase 2 — Track A DONE + object list
+Implementation: [21/21] Phase 1 DONE · [7/25] Phase 2 — Track A + object list + moderation resolution
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-05 **Decision: plan generated in Bootstrap mode.** No specification reached `Stable`, so the C6 default (plan only `Stable`, backlog the rest) would have produced an empty plan. The Bootstrap Exception applies. `RFC → Stable` promotion stays **withheld** — `RULES.md` §2 requires no open questions and the set carries twenty inline TBDs.
-- 2026-08-06 **Decision: Phase 2's Track A is a hard gate, not a suggestion.** `T-2A02` (shared resource contract — policy binding, scope narrowing, persisted filters, unsaved-change guard, counted bulk confirmation) is upstream of all 22 remaining tasks. Tracks B/C/D are three-wide parallel only after it lands; a contract changed after ten resources adopt it is a ten-file rewrite. One cross-track edge is scheduled rather than discovered: `T-2D01` before `T-2B02`.
-- 2026-08-06 **Decision: field-level partial acceptance of a moderated change set is implemented behind a portal setting, defaulting off** (`T-2D03`). The client specification marks it optional and the snapshot model already supports it, so gating costs a setting read rather than a redesign. Whole-request-only would remove the setting and move nothing else.
+- 2026-08-05 **Decision: plan generated in Bootstrap mode.** No specification reached `Stable`. `RFC → Stable` promotion stays **withheld** — `RULES.md` §2 requires no open questions and the set carries twenty inline TBDs.
+- 2026-08-06 **Decision: field-level partial acceptance of a moderated change set is implemented behind a portal setting, defaulting off** (`T-2D03`). The client specification marks it optional and the snapshot model already supports it, so gating costs a setting read rather than a redesign.
+- 2026-08-07 **Decision: `pragmarx/google2fa-laravel` removed** (user-authorized dependency cleanup). Filament's own MFA provider depends on `pragmarx/google2fa` directly and never called the Laravel wrapper's facade/middleware; confirmed unused before removal, full suite green after. `CLAUDE.md`'s required-packages table updated to match.
+- 2026-08-07 **Decision: `ModerationModeResolver` and `ModuleResolver` stay separate**, reversing this phase's own planning note that predicted one shared service. Built concretely, the two ladders diverge enough (module_settings carries a module FK plus dependency-graph walking; moderation_settings has no portal row at all, unlike module_settings) that unifying them would force an abstraction to fit. **Plan gap surfaced, not filled unilaterally:** no task in this phase decomposes an admin write screen for `moderation_settings`; the natural write points (object form, owner management, category registry) don't claim it either. Flagged for the next `/magic.task` pass rather than invented here.
 
 ## Blockers
 
@@ -65,10 +66,7 @@ Implementation: [21/21] Phase 1 DONE · [6/25] Phase 2 — Track A DONE + object
   (collides with Composer's own command); Rector/Pint disagree — `composer
   fix` after `composer rector`. Array-form scripts abort at the first
   non-zero step, so order matters. `process-timeout: 900` — suite outgrew 300s.
-- **Postgres role topology has a hard ceiling:** `booking` is table owner and
-  bootstrap superuser — both bypass `GRANT`/`REVOKE`; enforce "no role can do X"
-  with a `BEFORE`-trigger. `migrate:fresh` drops tables but not functions or
-  triggers — `CREATE OR REPLACE` both.
+- **Postgres role topology has a hard ceiling:** `booking` is table owner and bootstrap superuser — both bypass `GRANT`/`REVOKE`; enforce "no role can do X" with a `BEFORE`-trigger. `migrate:fresh` drops tables but not functions or triggers — `CREATE OR REPLACE` both.
 - **Git hooks are versioned at `.githooks/`** — `git config core.hooksPath
   .githooks` once per clone, or the pre-commit gate silently never fires.
 - **Tests run against real Postgres (`booking_testing`), not SQLite** — the
