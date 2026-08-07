@@ -7,6 +7,7 @@ namespace App\Filament\Admin\Resources\Owners\RelationManagers;
 use App\Exceptions\OwnerDetachmentException;
 use App\Models\Object_;
 use App\Models\User;
+use App\Services\Authorization\ResourceQueryScoper;
 use App\Services\Owners\OwnerAccountService;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -18,6 +19,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Gate;
 use Override;
 
 /**
@@ -93,6 +95,14 @@ class ObjectsRelationManager extends RelationManager
         ];
     }
 
+    /**
+     * The Select offers only objects the acting administrator's own grant
+     * reaches, and the action re-checks the resolved object against the same
+     * policy on submit — a country-scoped administrator must not be able to
+     * attach an owner to an object outside their jurisdiction merely because
+     * an unfiltered list happened to include it, or a request forged an
+     * `object_id` the rendered options never offered.
+     */
     private function attachAction(): Action
     {
         return Action::make('attach')
@@ -105,7 +115,7 @@ class ObjectsRelationManager extends RelationManager
                     // action closure and passed to the service explicitly,
                     // the same reasoning `EditObject`'s own transfer-of-
                     // ownership select follows for the identical shape.
-                    ->options(fn (): array => Object_::query()->with('translations')->get()
+                    ->options(fn (): array => self::attachableObjectsQuery()->get()
                         ->mapWithKeys(fn (Object_ $object): array => [$object->id => $object->name ?? "#{$object->id}"])
                         ->all())
                     ->required()
@@ -113,17 +123,46 @@ class ObjectsRelationManager extends RelationManager
             ])
             ->action(function (array $data): void {
                 $actor = Filament::auth()->user();
-                $object = Object_::query()->find($data['object_id']);
+                $object = self::attachableObjectsQuery()->whereKey($data['object_id'])->first();
 
-                if ($actor instanceof User && $object instanceof Object_) {
-                    /** @var User $owner */
-                    $owner = $this->getOwnerRecord();
+                if (! $actor instanceof User || ! $object instanceof Object_ || Gate::forUser($actor)->denies('update', $object)) {
+                    Notification::make()
+                        ->danger()
+                        ->title(__('panel.owners.objects.attachment_refused'))
+                        ->send();
 
-                    app(OwnerAccountService::class)->attachObject($owner, $object, $actor);
+                    return;
                 }
+
+                /** @var User $owner */
+                $owner = $this->getOwnerRecord();
+
+                app(OwnerAccountService::class)->attachObject($owner, $object, $actor);
 
                 Notification::make()->title(__('panel.owners.objects.applied'))->success()->send();
             });
+    }
+
+    /**
+     * @return Builder<Object_>
+     */
+    private static function attachableObjectsQuery(): Builder
+    {
+        $actor = Filament::auth()->user();
+        $query = Object_::query()->withUnmoderated()->with('translations');
+
+        if (! $actor instanceof User) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return app(ResourceQueryScoper::class)->narrow(
+            $query,
+            $actor,
+            'object.edit',
+            'country_id',
+            'territory_id',
+            'object_type_id',
+        );
     }
 
     private function detachAction(): Action

@@ -291,6 +291,21 @@ it('persists and journals a contact edit across every field', function (): void 
         ->and(DB::table('audits')->where('event', 'owner_contacts_updated')->where('auditable_id', $owner->id)->count())->toBe(1);
 });
 
+it('refuses a country-scoped administrator reassigning an in-scope owner to an out-of-scope country', function (): void {
+    $geo = ownerGeography();
+    $owner = seedOwnerAccount(['country_id' => $geo['countryMd']]);
+    $actor = ownerActor(['admin_panel_access', 'user.view', 'user.edit'], 'country', $geo['countryMd'], 'md_only_edit');
+
+    Livewire::actingAs($actor)
+        ->test(EditOwner::class, ['record' => $owner->getKey()])
+        ->fillForm(['country_id' => $geo['countryUa']])
+        ->call('save')
+        ->assertHasFormErrors(['country_id']);
+
+    expect($owner->fresh()->country_id)->toBe($geo['countryMd'])
+        ->and(DB::table('audits')->where('event', 'owner_contacts_updated')->where('auditable_id', $owner->id)->count())->toBe(0);
+});
+
 // -----------------------------------------------------------------------
 // Attaching / detaching objects.
 // -----------------------------------------------------------------------
@@ -341,6 +356,46 @@ it('detaches an object, clearing its owner and journalling the change, and refus
 
     expect(fn () => app(OwnerAccountService::class)->detachObject($refetched, $actor))
         ->toThrow(OwnerDetachmentException::class);
+});
+
+it('never offers an out-of-scope object on the attach action, and refuses it server-side even if forced', function (): void {
+    $geo = ownerGeography();
+    $owner = seedOwnerAccount(['country_id' => $geo['countryMd']]);
+    $actor = ownerActor(['admin_panel_access', 'user.view', 'user.edit', 'object.edit'], 'country', $geo['countryMd'], 'md_only_attach');
+
+    $inScopeId = ownerSeedObject($geo, ['owner_id' => null]);
+    $outOfScopeId = ownerSeedObject($geo, [
+        'owner_id' => null, 'country_id' => $geo['countryUa'], 'territory_id' => null,
+    ]);
+    // territory_id is required (not nullable) — reuse a Ukraine-side
+    // territory row for the out-of-scope fixture instead of null.
+    $territoryUa = DB::table('territories')->insertGetId([
+        'country_id' => $geo['countryUa'], 'level_id' => $geo['levelMd'], 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('objects')->where('id', $outOfScopeId)->update(['territory_id' => $territoryUa]);
+
+    $test = Livewire::actingAs($actor)
+        ->test(\App\Filament\Admin\Resources\Owners\RelationManagers\ObjectsRelationManager::class, [
+            'ownerRecord' => $owner,
+            'pageClass' => EditOwner::class,
+        ]);
+
+    $test->mountTableAction('attach')
+        ->assertTableActionDataSet([]);
+
+    $mountedAction = $test->instance()->getMountedTableAction();
+    $optionsField = collect($mountedAction?->getSchema()?->getComponents() ?? [])->first();
+    $offered = $optionsField instanceof \Filament\Forms\Components\Select ? array_keys($optionsField->getOptions()) : [];
+
+    expect($offered)->toContain($inScopeId)
+        ->and($offered)->not->toContain($outOfScopeId);
+
+    // Forced anyway (a crafted request bypassing the rendered options) —
+    // the action closure re-validates and must refuse, not silently attach.
+    $test->callMountedTableAction(data: ['object_id' => $outOfScopeId]);
+
+    expect(DB::table('objects')->where('id', $outOfScopeId)->value('owner_id'))->toBeNull()
+        ->and(DB::table('audits')->where('event', 'owner_object_attached')->where('auditable_id', $outOfScopeId)->count())->toBe(0);
 });
 
 // -----------------------------------------------------------------------

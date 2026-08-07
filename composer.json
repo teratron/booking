@@ -19,7 +19,7 @@
         "laravel/sanctum": "^4.3.3",
         "laravel/tinker": "^3.0.2",
         "owen-it/laravel-auditing": "^14.0.6",
-        "spatie/laravel-medialibrary": "^11.23.3",
+        "spatie/laravel-medialibrary": "^11.23.4",
         "spatie/laravel-permission": "^8.3.0",
         "staudenmeir/laravel-adjacency-list": "^1.26.1"
     },

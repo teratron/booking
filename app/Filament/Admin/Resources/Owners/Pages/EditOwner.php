@@ -6,12 +6,14 @@ namespace App\Filament\Admin\Resources\Owners\Pages;
 
 use App\Filament\Admin\Resources\Owners\OwnerResource;
 use App\Models\User;
+use App\Services\Authorization\ScopeAuthorizer;
 use App\Services\Owners\OwnerAccountService;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\ValidationException;
 use Override;
 
 /**
@@ -29,11 +31,22 @@ class EditOwner extends EditRecord
      * contact changes get the same journal entry every other account
      * mutation on this screen does, and only the fields that actually
      * changed are recorded.
+     *
+     * The resource's own query already keeps a country-scoped administrator
+     * from opening a record outside their grant, but the form's own
+     * `country_id` field is not itself scope-limited — without this check a
+     * scoped administrator could reassign an in-scope owner to a country
+     * outside their grant, which is the same field-not-hidden gap
+     * {@see CreateOwner::assertWithinScope()} closes on the create side.
      */
     #[Override]
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
         /** @var User $record */
+        $countryId = isset($data['country_id']) ? (int) $data['country_id'] : null;
+
+        $this->assertWithinScope($countryId);
+
         $actor = Filament::auth()->user();
 
         if ($actor instanceof User) {
@@ -41,6 +54,29 @@ class EditOwner extends EditRecord
         }
 
         return $record;
+    }
+
+    private function assertWithinScope(?int $countryId): void
+    {
+        $actor = Filament::auth()->user();
+
+        if (! $actor instanceof User) {
+            throw ValidationException::withMessages(['data.country_id' => __('panel.owners.form.out_of_scope')]);
+        }
+
+        $constraint = app(ScopeAuthorizer::class)->constraintFor($actor, 'user.edit');
+
+        if ($constraint->isUnrestricted) {
+            return;
+        }
+
+        if ($constraint->reachesNothing()) {
+            throw ValidationException::withMessages(['data.country_id' => __('panel.owners.form.out_of_scope')]);
+        }
+
+        if ($constraint->countryIds !== [] && ($countryId === null || ! in_array($countryId, $constraint->countryIds, true))) {
+            throw ValidationException::withMessages(['data.country_id' => __('panel.owners.form.out_of_scope')]);
+        }
     }
 
     /** @return array<Action> */

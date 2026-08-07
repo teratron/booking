@@ -186,6 +186,7 @@ return [
             'detach' => 'Detach',
             'detach_confirm' => 'This clears the object\'s owner. It becomes ownerless until reassigned.',
             'detachment_refused' => 'Detachment refused',
+            'attachment_refused' => 'Attachment refused — that object is outside your assigned scope.',
             'applied' => 'Done.',
         ],
     ],
