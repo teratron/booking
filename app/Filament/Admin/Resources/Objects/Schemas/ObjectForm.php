@@ -13,6 +13,8 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
@@ -43,6 +45,7 @@ class ObjectForm
             Tabs::make()->tabs([
                 self::coreInformationTab(),
                 self::geographyTab(),
+                self::typeAttributesTab(),
                 self::seoTab(),
                 self::contactsTab(),
                 self::servicesTab(),
@@ -80,7 +83,8 @@ class ObjectForm
             Select::make('object_type_id')
                 ->label(__('panel.objects.columns.type'))
                 ->options(fn (): array => ObjectType::query()->pluck('key', 'id')->all())
-                ->required(),
+                ->required()
+                ->live(),
 
             Select::make('status')
                 ->label(__('panel.objects.columns.status'))
@@ -103,6 +107,49 @@ class ObjectForm
                     ->label(__('panel.objects.form.full_description')),
             ]),
         ]);
+    }
+
+    /**
+     * The fields a catalog view must render only if the object's type
+     * declares them — an accommodation type exposing rooms and prices, a
+     * dining type exposing cuisine and opening hours. Rendered from
+     * `object_types.attribute_schema`, never a hard-coded field list, and
+     * stored directly into the `objects.attributes`
+     * JSONB column: the field names (`attributes.{key}`) already match that
+     * column's own array-cast shape, so no reconciliation step is needed the
+     * way translations require.
+     */
+    private static function typeAttributesTab(): Tab
+    {
+        return Tab::make(__('panel.objects.form.tabs.type_attributes'))
+            ->schema(function (Get $get): array {
+                $typeId = $get('object_type_id');
+
+                if (! $typeId) {
+                    return [];
+                }
+
+                $type = ObjectType::query()->find($typeId);
+
+                if (! $type instanceof ObjectType) {
+                    return [];
+                }
+
+                /** @var list<array{key: string, type: string, label?: array<string, string>}> $schema */
+                $schema = $type->attribute_schema ?? [];
+                $locale = app()->getLocale();
+
+                return array_map(function (array $attribute) use ($locale): Component {
+                    $label = $attribute['label'][$locale] ?? $attribute['key'];
+                    $field = "attributes.{$attribute['key']}";
+
+                    return match ($attribute['type']) {
+                        'boolean' => Toggle::make($field)->label($label),
+                        'number' => TextInput::make($field)->label($label)->numeric(),
+                        default => TextInput::make($field)->label($label),
+                    };
+                }, $schema);
+            });
     }
 
     private static function geographyTab(): Tab

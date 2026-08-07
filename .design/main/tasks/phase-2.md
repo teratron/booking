@@ -65,7 +65,7 @@ Track D and the edge never becomes a stall.
 ### Track C — Geography, Taxonomy & Translations
 
 - [x] [T-2C01] Territory administration with guarded reparenting
-- [ ] [T-2C02] Object type registry administration
+- [x] [T-2C02] Object type registry administration
 - [ ] [T-2C03] Language registry and the interface catalog editor
 - [ ] [T-2C04] Translation management and the untranslated-material report
 
@@ -236,11 +236,14 @@ Track D and the edge never becomes a stall.
 ### [T-2C02] Object type registry administration
 
 - **Spec:** l1-object-catalog.md §3.1 (`[TZ]` §69, §109)
-- **Status:** Todo
+- **Status:** Done `[Bootstrap]`
 - **Assignment:** Agent
 - **Verify:** `docker compose exec app ./vendor/bin/pest --filter=ObjectTypeRegistry` proves an administrator can create a type, nest it under a parent, assign its icon, choose its applicable field set and amenity groups, and set its SEO defaults, all without a code change; that a type's declared field set actually governs which fields the object form in `T-2B02` renders; that deactivating a type hides it from the public catalog without detaching its objects; and that no code path branches on a hard-coded type key.
-- **Handoff:** T-2B02 — the object form reads its tab and field composition from this registry.
+- **Changes:** `ObjectType` gains an `amenityGroups()` many-to-many relation and is policy-bound (`ObjectTypePolicy`: view/viewAny gated by `settings.view`, create/update/delete by `settings.edit` — the same portal-wide configuration gate the module registry already uses, since a type registry is configuration rather than a per-object action). New `ObjectTypeResource` (list/form/pages) with a `parent_id` self-reference, an `amenityGroups` multi-select, and an `attribute_schema` repeater (key, type, per-language label) that becomes the JSONB column the object form reads. Retroactively wires `T-2B02`'s object form with a dynamic `typeAttributesTab()`: a `Get $get`-driven schema closure resolves the selected type's `attribute_schema` and renders a `Toggle` or `TextInput` per declared field straight onto the object's own `attributes` JSONB column — no reconciliation step, since it is a cast column and not a relation.
+- **Evidence:** `pest tests/Feature/Admin/ObjectTypeRegistryTest.php` · exit 0 · 5 passed (30 assertions) — a nested type with icon, amenity groups, and attribute schema is created in one save; a type's declared fields — and only those fields — render on the object form's dynamic tab; a type invented after this code was written (never special-cased) renders correctly from its own schema alone; deactivating a type removes it from the public catalog while its objects stay attached; an unrestricted grant reaches every type and a scoped one is refused. Falsification: `ObjectForm`'s attribute-schema read was replaced with a hardcoded empty array; the two tests asserting rendered fields failed at their exact assertions (caught independently by a concurrent coverage run before the isolated re-run confirmed it), then the fix was restored and the full 5 tests passed again. `composer quality` (fix, analyse, test, test:coverage, audit, unused) · exit 0 · Pint 260 files clean; PHPStan level 8 zero errors; Pest 195 passed (587 assertions) twice (plain run and coverage run); coverage 92.2%; no security advisories; no unused packages beyond the documented `laravel/sanctum` filter. `migrate:fresh --seed` applies cleanly.
+- **Handoff:** T-2B02's object form (already wired) and any later catalog rendering that needs to branch on type-declared fields rather than a hard-coded list.
 - **Notes:** The registry being data is not decoration: an accommodation type exposes rooms, prices, and availability while a dining type exposes cuisine, average cheque, and opening hours, and the difference has to survive an administrator adding a type nobody anticipated. The architecture test that forbids hard-coded language and country counts extends naturally here; add the type-key case to it rather than trusting review.
+- **Execution findings:** Cross-track integration, not a plan gap: `T-2B02` shipped before this task and left its type-dependent tab unbuilt on purpose, since the schema it reads did not exist yet; completing `T-2C02` closes that loop rather than opening a new one, and the object form needed no structural change — only its already-`Get`-driven tab closure gained a real data source in place of an empty list. One containment-test violation caught and fixed here: an early docblock for `typeAttributesTab()` cited a specification filename directly; rewritten in plain language, suite re-verified green.
 
 ### [T-2C03] Language registry and the interface catalog editor
 

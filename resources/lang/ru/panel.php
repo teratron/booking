@@ -78,6 +78,7 @@ return [
             'tabs' => [
                 'core' => 'Основная информация',
                 'geography' => 'География',
+                'type_attributes' => 'Поля по типу',
                 'seo' => 'SEO',
                 'contacts' => 'Контакты',
                 'services' => 'Услуги',
@@ -142,6 +143,39 @@ return [
             'no_parent' => 'Нет — сделать корнем страны',
             'reparent_confirm' => 'Перенос затронет дочерних территорий: :descendants, объектов: :objects.',
             'cycle_refused' => 'Перенос отклонён',
+        ],
+    ],
+
+    'object_types' => [
+        'title' => 'Типы объектов',
+        'model_label' => 'тип объекта',
+
+        'columns' => [
+            'active' => 'Активен',
+        ],
+
+        'form' => [
+            'key' => 'Ключ',
+            'name' => 'Название',
+            'parent' => 'Родительский тип',
+            'no_parent' => 'Нет — тип верхнего уровня',
+            'icon' => 'Путь к иконке',
+            'has_rooms' => 'Имеет номера',
+            'has_availability_status' => 'Имеет статус наличия мест',
+            'display_order' => 'Порядок отображения',
+            'amenity_groups' => 'Применимые группы удобств',
+            'attribute_schema' => 'Дополнительные поля',
+            'attribute_schema_hint' => 'Дополнительные поля, которые объект этого типа показывает в своей форме и на публичной странице — например, кухня и часы работы для типа «кафе».',
+            'attribute_key' => 'Ключ поля',
+            'attribute_type' => 'Тип поля',
+            'attribute_types' => [
+                'text' => 'Текст',
+                'number' => 'Число',
+                'boolean' => 'Да / Нет',
+            ],
+            'attribute_label' => 'Подпись (:language)',
+            'seo_title' => 'SEO-заголовок',
+            'seo_description' => 'SEO-описание',
         ],
     ],
 

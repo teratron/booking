@@ -4,28 +4,29 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-06 22:13
+**Updated:** 2026-08-07 13:15
 **Phase:** 2 — Back Office Core
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Phase 2 Track A + T-2B01 + T-2D01 + T-2B02 + T-2C01 done (9/25). Track B (B03-B07), Track C (C02-C04), Track D (D02-D05) all remain, no cross-track blockers left.
+- **Task:** Phase 2 Track A + T-2B01 + T-2D01 + T-2B02 + T-2C01 + T-2C02 done (10/25). Track B (B03-B07), Track C (C03-C04), Track D (D02-D05) all remain, no cross-track blockers left.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral and unchanged by the pivot; the 3 L2 documents were rewritten. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Any of T-2B03/B04/B05/B06/B07, T-2C02/C03/C04, T-2D02+ — pick by track order (B → C ∥ D → T per phase-2.md).
+- **Next Action:** Any of T-2B03/B04/B05/B06/B07, T-2C03/C04, T-2D02+ — pick by track order (B → C ∥ D → T per phase-2.md).
 
 ## Progress
 
 ```
 Overall: [1/7] █░░░░░░░ 14%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1 archived, Phase 2 decomposed, 3-7 scoped
-Implementation: [21/21] Phase 1 DONE · [9/25] Phase 2 — Track A + object list/form + moderation + territories
+Implementation: [21/21] Phase 1 DONE · [10/25] Phase 2 — Track A + object list/form + moderation + territories + object types
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
+- 2026-08-07 **Decision: `T-2C02`'s `attribute_schema` renders straight onto `objects.attributes`**, a JSONB array-cast column rather than a relation — no translation-style reconciliation step needed, unlike every other per-language field on the object form.
 - 2026-08-07 **Decision: `ModerationModeResolver` and `ModuleResolver` stay separate**, reversing this phase's planning note. **Plan gap surfaced:** no task decomposes a `moderation_settings` write screen; flagged for the next `/magic.task` pass.
 - 2026-08-07 **Decision: rooms & prices excluded from `T-2B02`'s object form**, matching the spec's own separation of "Rooms & prices" from "Objects" into distinct back-office sections. No task claims that section either — second plan gap, flagged not absorbed.
 - 2026-08-07 **Decision: `territory_translations` gets a cached `full_slug_path` column** rather than computing it on read — matches the spec's own caching note and avoids a recursive walk per URL resolution. Recomputed on reparent and on any slug edit (own or ancestor's, since editing any territory recomputes its whole descendant set).

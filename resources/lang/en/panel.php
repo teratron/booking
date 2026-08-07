@@ -78,6 +78,7 @@ return [
             'tabs' => [
                 'core' => 'Core information',
                 'geography' => 'Geography',
+                'type_attributes' => 'Type-specific fields',
                 'seo' => 'SEO',
                 'contacts' => 'Contacts',
                 'services' => 'Services',
@@ -142,6 +143,39 @@ return [
             'no_parent' => 'None — make this a country root',
             'reparent_confirm' => 'This moves :descendants descendant territories and :objects attached objects.',
             'cycle_refused' => 'Move refused',
+        ],
+    ],
+
+    'object_types' => [
+        'title' => 'Object Types',
+        'model_label' => 'object type',
+
+        'columns' => [
+            'active' => 'Active',
+        ],
+
+        'form' => [
+            'key' => 'Key',
+            'name' => 'Name',
+            'parent' => 'Parent type',
+            'no_parent' => 'None — top-level type',
+            'icon' => 'Icon path',
+            'has_rooms' => 'Has rooms',
+            'has_availability_status' => 'Has availability status',
+            'display_order' => 'Display order',
+            'amenity_groups' => 'Applicable amenity groups',
+            'attribute_schema' => 'Custom fields',
+            'attribute_schema_hint' => 'The extra fields an object of this type exposes on its own form and public page — e.g. cuisine and opening hours for a dining type.',
+            'attribute_key' => 'Field key',
+            'attribute_type' => 'Field type',
+            'attribute_types' => [
+                'text' => 'Text',
+                'number' => 'Number',
+                'boolean' => 'Yes / No',
+            ],
+            'attribute_label' => 'Label (:language)',
+            'seo_title' => 'SEO title',
+            'seo_description' => 'SEO description',
         ],
     ],
 
