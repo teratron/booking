@@ -95,6 +95,7 @@ return [
 
         'filters' => [
             'contact' => 'Phone, email or messenger',
+            'missing_translation' => 'Missing translation in',
             'quick_available' => 'Vacancies available',
             'quick_unspecified' => 'Status unspecified',
             'quick_stale' => 'Status not updated recently',
@@ -430,6 +431,32 @@ return [
         'title' => 'Interface catalog',
         'save' => 'Save catalog',
         'saved' => 'Interface catalog saved.',
+    ],
+
+    'translation_report' => [
+        'title' => 'Translation report',
+
+        'columns' => [
+            'entity' => 'Entity',
+            'state' => 'State',
+            'needs_review_count' => ':count needs review',
+        ],
+
+        'state' => [
+            'missing' => 'Missing',
+            'needs_review' => 'Needs review',
+        ],
+
+        'actions' => [
+            'copy_from_primary' => 'Copy from primary',
+            'publish' => 'Publish',
+        ],
+
+        'notifications' => [
+            'copied' => 'Copied from the primary language — marked as needing review.',
+            'published' => 'Translation published.',
+            'publish_refused' => 'No translation exists yet for this language.',
+        ],
     ],
 
 ];

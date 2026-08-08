@@ -8,6 +8,7 @@ use App\Exceptions\BulkSelectionScopeException;
 use App\Filament\Admin\Support\CountedBulkAction;
 use App\Jobs\ExecuteObjectBulkActionJob;
 use App\Models\Country;
+use App\Models\Language;
 use App\Models\Object_;
 use App\Models\ObjectType;
 use App\Models\PromotionLabel;
@@ -153,6 +154,22 @@ class ObjectsTable
                     'unavailable' => __('panel.objects.availability.unavailable'),
                     'unspecified' => __('panel.objects.availability.unspecified'),
                 ]),
+
+            SelectFilter::make('missing_translation')
+                ->label(__('panel.objects.filters.missing_translation'))
+                ->options(fn (): array => Language::query()->where('is_active', true)->orderBy('display_order')->pluck('short_label', 'code')->all())
+                ->query(function (Builder $query, array $data): Builder {
+                    $locale = $data['value'] ?? null;
+
+                    if (! is_string($locale) || $locale === '') {
+                        return $query;
+                    }
+
+                    return $query->whereDoesntHave(
+                        'translations',
+                        fn (Builder $translations) => $translations->where('locale', $locale)->where('needs_review', false),
+                    );
+                }),
 
             // Searching by the caller's own phone or address is the point of
             // this one: staff receive the details an owner can recite, not the
