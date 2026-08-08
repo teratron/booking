@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Override;
 use OwenIt\Auditing\Auditable;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
@@ -31,6 +32,8 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property-read ?string $name virtual, proxied through the active translation
  * @property ?int $owner_id null once an owner has been deliberately detached, or
  *                          whenever a user row backing a previous owner is removed
+ * @property ?Carbon $availability_changed_at
+ * @property ?Carbon $availability_last_confirmed_at
  */
 #[UsePolicy(Object_Policy::class)]
 class Object_ extends Model implements AuditableContract, HasMedia, TranslatableContract
@@ -144,5 +147,11 @@ class Object_ extends Model implements AuditableContract, HasMedia, Translatable
     public function staff(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'object_user', 'object_id', 'user_id')->withPivot('permissions');
+    }
+
+    /** @return HasMany<AvailabilityHistory, $this> */
+    public function availabilityHistories(): HasMany
+    {
+        return $this->hasMany(AvailabilityHistory::class, 'object_id');
     }
 }

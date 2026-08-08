@@ -7,6 +7,7 @@ namespace App\Filament\Admin\Resources\Objects;
 use App\Filament\Admin\Resources\Objects\Pages\CreateObject;
 use App\Filament\Admin\Resources\Objects\Pages\EditObject;
 use App\Filament\Admin\Resources\Objects\Pages\ListObjects;
+use App\Filament\Admin\Resources\Objects\RelationManagers\AvailabilityHistoryRelationManager;
 use App\Filament\Admin\Resources\Objects\Schemas\ObjectForm;
 use App\Filament\Admin\Resources\Objects\Tables\ObjectsTable;
 use App\Filament\Admin\Support\ScopedResource;
@@ -80,6 +81,14 @@ class ObjectResource extends ScopedResource
     public static function form(Schema $schema): Schema
     {
         return ObjectForm::configure($schema);
+    }
+
+    /** @return array<class-string> */
+    public static function getRelations(): array
+    {
+        return [
+            AvailabilityHistoryRelationManager::class,
+        ];
     }
 
     /** @return array<string, mixed> */

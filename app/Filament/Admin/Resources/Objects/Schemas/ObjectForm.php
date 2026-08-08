@@ -7,8 +7,11 @@ namespace App\Filament\Admin\Resources\Objects\Schemas;
 use App\Models\Amenity;
 use App\Models\Country;
 use App\Models\Language;
+use App\Models\Object_;
 use App\Models\ObjectType;
 use App\Models\Territory;
+use App\Models\User;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -50,6 +53,7 @@ class ObjectForm
                 self::contactsTab(),
                 self::servicesTab(),
                 self::ownerAndStaffTab(),
+                self::availabilityTab(),
             ]),
         ]);
     }
@@ -234,6 +238,45 @@ class ObjectForm
                 ->relationship('owner', 'name')
                 ->required()
                 ->searchable(),
+        ]);
+    }
+
+    /**
+     * Read-only: the actual write path is the override/revert header
+     * actions on the edit page, which go through
+     * `AvailabilityAdministrationService` rather than an ordinary form
+     * save — routing an availability change through this form's own save
+     * would skip the paired history row and the staleness-clock reset
+     * that service exists to keep atomic with the status write.
+     */
+    private static function availabilityTab(): Tab
+    {
+        return Tab::make(__('panel.objects.form.tabs.availability'))->schema([
+            Placeholder::make('availability_status_display')
+                ->label(__('panel.objects.availability.current_status'))
+                ->content(fn (?Object_ $record): string => $record === null
+                    ? '—'
+                    : __('panel.objects.availability.'.$record->availability_status)),
+
+            Placeholder::make('availability_changed_at_display')
+                ->label(__('panel.objects.availability.changed_at'))
+                ->content(fn (?Object_ $record): string => $record?->availability_changed_at?->toDateTimeString() ?? '—'),
+
+            Placeholder::make('availability_changed_by_display')
+                ->label(__('panel.objects.availability.changed_by'))
+                ->content(function (?Object_ $record): string {
+                    if ($record === null || $record->availability_changed_by === null) {
+                        return '—';
+                    }
+
+                    $changedBy = User::query()->find($record->availability_changed_by);
+
+                    return $changedBy === null ? '—' : $changedBy->name;
+                }),
+
+            Placeholder::make('availability_last_confirmed_at_display')
+                ->label(__('panel.objects.availability.last_confirmed_at'))
+                ->content(fn (?Object_ $record): string => $record?->availability_last_confirmed_at?->toDateTimeString() ?? '—'),
         ]);
     }
 }

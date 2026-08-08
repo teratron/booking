@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources\Objects\Pages;
 
+use App\Exceptions\AvailabilityRevertRefusedException;
 use App\Filament\Admin\Resources\Objects\ObjectResource;
 use App\Models\Object_;
 use App\Models\ObjectTranslation;
 use App\Models\User;
+use App\Services\Objects\AvailabilityAdministrationService;
 use App\Services\Objects\ObjectLifecycleService;
 use App\Services\Settings\SettingsRepository;
 use Closure;
@@ -124,7 +126,79 @@ class EditObject extends EditRecord
                 ->visible(fn (Object_ $object): bool => $object->trashed()),
             $this->duplicateAction(),
             $this->transferOwnershipAction(),
+            $this->overrideAvailabilityAction(),
+            $this->revertAvailabilityAction(),
         ];
+    }
+
+    /**
+     * Goes through {@see AvailabilityAdministrationService} rather than the
+     * ordinary `handleRecordUpdate()` save path — that path would skip the
+     * paired `availability_histories` row and the moderation-bypass this
+     * write is required to keep.
+     */
+    private function overrideAvailabilityAction(): Action
+    {
+        return Action::make('override_availability')
+            ->label(__('panel.objects.availability.override'))
+            ->authorize(fn (Object_ $object): bool => (bool) auth()->user()?->can('update', $object))
+            ->schema([
+                Select::make('availability_status')
+                    ->label(__('panel.objects.availability.new_status'))
+                    ->options([
+                        'available' => __('panel.objects.availability.available'),
+                        'unavailable' => __('panel.objects.availability.unavailable'),
+                        'unspecified' => __('panel.objects.availability.unspecified'),
+                    ])
+                    ->required(),
+                Textarea::make('comment')
+                    ->label(__('panel.objects.availability.comment')),
+            ])
+            ->action(function (array $data): void {
+                $actor = Filament::auth()->user();
+
+                if ($actor instanceof User) {
+                    app(AvailabilityAdministrationService::class)->override(
+                        $this->currentObject(),
+                        $data['availability_status'],
+                        $actor,
+                        $data['comment'] ?? null,
+                    );
+                }
+
+                $this->refreshFormData(['availability_status']);
+                Notification::make()->title(__('panel.objects.lifecycle.applied'))->success()->send();
+            });
+    }
+
+    private function revertAvailabilityAction(): Action
+    {
+        return Action::make('revert_availability')
+            ->label(__('panel.objects.availability.revert'))
+            ->authorize(fn (Object_ $object): bool => (bool) auth()->user()?->can('update', $object))
+            ->visible(fn (Object_ $object): bool => $object->availability_previous_status !== null)
+            ->requiresConfirmation()
+            ->action(function (): void {
+                $actor = Filament::auth()->user();
+
+                if (! $actor instanceof User) {
+                    return;
+                }
+
+                try {
+                    app(AvailabilityAdministrationService::class)->revert($this->currentObject(), $actor);
+                } catch (AvailabilityRevertRefusedException) {
+                    Notification::make()
+                        ->danger()
+                        ->title(__('panel.objects.availability.revert_refused'))
+                        ->send();
+
+                    return;
+                }
+
+                $this->refreshFormData(['availability_status']);
+                Notification::make()->title(__('panel.objects.lifecycle.applied'))->success()->send();
+            });
     }
 
     private function lifecycleAction(string $name, string $ability, Closure $handle): Action

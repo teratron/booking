@@ -4,32 +4,32 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-08 12:40
+**Updated:** 2026-08-08 14:05
 **Phase:** 2 — Back Office Core
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Phase 2 Track A + T-2B01 + T-2D01 + T-2B02 + T-2C01 + T-2C02 + T-2B03 + T-2B04 + T-2B05 done (13/25). Track B (B06-B07), Track C (C03-C04), Track D (D02-D05) all remain, no cross-track blockers left.
+- **Task:** Phase 2 Track A + T-2B01 + T-2D01 + T-2B02 + T-2C01 + T-2C02 + T-2B03 + T-2B04 + T-2B05 + T-2B06 done (14/25). Track B (B07), Track C (C03-C04), Track D (D02-D05) all remain, no cross-track blockers left.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral and unchanged by the pivot; the 3 L2 documents were rewritten. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Any of T-2B06/B07, T-2C03/C04, T-2D02+ — pick by track order (B → C ∥ D → T per phase-2.md).
+- **Next Action:** Any of T-2B07, T-2C03/C04, T-2D02+ — pick by track order (B → C ∥ D → T per phase-2.md).
 
 ## Progress
 
 ```
 Overall: [1/7] █░░░░░░░ 14%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1 archived, Phase 2 decomposed, 3-7 scoped
-Implementation: [21/21] Phase 1 DONE · [13/25] Phase 2 — Track A + object list/form/bulk + owners + impersonation + moderation + territories + object types
+Implementation: [21/21] Phase 1 DONE · [14/25] Phase 2 — Track A + object list/form/bulk/availability + owners + impersonation + moderation + territories + object types
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
+- 2026-08-08 **Decision: `T-2B06`'s cache invalidation is real tag-based Redis flushing** (`catalog`/`territory:{id}`/`object:{id}` tags), not a stub — even though no catalog/territory/object page exists yet to write under those tags. Establishes the naming convention those later pages inherit.
 - 2026-08-08 **Decision: `ImpersonationContext` is the single actor-resolution source for both journal-writing paths** — `AuditJournal`'s explicit writes and `owen-it/laravel-auditing`'s own automatic-audit resolver both consult it, so a mutation made during support-mode impersonation is always attributed to the administrator, never the owner. Session swap (`Auth::guard('web')->loginUsingId()`) happens only after the entry journal write commits, so a failed switch can never erase the record of having entered.
 - 2026-08-07 **Decision: a blocked owner's "session termination" is enforced via `canAccessPanel()`**, re-checked by Filament on every request, rather than by hunting down Redis-backed session keys (this project's session store has no per-user index to walk). Also: `objects.owner_id` is now nullable with `ON DELETE SET NULL` — "ownerless" is a real, renderable state, not data loss.
 - 2026-08-07 **Decision: `T-2B03`'s bulk actions collapse "assign a promotional caption" and "change border colour" into one operation** — border colour is a property of the `promotion_labels` row an administrator picks, not an independent per-object field. "Change package" excluded from this task; placement/package mechanics stay a distinct later concern.
-- 2026-08-07 **Decision: `T-2C02`'s `attribute_schema` renders straight onto `objects.attributes`**, a JSONB array-cast column rather than a relation — no translation-style reconciliation step needed, unlike every other per-language field on the object form.
 
 ## Blockers
 
@@ -46,22 +46,17 @@ Implementation: [21/21] Phase 1 DONE · [13/25] Phase 2 — Track A + object lis
   every invocation (top-level `**Status:**`, `## Progress`). Always re-open
   STATE.md after `update-state`/`finalize` and manually verify both.
 - **Public OSM tile servers are prohibited in production** (OSMF policy) — never `tile.openstreetmap.org`; use MapTiler, Stadia, or self-hosted.
-- **Host port conflicts**: Postgres native→5433, web 8300, Mailpit 8325 (Win
-  TCP 7915–8114 reserved; check first). `postgres:18+` data lives under a
-  major-version subdir, not `.../data`.
-- **No PHP/Composer on the host** — toolchain runs through `docker compose
-  exec app …`. Never assume bare `php`/`composer` in a shell command.
-- **The Windows bind mount is not a benchmark host** — benchmark inside the
-  container, non-bind-mounted. **No Postgres FT dictionary for
-  Georgian/Ukrainian** — trigram carries name search; escalates to
-  Typesense (`l2-tech-stack.md` §5.7) if inadequate.
-- **Superseded Next.js-era archives moved to `archives/tasks/v1-nextjs/`** —
-  they occupied the exact filenames `archive-phases` writes to. Do not read
-  them for context; do not move them back.
+- **Host port conflicts**: Postgres native→5433, web 8300, Mailpit 8325 (Win TCP 7915–8114 reserved; check first). `postgres:18+` data lives under a major-version subdir, not `.../data`.
+- **No PHP/Composer on the host** — toolchain runs through `docker compose exec app …`. Never assume bare `php`/`composer` in a shell command.
+- **The Windows bind mount is not a benchmark host** — benchmark inside the container, non-bind-mounted. **No Postgres FT dictionary for Georgian/Ukrainian** — trigram carries name search; escalates to Typesense (`l2-tech-stack.md` §5.7) if inadequate.
+- **Superseded Next.js-era archives moved to `archives/tasks/v1-nextjs/`** — they occupied the exact filenames `archive-phases` writes to. Do not read them for context; do not move them back.
 - **Domain invariants:** hiding a Filament action/Blade block is never an
   access control — Policies enforce scoped permissions server-side. Catalog
   ordering is placement-tier first, never relevance-first. **`objects.rating`
-  does not exist** — add as a maintained aggregate later.
+  does not exist** — add as a maintained aggregate later. **Strict
+  authorization mode needs a bound Policy for every model a resource or
+  relation manager touches**, including a purely read-only one — add it in
+  the same change, or every unrelated page touching that resource 500s.
 - **Tooling quirks:** a composer script named `audit` is silently skipped
   (collides with Composer's own command); Rector/Pint disagree — `composer
   fix` after `composer rector`. Array-form scripts abort at the first
