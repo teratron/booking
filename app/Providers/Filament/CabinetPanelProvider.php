@@ -12,8 +12,10 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
+use Illuminate\Contracts\View\View;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -58,6 +60,14 @@ class CabinetPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+            ])
+            // Renders nothing at all when support mode is not active — an
+            // empty view, not a hidden-but-present one — so the ordinary
+            // owner session this panel exists for is never told about a
+            // capability that has nothing to do with it.
+            ->renderHook(
+                PanelsRenderHook::BODY_START,
+                fn (): View => view('filament.cabinet.impersonation-banner'),
+            );
     }
 }

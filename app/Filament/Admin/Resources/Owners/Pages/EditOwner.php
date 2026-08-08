@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources\Owners\Pages;
 
+use App\Exceptions\ImpersonationRefusedException;
 use App\Filament\Admin\Resources\Owners\OwnerResource;
 use App\Models\User;
 use App\Services\Authorization\ScopeAuthorizer;
+use App\Services\Owners\ImpersonationService;
 use App\Services\Owners\OwnerAccountService;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -83,10 +85,52 @@ class EditOwner extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            $this->impersonateAction(),
             $this->blockAction(),
             $this->restoreAction(),
             $this->sendPasswordResetLinkAction(),
         ];
+    }
+
+    /**
+     * ->authorize() here is a usability affordance only — the button hides
+     * for an actor who plainly lacks the permission, but
+     * {@see ImpersonationService::enter()} is what actually enforces every
+     * refusal condition, including the ones the Filament layer cannot see
+     * (an owner-scoped account holding the permission through a
+     * misconfiguration, for one).
+     */
+    private function impersonateAction(): Action
+    {
+        return Action::make('impersonate')
+            ->label(__('panel.owners.actions.impersonate'))
+            ->authorize(fn (): bool => (bool) auth()->user()?->can('impersonate'))
+            ->requiresConfirmation()
+            ->modalDescription(__('panel.owners.actions.impersonate_confirm'))
+            ->action(function (): void {
+                $actor = Filament::auth()->user();
+
+                if (! $actor instanceof User) {
+                    return;
+                }
+
+                try {
+                    app(ImpersonationService::class)->enter($this->currentOwner(), $actor);
+                } catch (ImpersonationRefusedException) {
+                    Notification::make()
+                        ->danger()
+                        ->title(__('panel.owners.actions.impersonation_refused'))
+                        ->send();
+
+                    return;
+                }
+
+                $cabinetUrl = Filament::getPanel('cabinet')->getUrl();
+
+                if (is_string($cabinetUrl)) {
+                    $this->redirect($cabinetUrl, navigate: false);
+                }
+            });
     }
 
     private function blockAction(): Action

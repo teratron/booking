@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Services\Audit\ImpersonationAwareUserResolver;
 use OwenIt\Auditing\Models\Audit;
 use OwenIt\Auditing\Resolvers\IpAddressResolver;
 use OwenIt\Auditing\Resolvers\UrlResolver;
 use OwenIt\Auditing\Resolvers\UserAgentResolver;
-use OwenIt\Auditing\Resolvers\UserResolver;
 
 return [
 
@@ -38,7 +38,12 @@ return [
             'web',
             'api',
         ],
-        'resolver' => UserResolver::class,
+        // Impersonation-aware: while an administrator is in support mode,
+        // the guard's own authenticated user is the impersonated owner —
+        // this resolver attributes the automatic Eloquent-observed audits
+        // to the administrator instead, falling back to the package's own
+        // guard-iteration behaviour when no impersonation is in progress.
+        'resolver' => ImpersonationAwareUserResolver::class,
     ],
 
     /*

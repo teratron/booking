@@ -25,13 +25,17 @@ use OwenIt\Auditing\Models\Audit;
  */
 final class AuditJournal
 {
+    public function __construct(private readonly ImpersonationContext $impersonationContext) {}
+
     /**
      * Appends one entry to the action journal.
      *
-     * The entry carries the acting account (falling back to the authenticated
-     * user), the request's IP address and user agent, and whatever before/after
-     * values the caller can supply. Never throws for a missing request context
-     * — journal writes happen from queued jobs and console commands too.
+     * The entry carries the acting account (falling back to whoever is
+     * really behind the current session — the authenticated user, or the
+     * administrator when impersonating), the request's IP address and user
+     * agent, and whatever before/after values the caller can supply. Never
+     * throws for a missing request context — journal writes happen from
+     * queued jobs and console commands too.
      *
      * @param  string  $event  verb recorded against the entry, e.g. `sign_in`, `impersonation_started`
      * @param  Model  $target  the record the event concerns; a sign-in targets the account itself
@@ -47,7 +51,11 @@ final class AuditJournal
         ?Authenticatable $actor = null,
         array $tags = [],
     ): Audit {
-        $actor ??= auth()->user();
+        // Not a plain auth()->user() fallback: while impersonating, the
+        // guard's own current user is the impersonated owner, and this
+        // journal must attribute an unspecified actor to whoever is really
+        // acting instead.
+        $actor ??= $this->impersonationContext->currentActor();
 
         $audit = new Audit;
 

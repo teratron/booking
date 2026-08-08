@@ -12,6 +12,11 @@ return [
         'confirm_label' => 'Apply to :count record(s)',
     ],
 
+    'impersonation' => [
+        'banner_text' => 'Support mode — you are viewing the cabinet as :owner.',
+        'return_to_admin' => 'Return to admin',
+    ],
+
     'navigation' => [
         'catalog' => 'Catalog',
         'geography' => 'Geography',
@@ -170,6 +175,9 @@ return [
         ],
 
         'actions' => [
+            'impersonate' => 'Enter support mode',
+            'impersonate_confirm' => 'You will be signed in to the cabinet panel as this owner. Every action you take there is journalled against your own account, not theirs.',
+            'impersonation_refused' => 'Support mode refused.',
             'block' => 'Block',
             'block_confirm' => 'This refuses the account admission to every panel until restored.',
             'restore' => 'Restore',
