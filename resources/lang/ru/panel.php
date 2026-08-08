@@ -480,12 +480,44 @@ return [
         ],
 
         'actions' => [
+            'review' => 'Рассмотреть',
             'reassign' => 'Переназначить',
             'reassign_to' => 'Переназначить на',
         ],
 
         'notifications' => [
             'reassigned' => 'Заявка переназначена.',
+        ],
+    ],
+
+    'moderation_review' => [
+        'title' => 'Рассмотрение заявки на изменение',
+
+        'columns' => [
+            'field' => 'Поле',
+            'published' => 'Опубликовано',
+            'proposed' => 'Предложено',
+        ],
+
+        'fields' => [
+            'reason' => 'Причина',
+            'comment' => 'Комментарий',
+            'accepted_fields' => 'Поля для принятия',
+        ],
+
+        'actions' => [
+            'approve' => 'Одобрить',
+            'reject' => 'Отклонить',
+            'request_revision' => 'Запросить доработку',
+            'partially_accept' => 'Принять частично',
+        ],
+
+        'notifications' => [
+            'approved' => 'Изменение одобрено и опубликовано.',
+            'rejected' => 'Изменение отклонено.',
+            'revision_requested' => 'У владельца запрошена доработка.',
+            'partially_accepted' => 'Принятые поля применены; остальные возвращены на доработку.',
+            'partial_refused' => 'Не удалось применить частичное принятие.',
         ],
     ],
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources\ModerationRequests\Tables;
 
+use App\Filament\Admin\Resources\ModerationRequests\ModerationRequestResource;
 use App\Models\Country;
 use App\Models\ModerationRequest;
 use App\Models\User;
@@ -110,6 +111,10 @@ class ModerationRequestsTable
                     }),
             ])
             ->recordActions([
+                Action::make('review')
+                    ->label(__('panel.moderation_queue.actions.review'))
+                    ->url(fn (ModerationRequest $record): string => ModerationRequestResource::getUrl('review', ['record' => $record])),
+
                 Action::make('reassign')
                     ->label(__('panel.moderation_queue.actions.reassign'))
                     ->schema([

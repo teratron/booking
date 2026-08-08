@@ -481,12 +481,44 @@ return [
         ],
 
         'actions' => [
+            'review' => 'Review',
             'reassign' => 'Reassign',
             'reassign_to' => 'Reassign to',
         ],
 
         'notifications' => [
             'reassigned' => 'Request reassigned.',
+        ],
+    ],
+
+    'moderation_review' => [
+        'title' => 'Review change request',
+
+        'columns' => [
+            'field' => 'Field',
+            'published' => 'Published',
+            'proposed' => 'Proposed',
+        ],
+
+        'fields' => [
+            'reason' => 'Reason',
+            'comment' => 'Comment',
+            'accepted_fields' => 'Fields to accept',
+        ],
+
+        'actions' => [
+            'approve' => 'Approve',
+            'reject' => 'Reject',
+            'request_revision' => 'Request revision',
+            'partially_accept' => 'Partially accept',
+        ],
+
+        'notifications' => [
+            'approved' => 'Change approved and published.',
+            'rejected' => 'Change rejected.',
+            'revision_requested' => 'Revision requested from the owner.',
+            'partially_accepted' => 'Accepted fields applied; the rest returned for revision.',
+            'partial_refused' => 'Partial acceptance could not be applied.',
         ],
     ],
 
