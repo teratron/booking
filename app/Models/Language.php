@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Policies\LanguagePolicy;
+use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Model;
 use Override;
 
@@ -19,6 +21,7 @@ use Override;
  * @property bool $is_active
  * @property bool $is_primary
  */
+#[UsePolicy(LanguagePolicy::class)]
 final class Language extends Model
 {
     protected $guarded = ['id'];

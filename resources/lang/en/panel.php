@@ -393,4 +393,43 @@ return [
         ],
     ],
 
+    'languages' => [
+        'title' => 'Languages',
+        'model_label' => 'language',
+
+        'columns' => [
+            'code' => 'Code',
+            'short_label' => 'Label',
+            'text_direction' => 'Direction',
+            'active' => 'Active',
+            'primary' => 'Primary',
+            'display_order' => 'Order',
+        ],
+
+        'text_direction' => [
+            'ltr' => 'Left to right',
+            'rtl' => 'Right to left',
+        ],
+
+        'actions' => [
+            'activate' => 'Activate',
+            'deactivate' => 'Deactivate',
+            'make_primary' => 'Make primary',
+        ],
+
+        'notifications' => [
+            'activated' => 'Language activated.',
+            'deactivated' => 'Language deactivated.',
+            'deactivate_refused' => 'Could not deactivate this language',
+            'primary_changed' => 'Primary language updated.',
+            'make_primary_refused' => 'Could not change the primary language',
+        ],
+    ],
+
+    'interface_catalog' => [
+        'title' => 'Interface catalog',
+        'save' => 'Save catalog',
+        'saved' => 'Interface catalog saved.',
+    ],
+
 ];

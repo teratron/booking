@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Services\Localization\DatabaseOverlayLoader;
+use App\Services\Localization\LanguageRegistry;
 use Astrotomic\Translatable\Locales;
+use Illuminate\Contracts\Translation\Loader;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Override;
@@ -19,7 +23,7 @@ class AppServiceProvider extends ServiceProvider
     #[Override]
     public function register(): void
     {
-        //
+        $this->app->singleton(LanguageRegistry::class);
     }
 
     /**
@@ -34,6 +38,13 @@ class AppServiceProvider extends ServiceProvider
         // passing suite is a warning nobody reads.
         Model::shouldBeStrict(! $this->app->isProduction());
 
+        // Must run before anything resolves the `translator` singleton —
+        // astrotomic's own Locales class (built by syncTranslatableLocales()
+        // below) depends on TranslatorContract, and once resolved a
+        // Translator instance keeps whatever loader it was built with; a
+        // later extend() of `translation.loader` would no longer reach it.
+        $this->overlayInterfaceCatalogFromDatabase();
+        $this->resolveTranslationFallbackFromPrimaryLanguage();
         $this->syncTranslatableLocales();
     }
 
@@ -46,6 +57,11 @@ class AppServiceProvider extends ServiceProvider
      * and appending the real set here, from the table that is the actual
      * source of truth. Guarded against a fresh install or `migrate:fresh`,
      * where this boots before the table exists.
+     *
+     * Reads `is_primary` alongside `code` in the same query and seeds
+     * `LanguageRegistry` with it — the translation fallback resolver would
+     * otherwise run a second, near-identical query of its own the first
+     * time a string is translated.
      */
     private function syncTranslatableLocales(): void
     {
@@ -55,8 +71,46 @@ class AppServiceProvider extends ServiceProvider
 
         $locales = $this->app->make(Locales::class);
 
-        foreach (DB::table('languages')->pluck('code') as $code) {
-            $locales->add($code);
+        foreach (DB::table('languages')->get(['code', 'is_primary']) as $language) {
+            $locales->add($language->code);
+
+            if ($language->is_primary) {
+                $this->app->make(LanguageRegistry::class)->seed($language->code);
+            }
         }
+    }
+
+    /**
+     * Wraps the framework's own file loader so every catalog load also
+     * checks `interface_catalog_overrides` for an administrator override —
+     * see `App\Services\Localization\DatabaseOverlayLoader`. Guarded the
+     * same way `syncTranslatableLocales()` is: the table does not exist yet
+     * during the migration that creates it.
+     */
+    private function overlayInterfaceCatalogFromDatabase(): void
+    {
+        if (! Schema::hasTable('interface_catalog_overrides')) {
+            return;
+        }
+
+        $this->app->extend('translation.loader', fn (Loader $loader): DatabaseOverlayLoader => new DatabaseOverlayLoader($loader));
+    }
+
+    /**
+     * A translation lookup falls back to the current primary language, not
+     * the static `config('app.fallback_locale')` value — which language is
+     * primary is administrator-editable data, not a build-time constant.
+     * `determineLocalesUsing` is the translator's own extension point for
+     * this: it receives the default `[requested, fallback]` pair and returns
+     * the list actually tried, in order.
+     */
+    private function resolveTranslationFallbackFromPrimaryLanguage(): void
+    {
+        Lang::determineLocalesUsing(function (array $locales): array {
+            $requested = $locales[0] ?? config('app.fallback_locale');
+            $primary = $this->app->make(LanguageRegistry::class)->primaryLocale();
+
+            return array_values(array_unique(array_filter([$requested, $primary])));
+        });
     }
 }

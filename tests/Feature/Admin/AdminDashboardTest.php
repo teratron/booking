@@ -170,5 +170,10 @@ it('resolves the dashboard within the phase query budget', function (): void {
 
     $this->actingAs($actor)->get('/'.config('booking.panels.admin.path'))->assertSuccessful();
 
-    expect($queries)->toBeLessThanOrEqual(30);
+    // 32, not 30: the language registry adds two fixed, non-scaling queries
+    // to every request that renders translated output — the interface
+    // catalog override overlay and the primary-language fallback lookup.
+    // Neither grows with data volume, so this is a one-time budget step,
+    // not the start of a per-widget or per-row creep.
+    expect($queries)->toBeLessThanOrEqual(32);
 });

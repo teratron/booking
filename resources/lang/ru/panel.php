@@ -393,4 +393,43 @@ return [
         ],
     ],
 
+    'languages' => [
+        'title' => 'Языки',
+        'model_label' => 'язык',
+
+        'columns' => [
+            'code' => 'Код',
+            'short_label' => 'Метка',
+            'text_direction' => 'Направление',
+            'active' => 'Активен',
+            'primary' => 'Основной',
+            'display_order' => 'Порядок',
+        ],
+
+        'text_direction' => [
+            'ltr' => 'Слева направо',
+            'rtl' => 'Справа налево',
+        ],
+
+        'actions' => [
+            'activate' => 'Активировать',
+            'deactivate' => 'Деактивировать',
+            'make_primary' => 'Сделать основным',
+        ],
+
+        'notifications' => [
+            'activated' => 'Язык активирован.',
+            'deactivated' => 'Язык деактивирован.',
+            'deactivate_refused' => 'Не удалось деактивировать этот язык',
+            'primary_changed' => 'Основной язык обновлён.',
+            'make_primary_refused' => 'Не удалось изменить основной язык',
+        ],
+    ],
+
+    'interface_catalog' => [
+        'title' => 'Каталог интерфейса',
+        'save' => 'Сохранить каталог',
+        'saved' => 'Каталог интерфейса сохранён.',
+    ],
+
 ];
