@@ -174,11 +174,59 @@ class ObjectsTable
                         fn (Builder $channels) => $channels->where('raw_value', 'ilike', "%{$value}%"),
                     );
                 }),
+
+            ...self::quickFilters(),
         ];
     }
 
     /**
-     * Nine bulk actions, grouped under one toolbar dropdown. Publish, hide,
+     * One-click toggles, distinct from the dropdown filters above — the
+     * five named quick filters an administrator reaches without opening a
+     * menu first.
+     *
+     * @return list<Filter>
+     */
+    private static function quickFilters(): array
+    {
+        return [
+            Filter::make('quick_available')
+                ->label(__('panel.objects.filters.quick_available'))
+                ->toggle()
+                ->query(fn (Builder $query): Builder => $query->where('availability_status', 'available')),
+
+            Filter::make('quick_unspecified')
+                ->label(__('panel.objects.filters.quick_unspecified'))
+                ->toggle()
+                ->query(fn (Builder $query): Builder => $query->where('availability_status', 'unspecified')),
+
+            Filter::make('quick_stale')
+                ->label(__('panel.objects.filters.quick_stale'))
+                ->toggle()
+                ->query(fn (Builder $query): Builder => $query->where(function (Builder $stale): void {
+                    $cadenceDays = (int) app(SettingsRepository::class)->get('availability.confirmation_period_days');
+                    $threshold = now()->subDays($cadenceDays);
+
+                    $stale->whereNull('availability_last_confirmed_at')
+                        ->orWhere('availability_last_confirmed_at', '<', $threshold);
+                })),
+
+            Filter::make('quick_active')
+                ->label(__('panel.objects.filters.quick_active'))
+                ->toggle()
+                ->query(fn (Builder $query): Builder => $query->where('status', 'published')),
+
+            Filter::make('quick_expired_package')
+                ->label(__('panel.objects.filters.quick_expired_package'))
+                ->toggle()
+                ->query(fn (Builder $query): Builder => $query->whereHas(
+                    'placement',
+                    fn (Builder $placement) => $placement->where('ends_at', '<', now()->toDateString()),
+                )),
+        ];
+    }
+
+    /**
+     * Ten bulk actions, grouped under one toolbar dropdown. Publish, hide,
      * and set-to-draft are three thin wrappers around the single
      * `change_status` operation the service exposes — the fixed `status`
      * parameter is the only thing distinguishing them, mirroring how the
@@ -199,7 +247,24 @@ class ObjectsTable
             self::assignManagerBulkAction(),
             self::notifyOwnersBulkAction(),
             self::exportBulkAction(),
+            self::resetStaleAvailabilityBulkAction(),
         ];
+    }
+
+    /**
+     * Resets every selected object's availability to `available` — the
+     * bulk counterpart to the "status not updated recently" quick filter,
+     * for the ordinary flow of filtering to the stale objects and clearing
+     * the backlog in one confirmed action. Delegates to the same
+     * `ObjectBulkActionService::execute()` scope check every other bulk
+     * action here goes through, not a second, independent one.
+     */
+    private static function resetStaleAvailabilityBulkAction(): CountedBulkAction
+    {
+        return CountedBulkAction::make('reset_stale_availability')
+            ->label(__('panel.objects.bulk.reset_stale_availability'))
+            ->authorize(fn (): bool => (bool) auth()->user()?->can('object.edit'))
+            ->action(fn (Collection $records) => self::runBulkOperation($records, 'reset_stale_availability', []));
     }
 
     private static function publishBulkAction(): CountedBulkAction

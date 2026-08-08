@@ -322,7 +322,7 @@ it('demands a confirmation for every registered bulk action on the objects table
     /** @var list<CountedBulkAction> $actions */
     $actions = $method->invoke(null);
 
-    expect($actions)->toHaveCount(9);
+    expect($actions)->toHaveCount(10);
 
     foreach ($actions as $action) {
         expect($action)->toBeInstanceOf(CountedBulkAction::class)

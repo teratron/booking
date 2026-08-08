@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Override;
@@ -153,5 +154,16 @@ class Object_ extends Model implements AuditableContract, HasMedia, Translatable
     public function availabilityHistories(): HasMany
     {
         return $this->hasMany(AvailabilityHistory::class, 'object_id');
+    }
+
+    /**
+     * The current placement grant — one row per object, distinct from the
+     * append-only `placement_histories` this table's own sibling keeps.
+     *
+     * @return HasOne<ObjectPlacement, $this>
+     */
+    public function placement(): HasOne
+    {
+        return $this->hasOne(ObjectPlacement::class, 'object_id');
     }
 }

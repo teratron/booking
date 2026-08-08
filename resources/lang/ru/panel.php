@@ -95,6 +95,11 @@ return [
 
         'filters' => [
             'contact' => 'Телефон, email или мессенджер',
+            'quick_available' => 'Есть свободные места',
+            'quick_unspecified' => 'Статус не указан',
+            'quick_stale' => 'Статус давно не обновлялся',
+            'quick_active' => 'Активные объекты',
+            'quick_expired_package' => 'Истёкший пакет',
         ],
 
         'bulk' => [
@@ -107,6 +112,7 @@ return [
             'assign_manager' => 'Назначить менеджера',
             'notify_owners' => 'Уведомить владельцев',
             'export' => 'Экспортировать выбранное',
+            'reset_stale_availability' => 'Сбросить устаревшее наличие мест',
             'promotion_label' => 'Промо-метка',
             'starts_at' => 'Начало действия',
             'ends_at' => 'Окончание действия',

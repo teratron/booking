@@ -44,7 +44,7 @@ final class AvailabilityAdministrationService
             throw new InvalidArgumentException("Unknown availability status [{$status}].");
         }
 
-        $this->applyStatus($object, $status, $actor, $comment, 'availability_overridden');
+        $this->applyStatus($object, $status, $actor, $comment, 'availability_overridden', 'administrator');
     }
 
     /**
@@ -64,20 +64,41 @@ final class AvailabilityAdministrationService
             throw AvailabilityRevertRefusedException::noPriorStatus($object->id);
         }
 
-        $this->applyStatus($object, $previous, $actor, null, 'availability_reverted');
+        $this->applyStatus($object, $previous, $actor, null, 'availability_reverted', 'administrator');
     }
 
-    private function applyStatus(Object_ $object, string $status, User $actor, ?string $comment, string $event): void
+    /**
+     * The scheduled sweep's own write — no administrator behind it, hence
+     * no $actor parameter. Resets a stale `unavailable` back to `available`
+     * with `source: automatic`, so a resulting badge is never mistaken for
+     * an owner's own assertion. `last_confirmed_at` is deliberately left
+     * untouched: the status is still genuinely unconfirmed by anyone, only
+     * the public-facing value changed, and the owner reminder this sweep
+     * raises still needs the stale clock to keep reading stale.
+     */
+    public function autoReset(Object_ $object): void
     {
+        $this->applyStatus($object, 'available', null, null, 'availability_auto_reset', 'automatic', resetConfirmation: false);
+    }
+
+    private function applyStatus(
+        Object_ $object,
+        string $status,
+        ?User $actor,
+        ?string $comment,
+        string $event,
+        string $source,
+        bool $resetConfirmation = true,
+    ): void {
         $previousStatus = $object->availability_status;
 
-        DB::transaction(function () use ($object, $status, $actor, $comment, $previousStatus): void {
+        DB::transaction(function () use ($object, $status, $actor, $comment, $previousStatus, $source, $resetConfirmation): void {
             $object->forceFill([
                 'availability_status' => $status,
                 'availability_changed_at' => now(),
-                'availability_changed_by' => $actor->id,
+                'availability_changed_by' => $actor?->id,
                 'availability_previous_status' => $previousStatus,
-                'availability_last_confirmed_at' => now(),
+                'availability_last_confirmed_at' => $resetConfirmation ? now() : $object->availability_last_confirmed_at,
                 'availability_comment' => $comment,
             ])->save();
 
@@ -85,8 +106,8 @@ final class AvailabilityAdministrationService
                 'from_status' => $previousStatus,
                 'to_status' => $status,
                 'changed_at' => now(),
-                'changed_by' => $actor->id,
-                'source' => 'administrator',
+                'changed_by' => $actor?->id,
+                'source' => $source,
             ]);
         });
 

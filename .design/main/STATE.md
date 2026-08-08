@@ -4,32 +4,32 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-08 14:05
+**Updated:** 2026-08-08 15:20
 **Phase:** 2 — Back Office Core
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Phase 2 Track A + T-2B01 + T-2D01 + T-2B02 + T-2C01 + T-2C02 + T-2B03 + T-2B04 + T-2B05 + T-2B06 done (14/25). Track B (B07), Track C (C03-C04), Track D (D02-D05) all remain, no cross-track blockers left.
+- **Task:** Phase 2 Track A + Track B (all of T-2B01–B07) + T-2D01 + T-2C01 + T-2C02 done (15/25). Track B is fully complete. Track C (C03-C04), Track D (D02-D05) remain, no cross-track blockers left.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral and unchanged by the pivot; the 3 L2 documents were rewritten. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Any of T-2B07, T-2C03/C04, T-2D02+ — pick by track order (B → C ∥ D → T per phase-2.md).
+- **Next Action:** Any of T-2C03/C04, T-2D02+ — pick by track order (C ∥ D → T per phase-2.md).
 
 ## Progress
 
 ```
 Overall: [1/7] █░░░░░░░ 14%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1 archived, Phase 2 decomposed, 3-7 scoped
-Implementation: [21/21] Phase 1 DONE · [14/25] Phase 2 — Track A + object list/form/bulk/availability + owners + impersonation + moderation + territories + object types
+Implementation: [21/21] Phase 1 DONE · [15/25] Phase 2 — Track A + Track B complete (objects/owners/impersonation/availability) + moderation + territories + object types
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
+- 2026-08-08 **Decision: `T-2B07`'s bulk reset and auto-reset both funnel through `AvailabilityAdministrationService`'s existing `applyStatus()` core** (via `override()` for the bulk path, a new `autoReset()` for the scheduled sweep) rather than duplicating the transaction/history/journal/cache logic a second time. The sweep is a no-op whenever `availability.auto_reset_enabled` is off — the setting's own seeded default, since auto-reset can manufacture a false vacancy claim.
 - 2026-08-08 **Decision: `T-2B06`'s cache invalidation is real tag-based Redis flushing** (`catalog`/`territory:{id}`/`object:{id}` tags), not a stub — even though no catalog/territory/object page exists yet to write under those tags. Establishes the naming convention those later pages inherit.
 - 2026-08-08 **Decision: `ImpersonationContext` is the single actor-resolution source for both journal-writing paths** — `AuditJournal`'s explicit writes and `owen-it/laravel-auditing`'s own automatic-audit resolver both consult it, so a mutation made during support-mode impersonation is always attributed to the administrator, never the owner. Session swap (`Auth::guard('web')->loginUsingId()`) happens only after the entry journal write commits, so a failed switch can never erase the record of having entered.
 - 2026-08-07 **Decision: a blocked owner's "session termination" is enforced via `canAccessPanel()`**, re-checked by Filament on every request, rather than by hunting down Redis-backed session keys (this project's session store has no per-user index to walk). Also: `objects.owner_id` is now nullable with `ON DELETE SET NULL` — "ownerless" is a real, renderable state, not data loss.
-- 2026-08-07 **Decision: `T-2B03`'s bulk actions collapse "assign a promotional caption" and "change border colour" into one operation** — border colour is a property of the `promotion_labels` row an administrator picks, not an independent per-object field. "Change package" excluded from this task; placement/package mechanics stay a distinct later concern.
 
 ## Blockers
 

@@ -38,6 +38,7 @@ final class ObjectBulkActionService
     public function __construct(
         private readonly AuditJournal $journal,
         private readonly ResourceQueryScoper $scoper,
+        private readonly AvailabilityAdministrationService $availability,
     ) {}
 
     /**
@@ -78,6 +79,7 @@ final class ObjectBulkActionService
             'assign_manager' => $this->assignManager($objects, $parameters, $actor),
             'notify_owners' => $this->notifyOwners($objects, $parameters, $actor),
             'export' => $this->export($objects, $actor),
+            'reset_stale_availability' => $this->resetStaleAvailability($objects, $actor),
             default => throw new InvalidArgumentException("Unknown bulk operation [{$operation}]."),
         };
     }
@@ -131,7 +133,7 @@ final class ObjectBulkActionService
         return match ($operation) {
             'change_status' => ($parameters['status'] ?? null) === 'published' ? 'object.publish' : 'object.edit',
             'archive' => 'object.delete',
-            'assign_promotion_label', 'move_territory', 'assign_manager', 'notify_owners' => 'object.edit',
+            'assign_promotion_label', 'move_territory', 'assign_manager', 'notify_owners', 'reset_stale_availability' => 'object.edit',
             'export' => 'object.export',
             default => throw new InvalidArgumentException("Unknown bulk operation [{$operation}]."),
         };
@@ -390,6 +392,25 @@ final class ObjectBulkActionService
                 $this->journal->record('object_bulk_owners_notified', $object, [], ['recipient_id' => $object->owner_id], $actor, ['object', 'bulk']);
             }
         });
+    }
+
+    /**
+     * Resets every selected object's availability to `available`, one at a
+     * time through {@see AvailabilityAdministrationService::override()} —
+     * that method already owns the transaction, the paired history row, the
+     * journal entry, and the cache invalidation for a single object, so
+     * this loop adds nothing beyond calling it once per selected record.
+     * Trusts the selection as given: the ordinary flow is filtering to the
+     * "status not updated recently" quick filter first, so this does not
+     * re-derive staleness itself.
+     *
+     * @param  Collection<int, Object_>  $objects
+     */
+    private function resetStaleAvailability(Collection $objects, User $actor): void
+    {
+        foreach ($objects as $object) {
+            $this->availability->override($object, 'available', $actor);
+        }
     }
 
     /**

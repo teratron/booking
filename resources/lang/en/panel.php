@@ -95,6 +95,11 @@ return [
 
         'filters' => [
             'contact' => 'Phone, email or messenger',
+            'quick_available' => 'Vacancies available',
+            'quick_unspecified' => 'Status unspecified',
+            'quick_stale' => 'Status not updated recently',
+            'quick_active' => 'Active objects',
+            'quick_expired_package' => 'Expired package',
         ],
 
         'bulk' => [
@@ -107,6 +112,7 @@ return [
             'assign_manager' => 'Assign a manager',
             'notify_owners' => 'Notify owners',
             'export' => 'Export selection',
+            'reset_stale_availability' => 'Reset stale availability',
             'promotion_label' => 'Promotional label',
             'starts_at' => 'Starts on',
             'ends_at' => 'Ends on',
