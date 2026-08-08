@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Policies\AuditPolicy;
 use App\Services\Localization\DatabaseOverlayLoader;
 use App\Services\Localization\LanguageRegistry;
 use Astrotomic\Translatable\Locales;
 use Illuminate\Contracts\Translation\Loader;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Override;
+use OwenIt\Auditing\Models\Audit;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -37,6 +40,10 @@ class AppServiceProvider extends ServiceProvider
         // calls "fails the test run rather than warning" — a warning in a
         // passing suite is a warning nobody reads.
         Model::shouldBeStrict(! $this->app->isProduction());
+
+        // `Audit` is a vendor model this project does not own, so its policy
+        // is bound the classic way rather than via a `#[UsePolicy]` attribute.
+        Gate::policy(Audit::class, AuditPolicy::class);
 
         // Must run before anything resolves the `translator` singleton —
         // astrotomic's own Locales class (built by syncTranslatableLocales()

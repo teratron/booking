@@ -53,6 +53,7 @@ final class PermissionSeeder extends Seeder
             'cabinet_access',
             'impersonate',
             'audit.view',
+            'audit.export',
         ];
     }
 

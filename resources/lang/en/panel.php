@@ -522,4 +522,39 @@ return [
         ],
     ],
 
+    'action_journal' => [
+        'title' => 'Action journal',
+        'model_label' => 'journal entry',
+
+        'columns' => [
+            'occurred_at' => 'Occurred at',
+            'actor' => 'Actor',
+            'action' => 'Action',
+            'target' => 'Target',
+            'target_id' => 'Target ID',
+            'previous_value' => 'Previous value',
+            'new_value' => 'New value',
+            'ip_address' => 'IP address',
+            'device' => 'Device',
+            'outcome' => 'Outcome',
+        ],
+
+        'outcome' => [
+            'success' => 'Success',
+            'failure' => 'Failure',
+        ],
+
+        'filters' => [
+            'occurred_between' => 'Occurred between',
+        ],
+
+        'actions' => [
+            'export' => 'Export',
+        ],
+
+        'notifications' => [
+            'export_completed' => '{0}The export finished with no rows.|{1}The export finished with :count row.|[2,*]The export finished with :count rows.',
+        ],
+    ],
+
 ];

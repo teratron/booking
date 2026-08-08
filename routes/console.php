@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Jobs\ArchiveJournalEntriesJob;
 use App\Jobs\SweepStaleAvailabilityJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -15,3 +16,8 @@ Artisan::command('inspire', function () {
 // job itself for why that stays the safe default. Daily is deliberately
 // coarse: this corrects a stale badge, not a real-time state.
 Schedule::job(new SweepStaleAvailabilityJob)->daily()->name('availability:sweep-stale');
+
+// The journal is the highest-volume table after statistics — daily keeps
+// the export current with whatever retention window an administrator has
+// configured, rather than letting a large backlog build up between runs.
+Schedule::job(new ArchiveJournalEntriesJob)->daily()->name('journal:archive');

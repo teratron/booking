@@ -521,4 +521,39 @@ return [
         ],
     ],
 
+    'action_journal' => [
+        'title' => 'Журнал действий',
+        'model_label' => 'запись журнала',
+
+        'columns' => [
+            'occurred_at' => 'Произошло',
+            'actor' => 'Исполнитель',
+            'action' => 'Действие',
+            'target' => 'Объект',
+            'target_id' => 'ID объекта',
+            'previous_value' => 'Предыдущее значение',
+            'new_value' => 'Новое значение',
+            'ip_address' => 'IP-адрес',
+            'device' => 'Устройство',
+            'outcome' => 'Результат',
+        ],
+
+        'outcome' => [
+            'success' => 'Успех',
+            'failure' => 'Неудача',
+        ],
+
+        'filters' => [
+            'occurred_between' => 'Произошло в период',
+        ],
+
+        'actions' => [
+            'export' => 'Экспорт',
+        ],
+
+        'notifications' => [
+            'export_completed' => '{0}Экспорт завершён, строк нет.|{1}Экспорт завершён, :count строка.|[2,4]Экспорт завершён, :count строки.|[5,*]Экспорт завершён, :count строк.',
+        ],
+    ],
+
 ];
