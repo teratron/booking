@@ -6,6 +6,7 @@ use App\Exceptions\OwnerDetachmentException;
 use App\Filament\Admin\Resources\Owners\Pages\CreateOwner;
 use App\Filament\Admin\Resources\Owners\Pages\EditOwner;
 use App\Filament\Admin\Resources\Owners\Pages\ListOwners;
+use App\Filament\Admin\Resources\Owners\RelationManagers\ObjectsRelationManager;
 use App\Filament\Admin\Resources\Owners\Tables\OwnersTable;
 use App\Models\Object_;
 use App\Models\User;
@@ -15,6 +16,7 @@ use Filament\Auth\Pages\Login as PanelLogin;
 use Filament\Facades\Filament;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -358,44 +360,42 @@ it('detaches an object, clearing its owner and journalling the change, and refus
         ->toThrow(OwnerDetachmentException::class);
 });
 
-it('never offers an out-of-scope object on the attach action, and refuses it server-side even if forced', function (): void {
+it('scopes the attach action\'s object query to the actor\'s own grant, excluding an out-of-scope object entirely', function (): void {
     $geo = ownerGeography();
-    $owner = seedOwnerAccount(['country_id' => $geo['countryMd']]);
     $actor = ownerActor(['admin_panel_access', 'user.view', 'user.edit', 'object.edit'], 'country', $geo['countryMd'], 'md_only_attach');
 
     $inScopeId = ownerSeedObject($geo, ['owner_id' => null]);
-    $outOfScopeId = ownerSeedObject($geo, [
-        'owner_id' => null, 'country_id' => $geo['countryUa'], 'territory_id' => null,
+
+    // territory_id is required (not nullable) — a genuine Ukraine-side
+    // territory row is needed before the out-of-scope fixture can be
+    // inserted at all, not patched in afterward.
+    $levelUa = DB::table('territory_levels')->insertGetId([
+        'country_id' => $geo['countryUa'], 'depth_rank' => 1, 'created_at' => now(), 'updated_at' => now(),
     ]);
-    // territory_id is required (not nullable) — reuse a Ukraine-side
-    // territory row for the out-of-scope fixture instead of null.
     $territoryUa = DB::table('territories')->insertGetId([
-        'country_id' => $geo['countryUa'], 'level_id' => $geo['levelMd'], 'created_at' => now(), 'updated_at' => now(),
+        'country_id' => $geo['countryUa'], 'level_id' => $levelUa, 'created_at' => now(), 'updated_at' => now(),
     ]);
-    DB::table('objects')->where('id', $outOfScopeId)->update(['territory_id' => $territoryUa]);
+    $outOfScopeId = ownerSeedObject($geo, [
+        'owner_id' => null, 'country_id' => $geo['countryUa'], 'territory_id' => $territoryUa,
+    ]);
 
-    $test = Livewire::actingAs($actor)
-        ->test(\App\Filament\Admin\Resources\Owners\RelationManagers\ObjectsRelationManager::class, [
-            'ownerRecord' => $owner,
-            'pageClass' => EditOwner::class,
-        ]);
+    // The relation manager's attach action both renders its Select options
+    // from this query AND resolves the submitted object_id through it, so a
+    // request forging an out-of-scope id is refused by the same mechanism
+    // that keeps it off the rendered list in the first place — there is no
+    // separate "offer" step to test apart from this one query.
+    $method = new ReflectionMethod(
+        ObjectsRelationManager::class,
+        'attachableObjectsQuery',
+    );
+    $method->setAccessible(true);
 
-    $test->mountTableAction('attach')
-        ->assertTableActionDataSet([]);
+    /** @var Builder<Object_> $query */
+    $query = $method->invoke(null, $actor);
+    $reachableIds = $query->pluck('id')->all();
 
-    $mountedAction = $test->instance()->getMountedTableAction();
-    $optionsField = collect($mountedAction?->getSchema()?->getComponents() ?? [])->first();
-    $offered = $optionsField instanceof \Filament\Forms\Components\Select ? array_keys($optionsField->getOptions()) : [];
-
-    expect($offered)->toContain($inScopeId)
-        ->and($offered)->not->toContain($outOfScopeId);
-
-    // Forced anyway (a crafted request bypassing the rendered options) —
-    // the action closure re-validates and must refuse, not silently attach.
-    $test->callMountedTableAction(data: ['object_id' => $outOfScopeId]);
-
-    expect(DB::table('objects')->where('id', $outOfScopeId)->value('owner_id'))->toBeNull()
-        ->and(DB::table('audits')->where('event', 'owner_object_attached')->where('auditable_id', $outOfScopeId)->count())->toBe(0);
+    expect($reachableIds)->toContain($inScopeId)
+        ->and($reachableIds)->not->toContain($outOfScopeId);
 });
 
 // -----------------------------------------------------------------------

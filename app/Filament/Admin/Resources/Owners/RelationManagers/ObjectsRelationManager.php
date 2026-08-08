@@ -115,15 +115,25 @@ class ObjectsRelationManager extends RelationManager
                     // action closure and passed to the service explicitly,
                     // the same reasoning `EditObject`'s own transfer-of-
                     // ownership select follows for the identical shape.
-                    ->options(fn (): array => self::attachableObjectsQuery()->get()
-                        ->mapWithKeys(fn (Object_ $object): array => [$object->id => $object->name ?? "#{$object->id}"])
-                        ->all())
+                    ->options(function (): array {
+                        $actor = Filament::auth()->user();
+
+                        if (! $actor instanceof User) {
+                            return [];
+                        }
+
+                        return self::attachableObjectsQuery($actor)->get()
+                            ->mapWithKeys(fn (Object_ $object): array => [$object->id => $object->name ?? "#{$object->id}"])
+                            ->all();
+                    })
                     ->required()
                     ->searchable(),
             ])
             ->action(function (array $data): void {
                 $actor = Filament::auth()->user();
-                $object = self::attachableObjectsQuery()->whereKey($data['object_id'])->first();
+                $object = $actor instanceof User
+                    ? self::attachableObjectsQuery($actor)->whereKey($data['object_id'])->first()
+                    : null;
 
                 if (! $actor instanceof User || ! $object instanceof Object_ || Gate::forUser($actor)->denies('update', $object)) {
                     Notification::make()
@@ -144,16 +154,16 @@ class ObjectsRelationManager extends RelationManager
     }
 
     /**
+     * The objects $actor's own grant of `object.edit` reaches — an explicit
+     * parameter rather than resolving the acting user internally, so this
+     * scope filter can be exercised directly against a real grant without
+     * needing a mounted Livewire/Filament panel context to resolve one.
+     *
      * @return Builder<Object_>
      */
-    private static function attachableObjectsQuery(): Builder
+    private static function attachableObjectsQuery(User $actor): Builder
     {
-        $actor = Filament::auth()->user();
         $query = Object_::query()->withUnmoderated()->with('translations');
-
-        if (! $actor instanceof User) {
-            return $query->whereRaw('1 = 0');
-        }
 
         return app(ResourceQueryScoper::class)->narrow(
             $query,
