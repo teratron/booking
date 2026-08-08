@@ -4,28 +4,29 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-08 18:05
+**Updated:** 2026-08-08 19:10
 **Phase:** 2 — Back Office Core
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Phase 2 Track A + Track B (all of T-2B01–B07) + T-2D01 + all of Track C (T-2C01–C04) done (17/25). Track B and Track C are both fully complete. Only Track D (D02-D05) and Track T (T01-T04) remain.
+- **Task:** Phase 2 Track A + Track B + Track C all done, plus T-2D01 + T-2D02 (18/25). Only T-2D03/D04/D05 and Track T (T01-T04) remain.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral and unchanged by the pivot; the 3 L2 documents were rewritten. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Any of T-2D02+ — pick by track order (D → T per phase-2.md); no cross-track blockers left before Track T.
+- **Next Action:** T-2D03 (side-by-side review — this queue's own handoff) or T-2D04/D05; Track T last, no cross-track blockers before it.
 
 ## Progress
 
 ```
 Overall: [1/7] █░░░░░░░ 14%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1 archived, Phase 2 decomposed, 3-7 scoped
-Implementation: [21/21] Phase 1 DONE · [17/25] Phase 2 — Track A + Track B + Track C all complete (objects/owners/impersonation/availability/moderation/territories/object types/languages/translations)
+Implementation: [21/21] Phase 1 DONE · [18/25] Phase 2 — Track A + B + C complete, Track D underway (queue listing done, review/journal/archive remain)
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
+- 2026-08-08 **Decision: `T-2D02`'s queue denormalizes `country_id`/`owner_id` onto `moderation_requests` at submission time** — `ScopedResource` scope narrowing filters a direct column on the resource's own table, and the request's target is polymorphic so no such column existed to filter on. `ModerationPipeline::submit()` already received both for mode resolution; only persisting them was missing. Test-fixture gotcha hit here: an object with no explicit `moderation_status` defaults to null, and `ModerationScope` (`WHERE moderation_status = 'approved'`) hides it even from an eager-loaded polymorphic relation, not just direct queries — seed fixtures must set it explicitly.
 - 2026-08-08 **Decision: `T-2C04`'s translatable-entity discovery scans `app/Models` for the `Translatable` contract instead of a maintained list** — reflection resolves each model's translation table/FK/attributes generically, so a Phase 3 model needs no registry change to appear in the report. `needs_review` + `published_at` added to all nine `*_translations` tables in one migration, backfilled so existing rows don't silently un-publish. Filament's `Table::query()` requires a real Eloquent builder, so the drill-down table is scoped to one entity+locale at a time rather than a hand-built cross-table union.
 - 2026-08-08 **Decision: `T-2C03`'s interface-catalog override table is named `interface_catalog_overrides`, not `*_translations`** — it is a flat key/value override store, not an entity-translation sibling pair, and the `%_translations` name collides with `CatalogIndexPlanSchemaTest`'s generic scan for that other shape. The whole override table is cached as one entry (not one per locale/group) since a request can load several translation groups; `InterfaceCatalogRepository::save()` invalidates that one entry. Translation fallback now resolves to the current primary language via `Lang::determineLocalesUsing()`, never `config('app.fallback_locale')` — both must be wired before anything resolves the `translator` singleton, or a already-built `Translator` keeps the unwrapped loader.
 - 2026-08-08 **Decision: `T-2B07`'s bulk reset and auto-reset both funnel through `AvailabilityAdministrationService`'s existing `applyStatus()` core** (via `override()` for the bulk path, a new `autoReset()` for the scheduled sweep) rather than duplicating the transaction/history/journal/cache logic a second time. The sweep is a no-op whenever `availability.auto_reset_enabled` is off — the setting's own seeded default, since auto-reset can manufacture a false vacancy claim.

@@ -459,4 +459,35 @@ return [
         ],
     ],
 
+    'moderation_queue' => [
+        'title' => 'Moderation queue',
+        'model_label' => 'moderation request',
+
+        'columns' => [
+            'submitted_at' => 'Submitted',
+            'owner' => 'Owner',
+            'object' => 'Object',
+            'section' => 'Section',
+            'change_summary' => 'Changed fields',
+            'status' => 'Status',
+            'assigned_to' => 'Assigned to',
+            'country' => 'Country',
+        ],
+
+        'filters' => [
+            'submitted_between' => 'Submitted between',
+            'from' => 'From',
+            'until' => 'Until',
+        ],
+
+        'actions' => [
+            'reassign' => 'Reassign',
+            'reassign_to' => 'Reassign to',
+        ],
+
+        'notifications' => [
+            'reassigned' => 'Request reassigned.',
+        ],
+    ],
+
 ];

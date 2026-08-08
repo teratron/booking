@@ -458,4 +458,35 @@ return [
         ],
     ],
 
+    'moderation_queue' => [
+        'title' => 'Очередь модерации',
+        'model_label' => 'заявка на модерацию',
+
+        'columns' => [
+            'submitted_at' => 'Подано',
+            'owner' => 'Владелец',
+            'object' => 'Объект',
+            'section' => 'Раздел',
+            'change_summary' => 'Изменённые поля',
+            'status' => 'Статус',
+            'assigned_to' => 'Назначено',
+            'country' => 'Страна',
+        ],
+
+        'filters' => [
+            'submitted_between' => 'Подано в период',
+            'from' => 'С',
+            'until' => 'По',
+        ],
+
+        'actions' => [
+            'reassign' => 'Переназначить',
+            'reassign_to' => 'Переназначить на',
+        ],
+
+        'notifications' => [
+            'reassigned' => 'Заявка переназначена.',
+        ],
+    ],
+
 ];

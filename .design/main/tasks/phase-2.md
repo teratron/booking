@@ -72,7 +72,7 @@ Track D and the edge never becomes a stall.
 ### Track D — Moderation & Governance
 
 - [x] [T-2D01] Moderation mode resolution and the change-request pipeline
-- [ ] [T-2D02] Moderation queue — listing, filtering, assignment
+- [x] [T-2D02] Moderation queue — listing, filtering, assignment
 - [ ] [T-2D03] Side-by-side review and the decision set
 - [ ] [T-2D04] Action journal — search, filter, before/after, export
 - [ ] [T-2D05] Archive — restore, transfer, permanent deletion
@@ -302,9 +302,11 @@ Track D and the edge never becomes a stall.
 ### [T-2D02] Moderation queue — listing, filtering, assignment
 
 - **Spec:** l1-moderation-governance.md §5.2 (`[TZ]` §46, §119)
-- **Status:** Todo
+- **Status:** Done `[Bootstrap]`
 - **Assignment:** Agent
 - **Verify:** `docker compose exec app ./vendor/bin/pest --filter=ModerationQueue` proves the queue shows change date, owner, object, section, change summary, and status per entry; that it filters by country, object, owner, change type, and date; that a moderator may reassign an entry to a colleague and the reassignment is journalled; that a country-scoped moderator sees only their country's entries; and that the queue's default ordering surfaces the oldest pending request first.
+- **Changes:** New `country_id` and `owner_id` columns on `moderation_requests` (both nullable FKs), denormalized off the polymorphic target at submission time — `ScopedResource`'s scope narrowing filters a direct column of the resource's own table, and the request's target is polymorphic so no such column existed. `ModerationPipeline::submit()` now persists both (it already received them as parameters for mode resolution; only storage was missing). `ModerationRequest` gains `country()`/`owner()` relations and a bound `ModerationRequestPolicy` (viewAny/view/update, scoped on `country_id`). New `ModerationRequestResource` — list-only, no create/edit/delete, since a request is produced by the pipeline and settled by the review screen this queue hands off to, never authored or removed here — with columns for submission date, owner, target object, section, a changed-fields summary, decision status, and assigned moderator; filters for country, object, owner, section, and a submitted-between date range; a `reassign` row action delegating to the new `ModerationQueueService::reassign()`, which updates `assigned_moderator_id` and journals the change; default sort `submitted_at` ascending.
+- **Evidence:** `pest tests/Feature/Admin/ModerationQueueTest.php` · exit 0 · 5 passed (19 assertions) — a seeded request's date/owner/object/section/changed-field-keys/status are all correct through the resource's own eager-loaded query; each of the five filters (country, object, owner, section, submitted-between) includes the matching request and excludes the non-matching one; reassignment updates `assigned_moderator_id` and writes a `moderation_request_reassigned` journal entry; a country-scoped moderator's queue contains their own country's request and not the other country's; the table's default sort is `submitted_at` ascending. Falsification: `$countryColumn` was set to `null`, and the country-scope test failed at its exact assertion (an unscoped resource reaches every row) rather than passing by coincidence; restored and the suite passed clean. One containment slip caught by `ContainmentTest` in the resource's own docblock (a direct handoff-task reference) and rewritten in plain language before the gate ran. `composer quality` (Pint, PHPStan level 8, Pest, coverage, audit, unused) · exit 0 · Pint clean; PHPStan zero errors; Pest 273 passed (919 assertions); coverage 84.2%; no security advisories; no unused packages. `migrate:fresh --seed` applies cleanly.
 - **Handoff:** T-2D03 — opening an entry from this queue is the review screen's entry point.
 - **Notes:** Oldest-first is the ordering that prevents a queue from developing a permanently unreviewed tail; any recency-first default quietly starves the entries that have waited longest. Scope filtering happens in the query, not in the view, for the same reason it does everywhere else in this panel.
 

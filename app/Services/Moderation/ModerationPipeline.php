@@ -73,6 +73,8 @@ final class ModerationPipeline
         $request = ModerationRequest::create([
             'target_type' => $target::class,
             'target_id' => $target->getKey(),
+            'country_id' => $countryId,
+            'owner_id' => $ownerId,
             'section' => $section,
             'previous_data' => $previousData,
             'proposed_data' => $proposedData,
