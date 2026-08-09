@@ -18,13 +18,13 @@
         "laravel/framework": "^13.24.0",
         "laravel/sanctum": "^4.3.3",
         "laravel/tinker": "^3.0.2",
-        "owen-it/laravel-auditing": "^14.0.6",
+        "owen-it/laravel-auditing": "^",
         "spatie/laravel-medialibrary": "^11.23.4",
         "spatie/laravel-permission": "^8.3.0",
         "staudenmeir/laravel-adjacency-list": "^1.26.1"
     },
     "require-dev": {
-        "driftingly/rector-laravel": "^2.5.0",
+        "driftingly/rector-laravel": "^",
         "fakerphp/faker": "^1.24.1",
         "icanhazstring/composer-unused": "^0.9.6",
         "larastan/larastan": "^3.10.0",

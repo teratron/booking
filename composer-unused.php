@@ -12,12 +12,10 @@ use ComposerUnused\ComposerUnused\Configuration\NamedFilter;
  * reason and a point at which the reason expires — an entry with neither is
  * how an unused-dependency check turns into decoration.
  */
-return static function (Configuration $config): Configuration {
-    return $config
-        // Issues the API tokens for the outward-facing REST contract. The
-        // contract is not written yet, but its `personal_access_tokens` table
-        // ships with the schema and the package is named in the project's
-        // required set. Remove this filter when the first token-guarded route
-        // is added; the scanner will then see the usage itself.
-        ->addNamedFilter(NamedFilter::fromString('laravel/sanctum'));
-};
+return static fn (Configuration $config): Configuration => $config
+    // Issues the API tokens for the outward-facing REST contract. The
+    // contract is not written yet, but its `personal_access_tokens` table
+    // ships with the schema and the package is named in the project's
+    // required set. Remove this filter when the first token-guarded route
+    // is added; the scanner will then see the usage itself.
+    ->addNamedFilter(NamedFilter::fromString('laravel/sanctum'));
