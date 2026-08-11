@@ -80,7 +80,7 @@ Track D and the edge never becomes a stall.
 ### Track T — Validation
 
 - [x] [T-2T01] Panel authorization matrix — every resource denies out of scope
-- [ ] [T-2T02] Moderation invariants — a rejected edit cannot touch the published record
+- [x] [T-2T02] Moderation invariants — a rejected edit cannot touch the published record
 - [ ] [T-2T03] Journal completeness and append-only enforcement
 - [ ] [T-2T04] Panel query budget under seeded volume
 
@@ -363,10 +363,13 @@ Track D and the edge never becomes a stall.
 
 - **Goal:** Verify the three moderation invariants that the design rests on and that a plausible implementation can violate without any visible symptom.
 - **Spec:** l1-moderation-governance.md §3.1, §5.3
-- **Status:** Todo
+- **Status:** Done `[Bootstrap]`
 - **Assignment:** Agent
 - **Method:** `docker compose exec app ./vendor/bin/pest --filter=ModerationInvariants` asserts: a pending request never mutates the published record, checked by hashing the published row before submission and after rejection; approval publishes with no second manual step; the availability toggle bypasses moderation in every mode including the strictest; and a request whose target is edited by an administrator between submission and review still shows the moderator the snapshot that was submitted against.
 - **Verify:** Each invariant is proven capable of failing before it is proven to hold — the implementation is temporarily broken in the way the invariant forbids, the assertion fails citing the case, and the break is reverted.
+- **Changes:** New `ModerationInvariantsTest` — no production code changed; the four invariants already hold, so this task is verification-only, proving each one rather than implementing it. Its own fixture hit the same `moderation_status` gotcha `T-2D02` first documented: the target object's polymorphic `target()` relation is invisible to `ModerationDecisionService::approve()` unless `moderation_status` is set to `approved` explicitly, since the default `null` falls outside `ModerationScope`'s own filter.
+- **Evidence:** `pest tests/Feature/Admin/ModerationInvariantsTest.php` · exit 0 · 4 passed (10 assertions) — a published record's row and its translation are byte-identical before submission, after submission, and after rejection; a single `approve()` call is sufficient to publish the proposed value with no further step; an object carrying the strictest possible mode setting (object-level, `review`) still bypasses moderation entirely when its availability is overridden, leaving `moderation_requests` empty; the review page's own `diff()` still shows the values a request was submitted against after the live record is edited out from under it. Falsification, one per invariant, each reverted after confirming the exact failure: `ModerationDecisionService::reject()` was temporarily made to apply the proposed data — the byte-identical assertion failed citing the `name` field; `approve()` was temporarily made to skip applying data — the published-value assertion failed showing the original name unchanged; `AvailabilityAdministrationService::override()` was temporarily made to submit through the pipeline first — the zero-requests assertion failed at count 1; `ReviewModerationRequest::diff()` was temporarily made to read the live target instead of the stored snapshot — the assertion failed showing the concurrent edit leaking through. `composer quality` (Pint, PHPStan level 8, Pest, coverage, audit, unused) · exit 0. `migrate:fresh --seed` applies cleanly from empty.
+- **Handoff:** none.
 
 ### [T-2T03] Journal completeness and append-only enforcement
 
