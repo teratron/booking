@@ -240,13 +240,17 @@ it('transfers ownership and removes the outgoing owner from object_user, leaving
         ->and(DB::table('object_user')->where('object_id', $fixture['objectId'])->where('user_id', $otherStaff->id)->exists())->toBeTrue();
 });
 
-it('refuses a category-scoped administrator saving an object of another category — rejected, not hidden', function (): void {
+it('refuses a category-scoped administrator saving an object of another category — refused by the scoped query, not a hidden link', function (): void {
     $fixture = objectFormFixture();
-    $actor = objectFormActor(['object.view', 'object.edit'], 'category', $fixture['typeDining'], 'dining_only');
+    $actor = objectFormActor(['admin_panel_access', 'object.view', 'object.edit'], 'category', $fixture['typeDining'], 'dining_only');
 
+    // The same scope narrowing that keeps the object off this actor's list
+    // also governs the edit page's own record resolution — a category
+    // mismatch reads as not found, since the row genuinely falls outside
+    // what the grant reaches, not as a policy refusing a record it can see.
     $this->actingAs($actor)
         ->get(ObjectResource::getUrl('edit', ['record' => $fixture['objectId']], panel: 'admin'))
-        ->assertForbidden();
+        ->assertNotFound();
 
     expect($actor->can('update', $fixture['object']))->toBeFalse();
 });
