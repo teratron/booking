@@ -2,7 +2,7 @@
 
 **Version:** 1.0.0
 **Status:** Active
-**Engine Version:** 2.1.58
+**Engine Version:** 2.1.71
 
 ## Overview
 
@@ -25,4 +25,4 @@ Global registry aggregating all project specifications across workspaces.
 
 - **Maintainer**: Core Team
 - **License**: MIT
-- **Last Updated**: 2026-07-30
+- **Last Updated**: 2026-08-11
