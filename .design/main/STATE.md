@@ -4,33 +4,33 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-08 20:45
+**Updated:** 2026-08-12 00:20
 **Phase:** 2 — Back Office Core
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Phase 2 Track A + Track B + Track C all done, plus T-2D01–D04 (20/25). Only T-2D05 and Track T (T01-T04) remain.
+- **Task:** Phase 2 Track A + Track B + Track C + Track D all done (21/25). Only Track T (T01-T04) remains.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral and unchanged by the pivot; the 3 L2 documents were rewritten. TZ coverage 134/134, registry parity clean.
-- **Next Action:** T-2D05 (archive/restore/permanent deletion) — the last Track D task; Track T last, no cross-track blockers before it.
+- **Next Action:** T-2T01 (panel authorization matrix) — first Track T task; no cross-track blockers before it.
 
 ## Progress
 
 ```
 Overall: [1/7] █░░░░░░░ 14%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1 archived, Phase 2 decomposed, 3-7 scoped
-Implementation: [21/21] Phase 1 DONE · [20/25] Phase 2 — Track A + B + C complete, Track D underway (queue/review/journal done, archive remains)
+Implementation: [21/21] Phase 1 DONE · [21/25] Phase 2 — Track A + B + C + D complete, Track T (validation) remains
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-08 **Decision: `T-2D04`'s archival job exports aging journal entries to `s3` rather than deleting them** — the append-only trigger from Phase 1 fires `BEFORE UPDATE OR DELETE` on `audits` unconditionally, for every role including a scheduled job's own connection ("never, by any role" per its own migration comment), so pruning the live table is not an option T-2D05 (or anything else) can reach for either. `outcome` (success/failure) has no column — derived from the event name's existing `_failed`/`_refused`/`_denied`/`_rejected` suffix convention instead of adding one that could drift. `Audit` is a vendor model (`owen-it/laravel-auditing`), so its Policy is bound via `Gate::policy()` in `AppServiceProvider`, not a `#[UsePolicy]` attribute — that attribute only works on a model this project owns.
+- 2026-08-12 **Decision: `T-2D05`'s archive/restore/transfer proof runs against `Object_` and a generic anonymous model, not Phase 3's content types** — `news_items`, `promotions`, `banners`, and `articles` all ship `softDeletes()` columns from Phase 1's upfront schema, but none has an Eloquent model yet; those are Phase 3 deliverables. An anonymous class (`new class extends Model { use SoftDeletes; protected $table = 'news_items'; }`) proves the mechanism generically without pulling a content-pipeline model forward. `users` has no `deleted_at` at all — its `blocked_at`/`blocked_by` lifecycle from an earlier task is the archive-equivalent, asserted as its own thing rather than duplicated with a column that was never meant to exist. Permanent deletion's re-authentication is a real password check (`Hash::check()`) in the service layer, not just a Filament confirmation — the service re-checks the chief-administrator restriction independently of the Filament `->authorize()` gate, mirroring the defense-in-depth pattern already used for critical settings.
+- 2026-08-08 **Decision: `T-2D04`'s archival job exports aging journal entries to `s3` rather than deleting them** — the append-only trigger from Phase 1 fires `BEFORE UPDATE OR DELETE` on `audits` unconditionally, for every role including a scheduled job's own connection ("never, by any role" per its own migration comment), so pruning the live table is not an option anything can reach for. `outcome` (success/failure) has no column — derived from the event name's existing `_failed`/`_refused`/`_denied`/`_rejected` suffix convention instead of adding one that could drift. `Audit` is a vendor model (`owen-it/laravel-auditing`), so its Policy is bound via `Gate::policy()` in `AppServiceProvider`, not a `#[UsePolicy]` attribute — that attribute only works on a model this project owns.
 - 2026-08-08 **Decision: `T-2D03`'s decisions pin the target's translation locale to the portal's primary language, not the moderator's own UI locale** — the request model carries no `locale` column despite proposed data sometimes holding translated fields, so `fill()` (which `astrotomic/laravel-translatable` routes to whatever locale is currently active) would otherwise write into whichever language the deciding moderator happens to be browsing in. Partial acceptance settles the original request as `approved` and spins off a fresh `pending` request for exactly the untouched remainder, since the `decision` enum has no "partially approved" state to represent it in place. Every decision writes its target mutation, the request's own outcome, and the journal entry in one transaction — the specification's own explicit requirement, not just house style.
 - 2026-08-08 **Decision: `T-2D02`'s queue denormalizes `country_id`/`owner_id` onto `moderation_requests` at submission time** — `ScopedResource` scope narrowing filters a direct column on the resource's own table, and the request's target is polymorphic so no such column existed to filter on. `ModerationPipeline::submit()` already received both for mode resolution; only persisting them was missing. Test-fixture gotcha hit here: an object with no explicit `moderation_status` defaults to null, and `ModerationScope` (`WHERE moderation_status = 'approved'`) hides it even from an eager-loaded polymorphic relation, not just direct queries — seed fixtures must set it explicitly.
 - 2026-08-08 **Decision: `T-2C04`'s translatable-entity discovery scans `app/Models` for the `Translatable` contract instead of a maintained list** — reflection resolves each model's translation table/FK/attributes generically, so a Phase 3 model needs no registry change to appear in the report. `needs_review` + `published_at` added to all nine `*_translations` tables in one migration, backfilled so existing rows don't silently un-publish. Filament's `Table::query()` requires a real Eloquent builder, so the drill-down table is scoped to one entity+locale at a time rather than a hand-built cross-table union.
-- 2026-08-08 **Decision: `T-2C03`'s interface-catalog override table is named `interface_catalog_overrides`, not `*_translations`** — it is a flat key/value override store, not an entity-translation sibling pair, and the `%_translations` name collides with `CatalogIndexPlanSchemaTest`'s generic scan for that other shape. The whole override table is cached as one entry (not one per locale/group) since a request can load several translation groups; `InterfaceCatalogRepository::save()` invalidates that one entry. Translation fallback now resolves to the current primary language via `Lang::determineLocalesUsing()`, never `config('app.fallback_locale')` — both must be wired before anything resolves the `translator` singleton, or a already-built `Translator` keeps the unwrapped loader.
 
 ## Blockers
 

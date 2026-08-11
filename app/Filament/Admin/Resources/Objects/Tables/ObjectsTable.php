@@ -26,6 +26,7 @@ use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -117,10 +118,15 @@ class ObjectsTable
         ];
     }
 
-    /** @return array<Filter|SelectFilter> */
+    /** @return array<Filter|SelectFilter|TrashedFilter> */
     private static function filters(): array
     {
         return [
+            // "Archived" here means what the resource's own soft-delete
+            // scope means everywhere else — without this filter an archived
+            // object is invisible in this list by design, not by accident.
+            TrashedFilter::make(),
+
             SelectFilter::make('country_id')
                 ->label(__('panel.objects.columns.country'))
                 ->options(fn (): array => Country::query()->orderBy('display_order')->pluck('code', 'id')->all()),

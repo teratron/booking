@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Services\Objects;
 
+use App\Exceptions\PermanentDeletionRefusedException;
 use App\Models\ModerationRequest;
 use App\Models\Object_;
 use App\Models\ObjectTranslation;
 use App\Models\User;
 use App\Services\Audit\AuditJournal;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
@@ -96,6 +98,42 @@ final class ObjectLifecycleService
         $object->restore();
 
         $this->journal->record('object_restored', $object, [], [], $actor, ['object']);
+    }
+
+    /**
+     * Removes the record beyond any restore path — the one action in this
+     * class that does not trust the Filament layer's own `->authorize()`
+     * gate to have run, since a hidden action is a usability affordance, not
+     * an access control. Re-checks the chief-administrator restriction
+     * `Object_Policy::forceDelete()` already states, and additionally
+     * requires the acting account's own current password: a confirmation
+     * click and a re-authentication are different gates, and this is the one
+     * `[TZ]` §75 asks for by name on the highest-impact target in the panel.
+     *
+     * @throws PermanentDeletionRefusedException when the actor is not the chief
+     *                                           administrator, the password does not match, or the
+     *                                           object was never archived first
+     */
+    public function permanentlyDelete(Object_ $object, User $actor, string $password): void
+    {
+        if (! $actor->hasRole('chief_administrator')) {
+            throw PermanentDeletionRefusedException::notChiefAdministrator($object->id);
+        }
+
+        if (! Hash::check($password, $actor->password)) {
+            throw PermanentDeletionRefusedException::passwordMismatch($object->id);
+        }
+
+        if (! $object->trashed()) {
+            throw PermanentDeletionRefusedException::notArchived($object->id);
+        }
+
+        $snapshot = $object->only(['id', 'ulid', 'owner_id', 'object_type_id', 'territory_id', 'status']);
+
+        DB::transaction(function () use ($object, $snapshot, $actor): void {
+            $this->journal->record('object_permanently_deleted', $object, $snapshot, [], $actor, ['object']);
+            $object->forceDelete();
+        });
     }
 
     /**

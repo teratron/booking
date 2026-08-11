@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Admin\Resources\Objects\Pages;
 
 use App\Exceptions\AvailabilityRevertRefusedException;
+use App\Exceptions\PermanentDeletionRefusedException;
 use App\Filament\Admin\Resources\Objects\ObjectResource;
 use App\Models\Object_;
 use App\Models\ObjectTranslation;
@@ -17,6 +18,7 @@ use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
@@ -124,11 +126,59 @@ class EditObject extends EditRecord
                 ->requiresConfirmation(),
             $this->lifecycleAction('restore', 'restore', fn (Object_ $object, User $actor) => $this->service()->restore($object, $actor))
                 ->visible(fn (Object_ $object): bool => $object->trashed()),
+            $this->permanentlyDeleteAction(),
             $this->duplicateAction(),
             $this->transferOwnershipAction(),
             $this->overrideAvailabilityAction(),
             $this->revertAvailabilityAction(),
         ];
+    }
+
+    /**
+     * Restricted to the chief administrator (`Object_Policy::forceDelete()`)
+     * and visible only once an object is already archived — permanent
+     * deletion is the last step of the archive flow, not an alternative to
+     * it. The password field is the re-authentication `[TZ]` §75 asks for by
+     * name; a confirmation click alone is not that gate.
+     */
+    private function permanentlyDeleteAction(): Action
+    {
+        return Action::make('permanently_delete')
+            ->label(__('panel.objects.lifecycle.permanently_delete'))
+            ->color('danger')
+            ->authorize(fn (Object_ $object): bool => (bool) auth()->user()?->can('forceDelete', $object))
+            ->visible(fn (Object_ $object): bool => $object->trashed())
+            ->requiresConfirmation()
+            ->schema([
+                TextInput::make('password')
+                    ->label(__('panel.objects.lifecycle.reauthenticate_password'))
+                    ->password()
+                    ->revealable()
+                    ->required(),
+            ])
+            ->action(function (array $data): void {
+                $actor = Filament::auth()->user();
+
+                if (! $actor instanceof User) {
+                    return;
+                }
+
+                try {
+                    $this->service()->permanentlyDelete($this->currentObject(), $actor, $data['password']);
+                } catch (PermanentDeletionRefusedException $exception) {
+                    Notification::make()
+                        ->danger()
+                        ->title(__('panel.objects.lifecycle.permanently_delete_refused'))
+                        ->body($exception->getMessage())
+                        ->send();
+
+                    return;
+                }
+
+                Notification::make()->title(__('panel.objects.lifecycle.applied'))->success()->send();
+
+                $this->redirect(ObjectResource::getUrl());
+            });
     }
 
     /**
