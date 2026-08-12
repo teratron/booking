@@ -81,7 +81,7 @@ Track D and the edge never becomes a stall.
 
 - [x] [T-2T01] Panel authorization matrix — every resource denies out of scope
 - [x] [T-2T02] Moderation invariants — a rejected edit cannot touch the published record
-- [ ] [T-2T03] Journal completeness and append-only enforcement
+- [x] [T-2T03] Journal completeness and append-only enforcement
 - [ ] [T-2T04] Panel query budget under seeded volume
 
 ## Detailed Tracking
@@ -375,10 +375,13 @@ Track D and the edge never becomes a stall.
 
 - **Goal:** Verify that every event class the specification enumerates actually reaches the journal, and that no ordinary administrator can alter it.
 - **Spec:** l1-moderation-governance.md §3.2, §5.4 (`[TZ]` §53, §129)
-- **Status:** Todo
+- **Status:** Done `[Bootstrap]`
 - **Assignment:** Agent
 - **Method:** `docker compose exec app ./vendor/bin/pest --filter=JournalCompleteness` performs one action per enumerated event class — sign-in, object creation, object edit, owner change, availability toggle, content publication, moderation decision, data export, settings change, module toggle, deletion, restoration, impersonation — and asserts each produced exactly one journal row with a populated previous and new value. A second case attempts `UPDATE` and `DELETE` against `audits` as the application's own database role and asserts both are refused by the Phase 1 trigger, not by application code.
 - **Verify:** The event class list in the test is asserted against the specification's enumeration so an unimplemented class fails loudly rather than being silently omitted; package changes, position changes, and bumps belong to Phase 3 and are marked skipped with that reason rather than dropped from the list.
+- **Changes:** New `JournalCompletenessTest` — no production code changed; every enumerated class already reaches the journal, so this is verification-only. Object creation and a plain field edit are the automatic half of the journal — `owen-it/laravel-auditing`'s own observer on `Object_`, not an explicit `AuditJournal` call — and that observer is deliberately silent in console context (`config/audit.php`'s `console => false`, to keep seeders and artisan commands quiet); the test flips it on for its own duration to prove the production, web-request behavior rather than the console-suppressed one. Three classes — sign-in, object creation, and object edit — are checked immediately after their own action rather than in the batch loop with the rest, because a later action in the same sequence (impersonation re-authenticates the guard; every subsequent lifecycle call saves the same object again) would otherwise add a second row under the identical event name before a single end-of-test count could tell the two apart.
+- **Evidence:** `pest tests/Feature/Admin/JournalCompletenessTest.php` · exit 0 · 2 passed (31 assertions), 3 skipped — all thirteen enumerated event classes each produced exactly one journal row carrying a real previous or new value (both, where the action has one of each to record; only one side where the domain has nothing to say about the other — creation has no prior state, deletion has no new one); a raw `UPDATE` and a raw `DELETE` against `audits`, issued as the application's own database role, both raised `QueryException` from the Phase 1 trigger, and the probe row was confirmed untouched afterward, not merely unmatched. Package changes, position changes, and bumps are marked skipped with the Phase 3 reason rather than dropped from the file. Falsification: the enumeration check's own discriminating power was proven by temporarily dropping `restoration` from the class map — the comparison failed citing exactly that missing key — then restored. `composer quality` (Pint, PHPStan level 8, Pest, coverage, audit, unused) · exit 0. `migrate:fresh --seed` applies cleanly from empty.
+- **Handoff:** none.
 
 ### [T-2T04] Panel query budget under seeded volume
 
