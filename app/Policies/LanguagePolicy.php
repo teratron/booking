@@ -40,4 +40,9 @@ final class LanguagePolicy extends ScopedPolicy
     {
         return $this->authorize($user, 'settings.edit');
     }
+
+    public function reorder(User $user): bool
+    {
+        return $this->authorize($user, 'settings.edit');
+    }
 }

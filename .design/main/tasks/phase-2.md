@@ -82,7 +82,7 @@ Track D and the edge never becomes a stall.
 - [x] [T-2T01] Panel authorization matrix — every resource denies out of scope
 - [x] [T-2T02] Moderation invariants — a rejected edit cannot touch the published record
 - [x] [T-2T03] Journal completeness and append-only enforcement
-- [ ] [T-2T04] Panel query budget under seeded volume
+- [x] [T-2T04] Panel query budget under seeded volume
 
 ## Detailed Tracking
 
@@ -387,10 +387,13 @@ Track D and the edge never becomes a stall.
 
 - **Goal:** Prove the panel meets its query budget against realistic volume rather than against fixtures, before Phase 3 adds more surface to it.
 - **Spec:** l2-tech-stack.md §5.9
-- **Status:** Todo
+- **Status:** Done `[Bootstrap]`
 - **Assignment:** Agent
 - **Method:** `docker compose exec app ./vendor/bin/pest --group=slow --filter=PanelQueryBudget` loads each resource list, the dashboard, the moderation queue, and the action journal against the seeded 52,800 objects and 6,270 territories, asserting each stays within thirty queries and that strict mode raises no lazy-loading violation.
 - **Verify:** Measured inside the container against a non-bind-mounted copy — the Windows bind mount measures filesystem cost rather than application cost and is not a valid benchmark host. Findings are recorded as numbers in the task's evidence line, not as a pass/fail claim.
+- **Changes:** New `PanelQueryBudgetTest`, tagged `slow` — reads the live resource registry (the same pattern `T-2T01` established) so every registered list page is measured without hand-enumerating them, plus the dashboard named explicitly since it is a page, not a resource. One fix: `LanguagePolicy` gained a `reorder()` method — strict authorization mode requires one wherever a table declares `->reorderable()`, and `LanguagesTable` does, but no existing test had ever rendered that list page through a real HTTP request to trigger the check; every prior assertion exercised the reorder action directly through Livewire, bypassing the page-level render that surfaces a missing policy method.
+- **Evidence:** `pest --group=slow tests/Feature/Admin/PanelQueryBudgetTest.php` (`-d memory_limit=1G`, matching `composer test:slow`) · exit 0 · 1 passed (32 assertions) against a freshly seeded 52,800 objects and 6,270 territories (~175,000 rows total). Measured query counts per page, all against a 30-query ceiling (32 for the dashboard, which carries two fixed, non-scaling language-registry queries `AdminDashboardTest` already established at that exact number): Objects 19, Territories 14, Owners 11, ModerationRequests 12, ActionJournal 23, ObjectTypes 13, Languages 10, Modules 21, Dashboard 21. Every page returned 200 with no strict-mode lazy-loading exception. Query counts were measured via `DB::enableQueryLog()`, which counts issued statements independent of the host filesystem — the Windows-bind-mount caveat this task's own Verify line names applies to *wall-clock* timing, which this task's budget metric (a query count, not a millisecond threshold) does not depend on; no separate non-bind-mounted timing pass was run, since nothing in this task's own numbers needed one. `composer quality` (Pint, PHPStan level 8 — run at `-d memory_limit=1G`, since the default 128M exhausts on this file's own analysis — Pest, coverage, audit, unused) · exit 0. `migrate:fresh --seed` applies cleanly from empty.
+- **Handoff:** none — the last Phase 2 task. Phase 2 (Back Office Core) is complete: 25/25.
 
 ## Standing Constraints
 
