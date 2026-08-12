@@ -36,7 +36,7 @@
         "pestphp/pest": "^5.1.0",
         "pestphp/pest-plugin-laravel": "^5.0.1",
         "phpstan/phpstan": "^2.2.8",
-        "rector/rector": "^2.6.1"
+        "rector/rector": "^2.6.2"
     },
     "autoload": {
         "psr-4": {
