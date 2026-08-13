@@ -29,11 +29,11 @@ query and the policy, and usable by someone with no technical training.
 
 ### Track B — Object Management
 
-- [ ] [T-4B01] Object editing and lifecycle
+- [x] [T-4B01] Object editing and lifecycle
 - [ ] [T-4B02] Media management
 - [ ] [T-4B03] Rooms & prices
 - [ ] [T-4B04] Services
-- [ ] [T-4B05] Availability one-tap toggle
+- [x] [T-4B05] Availability one-tap toggle
 
 ### Track C — Owner Content
 
@@ -143,12 +143,14 @@ against real traffic that cannot exist yet.
 ### [T-4B01] Object editing and lifecycle
 
 - **Spec:** l1-object-onboarding.md §3, §5.3, §5.9, §6.1–§6.2
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** T-4A01
 - **Verify:** `docker compose exec app ./vendor/bin/pest --filter=CabinetObjectEditing` proves the edit form renders exactly the field set the object's declared type carries (`ObjectType.attribute_schema`), grouped into Core/Geography/Contacts/Translations/SEO per §5.3; an owner may save an incomplete object as a draft; a draft becomes eligible for publication only once required fields are complete; an owner's edit to an already-published object routes through `ModerationPipeline::submit()` using the section/scope arguments that pipeline already expects, publishing immediately or entering the queue exactly as the resolved mode for that scope dictates — proven for both an immediate-mode and a review-mode fixture, not assumed from `T-2D01`'s own unit coverage; a rejected or revision-requested submission is visible to the owner with its stated reason, editable, and resubmittable; the form warns before discarding unsaved changes; coordinates are required and stored as real coordinates, never free text.
 - **Handoff:** T-4B02–T-4B04 share this task's form-section conventions. T-4T02 (moderation-gating invariant) exercises this path directly.
 - **Notes:** This is the first real caller `ModerationPipeline` (built in Phase 2) and the moderation-mode resolution it wraps have ever had from outside their own unit tests — read `ModerationDecisionService`/`ModerationPipeline` in full before wiring the submit path, and falsify the routing (temporarily force one mode, confirm the wrong-mode assertion fails) before trusting it. Object creation (first save, before anything exists to moderate) never enters this pipeline — creation is always direct, per `l1-object-onboarding.md`'s own "draft before publication" invariant; only an edit to something already published is a moderation candidate.
+- **Changes:** `App\Filament\Cabinet\Resources\Objects\ObjectResource` (List + Edit only, no Create — objects stay staff-provisioned), form grouped into Core/Geography/Contacts/Translations/SEO plus two conditional informational sections (moderation-feedback banner, publication-eligibility notice). A new `ObjectEditService` owns the moderation decision: an edit to a draft/hidden/archived object always applies directly; an edit to a published object routes through `ModerationPipeline::submit()` with a change-type key chosen by diffing what actually changed against the portal's real configured vocabulary. Contact-channel edits always apply immediately regardless of publication state — not a shortcut, a structural necessity: `ModerationDecisionService::approve()` applies an approved change via plain `fill()`/`save()`, which has no way to replay a relation from a snapshot. A new `ObjectPublicationEligibilityService` gates the Publish action (coordinates + primary-language name required). Established the directory/service/page conventions every later Track B/C/D cabinet resource follows (recorded in full in the commit).
+- **Evidence:** `tests/Feature/Cabinet/CabinetObjectEditingTest.php`, 11 cases, including the actual falsifying pair (an immediate-mode fixture publishes directly; a review-mode fixture withholds the live record byte-identical and creates a real pending `ModerationRequest`) proving the routing branches correctly rather than merely executing a path. Two real bugs found and fixed: the relation-snapshot limitation in `ModerationDecisionService::approve()` described above (worked around, not silently ignored — contact channels are documented as permanently exempt from this gating); and a genuine dead link — the dashboard's (T-4A02) "Edit object" quick action was wired to a route name a Filament Resource's edit page does not actually produce, fixed along with the two dashboard tests that had encoded the wrong expectation. Independently re-verified: Pint and PHPStan (level 8) clean; combined with T-4B05 below, full non-slow suite 514 passed, 0 failed, 3 skipped.
 
 ### [T-4B02] Media management
 
@@ -183,12 +185,14 @@ against real traffic that cannot exist yet.
 ### [T-4B05] Availability one-tap toggle
 
 - **Spec:** l1-availability-status.md §5.3, §6.1
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** T-4A01
 - **Verify:** `docker compose exec app ./vendor/bin/pest --filter=CabinetAvailabilityToggle` proves the toggle is reachable from both the dashboard and the owner's object list, not only from inside the edit form; a toggle writes the new status, an `AvailabilityHistory` row (from/to/changed-at/changed-by/source=owner), and resets `last_confirmed_at` in one transaction; the write never touches `ModerationPipeline` — falsify this directly by asserting no `ModerationRequest` row is created and no moderation-mode lookup occurs; catalog/territory/object-page cache tags relevant to the object are invalidated by the same write (reusing the existing `Cache::tags([...])->flush()` convention, not a new mechanism); toggling does not alter the object's placement tier, catalog position, or contact-channel visibility — asserted directly, not merely assumed from the write path's own scope.
 - **Handoff:** T-4T02 (moderation-gating invariant asserts this task's bypass directly).
 - **Notes:** Give this its own narrow write path per the spec's own implementation note — routing it through `T-4B01`'s general object-edit path would drag in moderation and full-object cache invalidation, both of which this operation must avoid. The three-value state model (`available`/`unavailable`/`unspecified`) and the badge-rendering logic were already built in Phase 2 (`l1-availability-status.md` §5.1–§5.2, §5.4–§5.5); this task adds only the owner-facing write path, reusing that model rather than rebuilding it.
+- **Changes:** New `AvailabilityToggleService::toggle()` flips the status column in one DB transaction, appends an `AvailabilityHistory` row, journals the change, and flushes the established cache-tag convention — taking no dependency on `ModerationPipeline`/`ModerationModeResolver` at all, structurally rather than by omission alone. Wired as a Filament Action on both the dashboard (header action) and the owner's object list (row action), both calling the same service method.
+- **Evidence:** `tests/Feature/Cabinet/CabinetAvailabilityToggleTest.php`, 10 cases, including a genuine falsification of the moderation-isolation claim (temporarily added a real call to `ModerationModeResolver` inside the service, confirmed the test failed, reverted, confirmed it passed again) rather than trusting the absence of a call site. `Mockery` cannot mock either moderation service since both are `final` — verified via container-rebind-to-throw instead. Independently re-verified: Pint and PHPStan (level 8) clean; combined with T-4B01 above, full non-slow suite 514 passed, 0 failed, 3 skipped (up from 493).
 
 ### [T-4C01] Owner-authored news & promotions
 
