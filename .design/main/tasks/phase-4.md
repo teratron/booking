@@ -30,9 +30,9 @@ query and the policy, and usable by someone with no technical training.
 ### Track B — Object Management
 
 - [x] [T-4B01] Object editing and lifecycle
-- [ ] [T-4B02] Media management
-- [ ] [T-4B03] Rooms & prices
-- [ ] [T-4B04] Services
+- [x] [T-4B02] Media management
+- [x] [T-4B03] Rooms & prices
+- [x] [T-4B04] Services
 - [x] [T-4B05] Availability one-tap toggle
 
 ### Track C — Owner Content
@@ -155,31 +155,38 @@ against real traffic that cannot exist yet.
 ### [T-4B02] Media management
 
 - **Spec:** l1-object-onboarding.md §5.4
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** T-4B01
 - **Verify:** `docker compose exec app ./vendor/bin/pest --filter=CabinetMediaManagement` proves an owner may upload, delete, reorder, caption, and select a primary photo for their own object only; uploads are queued for automatic optimization (conversions), never left to the owner to pre-resize; upload count and dimension limits read from the portal settings registry, not a hard-coded constant.
 - **Handoff:** none within this phase.
 - **Notes:** Reuses `spatie/laravel-medialibrary` exactly as `Object_` (Phase 2) and `Article`/`Banner`/`NewsItem`/`Promotion` (Phase 3) already do — no new upload mechanism, only the owner-scoped authorization wrapping it.
+- **Changes:** `Object_` gained `registerMediaCollections()`/`registerMediaConversions()` (a `photos` collection, two queued conversions — a card thumbnail and a detail size). A thin `ObjectPhoto` subclass of Spatie's own `Media` model, scoped to that collection, carries the `object()` relation Filament's tenancy needs. A new `ObjectPhotoService` owns upload-count enforcement (reading the settings registry, one new setting key added), captioning, primary-photo selection (a custom property on the media row, not a second FK column), and deletion through the base class so file cleanup fires. Photo actions apply immediately regardless of publication state — a gallery is a set of individually addressable rows, not a flat snapshot the moderation-approval mechanism can safely replay.
+- **Evidence:** `tests/Feature/Cabinet/CabinetMediaManagementTest.php`, 13 cases, proving real `spatie/laravel-medialibrary` state (a generated conversion actually present on disk, not just "the call didn't throw") and cross-owner refusal at three layers (HTTP, Policy, live table action). Three real bugs found and fixed: the photo policy had no `reorder()` method, which strict-authorization mode turns into a hard crash; the photo's relation back to its object silently returned null for any object not yet cleared by moderation — the normal state while an owner is actively curating photos — because the parent's moderation-visibility scope leaked into the relation query, which would have locked owners out of managing photos on their own unpublished listings; and the screen didn't eager-load that same relation, which would have crashed under this codebase's strict lazy-loading guard the moment an object had more than one photo.
 
 ### [T-4B03] Rooms & prices
 
 - **Spec:** l1-object-onboarding.md §5.5
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** T-4B01
 - **Verify:** `docker compose exec app ./vendor/bin/pest --filter=CabinetRoomsAndPrices` proves this section is reachable only for accommodation-type objects (the type's own declaration, not a hard-coded type-name check); an owner may create an unbounded number of room categories, each carrying name, description, photos, capacity, room count, area, bed configuration, maximum guests, extra-bed option, and amenities; a price record is period-aware (per night/room/person/service, or "from", with an optional seasonal window) and becomes publicly visible as soon as it is saved and any applicable moderation clears — reusing `T-4B01`'s moderation routing, not a second copy of it.
 - **Handoff:** none within this phase.
 - **Notes:** Confirm the exact schema Phase 1 already shipped for rooms/prices before adding anything — this phase has consistently found the migrations already exist ahead of the Filament/service layer, and this area is no exception if the same pattern holds.
+- **Changes:** `Room`/`RoomTranslation`/`Price` Eloquent models built against the already-existing (Phase 1) migrations — none existed before. A standalone tenant-scoped resource (no admin-panel precedent existed for a full CRUD one-to-many child of an object), gated in two independent places by the object type's own `has_rooms` flag: navigation visibility and every one of the resource's own routes (403, proven against real HTTP requests, not just the nav helper). Room/price content applies immediately regardless of publication state, for the same structural reason media does — a room category is a relational structure (nested translations, nested prices) the moderation-replay mechanism cannot safely reconstruct.
+- **Evidence:** `tests/Feature/Cabinet/CabinetRoomsAndPricesTest.php`, 6 cases. Root-caused a genuine `object_id` NOT NULL failure (not a guess-and-check fix) to Filament's automatic tenant-association listener only registering when the panel actually boots, which a bare `Livewire::test()` call doesn't do — fixed by an explicit `Filament::bootCurrentPanel()` call in the test's own tenant-mounting helper. **Also fixed a genuine cross-cutting regression this task's new `Room` model exposed, not scoped to this task's own tests**: `room_translations` predates the project's `needs_review`/`published_at` translation-completeness convention and was never brought into line, because nothing made `Room` a `Translatable` model before now — the moment it became one, `TranslatableEntityRegistry`'s reflection-based discovery picked it up and the existing `TranslationCompletenessReport` (unrelated admin-side SEO reporting) crashed querying a column that did not exist. Closed with a new migration mirroring the exact precedent an earlier phase had already established for the identical gap class on a different table set.
 
 ### [T-4B04] Services
 
 - **Spec:** l1-object-onboarding.md §5.6
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** T-4B01
 - **Verify:** `docker compose exec app ./vendor/bin/pest --filter=CabinetServices` proves an owner selects amenities only from the administrator-maintained registry (`Amenity`/`AmenityGroup`, already built in Phase 1/2) — no free-text entry exists anywhere in this form; only the amenity groups applicable to the object's declared type are offered, not the full registry unconditionally.
 - **Handoff:** none within this phase.
+- **Changes:** No new model — this is the object's own existing `amenities` relation, edited directly. A new `ObjectServiceCatalogService` resolves which amenity groups apply to the object's declared type and which amenities within a group are active, both narrowed sets. One collapsible section per applicable group, each a checkbox list bound through Filament's own `->relationship()` mechanism scoped to that group — structurally immediate (Filament persists relationship-bound fields before any page-level save hook runs), matching the same reasoning already established for rooms' own amenity selection.
+- **Evidence:** `tests/Feature/Cabinet/CabinetServicesTest.php`, 3 cases, including a structural assertion (inspecting the live form's own field list, not rendered HTML) that no free-text component exists anywhere. One test-fixture-only issue found and fixed: Filament's tenancy trait registers a real global scope directly on the tenant model class the first time a tenant is mounted in a test process, silently narrowing every later plain query on that model for the rest of that test — not a product bug, but worth knowing for every later cabinet test fixture that mounts a second object mid-test.
+- **Batch evidence (all three above):** Independently re-verified together — full-repository Pint and PHPStan (level 8) clean; combined cabinet test filter (all seven cabinet suites) 62 passed, 0 failed; full non-slow suite 536 passed, 0 failed, 3 skipped (up from 514, after the `room_translations` migration fix above).
 - **Notes:** This is the one area of Track B explicitly warned against in the spec's own Drawbacks section — free-text services would be fatal to the catalog's filter facets. Do not add an "other" free-text field even as a convenience.
 
 ### [T-4B05] Availability one-tap toggle
