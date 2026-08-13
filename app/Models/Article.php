@@ -6,6 +6,8 @@ namespace App\Models;
 
 use App\Models\Concerns\TranslatableDefaults;
 use App\Policies\ArticlePolicy;
+use App\Support\Content\ContentSummary;
+use App\Support\Content\Summarizable;
 use Astrotomic\Translatable\Contracts\Translatable as TranslatableContract;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
@@ -27,11 +29,13 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * never enters the moderation queue and never uses `FiltersModeration`.
  *
  * @property-read ?string $title virtual, proxied through the active translation
+ * @property-read ?string $summary virtual, proxied through the active translation
+ * @property-read ?string $slug virtual, proxied through the active translation
  * @property ?int $article_category_id
  * @property ?Carbon $publish_at
  */
 #[UsePolicy(ArticlePolicy::class)]
-class Article extends Model implements HasMedia, TranslatableContract
+class Article extends Model implements HasMedia, Summarizable, TranslatableContract
 {
     use InteractsWithMedia;
     use SoftDeletes;
@@ -129,5 +133,19 @@ class Article extends Model implements HasMedia, TranslatableContract
             ->where(function (Builder $query): void {
                 $query->whereNull('publish_at')->orWhere('publish_at', '<=', now());
             });
+    }
+
+    #[Override]
+    public function toContentSummary(): ContentSummary
+    {
+        return new ContentSummary(
+            contentType: 'article',
+            id: (int) $this->id,
+            title: $this->title,
+            summary: $this->summary,
+            coverImageUrl: $this->getFirstMediaUrl('cover_image') ?: null,
+            publishedAt: $this->publish_at,
+            slug: $this->slug,
+        );
     }
 }

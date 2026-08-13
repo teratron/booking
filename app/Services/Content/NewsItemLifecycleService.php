@@ -9,7 +9,6 @@ use App\Models\NewsItem;
 use App\Models\User;
 use App\Services\Audit\AuditJournal;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Cache;
 
 /**
  * The news item form's lifecycle actions — everything beyond an ordinary
@@ -27,7 +26,10 @@ use Illuminate\Support\Facades\Cache;
  */
 final class NewsItemLifecycleService
 {
-    public function __construct(private readonly AuditJournal $journal) {}
+    public function __construct(
+        private readonly AuditJournal $journal,
+        private readonly ContentPublicationService $publication,
+    ) {}
 
     public function saveAsDraft(NewsItem $newsItem, User $actor): void
     {
@@ -161,19 +163,16 @@ final class NewsItemLifecycleService
      * Publishing, scheduling, pinning, withdrawing, archiving, and restoring
      * all change what a public-facing read of this news item — and of its
      * object page and territory, when scoped to either — would return.
+     * Delegates to {@see ContentPublicationService}, the one place all
+     * three content types' invalidation keys are enumerated.
      */
     private function invalidateContentCaches(NewsItem $newsItem): void
     {
-        $tags = ['content', "news:{$newsItem->id}"];
-
-        if ($newsItem->object_id !== null) {
-            $tags[] = "object:{$newsItem->object_id}";
-        }
-
-        if ($newsItem->territory_id !== null) {
-            $tags[] = "territory:{$newsItem->territory_id}";
-        }
-
-        Cache::tags($tags)->flush();
+        $this->publication->invalidate(
+            'news',
+            (int) $newsItem->id,
+            $newsItem->object_id,
+            $newsItem->territory_id === null ? [] : [$newsItem->territory_id],
+        );
     }
 }

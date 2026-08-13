@@ -10,7 +10,6 @@ use App\Models\Promotion;
 use App\Models\User;
 use App\Services\Audit\AuditJournal;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Cache;
 
 /**
  * The promotion form's lifecycle actions — everything beyond an ordinary
@@ -25,7 +24,10 @@ use Illuminate\Support\Facades\Cache;
  */
 final class PromotionLifecycleService
 {
-    public function __construct(private readonly AuditJournal $journal) {}
+    public function __construct(
+        private readonly AuditJournal $journal,
+        private readonly ContentPublicationService $publication,
+    ) {}
 
     /**
      * @throws ContentScheduleRefusedException when $startsAt is not in the future
@@ -120,10 +122,17 @@ final class PromotionLifecycleService
     /**
      * Publishing, scheduling, archiving, deleting, and restoring all change
      * what a public-facing read of this promotion — and of its object page
-     * and territory — would return.
+     * and territory — would return. Delegates to
+     * {@see ContentPublicationService}, the one place all three content
+     * types' invalidation keys are enumerated.
      */
     private function invalidateContentCaches(Promotion $promotion): void
     {
-        Cache::tags(['content', "promotion:{$promotion->id}", "object:{$promotion->object_id}", "territory:{$promotion->territory_id}"])->flush();
+        $this->publication->invalidate(
+            'promotion',
+            (int) $promotion->id,
+            (int) $promotion->object_id,
+            [(int) $promotion->territory_id],
+        );
     }
 }

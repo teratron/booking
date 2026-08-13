@@ -7,9 +7,12 @@ namespace App\Models;
 use App\Models\Concerns\FiltersModeration;
 use App\Models\Concerns\TranslatableDefaults;
 use App\Policies\NewsItemPolicy;
+use App\Support\Content\ContentSummary;
+use App\Support\Content\Summarizable;
 use Astrotomic\Translatable\Contracts\Translatable as TranslatableContract;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -29,6 +32,8 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * published row invisible under this model's own default query.
  *
  * @property-read ?string $title virtual, proxied through the active translation
+ * @property-read ?string $summary virtual, proxied through the active translation
+ * @property-read ?string $slug virtual, proxied through the active translation
  * @property ?int $object_id
  * @property ?int $territory_id
  * @property ?int $article_category_id
@@ -36,7 +41,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property ?Carbon $end_at
  */
 #[UsePolicy(NewsItemPolicy::class)]
-class NewsItem extends Model implements HasMedia, TranslatableContract
+class NewsItem extends Model implements HasMedia, Summarizable, TranslatableContract
 {
     use FiltersModeration;
     use InteractsWithMedia;
@@ -108,5 +113,42 @@ class NewsItem extends Model implements HasMedia, TranslatableContract
     public function category(): BelongsTo
     {
         return $this->belongsTo(ArticleCategory::class, 'article_category_id');
+    }
+
+    /**
+     * Rows eligible for a public-facing feed. Combined with
+     * `FiltersModeration`'s own global scope (applied automatically, not
+     * repeated here), this is the full visibility contract: approved,
+     * published, not embargoed by a future `publish_at`, and not past its
+     * own `end_at` — the last check is a defensive belt-and-braces measure
+     * alongside the scheduled withdrawal job, since a row whose job has not
+     * yet run should still never appear live.
+     *
+     * @param  Builder<NewsItem>  $query
+     * @return Builder<NewsItem>
+     */
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('status', 'published')
+            ->where(function (Builder $query): void {
+                $query->whereNull('publish_at')->orWhere('publish_at', '<=', now());
+            })
+            ->where(function (Builder $query): void {
+                $query->whereNull('end_at')->orWhere('end_at', '>', now());
+            });
+    }
+
+    #[Override]
+    public function toContentSummary(): ContentSummary
+    {
+        return new ContentSummary(
+            contentType: 'news',
+            id: (int) $this->id,
+            title: $this->title,
+            summary: $this->summary,
+            coverImageUrl: $this->getFirstMediaUrl('cover_image') ?: null,
+            publishedAt: $this->publish_at,
+            slug: $this->slug,
+        );
     }
 }

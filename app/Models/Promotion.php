@@ -7,9 +7,12 @@ namespace App\Models;
 use App\Models\Concerns\FiltersModeration;
 use App\Models\Concerns\TranslatableDefaults;
 use App\Policies\PromotionPolicy;
+use App\Support\Content\ContentSummary;
+use App\Support\Content\Summarizable;
 use Astrotomic\Translatable\Contracts\Translatable as TranslatableContract;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -30,13 +33,15 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * `ends_at` passes, via a scheduled job — never a render-time check.
  *
  * @property-read ?string $title virtual, proxied through the active translation
+ * @property-read ?string $summary virtual, proxied through the active translation
+ * @property-read ?string $slug virtual, proxied through the active translation
  * @property int $object_id
  * @property int $territory_id
  * @property Carbon $starts_at
  * @property Carbon $ends_at
  */
 #[UsePolicy(PromotionPolicy::class)]
-class Promotion extends Model implements HasMedia, TranslatableContract
+class Promotion extends Model implements HasMedia, Summarizable, TranslatableContract
 {
     use FiltersModeration;
     use InteractsWithMedia;
@@ -96,5 +101,37 @@ class Promotion extends Model implements HasMedia, TranslatableContract
     public function hasElapsed(): bool
     {
         return $this->ends_at->isPast();
+    }
+
+    /**
+     * Rows eligible for a public-facing feed. Combined with
+     * `FiltersModeration`'s own global scope, this is the full visibility
+     * contract: approved, published, its own window open (`starts_at` has
+     * arrived, `ends_at` has not yet passed) — the latter a defensive check
+     * alongside `PromotionArchivalJob`, since a row the job has not yet
+     * swept should still never appear live past its own end date.
+     *
+     * @param  Builder<Promotion>  $query
+     * @return Builder<Promotion>
+     */
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('status', 'published')
+            ->where('starts_at', '<=', now()->toDateString())
+            ->where('ends_at', '>=', now()->toDateString());
+    }
+
+    #[Override]
+    public function toContentSummary(): ContentSummary
+    {
+        return new ContentSummary(
+            contentType: 'promotion',
+            id: (int) $this->id,
+            title: $this->title,
+            summary: $this->summary,
+            coverImageUrl: $this->getFirstMediaUrl('image') ?: null,
+            publishedAt: $this->starts_at,
+            slug: $this->slug,
+        );
     }
 }

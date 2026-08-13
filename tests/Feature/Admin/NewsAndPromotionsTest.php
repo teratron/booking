@@ -13,6 +13,7 @@ use App\Models\Territory;
 use App\Models\TerritoryLevel;
 use App\Models\User;
 use App\Services\Audit\AuditJournal;
+use App\Services\Content\ContentPublicationService;
 use App\Services\Content\NewsItemLifecycleService;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -240,7 +241,7 @@ it('archives an elapsed promotion within one sweep, and a re-run does not re-pro
     $active->translateOrNew('en')->fill(['title' => 'Active Promotion', 'slug' => 'active-promotion']);
     $active->save();
 
-    (new PromotionArchivalJob)->handle(app(AuditJournal::class));
+    (new PromotionArchivalJob)->handle(app(AuditJournal::class), app(ContentPublicationService::class));
 
     expect(Promotion::query()->find($elapsed->id)->status)->toBe('archived')
         ->and(Promotion::query()->find($active->id)->status)->toBe('published')
@@ -248,7 +249,7 @@ it('archives an elapsed promotion within one sweep, and a re-run does not re-pro
 
     // Idempotent: a second run has nothing left to archive for $elapsed —
     // the query itself excludes already-archived rows.
-    (new PromotionArchivalJob)->handle(app(AuditJournal::class));
+    (new PromotionArchivalJob)->handle(app(AuditJournal::class), app(ContentPublicationService::class));
 
     expect(DB::table('audits')->where('event', 'promotion_archived')->count())->toBe(1);
 });

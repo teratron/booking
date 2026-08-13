@@ -6,6 +6,7 @@ namespace App\Jobs;
 
 use App\Models\Promotion;
 use App\Services\Audit\AuditJournal;
+use App\Services\Content\ContentPublicationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Collection;
@@ -32,12 +33,12 @@ final class PromotionArchivalJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
-    public function handle(AuditJournal $journal): void
+    public function handle(AuditJournal $journal, ContentPublicationService $publication): void
     {
         Promotion::query()
             ->where('status', '!=', 'archived')
             ->where('ends_at', '<', now()->toDateString())
-            ->chunkById(200, function (Collection $promotions) use ($journal): void {
+            ->chunkById(200, function (Collection $promotions) use ($journal, $publication): void {
                 /** @var Promotion $promotion */
                 foreach ($promotions as $promotion) {
                     $previousStatus = $promotion->getOriginal('status');
@@ -52,6 +53,8 @@ final class PromotionArchivalJob implements ShouldQueue
                         null,
                         ['content', 'promotion'],
                     );
+
+                    $publication->invalidate('promotion', (int) $promotion->id, (int) $promotion->object_id, [(int) $promotion->territory_id]);
                 }
             });
     }

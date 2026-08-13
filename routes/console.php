@@ -7,6 +7,7 @@ use App\Jobs\AnalyticsRollupJob;
 use App\Jobs\ArchiveJournalEntriesJob;
 use App\Jobs\AvailabilityConfirmationSweepJob;
 use App\Jobs\DispatchRetryJob;
+use App\Jobs\NewsItemWithdrawalJob;
 use App\Jobs\PlacementExpirySweepJob;
 use App\Jobs\PromotionArchivalJob;
 use App\Jobs\StalenessSweepJob;
@@ -64,3 +65,8 @@ Schedule::job(new DispatchRetryJob)->everyFiveMinutes()->name('notifications:ret
 // sweep, never a render-time check, so an expired promotion does not stay
 // live in every cache that has not yet turned over.
 Schedule::job(new PromotionArchivalJob)->daily()->name('content:archive-promotions');
+
+// Withdraws a news item from feeds once its own end date has passed —
+// distinct from the promotion sweep above: the item's own detail page
+// stays reachable, only its feed presence ends.
+Schedule::job(new NewsItemWithdrawalJob)->daily()->name('content:withdraw-news');

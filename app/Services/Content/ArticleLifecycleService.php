@@ -9,7 +9,6 @@ use App\Models\Article;
 use App\Models\User;
 use App\Services\Audit\AuditJournal;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Cache;
 
 /**
  * The article form's lifecycle actions — everything beyond an ordinary field
@@ -22,7 +21,10 @@ use Illuminate\Support\Facades\Cache;
  */
 final class ArticleLifecycleService
 {
-    public function __construct(private readonly AuditJournal $journal) {}
+    public function __construct(
+        private readonly AuditJournal $journal,
+        private readonly ContentPublicationService $publication,
+    ) {}
 
     /**
      * Returns $article to draft, clearing any prior schedule — a draft with
@@ -139,19 +141,18 @@ final class ArticleLifecycleService
     /**
      * Publishing, scheduling, archiving, and restoring all change what a
      * public-facing read of this article — and of the territories it
-     * relates to — would return. The same tag scheme
-     * `PlacementLifecycleService::invalidateCatalogCaches()` established for
-     * the catalog, extended here for editorial content rather than
-     * duplicated.
+     * relates to — would return. Delegates the actual tag enumeration to
+     * {@see ContentPublicationService}, the one place all three content
+     * types' invalidation keys are enumerated, rather than repeating the
+     * list here.
      */
     private function invalidateContentCaches(Article $article): void
     {
-        $tags = ['content', "article:{$article->id}"];
-
-        foreach ($article->territories as $territory) {
-            $tags[] = "territory:{$territory->id}";
-        }
-
-        Cache::tags($tags)->flush();
+        $this->publication->invalidate(
+            'article',
+            (int) $article->id,
+            null,
+            array_values($article->territories->pluck('id')->map(static fn (mixed $id): int => (int) $id)->all()),
+        );
     }
 }
