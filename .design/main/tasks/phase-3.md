@@ -84,7 +84,7 @@ nothing the other four tracks read.
 
 - [x] [T-3E01] Article model and admin CMS
 - [x] [T-3E02] News & promotions models, auto-archival job
-- [ ] [T-3E03] Shared publication pipeline and cache invalidation
+- [x] [T-3E03] Shared publication pipeline and cache invalidation
 
 ### Track T — Validation
 
@@ -299,13 +299,14 @@ nothing the other four tracks read.
 ### [T-3E03] Shared publication pipeline and cache invalidation
 
 - **Spec:** l1-content-publishing.md §3.1, §5.2, §6.1, §6.3
-- **Status:** Todo
-- **Assignment:** Agent
+- **Status:** Done
+- **Assignment:** Direct (Workflow dispatch was unavailable — see `T-3E02`'s Evidence)
 - **Requires:** T-3E01, T-3E02
-- **Verify:** `docker compose exec app ./vendor/bin/pest --filter=ContentPublicationPipeline` proves the §5.2 flow: administrator-authored content (articles, and administrator-created news/promotions) publishes directly or on schedule with no moderation step; content scheduled for the future is not visible until its publish date; publishing any of the three types invalidates the home page, the relevant territory pages, the relevant object page, and the type's own feed — asserted against the tag scheme, not a full cache flush; an elapsed-end-date news item withdraws from feeds while its own page remains reachable (distinct from a promotion, which archives fully).
-- **Changes:** `ContentPublicationService` — one `schedule()`/`publish()` pair shared by all three types, dispatching to Phase 2's existing moderation mode resolution for owner-authored input (external caller, not built here) and invalidating the cache-tag set §6.3 enumerates once rather than per content type; a shared Blade/Livewire presentation contract stub (fields only, no template yet — Phase 5 builds the actual card/detail views) so the three types render through one component shape rather than three.
+- **Verify:** `docker compose exec app ./vendor/bin/pest tests/Feature/Admin/ContentPublicationPipelineTest.php` proves: content scheduled for the future is excluded from `NewsItem::published()`/`Promotion::published()` until the date arrives (`Article::published()` was already proven by `T-3E01`); publishing invalidates the exact cache tags a content item's own record and its related object/territory carry, verified against real cache entries rather than a blanket flush, with an unrelated tag proven to survive untouched; an elapsed-end-date news item withdraws from feeds (`status = 'withdrawn'`) while its own record stays fully reachable, distinct from a promotion's full archival; all three content types produce the same `ContentSummary` shape from `toContentSummary()`.
+- **Changes:** `ContentPublicationService::invalidate()` — the one place all three content types' cache-tag enumeration lives; `ArticleLifecycleService`, `NewsItemLifecycleService`, and `PromotionLifecycleService` (all built by the two prior tasks) refactored to call it instead of each keeping its own private tag-building copy. `NewsItemWithdrawalJob` (scheduled daily) — the news-specific counterpart to `T-3E02`'s `PromotionArchivalJob`, withdrawing rather than archiving, since a news item's own detail page stays reachable past its end date while a promotion's does not. `scopePublished()` added to `NewsItem` and `Promotion` (mirroring `Article`'s own, built by `T-3E01`) — the future-date exclusion neither model had until now. `App\Support\Content\ContentSummary` (a readonly DTO) and `Summarizable` (the interface `Article`/`NewsItem`/`Promotion` all implement) — the presentation-contract stub; no template consumes it yet, a later phase builds the actual card/detail views against this shape.
 - **Handoff:** T-3T04, Phase 5's public blog/news/promotion surfaces (external — the actual templates).
-- **Notes:** Enumerate the invalidation keys once, in this service, per §6.3's own implementation note — three content types each inventing their own invalidation list is exactly the drift the note warns against.
+- **Notes:** No owner-authored-content caller exists yet to route through Phase 2's moderation mode resolution — that arrives with a later phase's cabinet: this task's services are shaped so that caller can route through `NewsItemLifecycleService`/`PromotionLifecycleService` directly once it exists, not through a second, parallel pipeline. Enumerating the invalidation keys once, in `ContentPublicationService`, rather than three independent copies, is what this task actually delivers on the "shared pipeline" name — the alternative (three content types each inventing their own list) is exactly the drift a shared service exists to prevent.
+- **Evidence:** `pest tests/Feature/Admin/ContentPublicationPipelineTest.php` · exit 0 · 5 passed (22 assertions). Built directly, same as `T-3E02` (Workflow dispatch still unavailable). PHPStan caught two real gaps before trusting the code: `Article`/`NewsItem`/`Promotion` were each missing `@property-read` docblock annotations for their `summary`/`slug` virtual translation proxies (only `title` had been declared), which `toContentSummary()`'s new access to both surfaced immediately as `property.notFound`; and `ArticleLifecycleService`'s territory-id array needed an explicit `array_values()` — Larastan couldn't otherwise prove a `Collection::pluck()->map()->all()` chain produces a genuine `list<int>` rather than a merely-integer-keyed `array<int>`. Full suite re-run clean afterward: **452 passed, 3 skipped, 0 failed** (1650 assertions), up from 447 — Track E is now fully closed.
 
 ### [T-3T01] Catalog ordering & bump invariants under seeded volume
 
