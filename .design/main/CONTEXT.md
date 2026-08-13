@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-08-12
+**Generated:** 2026-08-13
 
 ## Active Technologies
 
@@ -70,6 +70,7 @@
 │   ├── filesystems.php
 │   ├── logging.php
 │   ├── mail.php
+│   ├── notifications.php
 │   ├── permission.php
 │   ├── queue.php
 │   ├── services.php
