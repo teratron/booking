@@ -1,8 +1,8 @@
 # Master Task Index (Registry)
 
-**Version:** 1.1.0
+**Version:** 1.2.0
 **Generated:** 2026-08-05
-**Based on:** .design/main/PLAN.md v3.0.0
+**Based on:** .design/main/PLAN.md v3.1.1
 **Based on RULES:** .design/RULES.md v1.4.0
 **Execution Mode:** Parallel
 **Status:** Active
@@ -13,12 +13,14 @@ Tactical registry of all phases and their statuses. Atomic checklists (`T-XXXX`)
 the per-phase files under `tasks/`.
 
 **Decomposition state.** Phase 1 is complete (21/21) and archived. Phase 2 is decomposed
-into 25 atomic tasks across five tracks. Phases 3 through 7 carry frontmatter, a
-strategic goal, and their scope — no `T-XXXX` items yet. This is deliberate, not
-truncation: each is decomposed by the `/magic.task` invocation that activates it,
-against the specification set as it stands at that point. All 23 specifications are
-`RFC`, so decomposing five further phases now would produce tasks derived from contracts
-that have not been reviewed.
+into 25 atomic tasks across five tracks and complete (25/25) — pending archival now that
+its frontmatter status is corrected (see phase-2.md; archival fires on the next
+`magic.run` finalize). Phase 3 is decomposed into 23 atomic tasks across five parallel
+tracks plus validation, against its current `RFC` specification set — the same posture
+Phase 1 and Phase 2 were successfully decomposed and executed under, per the persisted
+`STATE.md` recommendation. Phases 4 through 7 still carry frontmatter, a strategic goal,
+and their scope only — no `T-XXXX` items yet; each is decomposed by the `/magic.task`
+invocation that activates it, against the specification set as it stands at that point.
 
 The superseded Next.js-era archives now live under `archives/tasks/v1-nextjs/`. They
 previously occupied the filenames `archives/tasks/phase-1.md` through `phase-6.md`,
@@ -30,8 +32,8 @@ archival would have overwritten them.
 | Phase | Description | Status |
 | --- | --- | --- |
 | [Phase 1](archives/tasks/phase-1.md) | Foundation, schema, registries, scoped authorization, module gating, quality gates | `Done (Archived)` |
-| [Phase 2](tasks/phase-2.md) | Back office core — staff panel, objects, owners, geography, taxonomy, moderation, action journal | `Done` (25/25) |
-| [Phase 3](tasks/phase-3.md) | Commerce, advertising, analytics ingest, notifications, content pipeline | `Todo` |
+| [Phase 2](tasks/phase-2.md) | Back office core — staff panel, objects, owners, geography, taxonomy, moderation, action journal | `Done` (25/25) — pending archival |
+| [Phase 3](tasks/phase-3.md) | Commerce, advertising, analytics ingest, notifications, content pipeline | `In Progress` (17/23) |
 | [Phase 4](tasks/phase-4.md) | Owner cabinet — the second Filament panel, owner-scoped throughout | `Todo` |
 | [Phase 5](tasks/phase-5.md) | Public site — shell, home, catalog, object profile, territory pages, built from Figma | `Todo` |
 | [Phase 6](tasks/phase-6.md) | SEO, portal-wide reporting, public REST API | `Todo` |
@@ -57,7 +59,17 @@ not at task boundaries and not only before a commit. `T-1A03` wired it, and ever
 subsequent task is verified against it. The toolchain runs inside the container —
 `docker compose exec app …` — because the host carries no PHP or Composer.
 
+**Phase 3 is five-wide**, one track per specification (`A` placement/monetization,
+`B` advertising, `C` analytics, `D` notifications, `E` content publishing), because
+Phase 2 already built the shared resource contract every one of these tracks builds on
+top of — no track here has to establish it first, unlike Phase 2's Track A gate. Two
+task-level edges are scheduled across tracks rather than discovered mid-run: `T-3D01`
+before `T-3A04` (the expiry sweep raises notifications against a model that must
+already exist), and `T-3C01` before `T-3B02` (banner impressions/clicks are `StatEvent`
+rows, not a second counting scheme). Full rationale in
+[tasks/phase-3.md](tasks/phase-3.md) §Track Ordering.
+
 ## Meta Information
 
-- **Last Updated**: 2026-08-06
+- **Last Updated**: 2026-08-12
 - **Maintainer**: Core Team

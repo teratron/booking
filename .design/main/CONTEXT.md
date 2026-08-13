@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-08-06
+**Generated:** 2026-08-12
 
 ## Active Technologies
 
@@ -44,6 +44,7 @@
 │   ├── Filament/
 │   ├── Http/
 │   ├── Jobs/
+│   ├── Listeners/
 │   ├── Livewire/
 │   ├── Models/
 │   ├── Policies/
@@ -56,12 +57,14 @@
 │   ├── app.php
 │   ├── cache/
 │   └── providers.php
+├── composer-unused.php
 ├── composer.json
 ├── composer.lock
 ├── config/
 │   ├── app.php
 │   ├── audit.php
 │   ├── auth.php
+│   ├── booking.php
 │   ├── cache.php
 │   ├── database.php
 │   ├── filesystems.php
@@ -90,6 +93,7 @@
 ├── phpunit.xml
 ├── pint.json
 ├── pnpm-lock.yaml
+├── pnpm-workspace.yaml
 ├── public/
 │   ├── .htaccess
 │   ├── favicon.ico
@@ -111,6 +115,7 @@
 ├── tests/
 │   ├── Architecture/
 │   ├── Feature/
+│   ├── Fixtures/
 │   ├── Pest.php
 │   ├── TestCase.php
 │   └── Unit/

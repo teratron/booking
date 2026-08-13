@@ -1,6 +1,6 @@
 # Implementation Plan
 
-**Version:** 3.1.0
+**Version:** 3.1.1
 **Generated:** 2026-08-05
 **Based on:** .design/main/INDEX.md v2.4.2
 **Based on RULES:** .design/RULES.md v1.4.0
@@ -225,10 +225,11 @@ critical path out of Phase 2.
 
 ## Next Step
 
-`/magic.run main` — execute Phase 2. Atomic tasks are in
-[tasks/phase-2.md](tasks/phase-2.md); phase registry in [TASKS.md](TASKS.md). Phase 1 is
-complete and archived at [archives/tasks/phase-1.md](archives/tasks/phase-1.md).
+`/magic.run main` — execute Phase 3. Atomic tasks are in
+[tasks/phase-3.md](tasks/phase-3.md); phase registry in [TASKS.md](TASKS.md). Phase 1 is
+complete and archived at [archives/tasks/phase-1.md](archives/tasks/phase-1.md); Phase 2
+is complete (25/25) and archives on the next `magic.run` finalize pass.
 
-Phases 3 through 7 carry frontmatter and scope only. They are decomposed into atomic
+Phases 4 through 7 carry frontmatter and scope only. They are decomposed into atomic
 tasks by the `/magic.task` invocation that activates each, so the decomposition is
 derived from the specification set as it stands then rather than as it stands now.

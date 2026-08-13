@@ -1,14 +1,14 @@
 ---
 phase: 2
 name: "Back Office Core"
-status: Todo
+status: Done
 subsystem: "app/Filament/Admin, app/Services, app/Policies"
 requires: ["phase-1"]
-provides: []
+provides: ["ScopedResource base contract", "CountedBulkAction", "ScopeAuthorizer.constraintFor()", "SettingsRegistry/SettingsRepository", "ModuleResolver-backed module admin", "moderation mode resolution + change-request pipeline", "AuditJournal / ImpersonationContext actor attribution", "AvailabilityAdministrationService (override/revert/autoReset)"]
 key_files:
   created: []
   modified: []
-patterns_established: []
+patterns_established: ["Panel resources bind a Policy and declare eager loads explicitly (strict mode)", "Business logic in single-purpose app/Services classes, one method per action, journalled", "Bulk operations funnel through one service entry point shared by inline and queued paths", "Cache invalidation by explicit tag keys (catalog/territory:{id}/object:{id})"]
 duration_minutes: ~
 ---
 
