@@ -27,6 +27,7 @@ test('no specification references leak into product code', function (): void {
         '/\.design\//',
         '/\bT-\d{3,5}\b/',
         '/\bphase-\d+\b/i',
+        '/\bPhase\s+\d+\b/', // prose form ("Phase" + a number in running text) — the file-form pattern above only catches the hyphenated slug
         '/\b(?:PLAN|TASKS|INDEX|RULES)\.md\b/',
         '/\bl[12]-[a-z][a-z-]*\.md\b/',
     ];
@@ -39,6 +40,7 @@ test('no specification references leak into product code', function (): void {
             $root.'/app',
             $root.'/resources',
             $root.'/database',
+            $root.'/tests',
         ])
         ->name(['*.php', '*.blade.php']);
 

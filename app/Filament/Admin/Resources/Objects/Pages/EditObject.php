@@ -5,13 +5,18 @@ declare(strict_types=1);
 namespace App\Filament\Admin\Resources\Objects\Pages;
 
 use App\Exceptions\AvailabilityRevertRefusedException;
+use App\Exceptions\BumpRefusedException;
 use App\Exceptions\PermanentDeletionRefusedException;
 use App\Filament\Admin\Resources\Objects\ObjectResource;
 use App\Models\Object_;
+use App\Models\ObjectPlacement;
 use App\Models\ObjectTranslation;
+use App\Models\PlacementPackage;
+use App\Models\Territory;
 use App\Models\User;
 use App\Services\Objects\AvailabilityAdministrationService;
 use App\Services\Objects\ObjectLifecycleService;
+use App\Services\Placement\BumpService;
 use App\Services\Settings\SettingsRepository;
 use Closure;
 use Filament\Actions\Action;
@@ -131,6 +136,7 @@ class EditObject extends EditRecord
             $this->transferOwnershipAction(),
             $this->overrideAvailabilityAction(),
             $this->revertAvailabilityAction(),
+            $this->bumpAction(),
         ];
     }
 
@@ -247,6 +253,54 @@ class EditObject extends EditRecord
                 }
 
                 $this->refreshFormData(['availability_status']);
+                Notification::make()->title(__('panel.objects.lifecycle.applied'))->success()->send();
+            });
+    }
+
+    /**
+     * Administrator-initiated only — the service accepts all five bump
+     * types the specification names, but the owner-initiated caller arrives
+     * with the cabinet in a later phase. Scope defaults to the object's own
+     * territory, matching the specification's own flow ("resolve scope:
+     * object's city / district / resort"); no scope picker is offered here.
+     */
+    private function bumpAction(): Action
+    {
+        return Action::make('bump')
+            ->label(__('panel.objects.lifecycle.bump'))
+            ->authorize(fn (Object_ $object): bool => (bool) auth()->user()?->can('update', $object))
+            ->visible(function (Object_ $object): bool {
+                $placement = $object->placement;
+
+                return $placement instanceof ObjectPlacement
+                    && $placement->package instanceof PlacementPackage
+                    && $placement->package->bump_allowed;
+            })
+            ->schema([
+                Textarea::make('comment')
+                    ->label(__('panel.objects.lifecycle.bump_comment')),
+            ])
+            ->action(function (array $data): void {
+                $actor = Filament::auth()->user();
+                $object = $this->currentObject();
+                $scope = Territory::query()->find($object->territory_id);
+
+                if (! $actor instanceof User || ! $scope instanceof Territory) {
+                    return;
+                }
+
+                try {
+                    app(BumpService::class)->bump($object, $scope, $actor, 'administrator', $data['comment'] ?? null);
+                } catch (BumpRefusedException $exception) {
+                    Notification::make()
+                        ->danger()
+                        ->title(__('panel.objects.lifecycle.bump_refused'))
+                        ->body($exception->getMessage())
+                        ->send();
+
+                    return;
+                }
+
                 Notification::make()->title(__('panel.objects.lifecycle.applied'))->success()->send();
             });
     }

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 | Architecture Tests
 |--------------------------------------------------------------------------
 |
-| Mechanical enforcement of the conventions CLAUDE.md and RULES.md state in
+| Mechanical enforcement of the engineering conventions CLAUDE.md states in
 | prose. A convention a machine cannot check is a convention that erodes —
 | these tests exist so review discipline is not the only thing holding the
 | line.
@@ -45,6 +45,11 @@ arch('Livewire components reach the database only through services')
 
 arch('controllers, jobs, and services are final by default')
     ->expect(['App\Http\Controllers', 'App\Jobs', 'App\Services'])
+    // Interfaces (e.g. a channel adapter contract) are exempt by
+    // construction — PHP forbids `final` on an interface, and the rule's
+    // own intent ("final unless deliberately extended") is about
+    // concrete implementations, not the contracts they implement.
+    ->classes()
     ->toBeFinal()
     // The base controller is Laravel's own template for extension — every
     // concrete controller extends it. That is the "deliberately extended"

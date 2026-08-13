@@ -19,6 +19,11 @@ return [
 
     'navigation' => [
         'catalog' => 'Каталог',
+        'commerce' => 'Коммерция',
+        'advertising' => 'Реклама',
+        'analytics' => 'Аналитика',
+        'communication' => 'Коммуникации',
+        'content' => 'Контент',
         'geography' => 'География',
         'governance' => 'Управление',
         'access' => 'Доступ',
@@ -164,6 +169,9 @@ return [
             'section' => 'Раздел, требующий доработки',
             'reason' => 'Причина',
             'new_owner' => 'Новый владелец',
+            'bump' => 'Поднять',
+            'bump_comment' => 'Комментарий',
+            'bump_refused' => 'Не удалось поднять объект',
         ],
     ],
 
@@ -294,6 +302,258 @@ return [
         ],
     ],
 
+    'placement_tiers' => [
+        'title' => 'Уровни размещения',
+        'model_label' => 'уровень размещения',
+
+        'columns' => [
+            'rank' => 'Ранг',
+            'active' => 'Активен',
+        ],
+
+        'form' => [
+            'rank' => 'Ранг',
+            'label' => 'Название',
+            'badge_text' => 'Текст значка',
+            'border_colour' => 'Цвет рамки',
+            'badge_colour' => 'Цвет значка',
+            'badge_icon' => 'Иконка значка',
+        ],
+    ],
+
+    'placement_packages' => [
+        'title' => 'Пакеты размещения',
+        'model_label' => 'пакет размещения',
+
+        'columns' => [
+            'active' => 'Активен',
+        ],
+
+        'form' => [
+            'name' => 'Название',
+            'tier' => 'Уровень размещения',
+            'object_type' => 'Категория объектов',
+            'any_object_type' => 'Любая категория',
+            'price' => 'Цена',
+            'currency' => 'Валюта',
+            'validity_days' => 'Срок действия (дней)',
+            'bump_allowed' => 'Поднятие разрешено',
+            'bump_interval_hours' => 'Минимальный интервал между бесплатными поднятиями (часов)',
+            'free_bumps_per_period' => 'Бесплатных поднятий за период',
+            'paid_bump_price' => 'Цена платного поднятия',
+            'display_order' => 'Порядок отображения',
+        ],
+    ],
+
+    'banner_slots' => [
+        'title' => 'Рекламные слоты',
+        'model_label' => 'рекламный слот',
+
+        'columns' => [
+            'active' => 'Активен',
+        ],
+
+        'form' => [
+            'key' => 'Ключ',
+            'name' => 'Название',
+            'surfaces' => 'Поверхности показа',
+            'surface_options' => [
+                'home' => 'Главная',
+                'country' => 'Страна',
+                'region' => 'Регион',
+                'city' => 'Город',
+                'resort' => 'Курорт',
+                'category' => 'Категория',
+                'object' => 'Объект',
+                'news' => 'Новости',
+                'article' => 'Статья',
+            ],
+        ],
+    ],
+
+    'banners' => [
+        'title' => 'Баннеры',
+        'model_label' => 'баннер',
+
+        'columns' => [
+            'active' => 'Активен',
+            'impressions' => 'Показы',
+            'clicks' => 'Клики',
+            'click_through_rate' => 'CTR',
+        ],
+
+        'form' => [
+            'slot' => 'Слот',
+            'name' => 'Название',
+            'advertiser' => 'Рекламодатель',
+            'destination_link' => 'Ссылка перехода',
+            'starts_at' => 'Начало показа',
+            'ends_at' => 'Окончание показа',
+            'display_order' => 'Порядок отображения',
+            'desktop_creative' => 'Креатив (десктоп)',
+            'mobile_creative' => 'Креатив (моб.)',
+            'territories' => 'Территории',
+            'categories' => 'Категории',
+            'target_languages' => 'Языки',
+            'link_text' => 'Текст ссылки',
+        ],
+    ],
+
+    'promotion_labels' => [
+        'title' => 'Промо-метки',
+        'model_label' => 'промо-метка',
+
+        'columns' => [
+            'active' => 'Активна',
+        ],
+
+        'form' => [
+            'text' => 'Текст',
+            'border_colour' => 'Цвет рамки',
+            'text_colour' => 'Цвет текста',
+            'background_colour' => 'Цвет фона',
+            'icon' => 'Иконка',
+            'position_on_card' => 'Позиция на карточке',
+            'preview' => 'Предпросмотр карточки',
+            'preview_placeholder' => 'Выберите позицию, чтобы увидеть предпросмотр.',
+            'preview_sample_text' => 'Метка',
+        ],
+
+        'positions' => [
+            'top-left' => 'Верхний левый угол',
+            'top-right' => 'Верхний правый угол',
+            'bottom-left' => 'Нижний левый угол',
+            'bottom-right' => 'Нижний правый угол',
+        ],
+    ],
+
+    'financial_records' => [
+        'title' => 'Финансовый журнал',
+        'model_label' => 'запись журнала',
+
+        'form' => [
+            'subject_kind' => 'Относится к',
+            'subject_object' => 'Объект',
+            'subject_banner' => 'Баннер',
+            'object' => 'Объект',
+            'banner' => 'Баннер',
+            'service' => 'Услуга',
+            'package' => 'Пакет',
+            'amount' => 'Сумма',
+            'currency' => 'Валюта',
+            'status' => 'Статус',
+            'paid_at' => 'Дата оплаты',
+            'valid_from' => 'Действует с',
+            'valid_until' => 'Действует по',
+            'payment_method' => 'Способ оплаты',
+            'document_number' => 'Номер документа',
+            'responsible_staff' => 'Ответственный сотрудник',
+            'comment' => 'Комментарий',
+        ],
+
+        'status' => [
+            'awaiting_payment' => 'Ожидает оплаты',
+            'paid' => 'Оплачено',
+            'partially_paid' => 'Частично оплачено',
+            'overdue' => 'Просрочено',
+            'cancelled' => 'Отменено',
+            'granted_free' => 'Предоставлено бесплатно',
+        ],
+
+        'filters' => [
+            'from' => 'С',
+            'until' => 'По',
+        ],
+
+        'actions' => [
+            'export' => 'Экспорт',
+        ],
+
+        'notifications' => [
+            'export_completed' => 'Экспорт журнала завершён, экспортировано записей: :count.',
+        ],
+    ],
+
+    'broadcast' => [
+        'title' => 'Рассылка владельцам',
+
+        'fields' => [
+            'target_type' => 'Цель по',
+            'target' => 'Цель',
+            'title' => 'Заголовок сообщения',
+            'body' => 'Текст сообщения',
+        ],
+
+        'target_types' => [
+            'country' => 'Страна',
+            'resort' => 'Курорт',
+            'package' => 'Пакет размещения',
+        ],
+
+        'actions' => [
+            'send' => 'Отправить рассылку',
+        ],
+
+        'confirmation' => 'Будет уведомлено владельцев: :count. Каждый из них получит это сообщение.',
+        'confirm_label' => 'Уведомить владельцев: :count',
+        'sent' => 'Рассылка отправлена владельцам: :count.',
+        'rate_limited' => 'Достигнут дневной лимит рассылок',
+        'quota_remaining' => 'Осталось рассылок сегодня: :count.',
+    ],
+
+    'commerce_reports' => [
+        'title' => 'Коммерческие отчёты',
+        'active_placements' => 'Активные размещения',
+        'ending_30' => 'Истекают в течение 30 дней',
+        'ending_14' => 'Истекают в течение 14 дней',
+        'ending_7' => 'Истекают в течение 7 дней',
+        'ending_3' => 'Истекают в течение 3 дней',
+        'expired_placements' => 'Истёкшие размещения',
+        'no_term_set' => 'Объекты без установленного срока',
+        'free_placements' => 'Бесплатные размещения',
+        'paid_bump_count' => 'Платные поднятия',
+        'active_campaigns' => 'Активные рекламные кампании',
+    ],
+
+    'analytics_report' => [
+        'title' => 'Отчёт по аналитике',
+
+        'filters' => [
+            'territory' => 'Город',
+            'category' => 'Категория',
+            'language' => 'Язык',
+            'banner' => 'Баннер',
+            'object' => 'ID объекта',
+        ],
+
+        'columns' => [
+            'date' => 'Дата',
+            'kind' => 'Тип',
+            'subject_type' => 'Субъект',
+            'subject_id' => 'ID субъекта',
+            'territory' => 'Город',
+            'language' => 'Язык',
+            'count' => 'Количество',
+        ],
+
+        'kinds' => [
+            'object_card_view' => 'Просмотры карточки',
+            'object_page_view' => 'Просмотры страницы',
+            'photo_view' => 'Просмотры фото',
+            'contact_click' => 'Клики по контактам',
+            'banner_impression' => 'Показы баннеров',
+            'banner_click' => 'Клики по баннерам',
+        ],
+
+        'actions' => [
+            'export' => 'Экспорт',
+        ],
+
+        'notifications' => [
+            'export_completed' => '{1} экспортирована :count строка.|[2,4] экспортировано :count строки.|[5,*] экспортировано :count строк.',
+        ],
+    ],
+
     'modules' => [
         'title' => 'Модули',
         'model_label' => 'модуль',
@@ -349,6 +609,7 @@ return [
             'integrations' => 'Интеграции',
             'security' => 'Безопасность',
             'journal' => 'Журнал действий',
+            'analytics' => 'Аналитика',
         ],
 
         'fields' => [
@@ -381,6 +642,8 @@ return [
 
             'notifications.digest_hour' => 'Час отправки ежедневной сводки',
             'notifications.expiry_reminder_lead_days' => 'За сколько дней предупреждать об окончании',
+            'notifications.dispatch_max_retries' => 'Максимум повторных попыток для неудачной отправки',
+            'notifications.broadcast_rate_limit' => 'Максимум рассылок администратора в день',
 
             'integrations.map_tile_provider' => 'Поставщик картографических тайлов',
             'integrations.map_tile_key' => 'API-ключ картографических тайлов',
@@ -393,6 +656,8 @@ return [
             'security.sign_in_max_attempts' => 'Попыток входа до блокировки',
 
             'journal.retention_days' => 'Хранение журнала (дней)',
+
+            'analytics.raw_retention_days' => 'Хранение сырых событий (дней)',
         ],
     ],
 
@@ -556,6 +821,73 @@ return [
 
         'notifications' => [
             'export_completed' => '{0}Экспорт завершён, строк нет.|{1}Экспорт завершён, :count строка.|[2,4]Экспорт завершён, :count строки.|[5,*]Экспорт завершён, :count строк.',
+        ],
+    ],
+
+    'article_categories' => [
+        'title' => 'Категории статей',
+        'model_label' => 'категория статьи',
+
+        'columns' => [
+            'active' => 'Активна',
+        ],
+
+        'form' => [
+            'slug' => 'URL-слаг',
+            'name' => 'Название',
+            'display_order' => 'Порядок отображения',
+        ],
+    ],
+
+    'article_tags' => [
+        'title' => 'Теги статей',
+        'model_label' => 'тег статьи',
+
+        'columns' => [
+            'active' => 'Активен',
+        ],
+
+        'form' => [
+            'slug' => 'URL-слаг',
+            'name' => 'Название',
+            'display_order' => 'Порядок отображения',
+        ],
+    ],
+
+    'articles' => [
+        'title' => 'Статьи',
+        'model_label' => 'статья',
+
+        'form' => [
+            'author' => 'Автор',
+            'category' => 'Категория',
+            'status' => 'Статус',
+            'publish_at' => 'Дата публикации',
+            'cover_image' => 'Обложка',
+            'related_objects' => 'Связанные объекты',
+            'related_territories' => 'Связанные территории',
+            'tags' => 'Теги',
+            'title' => 'Заголовок',
+            'summary' => 'Краткое описание',
+            'body' => 'Текст',
+            'slug' => 'URL-слаг',
+            'seo_title' => 'SEO-заголовок',
+            'seo_description' => 'SEO-описание',
+        ],
+
+        'status' => [
+            'draft' => 'Черновик',
+            'scheduled' => 'Запланировано',
+            'published' => 'Опубликовано',
+        ],
+
+        'lifecycle' => [
+            'publish' => 'Опубликовать',
+            'schedule' => 'Запланировать',
+            'archive' => 'В архив',
+            'restore' => 'Восстановить',
+            'applied' => 'Изменение применено.',
+            'schedule_refused' => 'Эту статью нельзя запланировать',
         ],
     ],
 

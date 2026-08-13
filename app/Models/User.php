@@ -67,6 +67,12 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         return $this->hasMany(Object_::class, 'owner_id');
     }
 
+    /** @return HasMany<NotificationPreference, $this> */
+    public function notificationPreferences(): HasMany
+    {
+        return $this->hasMany(NotificationPreference::class);
+    }
+
     /**
      * The owner-management screen's own axis: unlike an object, an account
      * carries only a country, no territory or category of its own.

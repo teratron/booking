@@ -15,9 +15,11 @@
         "php": "^8.5",
         "astrotomic/laravel-translatable": "^11.17.0",
         "filament/filament": "^5.7.6",
+        "filament/spatie-laravel-media-library-plugin": "^5.7.6",
         "laravel/framework": "^13.25.0",
         "laravel/sanctum": "^4.3.3",
         "laravel/tinker": "^3.0.2",
+        "league/flysystem-aws-s3-v3": "^3.35.2",
         "owen-it/laravel-auditing": "^14.0.6",
         "spatie/laravel-medialibrary": "^11.23.5",
         "spatie/laravel-permission": "^8.3.0",
@@ -33,7 +35,7 @@
         "laravel/pint": "^1.30.5",
         "mockery/mockery": "^1.6.12",
         "nunomaduro/collision": "^8.9.5",
-        "pestphp/pest": "^5.1.0",
+        "pestphp/pest": "^5.1.1",
         "pestphp/pest-plugin-laravel": "^5.0.1",
         "phpstan/phpstan": "^2.2.8",
         "rector/rector": "^2.6.2"
@@ -111,7 +113,7 @@
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
-        "process-timeout": 900,
+        "process-timeout": 1800,
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,

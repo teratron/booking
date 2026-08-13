@@ -3,10 +3,19 @@
 declare(strict_types=1);
 
 use App\Filament\Admin\Resources\ActionJournal\ActionJournalResource;
+use App\Filament\Admin\Resources\ArticleCategories\ArticleCategoryResource;
+use App\Filament\Admin\Resources\Articles\ArticleResource;
+use App\Filament\Admin\Resources\ArticleTags\ArticleTagResource;
+use App\Filament\Admin\Resources\Banners\BannerResource;
+use App\Filament\Admin\Resources\BannerSlots\BannerSlotResource;
+use App\Filament\Admin\Resources\FinancialRecords\FinancialRecordResource;
 use App\Filament\Admin\Resources\Languages\LanguageResource;
 use App\Filament\Admin\Resources\Modules\ModuleResource;
 use App\Filament\Admin\Resources\Objects\ObjectResource;
 use App\Filament\Admin\Resources\ObjectTypes\ObjectTypeResource;
+use App\Filament\Admin\Resources\PlacementPackages\PlacementPackageResource;
+use App\Filament\Admin\Resources\PlacementTiers\PlacementTierResource;
+use App\Filament\Admin\Resources\PromotionLabels\PromotionLabelResource;
 use App\Filament\Admin\Resources\Territories\TerritoryResource;
 use App\Models\User;
 use Filament\Facades\Filament;
@@ -26,8 +35,8 @@ uses(RefreshDatabase::class);
 | Panel Authorization Matrix
 |--------------------------------------------------------------------------
 |
-| Phase 1's scoped authorization only governs this panel if every resource
-| is actually wired into it — not the ones a hand-picked test happened to
+| The platform's scoped authorization only governs this panel if every
+| resource is actually wired into it — not the ones a hand-picked test happened to
 | cover. The structural case below reads the live resource registry rather
 | than an enumerated list, so a resource added in a later phase is covered
 | without touching this file. The scenario cases beneath it exercise the
@@ -143,6 +152,106 @@ function seedProbeRowFor(string $resourceClass): void
         ObjectTypeResource::class => DB::table('object_types')->insert([
             'key' => 'matrix_probe_type', 'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
         ]),
+        PlacementTierResource::class => DB::table('placement_tiers')->insert([
+            'rank' => 9, 'border_colour' => '#000000', 'badge_colour' => '#111111',
+            'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+        ]),
+        PlacementPackageResource::class => DB::table('placement_packages')->insert([
+            'placement_tier_id' => DB::table('placement_tiers')->insertGetId([
+                'rank' => 10, 'border_colour' => '#000000', 'badge_colour' => '#111111',
+                'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+            ]),
+            'price' => 1, 'currency' => 'EUR', 'validity_days' => 30, 'bump_allowed' => false,
+            'is_active' => true, 'display_order' => 0, 'created_at' => now(), 'updated_at' => now(),
+        ]),
+        PromotionLabelResource::class => (function (): void {
+            $labelId = DB::table('promotion_labels')->insertGetId([
+                'border_colour' => '#000000', 'text_colour' => '#ffffff', 'background_colour' => '#ff0000',
+                'position_on_card' => 'top-left', 'is_active' => true,
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+
+            DB::table('promotion_label_translations')->insert([
+                'promotion_label_id' => $labelId, 'locale' => 'en', 'text' => 'Matrix Probe Label',
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+        })(),
+        BannerSlotResource::class => (function (): void {
+            $slotId = DB::table('banner_slots')->insertGetId([
+                'key' => 'matrix_probe_slot', 'surfaces' => json_encode(['home']),
+                'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+            ]);
+
+            DB::table('banner_slot_translations')->insert([
+                'banner_slot_id' => $slotId, 'locale' => 'en', 'name' => 'Matrix Probe Slot',
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+        })(),
+        BannerResource::class => (function (): void {
+            $slotId = DB::table('banner_slots')->insertGetId([
+                'key' => 'matrix_probe_banner_slot', 'surfaces' => json_encode(['home']),
+                'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+            ]);
+            $bannerId = DB::table('banners')->insertGetId([
+                'banner_slot_id' => $slotId, 'name' => 'Matrix Probe Banner', 'advertiser' => 'Acme',
+                'destination_link' => 'https://example.test', 'display_order' => 0,
+                'starts_at' => now()->toDateString(), 'ends_at' => now()->addDays(30)->toDateString(),
+                'is_active' => true, 'impressions' => 0, 'clicks' => 0,
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+
+            DB::table('banner_translations')->insert([
+                'banner_id' => $bannerId, 'locale' => 'en', 'link_text' => 'Learn more',
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+        })(),
+        ArticleCategoryResource::class => (function (): void {
+            $categoryId = DB::table('article_categories')->insertGetId([
+                'slug' => 'matrix-probe-category', 'is_active' => true, 'display_order' => 0,
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+
+            DB::table('article_category_translations')->insert([
+                'article_category_id' => $categoryId, 'locale' => 'en', 'name' => 'Matrix Probe Category',
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+        })(),
+        ArticleTagResource::class => DB::table('article_tags')->insert([
+            'slug' => 'matrix-probe-tag', 'name' => 'Matrix Probe Tag', 'is_active' => true, 'display_order' => 0,
+            'created_at' => now(), 'updated_at' => now(),
+        ]),
+        // Reuses the geography the enclosing test already seeded (via its
+        // own matrixGeography() call) for the author account's own
+        // language row rather than inserting a second one.
+        ArticleResource::class => (function (): void {
+            $authorId = User::factory()->create()->id;
+            $articleId = DB::table('articles')->insertGetId([
+                'author_id' => $authorId, 'status' => 'draft',
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+
+            DB::table('article_translations')->insert([
+                'article_id' => $articleId, 'locale' => 'en', 'title' => 'Matrix Probe Article',
+                'body' => 'Matrix probe body.', 'slug' => "matrix-probe-article-{$articleId}",
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+        })(),
+        // Reuses the geography the enclosing test already seeded (via its
+        // own matrixGeography() call) rather than inserting a second one —
+        // country codes are unique, and this probe runs inside the same
+        // test's loop over every axis-less resource.
+        FinancialRecordResource::class => (function (): void {
+            $countryId = DB::table('countries')->value('id');
+            $territoryId = DB::table('territories')->value('id');
+            $typeId = DB::table('object_types')->value('id');
+            $objectId = matrixObject((int) $countryId, (int) $territoryId, (int) $typeId);
+
+            DB::table('financial_records')->insert([
+                'object_id' => $objectId, 'service' => 'placement',
+                'amount' => 1, 'currency' => 'EUR', 'status' => 'granted_free',
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+        })(),
         default => throw new RuntimeException("No probe-row fixture registered for {$resourceClass}."),
     };
 }
@@ -225,13 +334,22 @@ it('reaches every global-registry resource only through an unrestricted grant, n
 
     // The registry drives which resources are exercised — a resource
     // declaring no scope axis in a later phase is picked up here without
-    // this file changing. These four are today's, asserted so the fixture
-    // switch above cannot silently stop covering one of them.
+    // this file changing. These seven are today's, asserted so the
+    // fixture switch above cannot silently stop covering one of them.
     expect($axisLessResources->all())->toEqualCanonicalizing([
         ActionJournalResource::class,
+        ArticleCategoryResource::class,
+        ArticleResource::class,
+        ArticleTagResource::class,
+        BannerResource::class,
+        BannerSlotResource::class,
+        FinancialRecordResource::class,
         LanguageResource::class,
         ModuleResource::class,
         ObjectTypeResource::class,
+        PlacementPackageResource::class,
+        PlacementTierResource::class,
+        PromotionLabelResource::class,
     ]);
 
     foreach ($axisLessResources as $resourceClass) {

@@ -106,9 +106,24 @@ final class SettingsRegistry
 
             new SettingDefinition('placement.expiry_grace_days', 'placement', 'int', 3),
             new SettingDefinition('placement.expired_behaviour', 'placement', 'string', 'demote'),
+            // The pre-expiry/day-of points of §62's six-point warning
+            // schedule; the sixth point ("after") reuses expiry_grace_days
+            // above rather than a second offset list.
+            new SettingDefinition('placement.expiry_warning_offset_days', 'placement', 'array', [30, 14, 7, 3, 0]),
 
             new SettingDefinition('notifications.digest_hour', 'notifications', 'int', 9),
             new SettingDefinition('notifications.expiry_reminder_lead_days', 'notifications', 'int', 7),
+            // Sweep-level retry budget for a dispatch that reached `failed`
+            // after DispatchNotificationJob's own queue-level tries were
+            // exhausted — separate limit, separate concern: that job's
+            // tries absorb a few seconds of transient trouble, this one
+            // covers a channel down for longer than that.
+            new SettingDefinition('notifications.dispatch_max_retries', 'notifications', 'int', 3),
+            // Maximum administrator broadcasts (see BroadcastComposer) per
+            // calendar day. Portal-wide rather than per-administrator: the
+            // recipient-facing cost of an over-broadcast portal is the same
+            // regardless of which staff account sent the message.
+            new SettingDefinition('notifications.broadcast_rate_limit', 'notifications', 'int', 5),
 
             new SettingDefinition('integrations.map_tile_provider', 'integrations', 'string', 'maptiler'),
             new SettingDefinition('integrations.map_tile_key', 'integrations', 'string', '', isCritical: true),
@@ -121,6 +136,10 @@ final class SettingsRegistry
             new SettingDefinition('security.sign_in_max_attempts', 'security', 'int', 5, isCritical: true),
 
             new SettingDefinition('journal.retention_days', 'journal', 'int', 730, isCritical: true),
+
+            // How long a raw stat_events row survives after its day has
+            // been rolled up into stat_dailies — see AnalyticsCompactionJob.
+            new SettingDefinition('analytics.raw_retention_days', 'analytics', 'int', 90),
         ];
     }
 }

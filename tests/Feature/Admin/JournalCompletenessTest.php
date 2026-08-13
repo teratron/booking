@@ -36,8 +36,9 @@ uses(RefreshDatabase::class);
 | consumer checking its own completeness. The second half proves the
 | append-only guarantee is a database-level fact, not an application
 | convention: the same role the web application connects as is denied
-| UPDATE and DELETE on `audits` directly, by the Phase 1 trigger, before
-| any application code gets a chance to refuse anything itself.
+| UPDATE and DELETE on `audits` directly, by a database trigger installed
+| in the schema's own migrations, before any application code gets a
+| chance to refuse anything itself.
 |
 */
 
@@ -267,11 +268,11 @@ it('refuses UPDATE and DELETE against the journal as the application\'s own data
     expect(DB::table('audits')->where('id', $auditId)->value('event'))->toBe('journal_completeness_probe');
 });
 
-it('skips package changes — Phase 3 advertising has no model yet to exercise it', function (): void {})
-    ->skip('Package changes belong to Phase 3 (commerce/advertising); no model exists yet to produce this event.');
+it('skips package changes — no commerce package model exists yet to exercise it', function (): void {})
+    ->skip('Package changes are a commerce/advertising concern; no model exists yet to produce this event.');
 
-it('skips position changes — Phase 3 placement has no model yet to exercise it', function (): void {})
-    ->skip('Position changes belong to Phase 3 (placement/ranking); no model exists yet to produce this event.');
+it('skips position changes — no placement model exists yet to exercise it', function (): void {})
+    ->skip('Position changes are a placement/ranking concern; no model exists yet to produce this event.');
 
-it('skips bumps — Phase 3 advertising has no model yet to exercise it', function (): void {})
-    ->skip('Bumps belong to Phase 3 (commerce/advertising); no model exists yet to produce this event.');
+it('skips bumps — no bump model exists yet to exercise it', function (): void {})
+    ->skip('Bumps are a commerce/advertising concern; no model exists yet to produce this event.');

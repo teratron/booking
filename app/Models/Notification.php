@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
 use Override;
@@ -70,5 +71,17 @@ final class Notification extends Model
     public function related(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    /** @return BelongsTo<NotificationType, $this> */
+    public function type(): BelongsTo
+    {
+        return $this->belongsTo(NotificationType::class, 'notification_type_id');
+    }
+
+    /** @return HasMany<NotificationDispatch, $this> */
+    public function dispatches(): HasMany
+    {
+        return $this->hasMany(NotificationDispatch::class);
     }
 }

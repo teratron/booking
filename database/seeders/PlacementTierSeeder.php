@@ -12,6 +12,14 @@ use Illuminate\Support\Facades\DB;
  * Seeds the four structural placement ranks — the count and order are
  * fixed; labels, colours, and packages are administrator-editable data —
  * and one launch package per rank, sold across every object category.
+ *
+ * `rank` is ascending-best: the catalog's own ordering contract sorts
+ * objects by `tier.rank ASC`, so VIP, the most expensive package, must
+ * carry the lowest rank NUMBER (1) to sort first, and the free Standard
+ * tier the highest (4) to sort last. An earlier version of this seeder had
+ * the two inverted — rank 1 assigned to the free tier — which would have
+ * put every free listing ahead of every paying VIP customer in production;
+ * caught while building the expiry sweep, before any real data existed.
  */
 final class PlacementTierSeeder extends Seeder
 {
@@ -23,7 +31,7 @@ final class PlacementTierSeeder extends Seeder
 
         $tiers = [
             [
-                'rank' => 1, 'border' => '#D1D5DB', 'badge' => '#6B7280',
+                'rank' => 4, 'border' => '#D1D5DB', 'badge' => '#6B7280',
                 'label' => ['en' => 'Standard', 'ru' => 'Стандарт'],
                 'badgeText' => ['en' => 'Standard', 'ru' => 'Стандарт'],
                 'package' => [
@@ -32,7 +40,7 @@ final class PlacementTierSeeder extends Seeder
                 ],
             ],
             [
-                'rank' => 2, 'border' => '#93C5FD', 'badge' => '#2563EB',
+                'rank' => 3, 'border' => '#93C5FD', 'badge' => '#2563EB',
                 'label' => ['en' => 'Business', 'ru' => 'Бизнес'],
                 'badgeText' => ['en' => 'Business', 'ru' => 'Бизнес'],
                 'package' => [
@@ -41,7 +49,7 @@ final class PlacementTierSeeder extends Seeder
                 ],
             ],
             [
-                'rank' => 3, 'border' => '#FCD34D', 'badge' => '#D97706',
+                'rank' => 2, 'border' => '#FCD34D', 'badge' => '#D97706',
                 'label' => ['en' => 'Premium', 'ru' => 'Премиум'],
                 'badgeText' => ['en' => 'Premium', 'ru' => 'Премиум'],
                 'package' => [
@@ -50,7 +58,7 @@ final class PlacementTierSeeder extends Seeder
                 ],
             ],
             [
-                'rank' => 4, 'border' => '#FCA5A5', 'badge' => '#DC2626',
+                'rank' => 1, 'border' => '#FCA5A5', 'badge' => '#DC2626',
                 'label' => ['en' => 'VIP', 'ru' => 'VIP'],
                 'badgeText' => ['en' => 'VIP', 'ru' => 'VIP'],
                 'package' => [

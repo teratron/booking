@@ -41,11 +41,28 @@ final class ObjectLifecycleService
 
     public function publish(Object_ $object, User $actor): void
     {
-        $previous = $object->getOriginal('status');
+        $previousStatus = $object->getOriginal('status');
+        $previousModerationStatus = $object->getOriginal('moderation_status');
         $object->status = 'published';
+        // An administrator publishing is already the trusted act, so this
+        // is the one place a plain field edit is not enough: every
+        // default query enforces the moderation gate globally (see
+        // `ModerationScope`), and nothing else on this path ever clears
+        // it — a freshly created object's `moderation_status` starts null,
+        // which is indistinguishable from "pending" to that scope.
+        // Leaving it null here would make a published object invisible to
+        // every query that has not explicitly opted out of moderation.
+        $object->moderation_status = 'approved';
         $object->save();
 
-        $this->journal->record('object_published', $object, ['status' => $previous], ['status' => 'published'], $actor, ['object']);
+        $this->journal->record(
+            'object_published',
+            $object,
+            ['status' => $previousStatus, 'moderation_status' => $previousModerationStatus],
+            ['status' => 'published', 'moderation_status' => 'approved'],
+            $actor,
+            ['object'],
+        );
     }
 
     public function hide(Object_ $object, User $actor): void

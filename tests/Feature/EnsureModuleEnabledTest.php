@@ -15,9 +15,9 @@ uses(RefreshDatabase::class);
 |
 | "Disabled means inert, not hidden" — a route behind a disabled module
 | returns 404, indistinguishable from a route that does not exist, not a
-| rendered page missing the capability. No real gated route exists yet
-| (Phase 5), so this proves the gate itself against a scratch route
-| registered for the test alone.
+| rendered page missing the capability. No real gated route exists yet,
+| so this proves the gate itself against a scratch route registered for
+| the test alone.
 |
 */
 

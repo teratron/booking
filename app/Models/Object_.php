@@ -157,6 +157,18 @@ class Object_ extends Model implements AuditableContract, HasMedia, Translatable
     }
 
     /**
+     * Every promotional-label grant ever recorded for this object, past and
+     * present — the decoration service narrows this to the one currently
+     * active row itself, rather than this relation carrying that filter.
+     *
+     * @return HasMany<ObjectPromotion, $this>
+     */
+    public function objectPromotions(): HasMany
+    {
+        return $this->hasMany(ObjectPromotion::class, 'object_id');
+    }
+
+    /**
      * The current placement grant — one row per object, distinct from the
      * append-only `placement_histories` this table's own sibling keeps.
      *

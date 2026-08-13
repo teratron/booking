@@ -19,8 +19,8 @@ uses(RefreshDatabase::class);
 | exist) while disabled, resolve normally once genuinely enabled, and
 | leave a non-participating object gated even when a sibling object has an
 | explicit object-scope override. No real gated route, scheduled job, or
-| rendered object page exists yet (Phase 5 builds the booking surface
-| itself) — see this task's own Execution findings for what that leaves
+| rendered object page exists yet — the public booking surface is not
+| built — so this task's own Execution findings record what that leaves
 | unverifiable for now, checked honestly rather than faked.
 |
 */

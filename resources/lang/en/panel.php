@@ -19,6 +19,11 @@ return [
 
     'navigation' => [
         'catalog' => 'Catalog',
+        'commerce' => 'Commerce',
+        'advertising' => 'Advertising',
+        'analytics' => 'Analytics',
+        'communication' => 'Communication',
+        'content' => 'Content',
         'geography' => 'Geography',
         'governance' => 'Governance',
         'access' => 'Access',
@@ -165,6 +170,9 @@ return [
             'section' => 'Section needing revision',
             'reason' => 'Reason',
             'new_owner' => 'New owner',
+            'bump' => 'Bump',
+            'bump_comment' => 'Comment',
+            'bump_refused' => 'Could not bump this object',
         ],
     ],
 
@@ -295,6 +303,258 @@ return [
         ],
     ],
 
+    'placement_tiers' => [
+        'title' => 'Placement Tiers',
+        'model_label' => 'placement tier',
+
+        'columns' => [
+            'rank' => 'Rank',
+            'active' => 'Active',
+        ],
+
+        'form' => [
+            'rank' => 'Rank',
+            'label' => 'Label',
+            'badge_text' => 'Badge text',
+            'border_colour' => 'Border colour',
+            'badge_colour' => 'Badge colour',
+            'badge_icon' => 'Badge icon',
+        ],
+    ],
+
+    'placement_packages' => [
+        'title' => 'Placement Packages',
+        'model_label' => 'placement package',
+
+        'columns' => [
+            'active' => 'Active',
+        ],
+
+        'form' => [
+            'name' => 'Name',
+            'tier' => 'Placement tier',
+            'object_type' => 'Object category',
+            'any_object_type' => 'Any category',
+            'price' => 'Price',
+            'currency' => 'Currency',
+            'validity_days' => 'Validity (days)',
+            'bump_allowed' => 'Bumping allowed',
+            'bump_interval_hours' => 'Minimum interval between free bumps (hours)',
+            'free_bumps_per_period' => 'Free bumps per period',
+            'paid_bump_price' => 'Paid bump price',
+            'display_order' => 'Display order',
+        ],
+    ],
+
+    'banner_slots' => [
+        'title' => 'Banner Slots',
+        'model_label' => 'banner slot',
+
+        'columns' => [
+            'active' => 'Active',
+        ],
+
+        'form' => [
+            'key' => 'Key',
+            'name' => 'Name',
+            'surfaces' => 'Surfaces',
+            'surface_options' => [
+                'home' => 'Home',
+                'country' => 'Country',
+                'region' => 'Region',
+                'city' => 'City',
+                'resort' => 'Resort',
+                'category' => 'Category',
+                'object' => 'Object',
+                'news' => 'News',
+                'article' => 'Article',
+            ],
+        ],
+    ],
+
+    'banners' => [
+        'title' => 'Banners',
+        'model_label' => 'banner',
+
+        'columns' => [
+            'active' => 'Active',
+            'impressions' => 'Impressions',
+            'clicks' => 'Clicks',
+            'click_through_rate' => 'CTR',
+        ],
+
+        'form' => [
+            'slot' => 'Slot',
+            'name' => 'Name',
+            'advertiser' => 'Advertiser',
+            'destination_link' => 'Destination link',
+            'starts_at' => 'Starts on',
+            'ends_at' => 'Ends on',
+            'display_order' => 'Display order',
+            'desktop_creative' => 'Desktop creative',
+            'mobile_creative' => 'Mobile creative',
+            'territories' => 'Territories',
+            'categories' => 'Categories',
+            'target_languages' => 'Languages',
+            'link_text' => 'Link text',
+        ],
+    ],
+
+    'promotion_labels' => [
+        'title' => 'Promotional Labels',
+        'model_label' => 'promotional label',
+
+        'columns' => [
+            'active' => 'Active',
+        ],
+
+        'form' => [
+            'text' => 'Text',
+            'border_colour' => 'Border colour',
+            'text_colour' => 'Text colour',
+            'background_colour' => 'Background colour',
+            'icon' => 'Icon',
+            'position_on_card' => 'Position on card',
+            'preview' => 'Card preview',
+            'preview_placeholder' => 'Choose a position to see the preview.',
+            'preview_sample_text' => 'Label',
+        ],
+
+        'positions' => [
+            'top-left' => 'Top-left corner',
+            'top-right' => 'Top-right corner',
+            'bottom-left' => 'Bottom-left corner',
+            'bottom-right' => 'Bottom-right corner',
+        ],
+    ],
+
+    'financial_records' => [
+        'title' => 'Financial Ledger',
+        'model_label' => 'ledger entry',
+
+        'form' => [
+            'subject_kind' => 'Applies to',
+            'subject_object' => 'Object',
+            'subject_banner' => 'Banner',
+            'object' => 'Object',
+            'banner' => 'Banner',
+            'service' => 'Service',
+            'package' => 'Package',
+            'amount' => 'Amount',
+            'currency' => 'Currency',
+            'status' => 'Status',
+            'paid_at' => 'Paid at',
+            'valid_from' => 'Valid from',
+            'valid_until' => 'Valid until',
+            'payment_method' => 'Payment method',
+            'document_number' => 'Document number',
+            'responsible_staff' => 'Responsible staff',
+            'comment' => 'Comment',
+        ],
+
+        'status' => [
+            'awaiting_payment' => 'Awaiting payment',
+            'paid' => 'Paid',
+            'partially_paid' => 'Partially paid',
+            'overdue' => 'Overdue',
+            'cancelled' => 'Cancelled',
+            'granted_free' => 'Granted free of charge',
+        ],
+
+        'filters' => [
+            'from' => 'From',
+            'until' => 'Until',
+        ],
+
+        'actions' => [
+            'export' => 'Export',
+        ],
+
+        'notifications' => [
+            'export_completed' => 'Your ledger export has completed and :count row(s) exported.|Your ledger export has completed and :count rows exported.',
+        ],
+    ],
+
+    'broadcast' => [
+        'title' => 'Owner Broadcast',
+
+        'fields' => [
+            'target_type' => 'Target by',
+            'target' => 'Target',
+            'title' => 'Message title',
+            'body' => 'Message body',
+        ],
+
+        'target_types' => [
+            'country' => 'Country',
+            'resort' => 'Resort',
+            'package' => 'Placement package',
+        ],
+
+        'actions' => [
+            'send' => 'Send broadcast',
+        ],
+
+        'confirmation' => 'This will notify :count owner(s). Every one of them will receive this message.',
+        'confirm_label' => 'Notify :count owner(s)',
+        'sent' => 'Broadcast sent to :count owner(s).',
+        'rate_limited' => 'Daily broadcast limit reached',
+        'quota_remaining' => ':count broadcast(s) remaining today.',
+    ],
+
+    'commerce_reports' => [
+        'title' => 'Commerce Reports',
+        'active_placements' => 'Active placements',
+        'ending_30' => 'Ending within 30 days',
+        'ending_14' => 'Ending within 14 days',
+        'ending_7' => 'Ending within 7 days',
+        'ending_3' => 'Ending within 3 days',
+        'expired_placements' => 'Expired placements',
+        'no_term_set' => 'Objects with no term set',
+        'free_placements' => 'Free placements',
+        'paid_bump_count' => 'Paid bumps',
+        'active_campaigns' => 'Active advertising campaigns',
+    ],
+
+    'analytics_report' => [
+        'title' => 'Analytics Report',
+
+        'filters' => [
+            'territory' => 'City',
+            'category' => 'Category',
+            'language' => 'Language',
+            'banner' => 'Banner',
+            'object' => 'Object ID',
+        ],
+
+        'columns' => [
+            'date' => 'Date',
+            'kind' => 'Kind',
+            'subject_type' => 'Subject',
+            'subject_id' => 'Subject ID',
+            'territory' => 'City',
+            'language' => 'Language',
+            'count' => 'Count',
+        ],
+
+        'kinds' => [
+            'object_card_view' => 'Card views',
+            'object_page_view' => 'Page views',
+            'photo_view' => 'Photo views',
+            'contact_click' => 'Contact clicks',
+            'banner_impression' => 'Banner impressions',
+            'banner_click' => 'Banner clicks',
+        ],
+
+        'actions' => [
+            'export' => 'Export',
+        ],
+
+        'notifications' => [
+            'export_completed' => '{1} :count row exported.|[2,*] :count rows exported.',
+        ],
+    ],
+
     'modules' => [
         'title' => 'Modules',
         'model_label' => 'module',
@@ -350,6 +610,7 @@ return [
             'integrations' => 'Integrations',
             'security' => 'Security',
             'journal' => 'Action journal',
+            'analytics' => 'Analytics',
         ],
 
         'fields' => [
@@ -382,6 +643,8 @@ return [
 
             'notifications.digest_hour' => 'Hour the daily digest is sent',
             'notifications.expiry_reminder_lead_days' => 'Days of notice before expiry',
+            'notifications.dispatch_max_retries' => 'Maximum retry sweeps for a failed dispatch',
+            'notifications.broadcast_rate_limit' => 'Maximum administrator broadcasts per day',
 
             'integrations.map_tile_provider' => 'Map tile provider',
             'integrations.map_tile_key' => 'Map tile API key',
@@ -394,6 +657,8 @@ return [
             'security.sign_in_max_attempts' => 'Sign-in attempts before lockout',
 
             'journal.retention_days' => 'Journal retention (days)',
+
+            'analytics.raw_retention_days' => 'Raw event retention (days)',
         ],
     ],
 
@@ -557,6 +822,73 @@ return [
 
         'notifications' => [
             'export_completed' => '{0}The export finished with no rows.|{1}The export finished with :count row.|[2,*]The export finished with :count rows.',
+        ],
+    ],
+
+    'article_categories' => [
+        'title' => 'Article Categories',
+        'model_label' => 'article category',
+
+        'columns' => [
+            'active' => 'Active',
+        ],
+
+        'form' => [
+            'slug' => 'Slug',
+            'name' => 'Name',
+            'display_order' => 'Display order',
+        ],
+    ],
+
+    'article_tags' => [
+        'title' => 'Article Tags',
+        'model_label' => 'article tag',
+
+        'columns' => [
+            'active' => 'Active',
+        ],
+
+        'form' => [
+            'slug' => 'Slug',
+            'name' => 'Name',
+            'display_order' => 'Display order',
+        ],
+    ],
+
+    'articles' => [
+        'title' => 'Articles',
+        'model_label' => 'article',
+
+        'form' => [
+            'author' => 'Author',
+            'category' => 'Category',
+            'status' => 'Status',
+            'publish_at' => 'Publish at',
+            'cover_image' => 'Cover image',
+            'related_objects' => 'Related objects',
+            'related_territories' => 'Related territories',
+            'tags' => 'Tags',
+            'title' => 'Title',
+            'summary' => 'Summary',
+            'body' => 'Body',
+            'slug' => 'Slug',
+            'seo_title' => 'SEO title',
+            'seo_description' => 'SEO description',
+        ],
+
+        'status' => [
+            'draft' => 'Draft',
+            'scheduled' => 'Scheduled',
+            'published' => 'Published',
+        ],
+
+        'lifecycle' => [
+            'publish' => 'Publish',
+            'schedule' => 'Schedule',
+            'archive' => 'Archive',
+            'restore' => 'Restore',
+            'applied' => 'Change applied.',
+            'schedule_refused' => 'This article cannot be scheduled',
         ],
     ],
 

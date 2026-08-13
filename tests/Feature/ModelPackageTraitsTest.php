@@ -20,8 +20,8 @@ uses(RefreshDatabase::class);
 |--------------------------------------------------------------------------
 |
 | One assertion per package this task wires onto a real model, so a
-| misconfigured trait fails loudly here rather than at first use in
-| Phase 2 — astrotomic/laravel-translatable, spatie/laravel-medialibrary,
+| misconfigured trait fails loudly here rather than at first use by later
+| feature work — astrotomic/laravel-translatable, spatie/laravel-medialibrary,
 | owen-it/laravel-auditing, and staudenmeir/laravel-adjacency-list.
 |
 */

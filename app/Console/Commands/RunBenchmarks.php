@@ -49,7 +49,7 @@ final class RunBenchmarks extends Command
         $failed = ! $rankingPassed || ! $subtreePassed;
 
         $this->newLine();
-        $this->line('Not yet measurable — no public page or cache layer exists to measure end-to-end (Phase 5 closes these):');
+        $this->line('Not yet measurable — no public page or cache layer exists yet to measure end-to-end:');
         $this->line('  - Catalog page, cache hit (< 100ms TTFB budget)');
         $this->line('  - Object page, cache miss (< 300ms budget)');
         $this->line('  - Search, p95 (< 300ms budget — no search endpoint yet)');

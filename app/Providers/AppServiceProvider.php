@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Models\Banner;
 use App\Policies\AuditPolicy;
+use App\Services\Advertising\BannerSelectionService;
 use App\Services\Localization\DatabaseOverlayLoader;
 use App\Services\Localization\LanguageRegistry;
 use Astrotomic\Translatable\Locales;
@@ -53,6 +55,7 @@ class AppServiceProvider extends ServiceProvider
         $this->overlayInterfaceCatalogFromDatabase();
         $this->resolveTranslationFallbackFromPrimaryLanguage();
         $this->syncTranslatableLocales();
+        $this->invalidateBannerSelectionCacheOnWrite();
     }
 
     /**
@@ -119,5 +122,31 @@ class AppServiceProvider extends ServiceProvider
 
             return array_values(array_unique(array_filter([$requested, $primary])));
         });
+    }
+
+    /**
+     * `Banner` has no dedicated write-path service of its own — it is
+     * created and edited directly through the admin resource's Filament
+     * pages — so this is the one place that reliably observes every write.
+     * A slot change on update invalidates both the slot the banner left and
+     * the one it now belongs to, since each caches its own selection
+     * independently.
+     */
+    private function invalidateBannerSelectionCacheOnWrite(): void
+    {
+        $invalidate = function (Banner $banner): void {
+            $service = $this->app->make(BannerSelectionService::class);
+            $service->invalidateSlot((int) $banner->banner_slot_id);
+
+            $originalSlotId = $banner->getOriginal('banner_slot_id');
+
+            if ($originalSlotId !== null && (int) $originalSlotId !== (int) $banner->banner_slot_id) {
+                $service->invalidateSlot((int) $originalSlotId);
+            }
+        };
+
+        Banner::saved($invalidate);
+        Banner::deleted($invalidate);
+        Banner::restored($invalidate);
     }
 }

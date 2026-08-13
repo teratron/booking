@@ -42,4 +42,10 @@ class ObjectPlacement extends Model
     {
         return $this->belongsTo(Object_::class);
     }
+
+    /** @return BelongsTo<PlacementPackage, $this> */
+    public function package(): BelongsTo
+    {
+        return $this->belongsTo(PlacementPackage::class, 'placement_package_id');
+    }
 }

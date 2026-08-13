@@ -87,6 +87,11 @@ class AdminPanelProvider extends PanelProvider
     {
         return [
             NavigationGroup::make()->label(fn (): string => __('panel.navigation.catalog')),
+            NavigationGroup::make()->label(fn (): string => __('panel.navigation.commerce')),
+            NavigationGroup::make()->label(fn (): string => __('panel.navigation.advertising')),
+            NavigationGroup::make()->label(fn (): string => __('panel.navigation.analytics')),
+            NavigationGroup::make()->label(fn (): string => __('panel.navigation.communication')),
+            NavigationGroup::make()->label(fn (): string => __('panel.navigation.content')),
             NavigationGroup::make()->label(fn (): string => __('panel.navigation.geography')),
             NavigationGroup::make()->label(fn (): string => __('panel.navigation.governance')),
             NavigationGroup::make()->label(fn (): string => __('panel.navigation.access')),

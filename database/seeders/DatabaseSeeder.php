@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             ModuleSeeder::class,
             NotificationChannelSeeder::class,
             NotificationTypeSeeder::class,
+            NotificationTemplateSeeder::class,
             PermissionSeeder::class,
             RoleSeeder::class,
         ]);
