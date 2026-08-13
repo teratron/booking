@@ -892,4 +892,102 @@ return [
         ],
     ],
 
+    'news_items' => [
+        'title' => 'News',
+        'model_label' => 'news item',
+
+        'columns' => [
+            'view_count' => 'Views',
+        ],
+
+        'form' => [
+            'author' => 'Author',
+            'object' => 'Object',
+            'any_object' => 'Portal-wide (no object)',
+            'territory' => 'Territory',
+            'category' => 'Category',
+            'status' => 'Status',
+            'publish_at' => 'Publish at',
+            'end_at' => 'End at',
+            'pinned' => 'Pinned',
+            'cover_image' => 'Cover image',
+            'gallery' => 'Gallery',
+            'title' => 'Title',
+            'summary' => 'Summary',
+            'body' => 'Body',
+            'slug' => 'Slug',
+            'seo_title' => 'SEO title',
+            'seo_description' => 'SEO description',
+        ],
+
+        'status' => [
+            'draft' => 'Draft',
+            'scheduled' => 'Scheduled',
+            'published' => 'Published',
+            'withdrawn' => 'Withdrawn',
+        ],
+
+        'moderation_status' => [
+            'pending' => 'Pending',
+            'approved' => 'Approved',
+            'rejected' => 'Rejected',
+            'revision_requested' => 'Revision requested',
+        ],
+
+        'lifecycle' => [
+            'publish' => 'Publish',
+            'schedule' => 'Schedule',
+            'pin' => 'Pin',
+            'unpin' => 'Unpin',
+            'withdraw' => 'Withdraw',
+            'archive' => 'Archive',
+            'restore' => 'Restore',
+            'applied' => 'Change applied.',
+            'schedule_refused' => 'This news item cannot be scheduled',
+        ],
+    ],
+
+    'promotions' => [
+        'title' => 'Promotions',
+        'model_label' => 'promotion',
+
+        'form' => [
+            'object' => 'Object',
+            'territory' => 'Territory',
+            'status' => 'Status',
+            'starts_at' => 'Starts at',
+            'ends_at' => 'Ends at',
+            'image' => 'Image',
+            'title' => 'Title',
+            'summary' => 'Description',
+            'slug' => 'Slug',
+            'seo_title' => 'SEO title',
+            'seo_description' => 'SEO description',
+        ],
+
+        'status' => [
+            'draft' => 'Draft',
+            'scheduled' => 'Scheduled',
+            'published' => 'Published',
+            'archived' => 'Archived',
+        ],
+
+        'moderation_status' => [
+            'pending' => 'Pending',
+            'approved' => 'Approved',
+            'rejected' => 'Rejected',
+            'revision_requested' => 'Revision requested',
+        ],
+
+        'lifecycle' => [
+            'publish' => 'Publish',
+            'schedule' => 'Schedule',
+            'archive' => 'Archive',
+            'delete' => 'Delete',
+            'restore' => 'Restore',
+            'applied' => 'Change applied.',
+            'schedule_refused' => 'This promotion cannot be scheduled',
+        ],
+    ],
+
 ];

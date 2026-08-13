@@ -891,4 +891,102 @@ return [
         ],
     ],
 
+    'news_items' => [
+        'title' => 'Новости',
+        'model_label' => 'новость',
+
+        'columns' => [
+            'view_count' => 'Просмотры',
+        ],
+
+        'form' => [
+            'author' => 'Автор',
+            'object' => 'Объект',
+            'any_object' => 'По всему порталу (без объекта)',
+            'territory' => 'Территория',
+            'category' => 'Категория',
+            'status' => 'Статус',
+            'publish_at' => 'Дата публикации',
+            'end_at' => 'Дата окончания',
+            'pinned' => 'Закреплено',
+            'cover_image' => 'Обложка',
+            'gallery' => 'Галерея',
+            'title' => 'Заголовок',
+            'summary' => 'Краткое описание',
+            'body' => 'Текст',
+            'slug' => 'URL-слаг',
+            'seo_title' => 'SEO-заголовок',
+            'seo_description' => 'SEO-описание',
+        ],
+
+        'status' => [
+            'draft' => 'Черновик',
+            'scheduled' => 'Запланировано',
+            'published' => 'Опубликовано',
+            'withdrawn' => 'Снято',
+        ],
+
+        'moderation_status' => [
+            'pending' => 'На проверке',
+            'approved' => 'Одобрено',
+            'rejected' => 'Отклонено',
+            'revision_requested' => 'Требует доработки',
+        ],
+
+        'lifecycle' => [
+            'publish' => 'Опубликовать',
+            'schedule' => 'Запланировать',
+            'pin' => 'Закрепить',
+            'unpin' => 'Открепить',
+            'withdraw' => 'Снять',
+            'archive' => 'В архив',
+            'restore' => 'Восстановить',
+            'applied' => 'Изменение применено.',
+            'schedule_refused' => 'Эту новость нельзя запланировать',
+        ],
+    ],
+
+    'promotions' => [
+        'title' => 'Акции',
+        'model_label' => 'акция',
+
+        'form' => [
+            'object' => 'Объект',
+            'territory' => 'Территория',
+            'status' => 'Статус',
+            'starts_at' => 'Дата начала',
+            'ends_at' => 'Дата окончания',
+            'image' => 'Изображение',
+            'title' => 'Заголовок',
+            'summary' => 'Описание',
+            'slug' => 'URL-слаг',
+            'seo_title' => 'SEO-заголовок',
+            'seo_description' => 'SEO-описание',
+        ],
+
+        'status' => [
+            'draft' => 'Черновик',
+            'scheduled' => 'Запланировано',
+            'published' => 'Опубликовано',
+            'archived' => 'В архиве',
+        ],
+
+        'moderation_status' => [
+            'pending' => 'На проверке',
+            'approved' => 'Одобрено',
+            'rejected' => 'Отклонено',
+            'revision_requested' => 'Требует доработки',
+        ],
+
+        'lifecycle' => [
+            'publish' => 'Опубликовать',
+            'schedule' => 'Запланировать',
+            'archive' => 'В архив',
+            'delete' => 'Удалить',
+            'restore' => 'Восстановить',
+            'applied' => 'Изменение применено.',
+            'schedule_refused' => 'Эту акцию нельзя запланировать',
+        ],
+    ],
+
 ];

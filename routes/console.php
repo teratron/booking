@@ -8,6 +8,7 @@ use App\Jobs\ArchiveJournalEntriesJob;
 use App\Jobs\AvailabilityConfirmationSweepJob;
 use App\Jobs\DispatchRetryJob;
 use App\Jobs\PlacementExpirySweepJob;
+use App\Jobs\PromotionArchivalJob;
 use App\Jobs\StalenessSweepJob;
 use App\Jobs\SweepStaleAvailabilityJob;
 use Illuminate\Foundation\Inspiring;
@@ -58,3 +59,8 @@ Schedule::job(new AvailabilityConfirmationSweepJob)->daily()->name('availability
 // sweep-level retry budget — frequent because a channel outage worth
 // retrying is worth retrying promptly, not once a day.
 Schedule::job(new DispatchRetryJob)->everyFiveMinutes()->name('notifications:retry-dispatch');
+
+// Archives a promotion once its own end date has passed — a scheduled
+// sweep, never a render-time check, so an expired promotion does not stay
+// live in every cache that has not yet turned over.
+Schedule::job(new PromotionArchivalJob)->daily()->name('content:archive-promotions');
