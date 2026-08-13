@@ -1018,6 +1018,48 @@ return [
                 'not_yet_available' => 'This screen is not available yet.',
             ],
         ],
+
+        'availability' => [
+            'mark_available' => 'Mark as available',
+            'mark_unavailable' => 'Mark as unavailable',
+            'toggled' => 'Availability updated.',
+        ],
+
+        'objects' => [
+            'title' => 'Edit object',
+            'model_label' => 'object',
+
+            'sections' => [
+                'core' => 'Core',
+                'geography' => 'Geography',
+                'contacts' => 'Contacts',
+                'translations' => 'Translations',
+                'seo' => 'SEO',
+            ],
+
+            'form' => [
+                'latitude' => 'Latitude',
+                'longitude' => 'Longitude',
+            ],
+
+            'lifecycle' => [
+                'saved' => 'Saved.',
+                'submitted_for_review' => 'Submitted for review. Your changes will go live once a moderator approves them.',
+            ],
+
+            'moderation_feedback' => [
+                'title' => 'Moderation feedback',
+                'pending' => 'Your latest change is awaiting review.',
+                'rejected_with_reason' => 'Your latest change was rejected. Reason: :reason',
+                'revision_requested_with_reason' => 'A moderator requested changes to your latest submission. Reason: :reason',
+            ],
+
+            'eligibility' => [
+                'title' => 'Before this object can be published',
+                'coordinates' => 'Coordinates (latitude and longitude) are required.',
+                'name' => 'A name in the primary language is required.',
+            ],
+        ],
     ],
 
 ];
