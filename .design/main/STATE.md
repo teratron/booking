@@ -4,31 +4,30 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-13 08:39
+**Updated:** 2026-08-13 10:07
 **Phase:** 4 — Owner Cabinet
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Phase 3 is fully Done (23/23, archived) and Phase 4 is now decomposed — 16 atomic tasks across four tracks (A cabinet foundation, B object management, C owner content, D statistics/bump/settings) plus Track T validation, written to `tasks/phase-4.md`. `T-4A01` (CabinetPanelProvider + owner-scoped resource base) is the hard gate every other task in this phase depends on, mirroring Phase 2's `T-2A02` role. Commit policy (explicit user instruction, still standing): commit after each completed task, push held for full phase-through-phase completion.
+- **Task:** `T-4A01` (CabinetPanelProvider, owner authentication, owner-scoped resource base contract) is Done — Phase 4's hard gate. Next: `T-4A02` (Dashboard), then Track B starting with `T-4B01`. Commit policy (explicit user instruction, still standing): commit after each completed task, push held for full phase-through-phase completion.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Execute T-4A01 CabinetPanelProvider, owner authentication, and the owner-scoped resource base contract via /magic.run main
+- **Next Action:** Execute T-4A02 Dashboard via /magic.run main
 
 ## Progress
 
 ```
-Phase 4: [0/16] ░░░░░░░░ 0%
+Phase 4: [1/16] ░░░░░░░░ 6%
 Overall: [3/7] ███░░░░░ 43%
-Plan:           [7 phases] Bootstrap/tentative; Phase 1-3 archived, Phase 4 decomposed, 5-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [0/16] Phase 4 DECOMPOSED
+Plan:           [7 phases] Bootstrap/tentative; Phase 1-3 archived, Phase 4 in progress, 5-7 scoped
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [1/16] Phase 4 IN PROGRESS
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-13 **Decision: Phase 3 closed — Track T validation done (23/23 total), finalize run archived both Phase 2 and Phase 3 in one pass** — `T-3T01`–`T-3T03` (catalog ordering volume proof, analytics privacy invariants, notification completeness) built cleanly via a single sequential Workflow; `T-3T03` closed two real, confirmed gaps discovered by direct code reading before any test was written — three of the ten seeded notification types (`moderation_approved`/`rejected`, `revision_requested`, `object_status_changed`) were fully modeled and seeded but never actually triggered by `ModerationDecisionService`/`ObjectLifecycleService`, now wired. `T-3T04` hit the session cap a second time (a later reset than Track E's) after finding but not yet fixing a real regression: the admin nav sidebar's per-resource authorization check (`ScopeAuthorizer::authorize()`) had zero per-request memoization, so growing the panel to 20+ resources pushed `ActionJournalResource`'s list page to 41 queries against the 30-query ceiling — not a defect in that resource, a fixed per-navigation-item cost every resource pays that one simply had the least headroom to absorb. Fixed directly: a per-(user, permission) memo on `ScopeAuthorizer`, bound as a singleton so it survives the whole request; `ActionJournalResource` dropped to 1 query, every other resource and all three new custom pages (`CommerceReports` 20, `AnalyticsReport` 9, `NotificationBroadcast` 3) comfortably under budget afterward. Full suite: 474 passed, 3 skipped, 0 failed.
-- 2026-08-13 **Decision: Track E (content publishing) closed by building `T-3E02`/`T-3E03` directly, no Workflow, after `T-3E01`'s dispatch hit the session cap** — both tasks went through the same independent-verification discipline as every agent-authored task this phase: falsifying test failures before trusting a fix, full suite green before marking Done (447 then 452 passed, both up cleanly from the prior checkpoint). Real, non-hypothetical issues caught this way, not by construction: a `Heroicon` constant that does not exist in the installed Filament version (caught by `composer analyse`'s own bootstrap crash); `promotions.starts_at` being a NOT NULL column made a null-check in `PromotionLifecycleService::publish()` provably dead code per Larastan, fixed alongside making the create form's field required with a sensible default so the constraint can never be violated; a test of my own asserting through the wrong (moderation-scoped) query for a still-pending draft. `T-3E03` also refactored `ArticleLifecycleService`'s (from `T-3E01`) and both of `T-3E02`'s lifecycle services to route cache invalidation through one new `ContentPublicationService::invalidate()` rather than three private copies — the literal "shared pipeline" the task's own name promised. All five feature tracks are now closed; only Track T validation remains for Phase 3.
+- 2026-08-13 **Decision: `T-4A01` built the cabinet's tenant/switcher contract on Filament's native `HasTenants`/`->tenant()` machinery rather than a hand-rolled session-based "current object" mechanism** — `User::getTenants()` unions owned objects with objects reachable through the pre-existing `object_user` staff pivot; a new `CabinetAccessResolver` service resolves record-level authorization along this second axis (ownership defers to the acting user's own permission grants, staff membership reads `object_user.permissions` directly, bypassing the portal permission system per that pivot's own documented design intent), and `Object_Policy` tries the admin panel's country/territory/category axis first, falling back to this one — neither regresses the other. Two real defects were found and fixed by direct code reading before any test proved them: Filament's tenant-menu label resolves via `getAttributeValue('name')`, which bypasses Astrotomic's translated-attribute accessor (fixed via `HasName::getFilamentName()` on `Object_`); and `ModerationScope` silently blocked an owner's own tenant resolution — an owner whose only object was still draft/pending could not reach their own cabinet at all, since both Filament's default tenant route-binding and the naive tenant-relation queries carry that global scope. Fixed at both call sites (`User::getTenants()`/`canAccessTenant()`, and the panel's `resolveTenantUsing()`), with the principle now recorded below as a standing constraint. Full suite: 485 passed, 3 skipped, 0 failed — up from 483 passed/2 failed at the first full-suite checkpoint; the 2 failures were two pre-existing tests from earlier phases whose owner fixtures assumed the old (non-tenant) panel-home behavior, root-caused to the same scope issue and fixed as part of this task.
 
 ## Blockers
 
@@ -90,15 +89,17 @@ Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 
 - **Commit policy changed mid-session (2026-08-13, explicit user instruction):** commit after each completed task now, not only once the entire phase-through-phase chain finishes. Push still waits for full completion, per the original instruction — the user only asked for per-task commits, not per-task pushes.
 - **A Workflow run's spawned agents can all fail at once with "session limit" — that is an account-wide usage cap, not a per-agent error, and it does not mean zero progress happened.** One run's three sequential agents (Track E) all reported this identical failure; the first agent had in fact completed essentially all of its real work (files written, its own quality gates already run) and only failed at its final self-report step, right as the cap tripped — the two agents after it never got to start. Always inspect the actual filesystem (`git status`, read the files) before assuming a "failed" Workflow result means nothing landed; independently re-verify whatever did land exactly as if it had self-reported success, then fall back to direct (non-Workflow) implementation for whatever the cap actually blocked.
 - **A resolved `Translator` singleton keeps whatever `translation.loader` it was built with** — `astrotomic/laravel-translatable`'s `Locales` class depends on `TranslatorContract`, so resolving it (even just to sync the locale registry) locks the loader in; any `extend('translation.loader', …)` must run first in `boot()`, not after.
+- **`ModerationScope` (global scope hiding unapproved `Object_` rows) silently breaks any query an owner needs to run against their own not-yet-approved object** — this bit both Filament's tenancy (default tenant route-binding, `User::getTenants()`/`canAccessTenant()`) and will bite every future cabinet query the same way unless explicitly stripped (`withoutGlobalScope(ModerationScope::class)`). The rule going forward: this scope belongs on public-facing/catalog queries only, never on a query resolving what an *authenticated, already-authorized* owner or staff member can reach about their own listing. Every Track B/C/D resource querying `Object_` (or anything scoped through it) must check this before assuming a draft/pending fixture will behave like an approved one in its own tests.
+- **Filament's tenant-menu (and anywhere else reading a tenant's display label) calls `getAttributeValue('name')` directly, bypassing any model's overridden `getAttribute()`** — a translated attribute (astrotomic) or any other custom accessor built on `getAttribute()` renders blank there unless the model also implements `Filament\Models\Contracts\HasName::getFilamentName()`. `Object_` already does; any other model later given a Filament label/name needs the same check.
 
 ## Session Continuity
 
 **Reading order for a fresh session:** this file (position, decisions,
 constraints) → `CLAUDE.md` (stack, conventions, engineering discipline) →
-`.design/main/tasks/phase-4.md` (active phase, once `/magic.task` decomposes
-it — currently frontmatter and scope only) → `.design/main/PLAN.md` only for
-cross-phase context. Phase 3's own task file is archived at
-`.design/main/archives/tasks/phase-3.md` for historical reference.
+`.design/main/tasks/phase-4.md` (active phase — decomposed, T-4A01 Done) →
+`.design/main/PLAN.md` only for cross-phase context. Phase 3's own task file
+is archived at `.design/main/archives/tasks/phase-3.md` for historical
+reference.
 
 **Do not carry forward** anything about Next.js, TypeScript, Drizzle, Better Auth,
 react-admin, or Vercel — that stack is superseded and preserved only at tag `v0.1.34`.

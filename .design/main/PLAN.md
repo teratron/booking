@@ -228,12 +228,14 @@ critical path out of Phase 2.
 
 ## Next Step
 
-`/magic.task main` — decompose Phase 4 (Owner Cabinet) into atomic tasks; phase registry
-in [TASKS.md](TASKS.md). Phases 1 through 3 are complete and archived at
+`/magic.run main` — continue executing Phase 4 (Owner Cabinet), decomposed into 16
+atomic tasks in [tasks/phase-4.md](tasks/phase-4.md); `T-4A01` (cabinet foundation gate)
+is Done, `T-4A02` (Dashboard) is next. Phase registry in [TASKS.md](TASKS.md). Phases 1
+through 3 are complete and archived at
 [archives/tasks/phase-1.md](archives/tasks/phase-1.md),
 [archives/tasks/phase-2.md](archives/tasks/phase-2.md), and
 [archives/tasks/phase-3.md](archives/tasks/phase-3.md) respectively.
 
-Phases 4 through 7 carry frontmatter and scope only. They are decomposed into atomic
+Phases 5 through 7 carry frontmatter and scope only. They are decomposed into atomic
 tasks by the `/magic.task` invocation that activates each, so the decomposition is
 derived from the specification set as it stands then rather than as it stands now.
