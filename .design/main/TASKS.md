@@ -12,15 +12,13 @@
 Tactical registry of all phases and their statuses. Atomic checklists (`T-XXXX`) live in
 the per-phase files under `tasks/`.
 
-**Decomposition state.** Phase 1 is complete (21/21) and archived. Phase 2 is decomposed
-into 25 atomic tasks across five tracks and complete (25/25) — pending archival now that
-its frontmatter status is corrected (see phase-2.md; archival fires on the next
-`magic.run` finalize). Phase 3 is decomposed into 23 atomic tasks across five parallel
-tracks plus validation, against its current `RFC` specification set — the same posture
-Phase 1 and Phase 2 were successfully decomposed and executed under, per the persisted
-`STATE.md` recommendation. Phases 4 through 7 still carry frontmatter, a strategic goal,
-and their scope only — no `T-XXXX` items yet; each is decomposed by the `/magic.task`
-invocation that activates it, against the specification set as it stands at that point.
+**Decomposition state.** Phases 1 through 3 are complete (21/21, 25/25, 23/23) and
+archived. All three were decomposed and executed against their specifications' current
+`RFC` status rather than deferred pending `Stable` promotion — the specifications remain
+technology-neutral regardless of that status field, and no Pre-flight gate has ever
+HALTed on it. Phases 4 through 7 still carry frontmatter, a strategic goal, and their
+scope only — no `T-XXXX` items yet; each is decomposed by the `/magic.task` invocation
+that activates it, against the specification set as it stands at that point.
 
 The superseded Next.js-era archives now live under `archives/tasks/v1-nextjs/`. They
 previously occupied the filenames `archives/tasks/phase-1.md` through `phase-6.md`,
@@ -32,8 +30,8 @@ archival would have overwritten them.
 | Phase | Description | Status |
 | --- | --- | --- |
 | [Phase 1](archives/tasks/phase-1.md) | Foundation, schema, registries, scoped authorization, module gating, quality gates | `Done (Archived)` |
-| [Phase 2](tasks/phase-2.md) | Back office core — staff panel, objects, owners, geography, taxonomy, moderation, action journal | `Done` (25/25) — pending archival |
-| [Phase 3](tasks/phase-3.md) | Commerce, advertising, analytics ingest, notifications, content pipeline | `In Progress` (19/23) |
+| [Phase 2](archives/tasks/phase-2.md) | Back office core — staff panel, objects, owners, geography, taxonomy, moderation, action journal | `Done (Archived)` (25/25) |
+| [Phase 3](archives/tasks/phase-3.md) | Commerce, advertising, analytics ingest, notifications, content pipeline | `Done (Archived)` (23/23) |
 | [Phase 4](tasks/phase-4.md) | Owner cabinet — the second Filament panel, owner-scoped throughout | `Todo` |
 | [Phase 5](tasks/phase-5.md) | Public site — shell, home, catalog, object profile, territory pages, built from Figma | `Todo` |
 | [Phase 6](tasks/phase-6.md) | SEO, portal-wide reporting, public REST API | `Todo` |
@@ -67,9 +65,9 @@ task-level edges are scheduled across tracks rather than discovered mid-run: `T-
 before `T-3A04` (the expiry sweep raises notifications against a model that must
 already exist), and `T-3C01` before `T-3B02` (banner impressions/clicks are `StatEvent`
 rows, not a second counting scheme). Full rationale in
-[tasks/phase-3.md](tasks/phase-3.md) §Track Ordering.
+[tasks/phase-3.md](archives/tasks/phase-3.md) §Track Ordering.
 
 ## Meta Information
 
-- **Last Updated**: 2026-08-12
+- **Last Updated**: 2026-08-13
 - **Maintainer**: Core Team

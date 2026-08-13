@@ -105,34 +105,37 @@ pass from empty, the registries as data, and scoped authorization before any pan
 - [x] **Platform Foundation** §3 — invariants made mechanically checkable ([l1-platform-foundation.md](specifications/l1-platform-foundation.md)) [L1]
 - [x] **Third-Party Integrations** §5.1, §5.4 — local storage and mail equivalents ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
 
-## Phase 2 — Back Office Core — **Active**
+## Phase 2 — Back Office Core — **Done**
 
 *The staff panel in `[TZ]` §134 priority order, up to the point where a portal can be
 operated: objects, owners, geography, taxonomy, moderation, and the action journal.*
 
-- [ ] **Back Office** §5.1, §5.3–§5.6 — panel shell, dashboard, object and owner management, settings ([l1-back-office.md](specifications/l1-back-office.md)) [L1]
-- [ ] **Moderation & Governance** — queue, diff review, action journal, archive, confirmation gates ([l1-moderation-governance.md](specifications/l1-moderation-governance.md)) [L1]
-- [ ] **Object Catalog** §3.1 — object type registry administration ([l1-object-catalog.md](specifications/l1-object-catalog.md)) [L1]
-- [ ] **Geography** §5.5 — territory administration, guarded reparenting ([l1-geography.md](specifications/l1-geography.md)) [L1]
-- [ ] **Localization** §5.4–§5.5 — interface catalogs, translation management, untranslated-material report ([l1-localization.md](specifications/l1-localization.md)) [L1]
-- [ ] **Availability Status** §5.4–§5.5 — administrator override, staleness filters, bulk reset ([l1-availability-status.md](specifications/l1-availability-status.md)) [L1]
-- [ ] **Feature Modules** §5.6 — module management screen, per-scope toggles, blast-radius confirmation ([l1-feature-modules.md](specifications/l1-feature-modules.md)) [L1]
+- [x] **Back Office** §5.1, §5.3–§5.6 — panel shell, dashboard, object and owner management, settings ([l1-back-office.md](specifications/l1-back-office.md)) [L1]
+- [x] **Moderation & Governance** — queue, diff review, action journal, archive, confirmation gates ([l1-moderation-governance.md](specifications/l1-moderation-governance.md)) [L1]
+- [x] **Object Catalog** §3.1 — object type registry administration ([l1-object-catalog.md](specifications/l1-object-catalog.md)) [L1]
+- [x] **Geography** §5.5 — territory administration, guarded reparenting ([l1-geography.md](specifications/l1-geography.md)) [L1]
+- [x] **Localization** §5.4–§5.5 — interface catalogs, translation management, untranslated-material report ([l1-localization.md](specifications/l1-localization.md)) [L1]
+- [x] **Availability Status** §5.4–§5.5 — administrator override, staleness filters, bulk reset ([l1-availability-status.md](specifications/l1-availability-status.md)) [L1]
+- [x] **Feature Modules** §5.6 — module management screen, per-scope toggles, blast-radius confirmation ([l1-feature-modules.md](specifications/l1-feature-modules.md)) [L1]
 
-Decomposed into 25 atomic tasks across five tracks in [tasks/phase-2.md](tasks/phase-2.md),
+Decomposed into 25 atomic tasks across five tracks in [archives/tasks/phase-2.md](archives/tasks/phase-2.md),
 which carries this phase's own planning audit — the shared resource contract, not the
 resource count, is the task that decides the phase.
 
-## Phase 3 — Commerce, Advertising & Platform Services
+## Phase 3 — Commerce, Advertising & Platform Services — **Done**
 
 *The revenue mechanics and the background machinery both panels depend on.*
 
-- [ ] **Placement & Monetization** — tiers, packages, placements, scoped bumps, expiry, financial ledger ([l1-placement-monetization.md](specifications/l1-placement-monetization.md)) [L1]
-- [ ] **Advertising** — banners, slots, targeting and specificity ranking, promotional labels ([l1-advertising.md](specifications/l1-advertising.md)) [L1]
-- [ ] **Analytics** §5.1–§5.3 — batched ingest, partitioned events, daily rollup and compaction ([l1-analytics.md](specifications/l1-analytics.md)) [L1]
-- [ ] **Notifications** — notification and dispatch model, channel adapters, scheduled sweeps ([l1-notifications.md](specifications/l1-notifications.md)) [L1]
-- [ ] **Content Publishing** §5.1–§5.2, §5.4 — articles, news, promotions and their shared pipeline ([l1-content-publishing.md](specifications/l1-content-publishing.md)) [L1]
+- [x] **Placement & Monetization** — tiers, packages, placements, scoped bumps, expiry, financial ledger ([l1-placement-monetization.md](specifications/l1-placement-monetization.md)) [L1]
+- [x] **Advertising** — banners, slots, targeting and specificity ranking, promotional labels ([l1-advertising.md](specifications/l1-advertising.md)) [L1]
+- [x] **Analytics** §5.1–§5.3 — batched ingest, partitioned events, daily rollup and compaction ([l1-analytics.md](specifications/l1-analytics.md)) [L1]
+- [x] **Notifications** — notification and dispatch model, channel adapters, scheduled sweeps ([l1-notifications.md](specifications/l1-notifications.md)) [L1]
+- [x] **Content Publishing** §5.1–§5.2, §5.4 — articles, news, promotions and their shared pipeline ([l1-content-publishing.md](specifications/l1-content-publishing.md)) [L1]
 
-## Phase 4 — Owner Cabinet
+Decomposed into 23 atomic tasks across five tracks plus validation in
+[archives/tasks/phase-3.md](archives/tasks/phase-3.md).
+
+## Phase 4 — Owner Cabinet — **Active**
 
 *The second Filament panel: the same toolkit, owner-scoped in both query and policy.*
 
@@ -225,10 +228,11 @@ critical path out of Phase 2.
 
 ## Next Step
 
-`/magic.run main` — execute Phase 3. Atomic tasks are in
-[tasks/phase-3.md](tasks/phase-3.md); phase registry in [TASKS.md](TASKS.md). Phase 1 is
-complete and archived at [archives/tasks/phase-1.md](archives/tasks/phase-1.md); Phase 2
-is complete (25/25) and archives on the next `magic.run` finalize pass.
+`/magic.task main` — decompose Phase 4 (Owner Cabinet) into atomic tasks; phase registry
+in [TASKS.md](TASKS.md). Phases 1 through 3 are complete and archived at
+[archives/tasks/phase-1.md](archives/tasks/phase-1.md),
+[archives/tasks/phase-2.md](archives/tasks/phase-2.md), and
+[archives/tasks/phase-3.md](archives/tasks/phase-3.md) respectively.
 
 Phases 4 through 7 carry frontmatter and scope only. They are decomposed into atomic
 tasks by the `/magic.task` invocation that activates each, so the decomposition is
