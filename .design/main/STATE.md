@@ -10,17 +10,17 @@
 
 ## Current Position
 
-- **Task:** Phase 2 complete, pending archival. Track A, Track D, Track C, and Track B all Done; Track E's `T-3E01` (Article) also Done — 17/23. Track E's Workflow run hit the session's account-wide usage cap (all three agents failed) right as `T-3E01`'s agent reached its own final report — its real work had already landed and independently re-verified clean, so nothing was lost; `T-3E02`/`T-3E03` never started and are being built directly (no Workflow) instead. Commit policy changed mid-session: commit after each completed task now (explicit user instruction), push still held for full completion.
+- **Task:** Phase 2 complete, pending archival. Track A, Track D, Track C, and Track B all Done; Track E's `T-3E01`/`T-3E02` also Done — 18/23. Track E's Workflow run hit the session's account-wide usage cap (all three agents failed) right as `T-3E01`'s agent reached its own final report — its real work had already landed and independently re-verified clean; `T-3E02` was then built directly (no Workflow, since a fresh dispatch would fail identically before the cap's reset) and independently verified the same way. `T-3E03` next, also direct. Commit policy changed mid-session: commit after each completed task now (explicit user instruction), push still held for full completion.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral and unchanged by the pivot; the 3 L2 documents were rewritten. TZ coverage 134/134, registry parity clean.
-- **Next Action:** `T-3E02` (News & promotions models, auto-archival job) next, built directly; then `T-3E03`. Track T validation after Track E closes (all five feature tracks converge on it). Run /magic.run main.
+- **Next Action:** `T-3E03` (shared publication pipeline & cache invalidation) next, built directly — closes Track E. Track T validation after (all five feature tracks converge on it). Run /magic.run main.
 
 ## Progress
 
 ```
-Phase 3: [17/23] ██████░░ 74%
+Phase 3: [18/23] ███████░ 78%
 Overall: [2/7] ██░░░░░░ 29%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1 archived, Phase 2 done, Phase 3 in progress, 4-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [17/23] Phase 3 IN PROGRESS
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [18/23] Phase 3 IN PROGRESS
 ```
 
 ## Recent Decisions
