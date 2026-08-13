@@ -80,6 +80,9 @@ final class SettingsRegistry
             new SettingDefinition('media.image_max_height', 'media', 'int', 1440),
             new SettingDefinition('media.upload_max_kilobytes', 'media', 'int', 8192),
             new SettingDefinition('media.allowed_mime_types', 'media', 'array', ['image/jpeg', 'image/png', 'image/webp']),
+            // The owner cabinet's own photo-gallery cap — see
+            // `ObjectPhotoService`, its first consumer.
+            new SettingDefinition('media.object_photos_max_count', 'media', 'int', 30),
 
             new SettingDefinition('moderation.default_mode', 'moderation', 'string', 'review'),
             new SettingDefinition('moderation.moderated_change_types', 'moderation', 'array', [

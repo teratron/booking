@@ -293,13 +293,13 @@ it('resolves a quick action to its real URL once the screen it targets already h
     $owner = cabinetDashboardOwner('dashboard_owner_quick_actions');
     $object = cabinetDashboardMakeObject($fixture, $owner->id, 'Quick Actions Villa');
 
-    // 'edit_object' now names the real object-edit resource route the
-    // owner cabinet's object-management task registered — no stub needed
-    // for it any more, unlike the other four quick actions, which still
-    // target screens no later task has built yet. 'bump_object' stands in
-    // here for "a target that does not exist yet", proving the same
-    // Route::has() gating this test always meant to prove, on an action
-    // that still lacks one.
+    // 'edit_object' and 'add_photos' now name real resource routes the
+    // owner cabinet's object-management and photo-management tasks
+    // registered — no stub needed for either any more, unlike the two
+    // quick actions that still target screens no later task has built yet.
+    // 'bump_object' stands in here for "a target that does not exist yet",
+    // proving the same Route::has() gating this test always meant to prove,
+    // on an action that still lacks one.
     $bumpRouteName = Dashboard::quickActionRouteName('bump_object');
     expect($bumpRouteName)->not->toBeNull();
 
@@ -321,15 +321,17 @@ it('resolves a quick action to its real URL once the screen it targets already h
         ->and($actions['edit_object']['url'])->toBe(
             route('filament.cabinet.resources.objects.edit', ['tenant' => $object, 'record' => $object])
         )
-        // The remaining three quick actions have no registered target yet
-        // in this codebase — they must resolve to null (a disabled
-        // action), never to a broken link.
-        ->and($actions['add_photos']['url'])->toBeNull()
+        ->and($actions['add_photos']['url'])->toBe(
+            route('filament.cabinet.resources.photos.index', ['tenant' => $object, 'record' => $object])
+        )
+        // The remaining two quick actions have no registered target yet in
+        // this codebase — they must resolve to null (a disabled action),
+        // never to a broken link.
         ->and($actions['add_news']['url'])->toBeNull()
         ->and($actions['add_promotion']['url'])->toBeNull();
 });
 
-it('still renders successfully when most quick-action targets are missing', function (): void {
+it('still renders successfully when some quick-action targets are missing', function (): void {
     $fixture = cabinetDashboardGeography();
     $owner = cabinetDashboardOwner('dashboard_owner_missing_targets');
     cabinetDashboardMakeObject($fixture, $owner->id, 'No Targets Yet Villa');

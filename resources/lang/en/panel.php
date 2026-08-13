@@ -1060,6 +1060,106 @@ return [
                 'name' => 'A name in the primary language is required.',
             ],
         ],
+
+        'photos' => [
+            'title' => 'Photos',
+            'model_label' => 'photo',
+            'empty' => 'No photos uploaded yet.',
+
+            'columns' => [
+                'photo' => 'Photo',
+                'caption' => 'Caption',
+                'primary' => 'Primary',
+            ],
+
+            'actions' => [
+                'upload' => 'Upload',
+                'set_primary' => 'Set as primary',
+                'edit_caption' => 'Edit caption',
+                'delete' => 'Delete',
+            ],
+
+            'upload_form' => [
+                'files' => 'Photos',
+            ],
+
+            'caption_form' => [
+                'caption' => 'Caption',
+            ],
+
+            'notifications' => [
+                'uploaded' => 'Photos uploaded.',
+                'limit_reached' => 'Photo limit reached',
+                'limit_reached_body' => 'This object already holds the maximum of :max photo(s). Delete one before uploading more.',
+                'primary_set' => 'Primary photo updated.',
+                'caption_saved' => 'Caption saved.',
+                'deleted' => 'Photo deleted.',
+            ],
+        ],
+
+        'rooms' => [
+            'title' => 'Rooms',
+            'model_label' => 'room',
+
+            'sections' => [
+                'core' => 'Room details',
+                'translations' => 'Translations',
+                'amenities' => 'Amenities',
+                'prices' => 'Prices',
+            ],
+
+            'form' => [
+                'capacity' => 'Capacity',
+                'room_count' => 'Number of rooms',
+                'area_sqm' => 'Area (m²)',
+                'bed_configuration' => 'Bed configuration',
+                'max_guests' => 'Maximum guests',
+                'display_order' => 'Display order',
+                'has_extra_bed' => 'Extra bed available',
+                'is_active' => 'Active',
+                'name' => 'Name',
+                'description' => 'Description',
+            ],
+
+            'columns' => [
+                'name' => 'Name',
+                'capacity' => 'Capacity',
+                'max_guests' => 'Max. guests',
+                'area_sqm' => 'Area (m²)',
+                'is_active' => 'Active',
+                'display_order' => 'Order',
+            ],
+
+            'price_form' => [
+                'type' => 'Rate label',
+                'calculation_unit' => 'Calculation unit',
+                'amount' => 'Amount',
+                'currency' => 'Currency',
+                'valid_from' => 'Valid from',
+                'valid_until' => 'Valid until',
+                'comment' => 'Comment',
+                'add' => 'Add price',
+            ],
+
+            'calculation_unit' => [
+                'per_room' => 'Per room',
+                'per_person' => 'Per person',
+                'per_night' => 'Per night',
+                'per_service' => 'Per service',
+                'from' => 'From',
+            ],
+        ],
+
+        'services' => [
+            'title' => 'Services',
+            'model_label' => 'service',
+            'empty' => 'This object type has no applicable service groups yet.',
+
+            'columns' => [
+                'name' => 'Name',
+                'selected_count' => 'Selected services',
+            ],
+        ],
     ],
 
 ];

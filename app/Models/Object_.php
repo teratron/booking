@@ -20,8 +20,10 @@ use Illuminate\Support\Carbon;
 use Override;
 use OwenIt\Auditing\Auditable;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
+use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * The portal's central entity — a hotel, guesthouse, restaurant, or any
@@ -85,6 +87,51 @@ class Object_ extends Model implements AuditableContract, HasMedia, HasName, Tra
             'availability_changed_at' => 'datetime',
             'availability_last_confirmed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * The object's photo gallery — the only media collection this model
+     * manages. Deliberately not `singleFile()`: an owner keeps an unbounded
+     * (portal-setting-capped, see `ObjectPhotoService`) set of photographs,
+     * ordered, one of them optionally flagged primary via a custom property
+     * — `spatie/laravel-medialibrary`'s own documented mechanism for that,
+     * rather than a second `primary_photo_id` column that could point at a
+     * photo from a different collection or a different object entirely.
+     */
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('photos');
+    }
+
+    /**
+     * Two derived sizes generated for every uploaded photograph — a catalog
+     * card thumbnail and a larger detail-page size — so an owner is never
+     * asked to resize anything before uploading. Queued rather than
+     * generated inline (`spatie/laravel-medialibrary`'s own default,
+     * `media-library.queue_conversions_by_default`), so an upload request
+     * returns immediately and never waits on image processing; named
+     * explicitly here anyway, since the guarantee this codebase's own
+     * cabinet media task depends on should not rest on a config default
+     * nobody at this call site is pinning.
+     */
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        // `fit()`/`sharpen()` are Spatie's own manipulation methods, proxied
+        // through `Conversion::__call()` rather than declared directly — an
+        // indirection Larastan cannot see through, so `queued()` and
+        // `performOnCollections()` (both real, typed `Conversion` methods)
+        // are called first and the magic-proxied manipulation calls last,
+        // where nothing chains off their inferred return type.
+        $this->addMediaConversion('thumb')
+            ->queued()
+            ->performOnCollections('photos')
+            ->fit(Fit::Crop, 400, 300)
+            ->sharpen(5);
+
+        $this->addMediaConversion('card')
+            ->queued()
+            ->performOnCollections('photos')
+            ->fit(Fit::Crop, 800, 600);
     }
 
     /**
