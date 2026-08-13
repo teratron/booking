@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Models\Banner;
 use App\Policies\AuditPolicy;
 use App\Services\Advertising\BannerSelectionService;
+use App\Services\Authorization\CabinetAccessResolver;
 use App\Services\Authorization\ScopeAuthorizer;
 use App\Services\Localization\DatabaseOverlayLoader;
 use App\Services\Localization\LanguageRegistry;
@@ -36,6 +37,11 @@ class AppServiceProvider extends ServiceProvider
         // request — every registered resource's navigation visibility check
         // resolves through it once per page render.
         $this->app->singleton(ScopeAuthorizer::class);
+
+        // Same rationale, cabinet side: a Policy check and the tenant query
+        // scoping it backs can otherwise ask the same (user, object,
+        // permission) question twice in one request.
+        $this->app->singleton(CabinetAccessResolver::class);
     }
 
     /**

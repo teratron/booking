@@ -8,6 +8,7 @@ use App\Models\Concerns\FiltersModeration;
 use App\Policies\Object_Policy;
 use Astrotomic\Translatable\Contracts\Translatable as TranslatableContract;
 use Astrotomic\Translatable\Translatable;
+use Filament\Models\Contracts\HasName;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -37,7 +38,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property ?Carbon $availability_last_confirmed_at
  */
 #[UsePolicy(Object_Policy::class)]
-class Object_ extends Model implements AuditableContract, HasMedia, TranslatableContract
+class Object_ extends Model implements AuditableContract, HasMedia, HasName, TranslatableContract
 {
     use Auditable;
     use FiltersModeration;
@@ -92,6 +93,19 @@ class Object_ extends Model implements AuditableContract, HasMedia, Translatable
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    /**
+     * The owner cabinet's tenant switcher resolves a tenant's display name
+     * through this contract, not the bare `name` attribute: Filament reads
+     * it via `getAttributeValue()`, which bypasses Astrotomic's own
+     * `getAttribute()` override — the one place the active-locale
+     * translation actually gets resolved. Without this, the switcher would
+     * render every object with an empty label.
+     */
+    public function getFilamentName(): string
+    {
+        return $this->name ?? '';
     }
 
     /**

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Providers\Filament;
 
+use App\Models\Object_;
+use App\Models\Scopes\ModerationScope;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -34,6 +36,28 @@ class CabinetPanelProvider extends PanelProvider
             ->brandName(fn (): string => __('panel.cabinet_brand'))
             ->strictAuthorization()
             ->unsavedChangesAlerts()
+            // The tenant is the object being managed, not an
+            // organization/team — an owner with several objects switches
+            // between them here; the ownership relationship name
+            // ('object') is what every tenant-scoped child resource (rooms,
+            // prices, services, media) declares on its own model as the
+            // BelongsTo back to Object_. No registration page: objects are
+            // never self-created through the cabinet, only assigned by
+            // staff via the admin panel's Owners resource.
+            ->tenant(Object_::class, ownershipRelationship: 'object')
+            // Default tenant resolution binds through Object_::query(),
+            // which carries the ModerationScope global scope — exactly the
+            // scope that hides a draft, rejected, or revision-requested
+            // object from public pages. Left unresolved here, an owner whose
+            // only object is not yet approved could never reach it: the
+            // very state they most need the cabinet to act on. This does
+            // not weaken moderation anywhere else — it only widens which of
+            // an *authenticated, already-authorized* owner's own objects
+            // they may select as their current tenant.
+            ->resolveTenantUsing(
+                fn (string $key): Object_ => Object_::withoutGlobalScope(ModerationScope::class)->findOrFail($key)
+            )
+            ->tenantMenu()
             ->colors([
                 'primary' => Color::Amber,
             ])

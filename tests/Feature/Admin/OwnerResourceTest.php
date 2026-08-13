@@ -444,14 +444,21 @@ it('refuses a blocked owner cabinet access on the very next request, without a f
     $owner = $owner->fresh();
     $actor = User::factory()->create();
 
+    // The cabinet is Filament tenant-scoped to Object_: reaching any page
+    // past sign-in requires at least one object to land on.
+    $geo = ownerGeography();
+    ownerSeedObject($geo, ['owner_id' => $owner->id]);
+
     $cabinetUrl = '/'.config('booking.panels.cabinet.path');
 
     test()->actingAs($owner)
+        ->followingRedirects()
         ->get($cabinetUrl)
         ->assertSuccessful();
 
     app(OwnerAccountService::class)->block($owner, $actor);
 
+    // Refused ahead of tenant resolution, so this stays a direct 403.
     test()->get($cabinetUrl)
         ->assertForbidden();
 });
