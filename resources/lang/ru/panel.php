@@ -989,4 +989,34 @@ return [
         ],
     ],
 
+    'cabinet' => [
+        'dashboard' => [
+            'title' => 'Панель управления',
+            'object_name' => 'Объект',
+            'active_package' => 'Активный пакет',
+            'no_active_package' => 'Нет активного пакета',
+            'current_tier' => 'Текущий уровень',
+            'expires_at' => 'Срок размещения истекает',
+            'catalog_position' => 'Позиция в каталоге',
+            'catalog_position_unavailable' => 'Пока недоступно',
+            'views_today' => 'Просмотры сегодня',
+            'views_this_week' => 'Просмотры за неделю',
+            'views_this_month' => 'Просмотры за месяц',
+            'views_all_time' => 'Просмотры за всё время',
+            'messenger_clicks' => 'Переходы в мессенджер',
+            'website_clicks' => 'Переходы на сайт',
+            'expiry_warning_today' => 'Срок действия пакета размещения истекает сегодня.',
+            'expiry_warning_days' => 'Срок действия пакета размещения истекает через :days дн.',
+            'quick_actions_section' => 'Быстрые действия',
+            'quick_actions' => [
+                'edit_object' => 'Редактировать объект',
+                'bump_object' => 'Поднять объект',
+                'add_photos' => 'Добавить фото',
+                'add_news' => 'Добавить новость',
+                'add_promotion' => 'Добавить акцию',
+                'not_yet_available' => 'Этот раздел пока недоступен.',
+            ],
+        ],
+    ],
+
 ];

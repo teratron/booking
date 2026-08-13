@@ -990,4 +990,34 @@ return [
         ],
     ],
 
+    'cabinet' => [
+        'dashboard' => [
+            'title' => 'Dashboard',
+            'object_name' => 'Object',
+            'active_package' => 'Active package',
+            'no_active_package' => 'No active package',
+            'current_tier' => 'Current tier',
+            'expires_at' => 'Placement expires',
+            'catalog_position' => 'Catalog position',
+            'catalog_position_unavailable' => 'Not yet available',
+            'views_today' => 'Views today',
+            'views_this_week' => 'Views this week',
+            'views_this_month' => 'Views this month',
+            'views_all_time' => 'Views all-time',
+            'messenger_clicks' => 'Messenger clicks',
+            'website_clicks' => 'Website clicks',
+            'expiry_warning_today' => 'Your placement package expires today.',
+            'expiry_warning_days' => 'Your placement package expires in :days day(s).',
+            'quick_actions_section' => 'Quick actions',
+            'quick_actions' => [
+                'edit_object' => 'Edit object',
+                'bump_object' => 'Bump object',
+                'add_photos' => 'Add photos',
+                'add_news' => 'Add news',
+                'add_promotion' => 'Add promotion',
+                'not_yet_available' => 'This screen is not available yet.',
+            ],
+        ],
+    ],
+
 ];
