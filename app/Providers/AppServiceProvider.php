@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Models\Banner;
 use App\Policies\AuditPolicy;
 use App\Services\Advertising\BannerSelectionService;
+use App\Services\Authorization\ScopeAuthorizer;
 use App\Services\Localization\DatabaseOverlayLoader;
 use App\Services\Localization\LanguageRegistry;
 use Astrotomic\Translatable\Locales;
@@ -29,6 +30,12 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(LanguageRegistry::class);
+
+        // Singleton specifically so ScopeAuthorizer's internal per-request
+        // grant memo (see its own docblock) actually spans the whole
+        // request — every registered resource's navigation visibility check
+        // resolves through it once per page render.
+        $this->app->singleton(ScopeAuthorizer::class);
     }
 
     /**

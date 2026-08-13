@@ -6,9 +6,11 @@ namespace App\Services\Moderation;
 
 use App\Exceptions\ModerationDecisionRefusedException;
 use App\Models\ModerationRequest;
+use App\Models\NotificationType;
 use App\Models\User;
 use App\Services\Audit\AuditJournal;
 use App\Services\Localization\LanguageRegistry;
+use App\Services\Notifications\NotificationDispatchService;
 use App\Services\Settings\SettingsRepository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -36,6 +38,7 @@ final class ModerationDecisionService
         private readonly AuditJournal $journal,
         private readonly LanguageRegistry $languages,
         private readonly SettingsRepository $settings,
+        private readonly NotificationDispatchService $notifications,
     ) {}
 
     public function approve(ModerationRequest $request, User $actor): void
@@ -46,6 +49,7 @@ final class ModerationDecisionService
             $this->applyData($this->target($request), $request->proposed_data);
             $this->settle($request, 'approved', $actor);
             $this->journal->record('moderation_approved', $request, ['decision' => 'pending'], ['decision' => 'approved', 'section' => $request->section], $actor, ['moderation']);
+            $this->notifySubmitter('moderation_approved', $request, $actor);
         });
     }
 
@@ -62,6 +66,14 @@ final class ModerationDecisionService
             ])->save();
 
             $this->journal->record('moderation_rejected', $request, ['decision' => 'pending'], ['decision' => 'rejected', 'reason' => $reason], $actor, ['moderation']);
+            // The seeded 'moderation_rejected' template carries no reason
+            // placeholder and its own wording already points the owner at
+            // the cabinet for the reason, so the dispatched body is the
+            // type's default template rather than a hand-assembled string —
+            // embedding $reason here would mean literal, untranslated copy
+            // in a user-facing notification, which the portal's own
+            // localization rule forbids.
+            $this->notifySubmitter('moderation_rejected', $request, $actor);
         });
     }
 
@@ -78,6 +90,7 @@ final class ModerationDecisionService
             ])->save();
 
             $this->journal->record('moderation_revision_requested', $request, ['decision' => 'pending'], ['decision' => 'revision_requested', 'comment' => $comment], $actor, ['moderation']);
+            $this->notifySubmitter('revision_requested', $request, $actor);
         });
     }
 
@@ -174,5 +187,23 @@ final class ModerationDecisionService
         if ($request->decision !== 'pending') {
             throw ModerationDecisionRefusedException::alreadyDecided($request->id, $request->decision);
         }
+    }
+
+    /**
+     * Notifies the owner who submitted $request of a just-made decision.
+     * Silently does nothing when $typeKey is not a registered notification
+     * type or the request no longer resolves a submitting owner — a
+     * decision must never fail on account of a downstream notification gap.
+     */
+    private function notifySubmitter(string $typeKey, ModerationRequest $request, User $actor): void
+    {
+        $type = NotificationType::query()->where('key', $typeKey)->first();
+        $recipient = $request->submittedBy;
+
+        if (! $type instanceof NotificationType || ! $recipient instanceof User) {
+            return;
+        }
+
+        $this->notifications->create($type, $recipient, $request, $actor);
     }
 }

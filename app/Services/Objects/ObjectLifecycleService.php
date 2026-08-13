@@ -6,10 +6,12 @@ namespace App\Services\Objects;
 
 use App\Exceptions\PermanentDeletionRefusedException;
 use App\Models\ModerationRequest;
+use App\Models\NotificationType;
 use App\Models\Object_;
 use App\Models\ObjectTranslation;
 use App\Models\User;
 use App\Services\Audit\AuditJournal;
+use App\Services\Notifications\NotificationDispatchService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -28,7 +30,10 @@ use Illuminate\Support\Str;
  */
 final class ObjectLifecycleService
 {
-    public function __construct(private readonly AuditJournal $journal) {}
+    public function __construct(
+        private readonly AuditJournal $journal,
+        private readonly NotificationDispatchService $notifications,
+    ) {}
 
     public function saveAsDraft(Object_ $object, User $actor): void
     {
@@ -63,6 +68,8 @@ final class ObjectLifecycleService
             $actor,
             ['object'],
         );
+
+        $this->notifyOwnerOfStatusChange($object, $actor);
     }
 
     public function hide(Object_ $object, User $actor): void
@@ -72,6 +79,8 @@ final class ObjectLifecycleService
         $object->save();
 
         $this->journal->record('object_hidden', $object, ['status' => $previous], ['status' => 'hidden'], $actor, ['object']);
+
+        $this->notifyOwnerOfStatusChange($object, $actor);
     }
 
     /**
@@ -214,5 +223,24 @@ final class ObjectLifecycleService
                 ['object'],
             );
         });
+    }
+
+    /**
+     * Notifies $object's owner that an administrator changed its publication
+     * state. Silently does nothing when the object has no owner — `owner_id`
+     * is nullable, and a publication-state change must never fail on account
+     * of a downstream notification gap — or when `object_status_changed` is
+     * not a registered notification type.
+     */
+    private function notifyOwnerOfStatusChange(Object_ $object, User $actor): void
+    {
+        $type = NotificationType::query()->where('key', 'object_status_changed')->first();
+        $owner = $object->owner;
+
+        if (! $type instanceof NotificationType || ! $owner instanceof User) {
+            return;
+        }
+
+        $this->notifications->create($type, $owner, $object, $actor);
     }
 }

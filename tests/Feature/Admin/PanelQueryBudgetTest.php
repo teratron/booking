@@ -34,6 +34,12 @@ function queryBudgetActor(): User
     $permissions = [
         'admin_panel_access', 'object.view', 'user.view', 'geography.view',
         'moderation.view', 'settings.view', 'audit.view',
+        // content/commerce/finance/advertising were added by the track that
+        // introduced the eleven resources this sweep now iterates — without
+        // these the dynamic loop below 403s before it ever reaches a query
+        // count, which hides a real budget regression behind an unrelated
+        // authorization failure.
+        'content.view', 'commerce.view', 'finance.view', 'advertising.view',
     ];
 
     foreach ($permissions as $permission) {

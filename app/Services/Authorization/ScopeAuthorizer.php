@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Authorization;
 
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -21,9 +22,24 @@ use Illuminate\Support\Facades\DB;
  * users exclusively through roles (`role_scopes` is keyed to a role grant),
  * so a permission assigned directly to a user, bypassing every role, has no
  * scope record to resolve against and is treated as having none.
+ *
+ * Bound as a singleton (see `AppServiceProvider`) specifically so the memo
+ * below survives for the lifetime of one request: the admin panel's own
+ * navigation sidebar calls `authorize()` once per registered resource on
+ * every single page render (each resource's visibility is its own
+ * authorization check), and a user's role/scope grants cannot change
+ * mid-request — re-querying them per resource is pure, avoidable cost. This
+ * was a real, measured regression: growing the panel's resource count past
+ * roughly twenty pushed the per-request query budget over its ceiling
+ * purely from this repetition, with no single resource actually at fault.
  */
 final class ScopeAuthorizer
 {
+    /**
+     * @var array<string, ?Collection<int, object{scope_kind: string, scope_reference_id: ?int}>>
+     */
+    private array $grantsMemo = [];
+
     /**
      * Whether $user's role grants of $permission cover a target described by
      * the given scope values. Pass only the values relevant to the target —
@@ -39,22 +55,11 @@ final class ScopeAuthorizer
         ?int $territoryId = null,
         ?int $categoryId = null,
     ): bool {
-        if (! $user->can($permission)) {
+        $scopes = $this->grantsFor($user, $permission);
+
+        if ($scopes === null) {
             return false;
         }
-
-        $roleIds = $user->roles()
-            ->whereHas('permissions', fn ($query) => $query->where('name', $permission))
-            ->pluck('id');
-
-        if ($roleIds->isEmpty()) {
-            return false;
-        }
-
-        $scopes = DB::table('role_scopes')
-            ->where('user_id', $user->id)
-            ->whereIn('role_id', $roleIds)
-            ->get(['scope_kind', 'scope_reference_id']);
 
         foreach ($scopes as $scope) {
             if ($this->scopeCovers($scope->scope_kind, $scope->scope_reference_id, $countryId, $territoryId, $categoryId)) {
@@ -76,22 +81,11 @@ final class ScopeAuthorizer
      */
     public function constraintFor(User $user, string $permission): ScopeConstraint
     {
-        if (! $user->can($permission)) {
+        $scopes = $this->grantsFor($user, $permission);
+
+        if ($scopes === null) {
             return ScopeConstraint::nothing();
         }
-
-        $roleIds = $user->roles()
-            ->whereHas('permissions', fn ($query) => $query->where('name', $permission))
-            ->pluck('id');
-
-        if ($roleIds->isEmpty()) {
-            return ScopeConstraint::nothing();
-        }
-
-        $scopes = DB::table('role_scopes')
-            ->where('user_id', $user->id)
-            ->whereIn('role_id', $roleIds)
-            ->get(['scope_kind', 'scope_reference_id']);
 
         $countryIds = [];
         $territoryRoots = [];
@@ -118,6 +112,46 @@ final class ScopeAuthorizer
             territoryIds: $this->expandSubtrees(array_values(array_unique($territoryRoots))),
             categoryIds: array_values(array_unique($categoryIds)),
         );
+    }
+
+    /**
+     * Resolves $user's role-granted scopes for $permission, memoized per
+     * (user, permission) pair for the lifetime of this instance — a
+     * singleton, so effectively for one request (see the class docblock).
+     * Returns null when $user holds no role granting $permission at all
+     * (the "does not have this permission" case, distinct from "has it,
+     * unrestricted", which returns a non-empty collection containing a
+     * `none`-kind scope).
+     *
+     * @return ?Collection<int, object{scope_kind: string, scope_reference_id: ?int}>
+     */
+    private function grantsFor(User $user, string $permission): ?Collection
+    {
+        $key = "{$user->id}:{$permission}";
+
+        if (array_key_exists($key, $this->grantsMemo)) {
+            return $this->grantsMemo[$key];
+        }
+
+        if (! $user->can($permission)) {
+            return $this->grantsMemo[$key] = null;
+        }
+
+        $roleIds = $user->roles()
+            ->whereHas('permissions', fn ($query) => $query->where('name', $permission))
+            ->pluck('id');
+
+        if ($roleIds->isEmpty()) {
+            return $this->grantsMemo[$key] = null;
+        }
+
+        /** @var Collection<int, object{scope_kind: string, scope_reference_id: ?int}> $scopes */
+        $scopes = DB::table('role_scopes')
+            ->where('user_id', $user->id)
+            ->whereIn('role_id', $roleIds)
+            ->get(['scope_kind', 'scope_reference_id']);
+
+        return $this->grantsMemo[$key] = $scopes;
     }
 
     /**

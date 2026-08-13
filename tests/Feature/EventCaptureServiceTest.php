@@ -112,16 +112,25 @@ it('never lets a capture-path exception reach the caller', function (): void {
     $geo = captureFixtureGeography();
     $object = makeCaptureObject($geo['country'], $geo['territory'], $geo['type']);
 
-    expect(fn () => app(EventCaptureService::class)->capture('object_page_view', $object))
-        ->not->toThrow(Throwable::class);
+    // Called directly, as a bare statement — not through
+    // expect(...)->not->toThrow(Throwable::class). Pest's toThrow()
+    // resolves a string argument via class_exists(), which returns false
+    // for the Throwable interface and silently degrades to a
+    // message-substring match instead of an instanceof check; combined
+    // with ->not, that makes it pass regardless of whether anything was
+    // actually thrown. Calling capture() unwrapped means a real leak
+    // fails this test outright with an uncaught exception, which is the
+    // guarantee genuinely under test here.
+    app(EventCaptureService::class)->capture('object_page_view', $object);
+
+    expect(StatEvent::query()->count())->toBe(0);
 });
 
 it('silently drops an unrecognised kind instead of throwing', function (): void {
     $geo = captureFixtureGeography();
     $object = makeCaptureObject($geo['country'], $geo['territory'], $geo['type']);
 
-    expect(fn () => app(EventCaptureService::class)->capture('not_a_real_kind', $object))
-        ->not->toThrow(Throwable::class);
+    app(EventCaptureService::class)->capture('not_a_real_kind', $object);
 
     expect(StatEvent::query()->count())->toBe(0);
 });
