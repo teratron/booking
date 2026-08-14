@@ -4,30 +4,30 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-14 13:20
+**Updated:** 2026-08-14 13:56
 **Phase:** 4 — Owner Cabinet
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Track A, Track B, Track C, and now `T-4D01`+`T-4D02` are Done — 11/16. Remaining: `T-4D03` settings/notification preferences, `T-4D04` staleness surfacing (both require only `T-4A01`, no ordering between them), then Track T (`T-4T01`–`T-4T03` validation, requires everything else). This session is continuing across machines — see the two new Blocking Constraints below (Workflow tool availability, uncommitted-work risk) before starting further work in a new environment.
+- **Task:** Track A, Track B, Track C, and now `T-4D01`–`T-4D03` are Done — 12/16. Remaining: `T-4D04` staleness surfacing (requires only `T-4A01`), then Track T (`T-4T01`–`T-4T03` validation, requires everything else). This session is continuing across machines — see the Blocking Constraints below (Workflow tool availability, uncommitted-work risk, unresolved git-push auth) before starting further work in a new environment.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** T-4D03 (settings & notification preferences) — no per-user `locale` column exists on `User` yet; this is the right task to add it (a migration + `NotificationDispatchService`'s locale-resolution updated to prefer it). Reuses `NotificationPreferenceService::isEnabled()/setEnabled()` and `NotificationDispatchService::markAsRead()/markAsUnread()` — do not build parallel mechanisms.
+- **Next Action:** T-4D04 (staleness surfacing) — surface `StalenessSweepJob`'s existing `information_out_of_date` notification visibly on the dashboard and/or object edit screen; advisory only, never hides the object or blocks any action. No new staleness mechanism — read the existing state Phase 2/3 already produce.
 
 ## Progress
 
 ```
-Phase 4: [11/16] ██████░░ 69%
+Phase 4: [12/16] ███████░ 75%
 Overall: [3/7] ███░░░░░ 43%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1-3 archived, Phase 4 in progress, 5-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [11/16] Phase 4 IN PROGRESS
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [12/16] Phase 4 IN PROGRESS
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-14 **Decision: `T-4D01` (statistics) closed, after a machine switch mid-session that initially appeared to have lost its uncommitted work** — it hadn't: an unrelated automated dependency-update commit (`c285d2e`, "update fallow to v3.16.0") swept the still-uncommitted working tree into itself via a broad stage-everything operation, landing the whole feature under a commit message that never mentions it. Content was independently re-verified in full on the new machine regardless, not taken on faith. The new machine also had no Workflow tool access at all (disabled for that session) and a completely empty `vendor/` that failed to install cleanly — see both new Blocking Constraints below. Full non-slow suite: 554 passed, 0 failed, 3 skipped (up from 550).
+- 2026-08-14 **Decision: `T-4D03` (settings & notification preferences) closed** — added the long-flagged `users.locale` column, wired `NotificationDispatchService` to prefer it, built `Settings` on Filament's own `EditProfile` base class, and gave the cabinet its own notification inbox. Found and fixed a panel-wide bug along the way: overriding the page's route name broke the shared layout's "my profile" link on every page in the panel (`Panel::getProfileUrl()` hardcodes the base route name) — fixed by overriding only the URL slug, not the route name. Full non-slow suite: 565 passed, 0 failed, 3 skipped (up from 560).
 
 ## Blockers
 

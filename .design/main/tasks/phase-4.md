@@ -44,7 +44,7 @@ query and the policy, and usable by someone with no technical training.
 
 - [x] [T-4D01] Statistics, including favorite count
 - [x] [T-4D02] Bump entry point
-- [ ] [T-4D03] Settings & notification preferences
+- [x] [T-4D03] Settings & notification preferences
 - [ ] [T-4D04] Staleness surfacing
 
 ### Track T — Validation
@@ -252,12 +252,14 @@ against real traffic that cannot exist yet.
 ### [T-4D03] Settings & notification preferences
 
 - **Spec:** l1-object-onboarding.md §5.8
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** T-4A01
 - **Verify:** `docker compose exec app ./vendor/bin/pest --filter=CabinetSettings` proves an owner may change their password, change the cabinet's own display language (independent of any public-site browsing language, which does not exist until Phase 5), change their contact email, and toggle per-type notification preferences using `NotificationPreferenceService` (built in `T-3D02`) for every optional-class notification type; the cabinet's own inbox lists the owner's `Notification` rows (placement expiry, package expiry, administration messages, information-refresh requests, moderation outcomes, system messages) with read/unread state, using `NotificationDispatchService::markAsRead()`/`markAsUnread()` rather than a parallel read-state mechanism.
 - **Handoff:** none within this phase.
 - **Notes:** No per-user locale column exists on `User` yet — this is the first task in this project positioned to close that real, previously-flagged gap (`T-3D01`/`T-3A04`'s own notes both name it). Closing it here is in scope: add the column, and update `NotificationDispatchService`'s locale resolution to prefer it over the portal's primary-language fallback, since this task is precisely "the owner sets their own language."
+- **Changes:** New `App\Filament\Cabinet\Pages\Settings` extends Filament's own `Filament\Auth\Pages\EditProfile` (password/email change, current-password confirmation, and rate limiting all inherited rather than rebuilt) with two additions: a `locale` select sourced from the active `Language` registry, and a notification-preferences section rendering one toggle per optional-class `NotificationType`, persisted through `NotificationPreferenceService` outside the base class's own `$record->update($data)` call since preferences are not `User` columns. A new migration adds a nullable `locale` column to `users` (FK to `languages.code`). `NotificationDispatchService::resolveLocaleFor()` now prefers the recipient's own active locale, falling back to the portal's primary language only when unset or the stored code is no longer active. A new `NotificationPolicy` and `NotificationResource` (list-only, account-level, not tenant-scoped) give the cabinet its own inbox, scoped to `recipient_id = current user` at the query level, with a row action calling the same `markAsRead()`/`markAsUnread()` the dispatch pipeline itself uses.
+- **Evidence:** `tests/Feature/Cabinet/CabinetSettingsTest.php`, 5 cases: password/email change with current-password confirmation; a genuinely falsifying locale test (portal's primary language is `en`; after the owner sets `ru`, a freshly dispatched notification renders in `ru`, proving `NotificationDispatchService` reads the owner's own column rather than coincidentally matching the default); fallback to the portal's primary language when no locale is set; notification-preference toggles proven scoped to optional-class types only by asserting no `NotificationPreference` row exists for a transactional type after save (the save loop never iterates it, rather than merely trusting the form's field list); and the notification inbox's Policy-level scoping plus read/unread toggling through the real service. One real bug found and fixed during verification, not from the task's own tests but from its interaction with the panel's shared layout: overriding `Settings::getRelativeRouteName()` to rename the route broke `Panel::getProfileUrl()`, which hardcodes the base route name (`auth.profile`) for the "my profile" link rendered in every page's layout across the whole panel — a page-local-looking customization with a panel-wide blast radius, traced by reading `Filament\Panel\Concerns\HasAuth::getProfileUrl()` directly. Fixed by keeping only the safe `getSlug()` override (URL path segment) and leaving the route name inherited. Independently re-verified: Pint and PHPStan (level 8) clean; combined cabinet regression filter (all twelve cabinet suites) 91 passed, 0 failed; full non-slow suite 565 passed, 0 failed, 3 skipped (up from 560).
 
 ### [T-4D04] Staleness surfacing
 
