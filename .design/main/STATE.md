@@ -4,23 +4,23 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-14 12:45
+**Updated:** 2026-08-14 13:20
 **Phase:** 4 — Owner Cabinet
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Track A, Track B, and Track C are Done; `T-4D01` (statistics) is now Done too — 10/16. Remaining: `T-4D02` bump, `T-4D03` settings/notification preferences, `T-4D04` staleness surfacing (all three require only `T-4A01`, no ordering between them), then Track T (`T-4T01`–`T-4T03` validation, requires everything else). This session is continuing across machines — see the two new Blocking Constraints below (Workflow tool availability, uncommitted-work risk) before starting further work in a new environment.
+- **Task:** Track A, Track B, Track C, and now `T-4D01`+`T-4D02` are Done — 11/16. Remaining: `T-4D03` settings/notification preferences, `T-4D04` staleness surfacing (both require only `T-4A01`, no ordering between them), then Track T (`T-4T01`–`T-4T03` validation, requires everything else). This session is continuing across machines — see the two new Blocking Constraints below (Workflow tool availability, uncommitted-work risk) before starting further work in a new environment.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** T-4D02 (bump entry point) — `BumpService::bump()` already exists (`app/Services/Placement/BumpService.php`); this task is a UI entry point and owner-facing refusal-message mapping only, no new bump logic. The dashboard's "Bump object" quick action already expects route name `filament.cabinet.pages.bump-object` (`Dashboard::QUICK_ACTIONS`) — register it.
+- **Next Action:** T-4D03 (settings & notification preferences) — no per-user `locale` column exists on `User` yet; this is the right task to add it (a migration + `NotificationDispatchService`'s locale-resolution updated to prefer it). Reuses `NotificationPreferenceService::isEnabled()/setEnabled()` and `NotificationDispatchService::markAsRead()/markAsUnread()` — do not build parallel mechanisms.
 
 ## Progress
 
 ```
-Phase 4: [10/16] ██████░░ 63%
+Phase 4: [11/16] ██████░░ 69%
 Overall: [3/7] ███░░░░░ 43%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1-3 archived, Phase 4 in progress, 5-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [10/16] Phase 4 IN PROGRESS
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [11/16] Phase 4 IN PROGRESS
 ```
 
 ## Recent Decisions
@@ -28,7 +28,6 @@ Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
 - 2026-08-14 **Decision: `T-4D01` (statistics) closed, after a machine switch mid-session that initially appeared to have lost its uncommitted work** — it hadn't: an unrelated automated dependency-update commit (`c285d2e`, "update fallow to v3.16.0") swept the still-uncommitted working tree into itself via a broad stage-everything operation, landing the whole feature under a commit message that never mentions it. Content was independently re-verified in full on the new machine regardless, not taken on faith. The new machine also had no Workflow tool access at all (disabled for that session) and a completely empty `vendor/` that failed to install cleanly — see both new Blocking Constraints below. Full non-slow suite: 554 passed, 0 failed, 3 skipped (up from 550).
-- 2026-08-14 **Decision: `T-4C01`/`T-4C02` (owner news/promotions, reviews) closed Track C** — `T-4C01` reused the exact moderation-routing shape `T-4B01`'s `ObjectEditService` established, adapted for creation rather than editing (a `ContentSubmissionOutcome` value object parallels `ObjectEditOutcome`), and found two real pre-existing gaps blocking the screens from being reachable at all: `NewsItemPolicy`/`PromotionPolicy` had no ownership-based authorization path (only the staff scope-table path present in every admin-side Policy), and the `object_owner` role had zero `content.*` permissions — both fixed. `T-4C02` built a `Review` model and Policy from scratch (none existed) whose `update`/`delete` abilities are refused unconditionally for every actor including the review's own object owner. Full non-slow suite: 550 passed, 0 failed, 3 skipped (up from 536).
 
 ## Blockers
 

@@ -43,7 +43,7 @@ query and the policy, and usable by someone with no technical training.
 ### Track D — Statistics, Bump & Settings
 
 - [x] [T-4D01] Statistics, including favorite count
-- [ ] [T-4D02] Bump entry point
+- [x] [T-4D02] Bump entry point
 - [ ] [T-4D03] Settings & notification preferences
 - [ ] [T-4D04] Staleness surfacing
 
@@ -240,12 +240,14 @@ against real traffic that cannot exist yet.
 ### [T-4D02] Bump entry point
 
 - **Spec:** l1-object-onboarding.md §5.1, §5.2; l1-placement-monetization.md (bump)
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** T-4A01
 - **Verify:** `docker compose exec app ./vendor/bin/pest --filter=CabinetBump` proves the cabinet exposes a bump action calling `BumpService::bump()` (built in `T-3A03`) for the owner's own object only; the action is refused, with a stated reason, when the object's current package forbids bumping or a free-bump interval/allowance has not been satisfied — reusing `BumpService`'s own refusal exceptions, not a second copy of that logic; bumping is the only cabinet capability gated by the object's placement package, per the phase's own Standing Constraints — every other Track B/C/D task in this phase must remain reachable regardless of package.
 - **Handoff:** none within this phase.
 - **Notes:** This task adds a UI entry point and an owner-facing refusal message; it adds no new bump logic. If `BumpService`'s existing exceptions do not already carry owner-presentable messages, add translation-key mappings here rather than new business logic in the service.
+- **Changes:** New `App\Filament\Cabinet\Pages\BumpObject` (auto-discovered, registers at `filament.cabinet.pages.bump-object` — exactly the route name the dashboard's quick action already anticipated) calls `BumpService::bump()` with `type: 'free'` and the object's own territory as scope, mirroring the back office's own bump action exactly. `BumpRefusedException` gained a `reasonKey` (plus the two numeric details a friendly message needs) additively — its existing `getMessage()` text and every existing catch site (the admin panel's own bump action) are unchanged; the cabinet is simply a second caller that needed a machine-readable reason alongside the existing developer-facing string. Deliberately never `type: 'owner'` (a fifth value the `bump_events.type` enum already declares but nothing in `BumpService` currently gates): that type carries none of the interval/allowance eligibility checks `'free'` does, so using it would let an owner bump without limit — the conservative, correctly-rate-limited reading was chosen over the unwired enum value.
+- **Evidence:** `tests/Feature/Cabinet/CabinetBumpTest.php`, 6 cases: a real bump reaching `BumpService` and writing a `bump_events` row; cross-owner refusal at the route level (404, not merely hidden); two refusal cases (package forbids bumping, free-bump interval not elapsed) each asserted against the exact translated `Notification` object the owner would see, not the raw exception message; the screen staying reachable when the package forbids bumping (refused only at submission); and the dashboard's quick action resolving to this screen's real URL. Two pre-existing `CabinetDashboardTest` cases updated to match — the "resolves a quick action" test no longer needs a stub route now that bump has a real one, and the "renders successfully when some targets are missing" test's premise is gone now that every quick action in this phase is real, renamed to reflect that. Independently re-verified: full-repo Pint and PHPStan (level 8) clean; full non-slow suite 560 passed, 0 failed, 3 skipped (up from 554).
 
 ### [T-4D03] Settings & notification preferences
 
