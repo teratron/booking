@@ -22,3 +22,9 @@
     --color-link: #3055d6;
     --color-surface-muted: #f8f8f8;
 }
+
+/* Alpine hides an `x-cloak` element only after it initializes; without this
+   rule every dropdown and drawer flashes open for one frame on page load. */
+[x-cloak] {
+    display: none;
+}

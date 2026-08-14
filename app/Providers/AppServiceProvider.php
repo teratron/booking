@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Models\Banner;
+use App\Models\Country;
+use App\Models\Language;
+use App\Models\ObjectType;
 use App\Policies\AuditPolicy;
 use App\Services\Advertising\BannerSelectionService;
 use App\Services\Authorization\CabinetAccessResolver;
@@ -14,6 +17,7 @@ use App\Services\Localization\LanguageRegistry;
 use Astrotomic\Translatable\Locales;
 use Illuminate\Contracts\Translation\Loader;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Lang;
@@ -69,6 +73,7 @@ class AppServiceProvider extends ServiceProvider
         $this->resolveTranslationFallbackFromPrimaryLanguage();
         $this->syncTranslatableLocales();
         $this->invalidateBannerSelectionCacheOnWrite();
+        $this->invalidatePublicShellCacheOnWrite();
     }
 
     /**
@@ -161,5 +166,27 @@ class AppServiceProvider extends ServiceProvider
         Banner::saved($invalidate);
         Banner::deleted($invalidate);
         Banner::restored($invalidate);
+    }
+
+    /**
+     * `App\Services\Shell\PublicShellDataProvider` caches the navigation,
+     * language, and country switcher data the public shell renders on every
+     * page — a write to any registry it reads from must invalidate that
+     * cache, or an administrator adding an object type, activating a
+     * language, or activating a country would not see it appear until the
+     * cache's own TTL expires.
+     */
+    private function invalidatePublicShellCacheOnWrite(): void
+    {
+        $flush = static function (): void {
+            Cache::tags(['public-shell'])->flush();
+        };
+
+        ObjectType::saved($flush);
+        ObjectType::deleted($flush);
+        Language::saved($flush);
+        Language::deleted($flush);
+        Country::saved($flush);
+        Country::deleted($flush);
     }
 }

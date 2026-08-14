@@ -11,6 +11,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Override;
 
+/**
+ * @property-read ?string $name virtual, proxied through the active translation
+ */
 class Country extends Model implements TranslatableContract
 {
     use Translatable;

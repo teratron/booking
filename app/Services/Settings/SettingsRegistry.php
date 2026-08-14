@@ -66,6 +66,11 @@ final class SettingsRegistry
             new SettingDefinition('portal.logo_path', 'portal', 'string', ''),
             new SettingDefinition('portal.contact_email', 'portal', 'string', ''),
             new SettingDefinition('portal.contact_phone', 'portal', 'string', ''),
+            // Footer social links — empty means the icon is omitted, not a
+            // dead link to a blank profile.
+            new SettingDefinition('portal.social_instagram_url', 'portal', 'string', ''),
+            new SettingDefinition('portal.social_telegram_url', 'portal', 'string', ''),
+            new SettingDefinition('portal.social_facebook_url', 'portal', 'string', ''),
 
             new SettingDefinition('presentation.date_format', 'presentation', 'string', 'd.m.Y'),
             new SettingDefinition('presentation.time_format', 'presentation', 'string', 'H:i'),

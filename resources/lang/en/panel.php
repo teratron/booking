@@ -618,6 +618,9 @@ return [
             'portal.logo_path' => 'Logo path',
             'portal.contact_email' => 'Contact email',
             'portal.contact_phone' => 'Contact phone',
+            'portal.social_instagram_url' => 'Instagram URL',
+            'portal.social_telegram_url' => 'Telegram URL',
+            'portal.social_facebook_url' => 'Facebook URL',
 
             'presentation.date_format' => 'Date format',
             'presentation.time_format' => 'Time format',

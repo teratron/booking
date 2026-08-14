@@ -617,6 +617,9 @@ return [
             'portal.logo_path' => 'Путь к логотипу',
             'portal.contact_email' => 'Контактный email',
             'portal.contact_phone' => 'Контактный телефон',
+            'portal.social_instagram_url' => 'Ссылка на Instagram',
+            'portal.social_telegram_url' => 'Ссылка на Telegram',
+            'portal.social_facebook_url' => 'Ссылка на Facebook',
 
             'presentation.date_format' => 'Формат даты',
             'presentation.time_format' => 'Формат времени',
