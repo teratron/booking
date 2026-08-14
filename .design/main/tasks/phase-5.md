@@ -42,7 +42,7 @@ lost.
 ### Track C — Catalog & Territory Listing Pages
 
 - [x] [T-5C01] Catalog / search results page
-- [ ] [T-5C02] Territory landing pages
+- [x] [T-5C02] Territory landing pages
 
 ### Track D — Home Page & Content Surfaces
 
@@ -264,12 +264,16 @@ than per-task.
 ### [T-5C02] Territory landing pages
 
 - **Spec:** l1-geography.md §5.3, §5.4
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** T-5A01, T-5A03, T-5A05, T-5A06, T-5C01
 - **Verify:** `docker compose exec app ./vendor/bin/pest --filter=PublicTerritory` proves a territory page renders breadcrumb, hero, short description, a catalog block per active object type (each independently omitted when empty — a territory with no restaurants renders without the dining block), territory news and promotions, a map centred on the territory, an SEO text block, and child-territory navigation; scoping is transitive, proven by seeding an object on a descendant node and asserting it appears in an ancestor's catalog blocks; tier ordering restarts per territory, proven by seeding the same tier distribution under two sibling territories and asserting each orders independently.
 - **Handoff:** T-5T01, T-5T03.
 - **Notes:** Every catalog block on this page is a scoped call into T-5A03, reusing the same card component T-5C01 uses — no page-specific card or query.
+- **Changes:** No Figma node covers a territory page; composition built from the specification's own §5.3 list directly. New `App\Http\Controllers\Public\TerritoryPageController` — a plain controller, not Livewire, since the page has no visitor-driven reactive state to bind, unlike `T-5C01`'s catalog page. One catalog block per active `ObjectType`, each its own scoped `CatalogQueryService::search()` call (territory + type), included only when it returns at least one result — the spec's own "degrades independently" invariant, asserted directly rather than assumed. Territory news and promotions reuse `NewsItem`/`Promotion`'s own existing `scopePublished()` visibility contracts (built in an earlier phase) rather than re-deriving publish/withdrawal rules. The map reuses `T-5A06`'s `<x-public.map>`, which gained a `:territory-id` prop and matching `territory_id` support in `MapPinsController::index()` and `CatalogSearchCriteria` — the first real caller of the map component since it was built.
+  Deliberate URL-grammar scope decision: territory pages are addressed by ID (`/{lang}/territory/{territory}`), not the full per-language nested-slug path `l1-seo.md` §5.1 eventually describes. That grammar needs a denormalized ancestor-slug-path cache (`l1-geography.md` §6 Implementation Note #2) neither this task nor any other Phase 5 task builds, and `l1-seo.md` is not one of this task's own cited specs — building it now would be a second, mostly-separate undertaking. The route is swappable for the real grammar later without touching this page's own composition logic.
+  Two real bugs surfaced and fixed, both in shell code `T-5A01` shipped before this route existed to test the guess against: the footer's "popular destinations" block guessed a `country` route parameter for `public.territories.show`, which this task registers with a `territory` parameter instead — fixed by replacing the country-keyed iteration with a new `PublicShellDataProvider::popularDestinations()` (top-level territories, cached and invalidated the same way navigation/languages/countries already are) so the links are both structurally correct and semantically real (an actual territory landing page, not an abstract country with no page of its own). `CountryPreferenceController`'s own redirect target had the identical wrong-parameter guess; fixed to resolve the selected country's own lowest-display-order top-level territory as its landing target, falling back to redirect-back when the country has none yet.
+- **Evidence:** `tests/Feature/Public/PublicTerritoryTest.php`, 4 cases: full composition (breadcrumb chain in root-to-leaf order, short and full description, a populated Hotel block, an empty Restaurant block's own heading absent while the word still legitimately appears in the site-wide nav) against a three-level fixture; transitive scoping (an object on a city seeded under a region page's own catalog block); tier ordering restarting per territory (two sibling territories each seeded with an identical VIP-over-standard distribution, each page's own HTML order asserted independently rather than assuming one proof covers both); and an inactive territory 404s. Independently re-verified: Pint and PHPStan (level 8, whole app) clean; `composer audit`/`composer unused` clean; full non-slow suite 623 passed, 0 failed, 3 skipped (up from 619), including `T-5A01`'s own `PublicShellTest` (the footer/country-preference fixes re-verified, not merely assumed safe) and the architecture and containment tests.
 
 ### [T-5D01] Public blog — listing and article detail
 
