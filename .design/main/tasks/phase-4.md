@@ -49,7 +49,7 @@ query and the policy, and usable by someone with no technical training.
 
 ### Track T — Validation
 
-- [ ] [T-4T01] Ownership isolation invariant across every cabinet resource
+- [x] [T-4T01] Ownership isolation invariant across every cabinet resource
 - [ ] [T-4T02] Moderation-gating & availability-bypass invariant
 - [ ] [T-4T03] Cabinet panel query budget under seeded volume
 
@@ -277,8 +277,10 @@ against real traffic that cannot exist yet.
 
 - **Goal:** Verify that no cabinet resource this phase adds ever exposes one owner's data to another, across every resource Track A–D built, not spot-checked on a subset.
 - **Method:** `docker compose exec app ./vendor/bin/pest --filter=CabinetOwnershipIsolation` — for every registered `CabinetResource` (discovered dynamically via the panel, the same `Filament::getPanel('cabinet')->getResources()` sweep `T-3T04`'s admin-panel equivalent used), seed two distinct owners with one object each, and assert owner A's session lists/views/edits only owner A's rows, with owner B's equivalent record returning not-found (never a 403 that would confirm the record's existence) for every list, edit, and action route the resource exposes.
-- **Status:** Todo
+- **Status:** Done
 - **Requires:** T-4A01, T-4B01–T-4B05, T-4C01, T-4C02, T-4D01–T-4D04
+- **Changes:** No product code changed — this task is pure verification. New `tests/Feature/Cabinet/CabinetOwnershipIsolationTest.php` reads the panel's live registry (`Filament::getPanel('cabinet')->getResources()`) rather than an enumerated list, so a resource added in a later phase without isolation coverage is caught here without this file changing. Every tenant-scoped resource shares one isolation mechanism — Filament's own tenancy, which refuses to resolve a `{tenant}` route parameter the acting user does not own before any resource-specific query runs — proven generically across all seven tenant-scoped resources rather than per-resource. `RoomResource`, `NewsItemResource`, and `PromotionResource` (the three resources whose record is a genuinely distinct child row, not the tenant object itself) get an additional, deeper check: a valid tenant whose own scoped query still refuses a record it does not own. `NotificationResource` (the one resource deliberately not tenant-scoped, `isScopedToTenant() === false`) gets its own direct query-level proof, scoped by `recipient_id` instead.
+- **Evidence:** `tests/Feature/Cabinet/CabinetOwnershipIsolationTest.php`, 4 cases: the registry's own canonical membership (8 resources, tenant-scoping flag asserted per resource); the generic tenant-route refusal sweep across all seven tenant-scoped resources; the child-row-within-a-valid-tenant refusal for the three resources where that distinction is meaningful; and the notification inbox's own recipient-scoped isolation. Independently re-verified: Pint and PHPStan (level 8) clean; combined cabinet regression filter (all fourteen cabinet suites) 100 passed, 0 failed; full non-slow suite 574 passed, 0 failed, 3 skipped (up from 570).
 
 ### [T-4T02] Moderation-gating & availability-bypass invariant
 

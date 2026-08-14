@@ -4,30 +4,30 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-14 14:35
+**Updated:** 2026-08-14 15:10
 **Phase:** 4 — Owner Cabinet
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Track A, Track B, Track C, and all of Track D (`T-4D01`–`T-4D04`) are Done — 13/16. Remaining: Track T (`T-4T01`–`T-4T03` validation, requires everything else). This session is continuing across machines — see the Blocking Constraints below (Workflow tool availability, uncommitted-work risk, unresolved git-push auth) before starting further work in a new environment.
+- **Task:** Track A, Track B, Track C, Track D, and now `T-4T01` are Done — 14/16. Remaining: `T-4T02` (moderation-gating & availability-bypass invariant), `T-4T03` (query budget). Both require every other Phase 4 task, now satisfied. Push is unblocked as of this session — the user will push locally-committed work themselves.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** `T-4T01` (ownership isolation invariant) — for every registered `CabinetResource` (discovered dynamically via the panel), seed two owners with one object each and assert owner A's session reaches only owner A's rows, refused as not-found (never merely hidden) for owner B's, across every list/edit/action route each resource exposes.
+- **Next Action:** `T-4T02` (moderation-gating & availability-bypass invariant) — prove the moderation-routing contract `T-4B01`/`T-4C01` both depend on holds together (review-mode enqueues without mutating the live record, immediate-mode applies directly, for both object edits and news/promotion submissions), and that the availability toggle's own bypass survives even when the scope is switched to review-mode mid-test — falsify by temporarily routing the toggle through `ModerationPipeline` and confirming the test fails, then restore.
 
 ## Progress
 
 ```
-Phase 4: [13/16] ████████░ 81%
+Phase 4: [14/16] █████████░ 88%
 Overall: [3/7] ███░░░░░ 43%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1-3 archived, Phase 4 in progress, 5-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [13/16] Phase 4 IN PROGRESS
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [14/16] Phase 4 IN PROGRESS
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-14 **Decision: `T-4D04` (staleness surfacing) closed, completing Track D** — new `ObjectStalenessService` reads the existing `information_out_of_date` notification `StalenessSweepJob` already raises, with no second detection mechanism; the flag only counts a notification as live while it postdates the object's own last edit, so it self-clears once the owner updates the listing rather than nagging forever. Surfaced on both the dashboard and the object's own edit screen, both purely advisory (never blocks a save, proven directly). Full non-slow suite: 570 passed, 0 failed, 3 skipped (up from 565).
+- 2026-08-14 **Decision: `T-4T01` (ownership isolation invariant) closed** — new `CabinetOwnershipIsolationTest` reads the panel's live resource registry rather than an enumerated list, proving isolation holds across all eight registered resources, not a hand-picked subset. Confirmed the generic mechanism (Filament's own tenancy refusing an unowned `{tenant}` route parameter) covers all seven tenant-scoped resources uniformly; added a deeper per-record check for the three resources with a genuinely distinct child row (Room, NewsItem, Promotion); `NotificationResource` (the one non-tenant-scoped resource) verified separately via its `recipient_id` scoping. Pure verification — no product code changed. Full non-slow suite: 574 passed, 0 failed, 3 skipped (up from 570).
 
 ## Blockers
 
