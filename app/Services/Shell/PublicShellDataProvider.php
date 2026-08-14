@@ -98,22 +98,60 @@ final class PublicShellDataProvider
     }
 
     /**
-     * Top-level territories — the "popular destinations" the footer links
-     * to, each a real, addressable territory landing page. Capped at a
-     * sensible footer-list length rather than every top-level node.
+     * Editorially featured top-level territories — the "popular
+     * destinations" the footer (portal-wide, no country filter) and the
+     * home page (scoped to the visitor's selected country) both link to,
+     * each a real, addressable territory landing page. Capped at a
+     * sensible list length rather than every featured node.
      *
      * @return list<PublicDestinationOption>
      */
-    public function popularDestinations(): array
+    public function popularDestinations(?int $countryId = null): array
     {
         /** @var list<PublicDestinationOption> */
         return Cache::tags([self::CACHE_TAG])->remember(
-            "public-shell.destinations.{$this->locale()}",
+            "public-shell.destinations.{$this->locale()}.".($countryId ?? 'all'),
             self::CACHE_TTL_SECONDS,
             fn (): array => array_values(
                 Territory::query()
                     ->whereNull('parent_id')
                     ->where('is_active', true)
+                    ->where('is_featured', true)
+                    ->when($countryId !== null, fn ($query) => $query->where('country_id', $countryId))
+                    ->orderBy('display_order')
+                    ->with('translations')
+                    ->limit(8)
+                    ->get()
+                    ->map(fn (Territory $territory): PublicDestinationOption => new PublicDestinationOption(
+                        id: $territory->id,
+                        name: (string) $territory->name,
+                    ))
+                    ->all(),
+            ),
+        );
+    }
+
+    /**
+     * Editorially featured non-top-level territories — the home page's own
+     * "popular cities" block, scoped to the visitor's selected country.
+     * Depth (a non-null `parent_id`), not a hard-coded level name, is what
+     * distinguishes a "city" here, matching the geography domain's own
+     * invariant against branching on level names.
+     *
+     * @return list<PublicDestinationOption>
+     */
+    public function popularCities(?int $countryId = null): array
+    {
+        /** @var list<PublicDestinationOption> */
+        return Cache::tags([self::CACHE_TAG])->remember(
+            "public-shell.cities.{$this->locale()}.".($countryId ?? 'all'),
+            self::CACHE_TTL_SECONDS,
+            fn (): array => array_values(
+                Territory::query()
+                    ->whereNotNull('parent_id')
+                    ->where('is_active', true)
+                    ->where('is_featured', true)
+                    ->when($countryId !== null, fn ($query) => $query->where('country_id', $countryId))
                     ->orderBy('display_order')
                     ->with('translations')
                     ->limit(8)

@@ -9,6 +9,7 @@
 @props([
     'objectTypeId' => null,
     'territoryId' => null,
+    'countryId' => null,
     'centerLat' => 45.0,
     'centerLng' => 30.0,
     'zoom' => 5,
@@ -23,7 +24,7 @@
         'brandColour' => '#f8bb44',
         'pinsUrl' => route('public.map.pins.index', ['lang' => $lang]),
         'pinCardUrlTemplate' => route('public.map.pins.show', ['lang' => $lang, 'object' => '__OBJECT__']),
-        'initialFilters' => array_filter(['type' => $objectTypeId, 'territory_id' => $territoryId]),
+        'initialFilters' => array_filter(['type' => $objectTypeId, 'territory_id' => $territoryId, 'country_id' => $countryId]),
     ];
 @endphp
 @vite(['resources/js/map.js'])

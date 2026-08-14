@@ -51,6 +51,7 @@ class Territory extends Model implements TranslatableContract
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
             'is_active' => 'boolean',
+            'is_featured' => 'boolean',
         ];
     }
 

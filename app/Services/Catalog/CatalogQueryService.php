@@ -16,6 +16,7 @@ use App\Support\Catalog\MapBounds;
 use App\Support\Catalog\MapPin;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -116,6 +117,8 @@ final class CatalogQueryService
                 // would leave the territory-scoped hot path unable to use
                 // that index at all.
                 ->where('country_id', $criteria->territory->country_id);
+        } elseif ($criteria->countryId !== null) {
+            $query->where('country_id', $criteria->countryId);
         }
 
         if ($criteria->objectTypeId !== null) {
@@ -145,6 +148,10 @@ final class CatalogQueryService
 
         foreach ($criteria->attributeFilters as $key => $value) {
             $this->applyAttributeFilter($query, $key, $value);
+        }
+
+        if ($criteria->createdAfter instanceof Carbon) {
+            $query->where('objects.created_at', '>=', $criteria->createdAfter);
         }
 
         return $scope;

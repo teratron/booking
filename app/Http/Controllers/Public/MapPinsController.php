@@ -38,6 +38,7 @@ final class MapPinsController extends Controller
 
         $criteria = new CatalogSearchCriteria(
             territory: $request->filled('territory_id') ? Territory::query()->find($request->integer('territory_id')) : null,
+            countryId: $request->filled('country_id') ? $request->integer('country_id') : null,
             objectTypeId: $request->filled('type') ? $request->integer('type') : null,
             name: $request->filled('q') ? $request->string('q')->value() : null,
         );

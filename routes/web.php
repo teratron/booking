@@ -6,6 +6,7 @@ use App\Http\Controllers\BannerClickController;
 use App\Http\Controllers\ExitImpersonationController;
 use App\Http\Controllers\Public\CountryPreferenceController;
 use App\Http\Controllers\Public\FeedbackSubmissionController;
+use App\Http\Controllers\Public\HomePageController;
 use App\Http\Controllers\Public\LegalPageController;
 use App\Http\Controllers\Public\MapPinsController;
 use App\Http\Controllers\Public\TerritoryPageController;
@@ -32,6 +33,7 @@ Route::prefix('{lang}')
     ->middleware(ResolvePublicLocale::class)
     ->name('public.')
     ->group(function (): void {
+        Route::get('/', [HomePageController::class, 'show'])->name('home');
         Route::post('/country', CountryPreferenceController::class)->name('country-preference');
         Route::post('/feedback', FeedbackSubmissionController::class)->name('feedback.submit');
         Route::get('/privacy-policy', [LegalPageController::class, 'privacy'])->name('legal.privacy');

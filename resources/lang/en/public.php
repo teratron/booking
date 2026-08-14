@@ -43,6 +43,24 @@ return [
         'explore' => 'Explore nearby',
     ],
 
+    'home' => [
+        'hero' => [
+            'title' => 'Find your next stay',
+            'subtitle' => 'Hotels, guesthouses, restaurants, and attractions across Moldova, Ukraine, and Georgia.',
+        ],
+        'categories_heading' => 'Browse by category',
+        'recommended_heading' => 'Recommended for you',
+        'newest_heading' => 'Newly added',
+        'cities_heading' => 'Popular cities',
+        'editorial_heading' => 'News & stories',
+        'reviews_heading' => 'What visitors are saying',
+        'partners_heading' => 'Our partners',
+        'informational' => [
+            'title' => 'About the portal',
+            'body' => 'We publish independently verified listings for hotels, guesthouses, restaurants, and attractions, and put you in direct contact with the owner — no booking fees, no middleman.',
+        ],
+    ],
+
     'shell' => [
         'header' => [
             'owner_entry' => 'Sign in / Cabinet',

@@ -6,6 +6,7 @@ namespace App\Support\Catalog;
 
 use App\Models\Territory;
 use App\Services\Catalog\CatalogQueryService;
+use Illuminate\Support\Carbon;
 
 /**
  * Everything a catalog surface (home, territory page, catalog/search page,
@@ -27,6 +28,8 @@ final readonly class CatalogSearchCriteria
      */
     public function __construct(
         public ?Territory $territory = null,
+        /** Country-wide scoping with no specific territory — the home page's own blocks. Ignored when `$territory` is set, which already implies its own country. */
+        public ?int $countryId = null,
         public ?int $objectTypeId = null,
         public ?string $name = null,
         public array $amenityIds = [],
@@ -34,6 +37,8 @@ final readonly class CatalogSearchCriteria
         public ?float $priceMax = null,
         public ?float $ratingMin = null,
         public array $attributeFilters = [],
+        /** The home page's own "newly added objects" block filter — absent everywhere else. */
+        public ?Carbon $createdAfter = null,
         public int $page = 1,
         public int $perPage = 24,
     ) {}
