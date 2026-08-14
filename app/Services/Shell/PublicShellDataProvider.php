@@ -7,7 +7,9 @@ namespace App\Services\Shell;
 use App\Models\Country;
 use App\Models\Language;
 use App\Models\ObjectType;
+use App\Models\Territory;
 use App\Support\Shell\PublicCountryOption;
+use App\Support\Shell\PublicDestinationOption;
 use App\Support\Shell\PublicLanguageOption;
 use App\Support\Shell\PublicNavigationEntry;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -89,6 +91,36 @@ final class PublicShellDataProvider
                         code: $country->code,
                         name: (string) $country->name,
                         flagPath: $country->flag_path,
+                    ))
+                    ->all(),
+            ),
+        );
+    }
+
+    /**
+     * Top-level territories — the "popular destinations" the footer links
+     * to, each a real, addressable territory landing page. Capped at a
+     * sensible footer-list length rather than every top-level node.
+     *
+     * @return list<PublicDestinationOption>
+     */
+    public function popularDestinations(): array
+    {
+        /** @var list<PublicDestinationOption> */
+        return Cache::tags([self::CACHE_TAG])->remember(
+            "public-shell.destinations.{$this->locale()}",
+            self::CACHE_TTL_SECONDS,
+            fn (): array => array_values(
+                Territory::query()
+                    ->whereNull('parent_id')
+                    ->where('is_active', true)
+                    ->orderBy('display_order')
+                    ->with('translations')
+                    ->limit(8)
+                    ->get()
+                    ->map(fn (Territory $territory): PublicDestinationOption => new PublicDestinationOption(
+                        id: $territory->id,
+                        name: (string) $territory->name,
                     ))
                     ->all(),
             ),

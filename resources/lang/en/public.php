@@ -37,6 +37,12 @@ return [
         ],
     ],
 
+    'territory' => [
+        'promotions' => 'Promotions',
+        'map' => 'Map',
+        'explore' => 'Explore nearby',
+    ],
+
     'shell' => [
         'header' => [
             'owner_entry' => 'Sign in / Cabinet',

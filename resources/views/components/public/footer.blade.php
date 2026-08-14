@@ -13,7 +13,7 @@
         ? route($name, ['lang' => $lang, ...$params])
         : null;
     $groups = $shell->navigationGroups();
-    $countries = $shell->activeCountries();
+    $destinations = $shell->popularDestinations();
     $portalName = $settings->get('portal.name');
     $contactEmail = $settings->get('portal.contact_email');
     $contactPhone = $settings->get('portal.contact_phone');
@@ -68,10 +68,10 @@
         <div>
             <h3 class="text-lg font-semibold">{{ __('public.shell.footer.destinations_heading') }}</h3>
             <ul class="mt-2 flex flex-col gap-1 text-sm text-white/90">
-                @foreach ($countries as $country)
+                @foreach ($destinations as $destination)
                     <li>
-                        <x-public.nav-link :href="$urlIfRouted('public.territories.show', ['country' => $country->code])">
-                            {{ $country->name }}
+                        <x-public.nav-link :href="$urlIfRouted('public.territories.show', ['territory' => $destination->id])">
+                            {{ $destination->name }}
                         </x-public.nav-link>
                     </li>
                 @endforeach

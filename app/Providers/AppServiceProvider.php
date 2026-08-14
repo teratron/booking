@@ -8,6 +8,7 @@ use App\Models\Banner;
 use App\Models\Country;
 use App\Models\Language;
 use App\Models\ObjectType;
+use App\Models\Territory;
 use App\Policies\AuditPolicy;
 use App\Services\Advertising\BannerSelectionService;
 use App\Services\Authorization\CabinetAccessResolver;
@@ -188,5 +189,7 @@ class AppServiceProvider extends ServiceProvider
         Language::deleted($flush);
         Country::saved($flush);
         Country::deleted($flush);
+        Territory::saved($flush);
+        Territory::deleted($flush);
     }
 }

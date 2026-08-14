@@ -37,6 +37,12 @@ return [
         ],
     ],
 
+    'territory' => [
+        'promotions' => 'Акции',
+        'map' => 'Карта',
+        'explore' => 'Рядом',
+    ],
+
     'shell' => [
         'header' => [
             'owner_entry' => 'Вход / Кабинет',

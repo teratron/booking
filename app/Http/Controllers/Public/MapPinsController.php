@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Models\Object_;
+use App\Models\Territory;
 use App\Services\Catalog\CatalogQueryService;
 use App\Services\Catalog\ObjectCardPresenter;
 use App\Support\Catalog\CatalogSearchCriteria;
@@ -36,6 +37,7 @@ final class MapPinsController extends Controller
         );
 
         $criteria = new CatalogSearchCriteria(
+            territory: $request->filled('territory_id') ? Territory::query()->find($request->integer('territory_id')) : null,
             objectTypeId: $request->filled('type') ? $request->integer('type') : null,
             name: $request->filled('q') ? $request->string('q')->value() : null,
         );
