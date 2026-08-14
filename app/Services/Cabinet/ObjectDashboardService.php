@@ -40,6 +40,7 @@ final class ObjectDashboardService
 
     public function __construct(
         private readonly SettingsRepository $settings,
+        private readonly ObjectStalenessService $staleness,
     ) {}
 
     /**
@@ -76,6 +77,7 @@ final class ObjectDashboardService
             messengerClicks: $this->contactClickCount($object, self::MESSENGER_CHANNEL_KEYS),
             websiteClicks: $this->contactClickCount($object, self::WEBSITE_CHANNEL_KEYS),
             availabilityStatus: (string) $object->availability_status,
+            isStale: $this->staleness->isFlagged($object),
         );
     }
 

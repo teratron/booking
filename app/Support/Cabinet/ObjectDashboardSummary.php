@@ -37,5 +37,6 @@ final readonly class ObjectDashboardSummary
         public int $messengerClicks,
         public int $websiteClicks,
         public string $availabilityStatus,
+        public bool $isStale,
     ) {}
 }

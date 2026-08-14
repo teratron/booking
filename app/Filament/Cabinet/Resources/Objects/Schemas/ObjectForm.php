@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Cabinet\Resources\Objects\Schemas;
 
+use App\Jobs\StalenessSweepJob;
 use App\Models\Country;
 use App\Models\Language;
 use App\Models\ModerationRequest;
@@ -12,6 +13,7 @@ use App\Models\ObjectType;
 use App\Models\Territory;
 use App\Services\Cabinet\ObjectEditService;
 use App\Services\Cabinet\ObjectPublicationEligibilityService;
+use App\Services\Cabinet\ObjectStalenessService;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -54,6 +56,7 @@ class ObjectForm
         return $schema->components([
             self::moderationFeedbackSection(),
             self::eligibilitySection(),
+            self::stalenessSection(),
             self::coreSection(),
             self::geographySection(),
             self::contactsSection(),
@@ -135,6 +138,25 @@ class ObjectForm
 
                 return ! app(ObjectPublicationEligibilityService::class)->isEligibleForPublication($record);
             });
+    }
+
+    /**
+     * Surfaces the same staleness flag {@see StalenessSweepJob}
+     * already raised as an inbox notification — advisory only, so this
+     * section never disables the form or any lifecycle action underneath
+     * it, only informs.
+     */
+    private static function stalenessSection(): Section
+    {
+        return Section::make(__('panel.cabinet.objects.staleness.title'))
+            ->schema([
+                Placeholder::make('staleness_notice')
+                    ->hiddenLabel()
+                    ->content(__('panel.cabinet.objects.staleness.notice')),
+            ])
+            ->visible(fn (?Object_ $record): bool => $record instanceof Object_
+                && $record->exists
+                && app(ObjectStalenessService::class)->isFlagged($record));
     }
 
     /**

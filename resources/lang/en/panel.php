@@ -1008,6 +1008,7 @@ return [
             'website_clicks' => 'Website clicks',
             'expiry_warning_today' => 'Your placement package expires today.',
             'expiry_warning_days' => 'Your placement package expires in :days day(s).',
+            'staleness_notice' => 'Your listing information may be out of date. Review and update it to keep it accurate for visitors.',
             'quick_actions_section' => 'Quick actions',
             'quick_actions' => [
                 'edit_object' => 'Edit object',
@@ -1131,6 +1132,11 @@ return [
                 'title' => 'Before this object can be published',
                 'coordinates' => 'Coordinates (latitude and longitude) are required.',
                 'name' => 'A name in the primary language is required.',
+            ],
+
+            'staleness' => [
+                'title' => 'Information may be out of date',
+                'notice' => 'It has been a while since this listing was last updated. Review the details below and save any changes to keep it accurate for visitors.',
             ],
         ],
 

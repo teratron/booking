@@ -30,6 +30,14 @@
             </div>
         @endif
 
+        @if ($summary->isStale)
+            <div class="fi-section rounded-xl bg-blue-50 p-4 ring-1 ring-blue-300 dark:bg-blue-500/10 dark:ring-blue-500/30">
+                <p class="text-sm font-medium text-blue-800 dark:text-blue-200">
+                    {{ __('panel.cabinet.dashboard.staleness_notice') }}
+                </p>
+            </div>
+        @endif
+
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div class="fi-section rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
                 <div class="text-sm text-gray-500 dark:text-gray-400">{{ __('panel.cabinet.dashboard.active_package') }}</div>
