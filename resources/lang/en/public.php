@@ -29,6 +29,9 @@ return [
         'search' => [
             'placeholder' => 'Search destinations, hotels, restaurants…',
         ],
+        'map' => [
+            'label' => 'Map of matching objects',
+        ],
         'nav' => [
             'primary' => 'Primary navigation',
             'news' => 'News',

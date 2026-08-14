@@ -2,10 +2,13 @@
   // This file is JSONC: fallow reads these comments; generic JSON tools may not.
   "$schema": "./node_modules/fallow/schema.json",
   "entry": [
-    // Both entries match vite.config.js's `input` array exactly — the CSS
+    // All three match vite.config.js's `input` array exactly — the CSS
     // entry is a real Vite build root, not a file imported from JS, so it
     // needs listing here too or fallow reports it as an unreachable dead file.
+    // map.js is its own entry (not imported from app.js) so MapLibre's
+    // ~950KB bundle only loads on the pages that embed the catalog map.
     "resources/js/app.js",
+    "resources/js/map.js",
     "resources/css/app.css"
   ],
   "duplicates": {

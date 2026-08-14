@@ -6,11 +6,14 @@ namespace App\Services\Catalog;
 
 use App\Models\Object_;
 use App\Models\ObjectType;
+use App\Models\PlacementTier;
 use App\Models\Price;
 use App\Models\Room;
 use App\Models\Territory;
 use App\Services\Placement\PlacementOrderingService;
 use App\Support\Catalog\CatalogSearchCriteria;
+use App\Support\Catalog\MapBounds;
+use App\Support\Catalog\MapPin;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -42,6 +45,64 @@ final class CatalogQueryService
     {
         $query = Object_::query()->where('status', 'published');
 
+        $scope = $this->applyFilters($query, $criteria);
+
+        $this->ordering->apply($query, $scope);
+
+        return $query->paginate($criteria->perPage, ['*'], 'page', $criteria->page);
+    }
+
+    /**
+     * The map's own retrieval path — the same scope and filters {@see
+     * search()} applies, constrained to a viewport instead of paginated.
+     * Tier ordering is deliberately not applied: pins are unordered
+     * markers, not a ranked list, so {@see PlacementOrderingService}'s own
+     * join buys nothing here. Only the tier's border colour is read, for
+     * the marker's own visual treatment.
+     *
+     * @return list<MapPin>
+     */
+    public function pins(CatalogSearchCriteria $criteria, MapBounds $bounds): array
+    {
+        $query = Object_::query()->where('status', 'published')->whereNotNull('geom');
+
+        $this->applyFilters($query, $criteria);
+
+        $query->whereRaw(
+            'geom && ST_MakeEnvelope(?, ?, ?, ?, 4326)::geography',
+            [$bounds->southWestLng, $bounds->southWestLat, $bounds->northEastLng, $bounds->northEastLat],
+        );
+
+        $query->select([
+            'objects.*',
+            DB::raw('ST_Y(geom::geometry) as pin_lat'),
+            DB::raw('ST_X(geom::geometry) as pin_lng'),
+        ])->with(['placement.package.tier']);
+
+        return array_values($query->get()->map(function (Object_ $object): MapPin {
+            $tier = $object->placement?->package?->tier;
+
+            return new MapPin(
+                objectId: $object->id,
+                lat: (float) $object->getAttribute('pin_lat'),
+                lng: (float) $object->getAttribute('pin_lng'),
+                tierBorderColour: $tier instanceof PlacementTier ? $tier->border_colour : null,
+            );
+        })->all());
+    }
+
+    /**
+     * Applies every scope and filter criterion shared between the paginated
+     * list retrieval and the map's pin retrieval — amenities, price,
+     * rating, type-declared attributes, territory/type scope — so the two
+     * surfaces can never silently disagree about what "the filtered
+     * result set" means. Returns the resolved ordering scope for the one
+     * caller ({@see search()}) that needs it.
+     *
+     * @param  Builder<Object_>  $query
+     */
+    private function applyFilters(Builder $query, CatalogSearchCriteria $criteria): Territory|ObjectType|null
+    {
         $scope = $this->resolveScope($criteria);
 
         if ($criteria->territory instanceof Territory) {
@@ -81,9 +142,7 @@ final class CatalogQueryService
             $this->applyAttributeFilter($query, $key, $value);
         }
 
-        $this->ordering->apply($query, $scope);
-
-        return $query->paginate($criteria->perPage, ['*'], 'page', $criteria->page);
+        return $scope;
     }
 
     /**
