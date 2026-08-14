@@ -9,7 +9,6 @@ use App\Services\Cabinet\ObjectDashboardService;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -288,35 +287,24 @@ it('does not surface an expiry warning once the placement has already lapsed', f
         ->and($summary->expiryWarningDaysRemaining)->toBeNull();
 });
 
-it('resolves a quick action to its real URL once the screen it targets already has a registered route', function (): void {
+it('resolves every quick action to its real URL, now that every target screen has a registered route', function (): void {
     $fixture = cabinetDashboardGeography();
     $owner = cabinetDashboardOwner('dashboard_owner_quick_actions');
     $object = cabinetDashboardMakeObject($fixture, $owner->id, 'Quick Actions Villa');
 
-    // 'edit_object', 'add_photos', 'add_news', and 'add_promotion' now name
-    // real resource routes the owner cabinet's object-management,
-    // photo-management, and content-authoring screens registered — no stub
-    // needed for any of them any more. 'bump_object' stands in here for "a
-    // target that does not exist yet", proving the same Route::has() gating
-    // this test always meant to prove, on an action that still lacks one.
-    $bumpRouteName = Dashboard::quickActionRouteName('bump_object');
-    expect($bumpRouteName)->not->toBeNull();
-
-    Route::get('/dashboard-test-only/bump-object', fn () => 'ok')->name($bumpRouteName);
-    // A route named fluently (as above) is not indexed by name until the
-    // router's name lookup table is rebuilt — normally a one-time step the
-    // framework performs once after loading every route file at boot. A
-    // route added after that point, as this test does, needs the same
-    // rebuild explicitly or `route()`/`Route::has()` will not find it.
-    Route::getRoutes()->refreshNameLookups();
-
+    // Every quick action now names a real route the owner cabinet's own
+    // screens registered — object editing, bumping, photo management, and
+    // content authoring — so this proves each one resolves to its actual
+    // URL directly, with no stub route standing in for a missing target.
     Filament::setCurrentPanel('cabinet');
     Filament::setTenant($object, isQuiet: true);
 
     $page = new Dashboard;
     $actions = collect($page->quickActions())->keyBy('key');
 
-    expect($actions['bump_object']['url'])->toBe(route($bumpRouteName, ['tenant' => $object, 'record' => $object]))
+    expect($actions['bump_object']['url'])->toBe(
+        route('filament.cabinet.pages.bump-object', ['tenant' => $object, 'record' => $object])
+    )
         ->and($actions['edit_object']['url'])->toBe(
             route('filament.cabinet.resources.objects.edit', ['tenant' => $object, 'record' => $object])
         )
@@ -331,7 +319,7 @@ it('resolves a quick action to its real URL once the screen it targets already h
         );
 });
 
-it('still renders successfully when some quick-action targets are missing', function (): void {
+it('renders successfully end to end with every quick action visible', function (): void {
     $fixture = cabinetDashboardGeography();
     $owner = cabinetDashboardOwner('dashboard_owner_missing_targets');
     cabinetDashboardMakeObject($fixture, $owner->id, 'No Targets Yet Villa');

@@ -1047,6 +1047,21 @@ return [
             'toggled' => 'Availability updated.',
         ],
 
+        'bump' => [
+            'title' => 'Bump object',
+            'description' => 'Move your object to the top of its tier in its own territory. This uses one of the free bumps your placement package allows — bumping is the only cabinet action that depends on your current package.',
+            'confirm' => 'Bump now',
+            'applied' => 'Your object has been bumped.',
+            'refused' => 'This object could not be bumped',
+            'refused_reasons' => [
+                'not_allowed_by_package' => 'Your current placement package does not allow bumping.',
+                'interval_not_elapsed' => 'You can bump again after the :hours-hour interval since your last free bump has passed.',
+                'allowance_exhausted' => 'You have used all :count free bump(s) included in your current placement.',
+                'no_current_placement' => 'This object has no active placement to bump.',
+                'unknown' => 'This object could not be bumped right now.',
+            ],
+        ],
+
         'objects' => [
             'title' => 'Edit object',
             'model_label' => 'object',
