@@ -4,29 +4,30 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-15 00:05
+**Updated:** 2026-08-15 01:10
 **Phase:** 5 — Public Site
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Track A and Track C both complete — 8/18. `T-5C02` (territory pages) closed: plain controller (no reactive state needed), one `CatalogQueryService`-backed block per active type, ID-addressed (`/{lang}/territory/{territory}`) rather than the full nested-slug grammar `l1-seo.md` eventually wants — deliberately deferred, noted, swappable later. Explicit user instruction this session: build `T-5C01` → `T-5C02` → `T-5D03` next, non-stop, committing after each — out of the plan's own stated order (Track B and `T-5D01`/`T-5D02` normally come first); graceful `Route::has()`-guarded degradation covers links into not-yet-built pages throughout.
+- **Task:** Track A, Track C, and `T-5D03` all complete — 9/18. `T-5D03` (home page composition) closed: sixteen blocks assembled in one server pass, each independently omitted when it has nothing to show, every listing block a caller of an existing service (`CatalogQueryService`, `PublicShellDataProvider`, `ObjectCardPresenter`) rather than a page-local reimplementation. Built ahead of `T-5D01`/`T-5D02` per explicit non-stop instruction; the articles/news/promotions rails render real content already reachable through existing models, with outbound links `Route::has()`-guarded until those two tasks land. This closes the explicitly requested `T-5C01` → `T-5C02` → `T-5D03` non-stop sequence — work pauses here pending further instruction.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** `T-5D03` (home page composition) — in progress per explicit user sequencing. It normally requires `T-5D01`/`T-5D02` (blog/news/promotions pages) too; those are skipped for now, so the home page's news/promotions/articles rails will read real Phase 3 data directly and link out via the same `Route::has()` guard pattern, inert until those two tasks land later.
+- **Next Action:** Awaiting further instruction — remaining Phase 5 work (Track B, `T-5D01`/`T-5D02`, Track T) was not part of the requested sequence and should not start without it.
 
 ## Progress
 
 ```
-Phase 5: [8/18] ████░░░░ 44%
+Phase 5: [9/18] ████░░░░ 50%
 Overall: [4/7] █████░░░ 57%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1-4 complete & archived, Phase 5 in progress, 6-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [8/18] Phase 5 IN PROGRESS
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [9/18] Phase 5 IN PROGRESS
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
+- 2026-08-15 **Decision: `T-5D03` (home page composition) closed — non-stop sequence complete** — `HomePageController::show()` assembles all sixteen blocks, country-resolved via session with a registry-order fallback. `PublicShellDataProvider::popularDestinations()`/`popularCities()` gained an optional country filter (footer stays portal-wide, home page's own blocks are country-scoped) and `Territory` gained an `is_featured` curation flag, depth distinguishing destinations from cities. Two real bugs fixed along the way, both pre-existing gaps only a real paginated result surfaced: `CatalogQueryService::applyFilters()`'s unqualified `object_type_id` (ambiguous once joined against `placement_packages`'s own column of that name), and `ObjectCardPresenter::present()`'s incomplete `loadMissing()`. Full non-slow suite: 627 passed, 0 failed, 3 skipped (up from 623).
 - 2026-08-15 **Decision: `T-5C02` (territory pages) closed — Track C complete** — plain controller composing breadcrumb/hero/description/per-type catalog blocks/news/promotions/map/child-nav, each independently omitted when empty. Two wrong-parameter route guesses from `T-5A01`-era shell code (predating this route's registration) surfaced and fixed: the footer's "popular destinations" now links real top-level territories via a new `PublicShellDataProvider::popularDestinations()`, and the country switcher's redirect resolves the selected country's own top-level territory. Full non-slow suite: 623 passed, 0 failed, 3 skipped (up from 619).
 
 ## Blockers
