@@ -4,23 +4,23 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-14 20:45
+**Updated:** 2026-08-14 21:20
 **Phase:** 5 — Public Site
 **Status:** Active
 
 ## Current Position
 
-- **Task:** `T-5A01`, `T-5A03`, `T-5A04`, and `T-5A05` are Done — 4/18. `T-5A01` is the phase's second hard gate (shell layout every later public page renders inside), now closed — locale-prefixed routing, data-driven navigation, both switchers, breadcrumbs, footer, and the feedback overlay all real and tested. `T-5A06` (map) is the only remaining independent Track A task; every Track B/C/D task that renders a listing or a page can now build on both the card component and the shell layout.
+- **Task:** `T-5A01`–`T-5A05` are Done — 5/18. `T-5A02` (404 page + static legal pages) just closed, rendering inside the `T-5A01` shell via Laravel's own `errors/404.blade.php` convention view; legal page bodies live in the interface translation catalog rather than a new content model. `T-5A06` (map) is the only remaining independent Track A task; every Track B/C/D task can now build on the card component, the shell layout, and the error/legal surfaces.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Execute T-5A02 404 page and static legal pages via /magic.run main
+- **Next Action:** Execute T-5A06 Clustered map — MapLibre GL JS and tile provisioning via /magic.run main
 
 ## Progress
 
 ```
-Phase 5: [4/18] ██░░░░░░ 22%
+Phase 5: [5/18] ██░░░░░░ 28%
 Overall: [4/7] █████░░░ 57%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1-4 complete & archived, Phase 5 in progress, 6-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [4/18] Phase 5 IN PROGRESS
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [5/18] Phase 5 IN PROGRESS
 ```
 
 ## Recent Decisions
