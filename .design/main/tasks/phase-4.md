@@ -37,8 +37,8 @@ query and the policy, and usable by someone with no technical training.
 
 ### Track C — Owner Content
 
-- [ ] [T-4C01] Owner-authored news & promotions
-- [ ] [T-4C02] Reviews — reply and report
+- [x] [T-4C01] Owner-authored news & promotions
+- [x] [T-4C02] Reviews — reply and report
 
 ### Track D — Statistics, Bump & Settings
 
@@ -204,22 +204,26 @@ against real traffic that cannot exist yet.
 ### [T-4C01] Owner-authored news & promotions
 
 - **Spec:** l1-content-publishing.md §3.3, §3.4, §5.2, §5.5
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** T-4A01
 - **Verify:** `docker compose exec app ./vendor/bin/pest --filter=CabinetOwnerContent` proves the owner-facing news form accepts exactly five fields (title, summary, body, image, publication date) and the promotion form exactly five (title, description, image, start date, end date) — no rich editor, no layout control, asserted against the form's own field list, not merely the visible UI; a submission routes through `ModerationPipeline::submit()` exactly as `T-4B01`'s object edits do, publishing immediately or entering the queue per the resolved mode for the owner's scope; the created row is attributed to the owner's object and, once published, is eligible for the portal-wide feed only after that moderation step clears — never before.
 - **Handoff:** none within this phase.
 - **Notes:** Reuses the `NewsItem`/`Promotion` models and `NewsItemLifecycleService`/`PromotionLifecycleService` Phase 3 already built (`T-3E02`) — this task is the owner-authoring caller those services were explicitly left ready for, not a second content pipeline. Do not create parallel owner-scoped content types per the source spec's own implementation note.
+- **Changes:** Two new resources (NewsItem, Promotion) with the five-field forms exactly as specified. A row is created first (unpublished, unapproved) so it has a primary key to moderate against, then routed through `ModerationPipeline::submit()` — immediate mode writes and flips status/moderation_status in the same request; review mode leaves the row with no translation and no live status, entirely invisible to any public query, while a real pending `ModerationRequest` carries the authored content. A new `ContentSubmissionOutcome` value object parallels the existing `ObjectEditOutcome`.
+- **Evidence:** `tests/Feature/Cabinet/CabinetOwnerContentTest.php`, 6 cases including the falsifying immediate/review pair. Two real pre-existing gaps found and closed, not worked around: `NewsItemPolicy`/`PromotionPolicy` had no ownership-based authorization path at all (only the staff scope-table path) — added the same `CabinetAccessResolver` fallback every sibling owner-facing policy already uses; the `object_owner` role had no `content.*` permissions, so no owner could reach these screens regardless of the policy fix — added `content.view`/`content.create`/`content.edit`. Also fixed a dead dashboard quick action (NewsItemResource needed an explicit `news` slug to match the route name the dashboard already anticipated). Independently re-verified: full-repo Pint and PHPStan (level 8) clean; combined with T-4C02 below, full non-slow suite 550 passed, 0 failed, 3 skipped.
 
 ### [T-4C02] Reviews — reply and report
 
 - **Spec:** l1-object-onboarding.md §5.7
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** T-4A01
 - **Verify:** `docker compose exec app ./vendor/bin/pest --filter=CabinetReviews` proves an owner sees every review of their own object (any status); may reply exactly once per review, recording `owner_reply`/`owner_replied_at`; may report a review, recording `reported_at`/`reported_by`/`report_reason`; edit and delete controls are absent from the UI *and* the corresponding actions are refused server-side when attempted directly (a policy check, not a hidden button) — falsify this by calling the update/delete action directly against another owner's review and confirming it is refused, then against the owner's own review's protected fields and confirming those too are refused.
 - **Handoff:** none within this phase.
 - **Notes:** Review *submission* is out of this task's scope — see the phase's own Standing Constraints. This task only builds the owner's read/reply/report capability against whatever review rows already exist (seed fixtures directly in tests; no submission form is built to produce them).
+- **Changes:** New `Review` model (no admin-authored one existed) and `ReviewPolicy`: ordinary `update`/`delete` abilities are refused unconditionally for every actor, including the object's own owner — reviews are never editable or deletable through this policy at all. A new `ReviewInteractionService` exposes only `reply()`/`report()`, each taking exactly the scalar value it may ever write (never an open data array), refusing a second attempt with a dedicated exception. List-only Filament resource (no create/edit page).
+- **Evidence:** `tests/Feature/Cabinet/CabinetReviewsTest.php`, 8 cases, including both falsifying cases: `Gate::allows('update'|'delete', ...)` refused even for the review's own object owner touching protected fields, and every ability refused for a different owner acting on another owner's review (including a real routed cross-tenant action attempt). Independently re-verified: full-repo Pint and PHPStan (level 8) clean; combined test filter across all nine cabinet suites plus `TranslationManagementTest` 83 passed, 0 failed; full non-slow suite 550 passed, 0 failed, 3 skipped (up from 536).
 
 ### [T-4D01] Statistics, including favorite count
 

@@ -229,8 +229,9 @@ critical path out of Phase 2.
 ## Next Step
 
 `/magic.run main` — continue executing Phase 4 (Owner Cabinet), decomposed into 16
-atomic tasks in [tasks/phase-4.md](tasks/phase-4.md); `T-4A01` (cabinet foundation gate)
-is Done, `T-4A02` (Dashboard) is next. Phase registry in [TASKS.md](TASKS.md). Phases 1
+atomic tasks in [tasks/phase-4.md](tasks/phase-4.md); Tracks A, B, and C are Done (9/16),
+`T-4D01` (statistics) is next, followed by the rest of Track D and Track T's validation.
+Phase registry in [TASKS.md](TASKS.md). Phases 1
 through 3 are complete and archived at
 [archives/tasks/phase-1.md](archives/tasks/phase-1.md),
 [archives/tasks/phase-2.md](archives/tasks/phase-2.md), and
