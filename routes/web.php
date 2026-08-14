@@ -6,6 +6,7 @@ use App\Http\Controllers\BannerClickController;
 use App\Http\Controllers\ExitImpersonationController;
 use App\Http\Controllers\Public\CountryPreferenceController;
 use App\Http\Controllers\Public\FeedbackSubmissionController;
+use App\Http\Controllers\Public\LegalPageController;
 use App\Http\Middleware\ResolvePublicLocale;
 use Illuminate\Support\Facades\Route;
 
@@ -30,4 +31,6 @@ Route::prefix('{lang}')
     ->group(function (): void {
         Route::post('/country', CountryPreferenceController::class)->name('country-preference');
         Route::post('/feedback', FeedbackSubmissionController::class)->name('feedback.submit');
+        Route::get('/privacy-policy', [LegalPageController::class, 'privacy'])->name('legal.privacy');
+        Route::get('/terms', [LegalPageController::class, 'terms'])->name('legal.terms');
     });
