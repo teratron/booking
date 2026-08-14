@@ -12,13 +12,12 @@
 Tactical registry of all phases and their statuses. Atomic checklists (`T-XXXX`) live in
 the per-phase files under `tasks/`.
 
-**Decomposition state.** Phases 1 through 3 are complete (21/21, 25/25, 23/23) and
-archived. Phase 4 is decomposed into 16 atomic tasks across four tracks plus validation
-in [tasks/phase-4.md](tasks/phase-4.md), against the same `RFC`-status posture the first
-three phases were successfully decomposed and executed under — no Pre-flight gate has
-ever HALTed on it. Phases 5 through 7 still carry frontmatter, a strategic goal, and
-their scope only — no `T-XXXX` items yet; each is decomposed by the `/magic.task`
-invocation that activates it, against the specification set as it stands at that point.
+**Decomposition state.** Phases 1 through 4 are complete (21/21, 25/25, 23/23, 16/16)
+against the same `RFC`-status posture each was successfully decomposed and executed
+under — no Pre-flight gate has ever HALTed on any of them. Phases 5 through 7 still
+carry frontmatter, a strategic goal, and their scope only — no `T-XXXX` items yet; each
+is decomposed by the `/magic.task` invocation that activates it, against the
+specification set as it stands at that point.
 
 The superseded Next.js-era archives now live under `archives/tasks/v1-nextjs/`. They
 previously occupied the filenames `archives/tasks/phase-1.md` through `phase-6.md`,
@@ -32,7 +31,7 @@ archival would have overwritten them.
 | [Phase 1](archives/tasks/phase-1.md) | Foundation, schema, registries, scoped authorization, module gating, quality gates | `Done (Archived)` |
 | [Phase 2](archives/tasks/phase-2.md) | Back office core — staff panel, objects, owners, geography, taxonomy, moderation, action journal | `Done (Archived)` (25/25) |
 | [Phase 3](archives/tasks/phase-3.md) | Commerce, advertising, analytics ingest, notifications, content pipeline | `Done (Archived)` (23/23) |
-| [Phase 4](tasks/phase-4.md) | Owner cabinet — the second Filament panel, owner-scoped throughout | `In Progress` (15/16) |
+| [Phase 4](archives/tasks/phase-4.md) | Owner cabinet — the second Filament panel, owner-scoped throughout | `Done (Archived)` (16/16) |
 | [Phase 5](tasks/phase-5.md) | Public site — shell, home, catalog, object profile, territory pages, built from Figma | `Todo` |
 | [Phase 6](tasks/phase-6.md) | SEO, portal-wide reporting, public REST API | `Todo` |
 | [Phase 7](tasks/phase-7.md) | Import/export, backups and rehearsed restore, production provisioning, load test | `Todo` |
@@ -69,5 +68,5 @@ rows, not a second counting scheme). Full rationale in
 
 ## Meta Information
 
-- **Last Updated**: 2026-08-13
+- **Last Updated**: 2026-08-14
 - **Maintainer**: Core Team

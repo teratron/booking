@@ -228,14 +228,13 @@ critical path out of Phase 2.
 
 ## Next Step
 
-`/magic.run main` — continue executing Phase 4 (Owner Cabinet), decomposed into 16
-atomic tasks in [tasks/phase-4.md](tasks/phase-4.md); Tracks A, B, and C are Done (9/16),
-`T-4D01` (statistics) is next, followed by the rest of Track D and Track T's validation.
-Phase registry in [TASKS.md](TASKS.md). Phases 1
-through 3 are complete and archived at
+`/magic.task main` — decompose Phase 5 (Public site: shell, home, catalog, object
+profile, territory pages, built from Figma). Phase registry in [TASKS.md](TASKS.md).
+Phases 1 through 4 are complete and archived at
 [archives/tasks/phase-1.md](archives/tasks/phase-1.md),
-[archives/tasks/phase-2.md](archives/tasks/phase-2.md), and
-[archives/tasks/phase-3.md](archives/tasks/phase-3.md) respectively.
+[archives/tasks/phase-2.md](archives/tasks/phase-2.md),
+[archives/tasks/phase-3.md](archives/tasks/phase-3.md), and
+[archives/tasks/phase-4.md](archives/tasks/phase-4.md) respectively.
 
 Phases 5 through 7 carry frontmatter and scope only. They are decomposed into atomic
 tasks by the `/magic.task` invocation that activates each, so the decomposition is

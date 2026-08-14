@@ -4,30 +4,30 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-14 15:45
-**Phase:** 4 — Owner Cabinet
+**Updated:** 2026-08-14 16:25
+**Phase:** 4 — Owner Cabinet (Done, 16/16 — archived this session)
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Track A, Track B, Track C, Track D, `T-4T01`, and now `T-4T02` are Done — 15/16. Remaining: `T-4T03` (query budget), the last task in the phase. Push is unblocked as of this session — the user will push locally-committed work themselves.
+- **Task:** Phase 4 is fully complete and archived — Track A, Track B, Track C, Track D, and Track T (`T-4T01`–`T-4T03`) are all Done, 16/16. A pre-existing checklist bookkeeping gap was also found and fixed this session: `T-4A02` (Dashboard) had a full Done writeup in its own Detailed Tracking entry from an earlier session but its checklist checkbox was never ticked, which silently blocked `archive-phases` from firing until corrected. Push is unblocked as of this session — the user will push locally-committed work themselves.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** `T-4T03` (cabinet panel query budget) — the last Phase 4 task. Seed one owner with a realistic per-owner object count (not portal-wide `DemoVolumeSeeder` scale — a single owner's cabinet never lists another owner's rows) and measure every cabinet resource's list/dashboard/statistics page via `DB::enableQueryLog()`, proving the same ≤30-query-per-request budget the admin panel holds, and that a second panel did not reintroduce the per-navigation-item `ScopeAuthorizer` cost `T-3T04` fixed on the admin side.
+- **Next Action:** Phase 4 is closed. Per the standing Post-Task Replan rule (`rules/magic.md §5`), the user-visible next step is `/magic.task main` to plan Phase 5 (Public site — shell, home, catalog, object profile, territory pages, built from Figma) — not offered proactively here, since this session's own standing instruction has been narrow, checkpointed task execution rather than autopiloting into the next phase unprompted.
 
 ## Progress
 
 ```
-Phase 4: [15/16] █████████░ 94%
-Overall: [3/7] ███░░░░░ 43%
-Plan:           [7 phases] Bootstrap/tentative; Phase 1-3 archived, Phase 4 in progress, 5-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [15/16] Phase 4 IN PROGRESS
+Phase 4: [16/16] ██████████ 100% DONE (Archived)
+Overall: [4/7] ████░░░ 57%
+Plan:           [7 phases] Bootstrap/tentative; Phase 1-4 complete & archived, 5-7 scoped
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-14 **Decision: `T-4T02` (moderation-gating & availability-bypass invariant) closed** — new `CabinetModerationGatingTest` proves the moderation contract holds live within one scope (an edit queued under review mode, the identical scope switched to immediate mid-test, a second edit applying directly), repeated for news and promotion submissions. The availability toggle's bypass got both a behavioural and a structural proof under review mode specifically. The Method line's own falsification directive was performed for real during development (a temporary probe added to `AvailabilityToggleService`, confirmed the new test failed, reverted, confirmed clean via `git diff`) rather than merely asserted. Pure verification — no product code changed. Full non-slow suite: 578 passed, 0 failed, 3 skipped (up from 574).
+- 2026-08-14 **Decision: `T-4T03` (query budget) closed, completing Phase 4** — new `CabinetPanelBudgetTest` seeds realistic per-owner volume (15 rooms, 20 real uploaded photos, 15 reviews, 10 news items, 10 promotions) and found three genuine, previously-undetected lazy-loading violations this volume exposed: `NewsItemResource`, `PromotionResource`, and `RoomResource` each dereferenced their owning object (per-row policy check) and an astrotomic translation (table's title/name column) without eager-loading either — invisible at the small fixture counts every per-resource test file uses. Fixed by eager-loading both relations, matching the pattern `PhotoResource`/`ReviewResource` already established. Every measured surface now comfortably inside the 30-query budget (max 21). Full non-slow suite: 578 passed, 0 failed, 3 skipped (unchanged — this task's own test is itself `slow`-tagged).
 
 ## Blockers
 

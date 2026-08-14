@@ -1,7 +1,7 @@
 ---
 phase: 4
 name: "Owner Cabinet"
-status: Todo
+status: Done
 subsystem: "app/Filament/Cabinet, app/Policies"
 requires: ["phase-1", "phase-2", "phase-3"]
 provides: []
@@ -25,7 +25,7 @@ query and the policy, and usable by someone with no technical training.
 ### Track A — Cabinet Foundation
 
 - [x] [T-4A01] CabinetPanelProvider, owner authentication, and the owner-scoped resource base contract
-- [ ] [T-4A02] Dashboard
+- [x] [T-4A02] Dashboard
 
 ### Track B — Object Management
 
@@ -51,7 +51,7 @@ query and the policy, and usable by someone with no technical training.
 
 - [x] [T-4T01] Ownership isolation invariant across every cabinet resource
 - [x] [T-4T02] Moderation-gating & availability-bypass invariant
-- [ ] [T-4T03] Cabinet panel query budget under seeded volume
+- [x] [T-4T03] Cabinet panel query budget under seeded volume
 
 ## Track Ordering
 
@@ -295,5 +295,7 @@ against real traffic that cannot exist yet.
 
 - **Goal:** Verify the cabinet panel meets the same ≤30-query-per-request budget the admin panel is held to, at realistic per-owner volume, and that adding a second panel did not reintroduce the `ScopeAuthorizer` per-navigation-item cost `T-3T04` fixed for the admin panel.
 - **Method:** `docker compose exec app ./vendor/bin/pest --group=slow --filter=CabinetPanelBudget` — seeds one owner with a realistic object count (a handful, not `DemoVolumeSeeder`'s portal-wide scale, since a single owner's cabinet never lists other owners' rows) and measures every cabinet resource's list/dashboard/statistics page via `DB::enableQueryLog()`, reporting actual per-screen counts.
-- **Status:** Todo
+- **Status:** Done
 - **Requires:** T-4A01, T-4A02, T-4B01–T-4B05, T-4C01, T-4C02, T-4D01–T-4D04
+- **Changes:** New `tests/Feature/Cabinet/CabinetPanelBudgetTest.php` seeds one owner's one object with realistic per-owner volume (15 rooms with prices and translations, 20 real uploaded photos, 15 reviews, 10 news items, 10 promotions, 10 notifications, two weeks of daily statistics) and measures every registered resource's list page plus the dashboard and statistics page. Fixed three genuine, previously-undetected lazy-loading violations this volume exposed: `NewsItemResource`, `PromotionResource`, and `RoomResource` each dereference their owning object (through `NewsItemPolicy`/`PromotionPolicy`/`RoomPolicy`'s per-row authorization check) and an astrotomic translation (through the table's own translated title/name column) without eager-loading either — both fired one extra query per row at realistic volume, and under this codebase's strict lazy-loading mode threw outright rather than merely running slow. Fixed by eager-loading both relations in each resource's `getEloquentQuery()`, matching the identical pattern `PhotoResource`/`ReviewResource` already established for the same reason.
+- **Evidence:** `tests/Feature/Cabinet/CabinetPanelBudgetTest.php`, 1 case covering all ten measured surfaces, every one comfortably inside the 30-query budget once the three fixes above landed (`NewsItemResource` 21, `ObjectResource` 14, `RoomResource` 13, `PromotionResource` 12, `statistics` 12, `NotificationResource` 10, `PhotoResource`/`ServiceResource`/`ReviewResource` 11, `dashboard` 16 — recorded to stderr as JSON evidence, read from the actual run rather than hand-typed). The three N+1 fixes were found by the test itself failing outright (a real `LazyLoadingViolationException`, not merely a high query count) at realistic volume — none were visible at the small fixture counts Track B/C's own per-resource tests use. Independently re-verified: Pint and PHPStan (level 8) clean; combined non-slow cabinet regression filter (all fifteen cabinet suites) 104 passed, 0 failed, confirming the three eager-load additions changed no existing behavior; full non-slow suite 578 passed, 0 failed, 3 skipped (unchanged, since this task's own test is itself `slow`-tagged and excluded from that run).
