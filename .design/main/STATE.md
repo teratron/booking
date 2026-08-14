@@ -4,30 +4,30 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-14 21:20
+**Updated:** 2026-08-14 22:15
 **Phase:** 5 — Public Site
 **Status:** Active
 
 ## Current Position
 
-- **Task:** `T-5A01`–`T-5A05` are Done — 5/18. `T-5A02` (404 page + static legal pages) just closed, rendering inside the `T-5A01` shell via Laravel's own `errors/404.blade.php` convention view; legal page bodies live in the interface translation catalog rather than a new content model. `T-5A06` (map) is the only remaining independent Track A task; every Track B/C/D task can now build on the card component, the shell layout, and the error/legal surfaces.
+- **Task:** Track A complete — `T-5A01`–`T-5A06` all Done, 6/18. `T-5A06` (clustered map) closed last: `CatalogQueryService::pins()` shares its filter logic with `search()` via an extracted `applyFilters()`; `MapTileConfigResolver` structurally cannot produce an OpenStreetMap tile URL; the MapLibre component and its own Vite entry (`resources/js/map.js`) are built and wired but not embedded on any page yet — nothing in Tracks B/C/D exists to embed it in until those tasks land. Every remaining Phase 5 task now has every Track A dependency it could need.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Execute T-5A06 Clustered map — MapLibre GL JS and tile provisioning via /magic.run main
+- **Next Action:** `T-5B01` (object profile composition) opens Track B — independent of Tracks C/D, its own four-task chain.
 
 ## Progress
 
 ```
-Phase 5: [5/18] ██░░░░░░ 28%
+Phase 5: [6/18] ███░░░░░ 33%
 Overall: [4/7] █████░░░ 57%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1-4 complete & archived, Phase 5 in progress, 6-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [5/18] Phase 5 IN PROGRESS
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [6/18] Phase 5 IN PROGRESS
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-14 **Decision: `T-5A01` (public layout shell) closed** — built against the real Figma home-page frame (node 225:3619) for visual language, then extended past what the mockup shows wherever the specification requires more (popular destinations, object categories, and legal links in the footer; the feedback overlay entirely — no Figma frame depicts it). New `PublicShellDataProvider` caches navigation/languages/countries under one tag, invalidated by write hooks mirroring the existing `Banner` pattern. New `ResolvePublicLocale` middleware establishes the `/{lang}/...` route grammar `l1-seo.md` names, validating the segment against the real active-language registry; the no-segment resolution fallback (session/Accept-Language/primary) is deliberately deferred until a page is reachable without an explicit segment. `LocaleSwitchResolver` swaps only the `lang` route parameter so switching language preserves position. Two settings gaps closed: the header/footer now read the real `portal.name`/`contact_email`/`contact_phone` settings instead of hard-coding Figma's placeholder text, and three new social-link settings were added for the footer icons (downloaded and committed as real static assets, not invented SVGs). Full non-slow suite: 605 passed, 0 failed, 3 skipped (up from 596).
+- 2026-08-14 **Decision: `T-5A06` (clustered map) closed — Track A complete (6/18)** — no Figma node exists for the map, built from the specification directly. `CatalogQueryService::pins()` and `search()` now share one extracted `applyFilters()` so the map and the paginated list can never disagree about "the filtered result set"; pins skip tier ordering (unordered markers) and add a PostGIS bbox constraint instead. `MapTileConfigResolver` resolves the MapLibre style URL through a template map that structurally cannot name the OSMF-prohibited public OpenStreetMap host. A pin's compact card is rendered through the same `ObjectCardPresenter` every list card uses, so "same contact actions" holds by construction. `maplibre-gl` added as a pnpm dependency with its own Vite entry so its ~950 KB bundle loads only on pages embedding the map — none exist yet, so the component is built and wired but not linked to, the same state the shell's not-yet-registered routes were in before their owning tasks landed. Full non-slow suite: 614 passed, 0 failed, 3 skipped (up from 610).
 
 ## Blockers
 
@@ -94,12 +94,13 @@ Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 
 - **The Workflow tool is not guaranteed available — it is disabled entirely in some sessions/machines.** Check before relying on it; if unavailable, dispatch via the Agent tool or build directly. A prior machine's detailed task report (even for uncommitted work) is still valuable context to hand to whatever approach replaces it.
 - **Uncommitted work does not transfer across a machine switch — commit early, even mid-task, when work might continue elsewhere.** One task's fully-built, fully-verified-but-uncommitted code was nearly lost this way; it survived only by accident (an unrelated automated tool's broad `git add -A` on the original machine happened to sweep it in before the switch). Do not rely on that happening again.
 - **A fresh environment's `composer install` can fail outright (exit 4, installs nothing) if `composer.lock` doesn't satisfy a `composer.json` constraint** — this can be a long-latent, pre-existing gap that only surfaces on a truly empty `vendor/`. Fix with a targeted `composer update <package> --with-all-dependencies`, not a broad `composer update`. Verify `vendor/` on any new machine before trusting `composer analyse`/`pest` results there.
+- **`node_modules` is bind-mounted and shared between the Windows host and the Linux `app` container — running `pnpm install` from one side installs platform-native optional packages (e.g. `lightningcss-win32-x64-msvc`) that dangle as broken symlinks for the other, and deleting what looks like a dangling symlink from one side can delete a package the other side actually needs.** The pre-commit hook's JS gate runs `pnpm` inside the container, so a host-side install can silently break the next commit. Run `pnpm install`/`pnpm run build` inside the container (`docker compose exec app …`) as the default, matching the PHP toolchain's own rule; if a host-side install already happened, re-run `CI=true pnpm install --no-frozen-lockfile` inside the container to rebuild the correct platform binaries before committing.
 
 ## Session Continuity
 
 **Reading order for a fresh session:** this file (position, decisions,
 constraints) → `CLAUDE.md` (stack, conventions, engineering discipline) →
-`.design/main/tasks/phase-5.md` (active phase — decomposed, nothing started) →
+`.design/main/tasks/phase-5.md` (active phase — Track A complete, 6/18) →
 `.design/main/PLAN.md` only for cross-phase context. Phases 1–4's own task files
 are archived at `.design/main/archives/tasks/phase-{1,2,3,4}.md` for historical
 reference.
