@@ -1062,6 +1062,42 @@ return [
             ],
         ],
 
+        'settings' => [
+            'title' => 'Settings',
+            'locale' => 'Interface language',
+            'locale_placeholder' => 'Portal default',
+            'notification_preferences_title' => 'Notification preferences',
+            'notification_preferences_description' => 'Choose which optional notifications you want to receive. Placement, moderation, and system notices always reach you regardless of these settings.',
+            'notification_types' => [
+                'information_out_of_date' => 'Your listing information may be out of date',
+                'confirm_availability_status' => 'Reminders to confirm your availability status',
+                'administration_message' => 'Messages from the portal administration',
+            ],
+        ],
+
+        'notifications' => [
+            'title' => 'Notifications',
+            'model_label' => 'notification',
+            'empty' => 'No notifications yet.',
+
+            'columns' => [
+                'title' => 'Title',
+                'body' => 'Message',
+                'received_at' => 'Received',
+                'status' => 'Status',
+            ],
+
+            'status' => [
+                'unread' => 'Unread',
+                'read' => 'Read',
+            ],
+
+            'actions' => [
+                'mark_read' => 'Mark as read',
+                'mark_unread' => 'Mark as unread',
+            ],
+        ],
+
         'objects' => [
             'title' => 'Edit object',
             'model_label' => 'object',

@@ -38,7 +38,7 @@ use Spatie\Permission\Traits\HasRoles;
 // block()/restore(), never through a form field, mirroring the accountability
 // columns already treated this way elsewhere in this schema (deleted_by,
 // availability_changed_by).
-#[Fillable(['name', 'email', 'password', 'company', 'phone', 'country_id'])]
+#[Fillable(['name', 'email', 'password', 'company', 'phone', 'country_id', 'locale'])]
 #[Hidden(['password', 'remember_token'])]
 #[UsePolicy(UserPolicy::class)]
 class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, HasDefaultTenant, HasTenants

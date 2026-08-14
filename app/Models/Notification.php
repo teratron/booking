@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Policies\NotificationPolicy;
+use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -32,6 +34,7 @@ use Override;
  * @property ?Carbon $read_at
  * @property ?int $created_by
  */
+#[UsePolicy(NotificationPolicy::class)]
 final class Notification extends Model
 {
     /** @var list<string> */

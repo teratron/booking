@@ -45,9 +45,10 @@ final class NotificationDispatchService
      * $title/$body let a caller that composes its own message (an
      * administrator broadcast, for one) supply it directly instead; either
      * way, whatever is stored here is exactly what the recipient sees, never
-     * re-read from the template afterward. No per-user locale column exists
-     * on `User` yet, so every recipient's locale falls back to the portal's
-     * primary language; this is a known, deliberate gap, not an oversight.
+     * re-read from the template afterward. Locale prefers the recipient's
+     * own `locale` column when set — the cabinet's settings screen is what
+     * lets an owner set it — and falls back to the portal's primary
+     * language exactly as before that column existed.
      *
      * @param  ?Model  $related  the record the notification is about, if any — stored via the `related` morph relation
      * @param  ?User  $creator  the staff member who triggered this, if any — null means system-triggered
@@ -56,7 +57,7 @@ final class NotificationDispatchService
      */
     public function create(NotificationType $type, User $recipient, ?Model $related = null, ?User $creator = null, ?string $title = null, ?string $body = null): Notification
     {
-        $locale = $this->resolvePrimaryLocale();
+        $locale = $this->resolveLocaleFor($recipient);
         $template = $this->inboxTemplateFor($type, $locale);
 
         $notification = Notification::query()->create([
@@ -211,6 +212,25 @@ final class NotificationDispatchService
             ->where('locale', $locale)
             ->whereHas('channel', fn ($query) => $query->where('key', 'inbox'))
             ->first();
+    }
+
+    /**
+     * $recipient's own `locale` column when set — validated against the
+     * active language registry, since a stale value (a language since
+     * deactivated) must not render a notification in a locale the portal no
+     * longer serves — otherwise the portal's primary language, exactly the
+     * behavior before a per-user locale existed.
+     */
+    private function resolveLocaleFor(User $recipient): string
+    {
+        $preferred = $recipient->locale;
+
+        if ($preferred !== null
+            && DB::table('languages')->where('code', $preferred)->where('is_active', true)->exists()) {
+            return $preferred;
+        }
+
+        return $this->resolvePrimaryLocale();
     }
 
     private function resolvePrimaryLocale(): string

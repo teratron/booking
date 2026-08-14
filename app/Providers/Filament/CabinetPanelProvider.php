@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Providers\Filament;
 
 use App\Filament\Cabinet\Pages\Dashboard;
+use App\Filament\Cabinet\Pages\Settings;
 use App\Models\Object_;
 use App\Models\Scopes\ModerationScope;
 use Filament\Http\Middleware\Authenticate;
@@ -36,6 +37,12 @@ class CabinetPanelProvider extends PanelProvider
             ->brandName(fn (): string => __('panel.cabinet_brand'))
             ->strictAuthorization()
             ->unsavedChangesAlerts()
+            // Settings extends Filament's own EditProfile (password/email
+            // change, current-password confirmation, rate limiting) rather
+            // than a hand-built page — it opts out of ordinary page
+            // discovery by design, so it is registered explicitly here,
+            // the same way any profile page must be.
+            ->profile(Settings::class, isSimple: false)
             // The tenant is the object being managed, not an
             // organization/team — an owner with several objects switches
             // between them here; the ownership relationship name
