@@ -26,7 +26,7 @@ lost.
 ### Track A — Site Shell, Catalog Query & Card Foundation
 
 - [x] [T-5A01] Public layout shell — header, navigation, switchers, footer
-- [ ] [T-5A02] 404 page and static legal pages
+- [x] [T-5A02] 404 page and static legal pages
 - [x] [T-5A03] CatalogQueryService — the shared tier-ordered retrieval contract
 - [x] [T-5A04] ContactChannelType model and deep-link resolution service
 - [x] [T-5A05] Object card component and card-view event emission
@@ -151,12 +151,15 @@ than per-task.
 ### [T-5A02] 404 page and static legal pages
 
 - **Spec:** l1-platform-shell.md §3 (Core Invariants), §5.1
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** T-5A01
 - **Verify:** `docker compose exec app ./vendor/bin/pest --filter=PublicErrorAndLegal` proves an unresolved route renders the 404 page (not a framework default) in all four viewport classes and carries a noindex directive; the privacy policy and terms-of-use pages render, are linked persistently from the footer, and are reachable without authentication.
 - **Handoff:** none within this phase.
 - **Notes:** The 404 page must itself never be indexable — verify the noindex directive directly against the rendered response head, not merely that the page renders.
+- **Changes:** No Figma node exists for the shell's error/legal pages beyond the two node IDs the spec's own Canonical References table names for the 404 and privacy layouts — content and composition were built from the specification directly rather than a design source, consistent with the rest of this shell's own graceful-gap-filling. New `resources/views/errors/404.blade.php` — Laravel's own convention view, picked up automatically by the framework's exception renderer for any unresolved route (an unmatched path, or `ResolvePublicLocale`'s own `abort(404)` on an inactive/invented language segment), so no route registration was needed for it. It renders through the same `<x-layouts.public>` layout every other page uses, which gained a new `:noindex` prop emitting `<meta name="robots" content="noindex">` — a small, reusable addition rather than a one-off hack, since a later page (e.g. a moderation preview) may need the same directive.
+  New `App\Http\Controllers\Public\LegalPageController` (`privacy()`/`terms()`) and `resources/views/public/legal/{privacy,terms}.blade.php`, registered at `/{lang}/privacy-policy` and `/{lang}/terms` (`public.legal.privacy`/`public.legal.terms`) — the exact URL grammar and route names the shell's own footer already guarded against in `T-5A01`, so no footer change was needed; both links activated automatically once these routes existed. Page body content lives in the interface translation catalog (`public.legal.{privacy,terms}.body`, an array of paragraphs per language) rather than a new database-backed content model: the specification calls these pages "static" and does not list them among the entity classes `l1-localization.md` §3 requires a translation table for, and storing them as catalog entries gets runtime editability through the existing `InterfaceCatalogEditor`/`InterfaceCatalogOverride` overlay mechanism for free, with no new schema. Wrote real, standard-shape privacy and terms text appropriate to a directory-not-booking-intermediary portal (per the project's own stated model) in both launch languages, not placeholder text.
+- **Evidence:** `tests/Feature/Public/PublicErrorAndLegalTest.php`, 5 cases: an unresolved route inside a `{lang}` segment renders the real shell 404 page (not a bare framework page) with a `noindex` meta tag and the same responsive markers `T-5A01`'s own shell test asserts on; an unresolved route with no `{lang}` segment at all 404s the same way, proving the view is a framework-wide convention rather than scoped to the locale-prefixed group; the privacy and terms pages each render their real translated title and first body paragraph, unauthenticated; and a rendered page's footer contains real `href` links to both legal routes rather than the inert spans `T-5A01` shipped before these routes existed. Independently re-verified: Pint and PHPStan (level 8, whole app) clean; `composer audit` and `composer unused` clean; full non-slow suite 610 passed, 0 failed, 3 skipped (up from 605), including the architecture and containment tests.
 
 ### [T-5A03] CatalogQueryService — the shared tier-ordered retrieval contract
 
