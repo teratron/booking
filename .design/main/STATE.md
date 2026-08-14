@@ -4,30 +4,30 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-14 18:10
+**Updated:** 2026-08-14 18:45
 **Phase:** 5 — Public Site
 **Status:** Active
 
 ## Current Position
 
-- **Task:** `T-5A03` (`CatalogQueryService`) is Done — 1/18. `T-5A01` (shell) remains the other independent Track A starting point; `T-5A04`–`T-5A06` and every Track B/C/D task now have a real ordering/retrieval contract to build against.
+- **Task:** `T-5A03` and `T-5A04` are Done — 2/18. `T-5A01` (shell) and `T-5A06` (map, now unblocked since `T-5A03` landed) remain in Track A; `T-5A05` (card) is now unblocked too, since both its dependencies (`T-5A03`, `T-5A04`) are Done.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** `T-5A01` (public layout shell) or `T-5A04` (`ContactChannelType` model + deep-link resolution service, needed by both `T-5A05`'s card and `T-5B02`'s contact rail) — both are unblocked and independent of each other and of the now-complete `T-5A03`.
+- **Next Action:** `T-5A05` (object card component + card-view event emission) — now fully unblocked, and the natural next step since it's the shared component every listing surface in Tracks B/C/D renders. `T-5A01` (shell) and `T-5A06` (map) remain independently available too.
 
 ## Progress
 
 ```
-Phase 5: [1/18] ░░░░░░░░ 6%
+Phase 5: [2/18] █░░░░░░░ 11%
 Overall: [4/7] █████░░░ 57%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1-4 complete & archived, Phase 5 in progress, 6-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [1/18] Phase 5 IN PROGRESS
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [2/18] Phase 5 IN PROGRESS
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-14 **Decision: `T-5A03` (`CatalogQueryService`) closed** — delegates tier-first ordering entirely to the existing `PlacementOrderingService::apply()` (found already built ahead of time for this exact call site; the task's own Verify/Notes were corrected before implementation to reuse it rather than reimplement a second `ORDER BY`). Added scope resolution (territory descendant expansion, with a `country_id` filter alongside `territory_id` so the existing composite index serves as a true leading-column match), amenity/price/rating/type-attribute filtering, and pagination. A second planning correction: removed a newly-added index migration after discovering a comprehensive index-plan migration already existed from an earlier phase, covering everything needed. A containment near-miss (two docblocks naming a spec file and a phase number) was caught and fixed before commit. Full non-slow suite: 587 passed, 0 failed, 3 skipped (up from 578).
+- 2026-08-14 **Decision: `T-5A04` (`ContactChannelType` model + deep-link resolver) closed** — new translatable model plus `ContactChannelLinkResolver::resolve()`, plain `{value}`-placeholder substitution against the type's own `link_template`, no per-channel branching (falsified directly with an invented "snapchat" type absent from the resolver's own source). Closed a real gap: `contact_channel_type_translations` predated the `needs_review`/`published_at` convention, the same class of gap `room_translations` hit earlier — fixed with a mirrored migration. Found and fixed a genuine architecture violation: the model's own `{@see}` docblock reference to the resolver caused Pint to auto-import `App\Services` into `App\Models`, failing the "models are thin" architecture test — fixed by naming the service in prose instead. Full non-slow suite: 591 passed, 0 failed, 3 skipped (up from 587).
 
 ## Blockers
 

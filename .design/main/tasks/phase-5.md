@@ -28,7 +28,7 @@ lost.
 - [ ] [T-5A01] Public layout shell — header, navigation, switchers, footer
 - [ ] [T-5A02] 404 page and static legal pages
 - [x] [T-5A03] CatalogQueryService — the shared tier-ordered retrieval contract
-- [ ] [T-5A04] ContactChannelType model and deep-link resolution service
+- [x] [T-5A04] ContactChannelType model and deep-link resolution service
 - [ ] [T-5A05] Object card component and card-view event emission
 - [ ] [T-5A06] Clustered map — MapLibre GL JS and tile provisioning
 
@@ -162,11 +162,13 @@ than per-task.
 ### [T-5A04] ContactChannelType model and deep-link resolution service
 
 - **Spec:** l1-object-profile.md §5.2
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** `docker compose exec app ./vendor/bin/pest --filter=ContactChannelDeepLink` proves a raw value (a phone number, a handle) resolves to the correct actionable link per channel type (`tel:`, `viber://`, `https://wa.me/`, `mailto:`, a bare URL for website) purely from the type's own link template — no per-channel branching in the caller; an inactive channel type never resolves a link; adding a channel type through the registry (no code change) is reachable by a caller without touching the resolution service.
 - **Handoff:** T-5A05 (card contact actions), T-5B02 (contact rail).
 - **Notes:** `ContactChannelType` has a migration and is seeded but has no Eloquent model yet — this task adds it. Model the link template as registry data on the type, per the spec's own §5.2 diagram, so "other social networks" (`[TZ]` §74) is a data row, not a code change.
+- **Changes:** New `App\Models\ContactChannelType` (translatable, `display_name`) and `App\Models\ContactChannelTypeTranslation`; a `contactChannelType()` relation added to the existing `ContactChannel` model. New `App\Services\Contact\ContactChannelLinkResolver::resolve(ContactChannelType $type, string $rawValue): ?string` — plain `{value}` placeholder substitution against the type's own `link_template`, returning null for an inactive or template-less type rather than fabricating a link. A real gap closed alongside this: `contact_channel_type_translations` predated this project's `needs_review`/`published_at` translation-completeness convention (the same class of gap `room_translations` hit earlier) — nothing made `ContactChannelType` a `Translatable` model until now, so `TranslatableEntityRegistry`'s reflection-based discovery would have picked it up and crashed `TranslationCompletenessReport` on the missing columns; closed with a migration mirroring the established precedent exactly, including its own backfill statement.
+- **Evidence:** `tests/Feature/Public/ContactChannelDeepLinkTest.php`, 4 cases: real template substitution across four different template shapes (`tel:`, `wa.me`, a `viber://` query-string form, and a bare pass-through for website); inactive-type refusal; template-less refusal; and a genuinely falsifying case — a channel type ("snapchat") that appears nowhere in the resolver's own source, proving the substitution is generic rather than a disguised per-channel branch. One real architecture violation found and fixed during verification: the model's own docblock named the resolver via an `{@see}` tag, which Pint's `fully_qualified_strict_types` fixer turned into a real `use App\Services\Contact\ContactChannelLinkResolver;` import — invisible to Pint and PHPStan, but caught by the full suite's own "models are thin" architecture test, since an `App\Models` file importing `App\Services` fails it regardless of whether the import is only ever used inside a docblock. Fixed by naming the service in plain prose instead of a resolvable class reference. Independently re-verified: Pint and PHPStan (level 8) clean; full non-slow suite 591 passed, 0 failed, 3 skipped (up from 587).
 
 ### [T-5A05] Object card component and card-view event emission
 
