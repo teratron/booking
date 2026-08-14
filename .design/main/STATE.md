@@ -4,30 +4,30 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-14 18:45
+**Updated:** 2026-08-14 19:30
 **Phase:** 5 — Public Site
 **Status:** Active
 
 ## Current Position
 
-- **Task:** `T-5A03` and `T-5A04` are Done — 2/18. `T-5A01` (shell) and `T-5A06` (map, now unblocked since `T-5A03` landed) remain in Track A; `T-5A05` (card) is now unblocked too, since both its dependencies (`T-5A03`, `T-5A04`) are Done.
+- **Task:** `T-5A03`, `T-5A04`, and `T-5A05` are Done — 3/18. Figma MCP is now authenticated (was blocked earlier this session) — `T-5A05` was built against the real Figma source (node 225:2734). `T-5A01` (shell) and `T-5A06` (map) remain in Track A; every Track B/C/D task that renders a listing can now call the real card component.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** `T-5A05` (object card component + card-view event emission) — now fully unblocked, and the natural next step since it's the shared component every listing surface in Tracks B/C/D renders. `T-5A01` (shell) and `T-5A06` (map) remain independently available too.
+- **Next Action:** `T-5A01` (public layout shell, Figma-sourced) or `T-5A06` (clustered map) — both independent, both unblocked. `T-5A01` is the broader gate (every page in the phase renders inside it), so it's the stronger candidate to take next.
 
 ## Progress
 
 ```
-Phase 5: [2/18] █░░░░░░░ 11%
+Phase 5: [3/18] █░░░░░░░ 17%
 Overall: [4/7] █████░░░ 57%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1-4 complete & archived, Phase 5 in progress, 6-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [2/18] Phase 5 IN PROGRESS
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [3/18] Phase 5 IN PROGRESS
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-14 **Decision: `T-5A04` (`ContactChannelType` model + deep-link resolver) closed** — new translatable model plus `ContactChannelLinkResolver::resolve()`, plain `{value}`-placeholder substitution against the type's own `link_template`, no per-channel branching (falsified directly with an invented "snapchat" type absent from the resolver's own source). Closed a real gap: `contact_channel_type_translations` predated the `needs_review`/`published_at` convention, the same class of gap `room_translations` hit earlier — fixed with a mirrored migration. Found and fixed a genuine architecture violation: the model's own `{@see}` docblock reference to the resolver caused Pint to auto-import `App\Services` into `App\Models`, failing the "models are thin" architecture test — fixed by naming the service in prose instead. Full non-slow suite: 591 passed, 0 failed, 3 skipped (up from 587).
+- 2026-08-14 **Decision: `T-5A05` (object card + card-view emission) closed, first Figma-sourced component in the project** — built against the real design source (Booking file, node 225:2734) after the user authenticated Figma MCP mid-session. The reference showed cover/name/rating/settlement/description/services/tier-ribbon/price but not view count or direct contact actions; both added per the spec's own core invariant, divergence noted per CLAUDE.md. Established the public site's first Tailwind design tokens (brand/ink/link colours, extracted not invented) and first translation catalog (`resources/lang/{en,ru}/public.php`). Event capture proven via `Bus::fake()` + `CaptureStatEventJob` reflection (its constructor properties are private) rather than mocking the final `EventCaptureService`. Full non-slow suite: 596 passed, 0 failed, 3 skipped (up from 591).
 
 ## Blockers
 
