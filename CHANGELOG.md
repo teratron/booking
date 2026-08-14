@@ -27,3 +27,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated 4 specifications (main)
 - Updated specification `data-model` (main)
 - Updated 19 specifications (main)
+- Updated task execution state (main)

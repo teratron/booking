@@ -4,30 +4,30 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-14 19:30
+**Updated:** 2026-08-14 20:45
 **Phase:** 5 — Public Site
 **Status:** Active
 
 ## Current Position
 
-- **Task:** `T-5A03`, `T-5A04`, and `T-5A05` are Done — 3/18. Figma MCP is now authenticated (was blocked earlier this session) — `T-5A05` was built against the real Figma source (node 225:2734). `T-5A01` (shell) and `T-5A06` (map) remain in Track A; every Track B/C/D task that renders a listing can now call the real card component.
+- **Task:** `T-5A01`, `T-5A03`, `T-5A04`, and `T-5A05` are Done — 4/18. `T-5A01` is the phase's second hard gate (shell layout every later public page renders inside), now closed — locale-prefixed routing, data-driven navigation, both switchers, breadcrumbs, footer, and the feedback overlay all real and tested. `T-5A06` (map) is the only remaining independent Track A task; every Track B/C/D task that renders a listing or a page can now build on both the card component and the shell layout.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** `T-5A01` (public layout shell, Figma-sourced) or `T-5A06` (clustered map) — both independent, both unblocked. `T-5A01` is the broader gate (every page in the phase renders inside it), so it's the stronger candidate to take next.
+- **Next Action:** Execute T-5A02 404 page and static legal pages via /magic.run main
 
 ## Progress
 
 ```
-Phase 5: [3/18] █░░░░░░░ 17%
+Phase 5: [4/18] ██░░░░░░ 22%
 Overall: [4/7] █████░░░ 57%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1-4 complete & archived, Phase 5 in progress, 6-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [3/18] Phase 5 IN PROGRESS
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [4/18] Phase 5 IN PROGRESS
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-14 **Decision: `T-5A05` (object card + card-view emission) closed, first Figma-sourced component in the project** — built against the real design source (Booking file, node 225:2734) after the user authenticated Figma MCP mid-session. The reference showed cover/name/rating/settlement/description/services/tier-ribbon/price but not view count or direct contact actions; both added per the spec's own core invariant, divergence noted per CLAUDE.md. Established the public site's first Tailwind design tokens (brand/ink/link colours, extracted not invented) and first translation catalog (`resources/lang/{en,ru}/public.php`). Event capture proven via `Bus::fake()` + `CaptureStatEventJob` reflection (its constructor properties are private) rather than mocking the final `EventCaptureService`. Full non-slow suite: 596 passed, 0 failed, 3 skipped (up from 591).
+- 2026-08-14 **Decision: `T-5A01` (public layout shell) closed** — built against the real Figma home-page frame (node 225:3619) for visual language, then extended past what the mockup shows wherever the specification requires more (popular destinations, object categories, and legal links in the footer; the feedback overlay entirely — no Figma frame depicts it). New `PublicShellDataProvider` caches navigation/languages/countries under one tag, invalidated by write hooks mirroring the existing `Banner` pattern. New `ResolvePublicLocale` middleware establishes the `/{lang}/...` route grammar `l1-seo.md` names, validating the segment against the real active-language registry; the no-segment resolution fallback (session/Accept-Language/primary) is deliberately deferred until a page is reachable without an explicit segment. `LocaleSwitchResolver` swaps only the `lang` route parameter so switching language preserves position. Two settings gaps closed: the header/footer now read the real `portal.name`/`contact_email`/`contact_phone` settings instead of hard-coding Figma's placeholder text, and three new social-link settings were added for the footer icons (downloaded and committed as real static assets, not invented SVGs). Full non-slow suite: 605 passed, 0 failed, 3 skipped (up from 596).
 
 ## Blockers
 
