@@ -7,4 +7,18 @@
     --font-sans:
         "Instrument Sans", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
         "Segoe UI Symbol", "Noto Color Emoji";
+
+    /*
+     * Public-site tokens, extracted from the Figma source (Booking file,
+     * node 225:2734 — the catalog card) rather than invented. Defined once
+     * here and reused as theme-based Tailwind classes (bg-brand, text-ink,
+     * etc.) in every public template, per the project's own no-magic-values
+     * rule — later public-site tasks extend this block as they pull their
+     * own nodes, they do not redefine these.
+     */
+    --color-brand: #f8bb44;
+    --color-ink: #1f1f1f;
+    --color-ink-muted: #606060;
+    --color-link: #3055d6;
+    --color-surface-muted: #f8f8f8;
 }

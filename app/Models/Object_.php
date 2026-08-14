@@ -34,6 +34,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * deliberate rename.
  *
  * @property-read ?string $name virtual, proxied through the active translation
+ * @property-read ?string $short_description virtual, proxied through the active translation
  * @property ?int $owner_id null once an owner has been deliberately detached, or
  *                          whenever a user row backing a previous owner is removed
  * @property ?Carbon $availability_changed_at
