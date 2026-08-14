@@ -293,13 +293,12 @@ it('resolves a quick action to its real URL once the screen it targets already h
     $owner = cabinetDashboardOwner('dashboard_owner_quick_actions');
     $object = cabinetDashboardMakeObject($fixture, $owner->id, 'Quick Actions Villa');
 
-    // 'edit_object' and 'add_photos' now name real resource routes the
-    // owner cabinet's object-management and photo-management tasks
-    // registered — no stub needed for either any more, unlike the two
-    // quick actions that still target screens no later task has built yet.
-    // 'bump_object' stands in here for "a target that does not exist yet",
-    // proving the same Route::has() gating this test always meant to prove,
-    // on an action that still lacks one.
+    // 'edit_object', 'add_photos', 'add_news', and 'add_promotion' now name
+    // real resource routes the owner cabinet's object-management,
+    // photo-management, and content-authoring screens registered — no stub
+    // needed for any of them any more. 'bump_object' stands in here for "a
+    // target that does not exist yet", proving the same Route::has() gating
+    // this test always meant to prove, on an action that still lacks one.
     $bumpRouteName = Dashboard::quickActionRouteName('bump_object');
     expect($bumpRouteName)->not->toBeNull();
 
@@ -324,11 +323,12 @@ it('resolves a quick action to its real URL once the screen it targets already h
         ->and($actions['add_photos']['url'])->toBe(
             route('filament.cabinet.resources.photos.index', ['tenant' => $object, 'record' => $object])
         )
-        // The remaining two quick actions have no registered target yet in
-        // this codebase — they must resolve to null (a disabled action),
-        // never to a broken link.
-        ->and($actions['add_news']['url'])->toBeNull()
-        ->and($actions['add_promotion']['url'])->toBeNull();
+        ->and($actions['add_news']['url'])->toBe(
+            route('filament.cabinet.resources.news.create', ['tenant' => $object, 'record' => $object])
+        )
+        ->and($actions['add_promotion']['url'])->toBe(
+            route('filament.cabinet.resources.promotions.create', ['tenant' => $object, 'record' => $object])
+        );
 });
 
 it('still renders successfully when some quick-action targets are missing', function (): void {

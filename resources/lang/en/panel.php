@@ -1160,6 +1160,110 @@ return [
                 'selected_count' => 'Selected services',
             ],
         ],
+
+        'news_items' => [
+            'title' => 'News',
+            'model_label' => 'news item',
+
+            'form' => [
+                'title' => 'Title',
+                'summary' => 'Summary',
+                'body' => 'Body',
+                'image' => 'Image',
+                'publish_at' => 'Publication date',
+            ],
+
+            'columns' => [
+                'title' => 'Title',
+                'status' => 'Status',
+                'publish_at' => 'Publication date',
+            ],
+
+            'status' => [
+                'draft' => 'Draft',
+                'scheduled' => 'Scheduled',
+                'published' => 'Published',
+                'withdrawn' => 'Withdrawn',
+            ],
+
+            'lifecycle' => [
+                'published' => 'Published.',
+                'submitted_for_review' => 'Submitted for review. This item will go live once a moderator approves it.',
+            ],
+        ],
+
+        'promotions' => [
+            'title' => 'Promotions',
+            'model_label' => 'promotion',
+
+            'form' => [
+                'title' => 'Title',
+                'description' => 'Description',
+                'image' => 'Image',
+                'starts_at' => 'Start date',
+                'ends_at' => 'End date',
+            ],
+
+            'columns' => [
+                'title' => 'Title',
+                'status' => 'Status',
+                'starts_at' => 'Start date',
+                'ends_at' => 'End date',
+            ],
+
+            'status' => [
+                'draft' => 'Draft',
+                'scheduled' => 'Scheduled',
+                'published' => 'Published',
+                'archived' => 'Archived',
+            ],
+
+            'lifecycle' => [
+                'published' => 'Published.',
+                'submitted_for_review' => 'Submitted for review. This promotion will go live once a moderator approves it.',
+            ],
+        ],
+
+        'reviews' => [
+            'title' => 'Reviews',
+            'model_label' => 'review',
+            'empty' => 'No reviews yet.',
+            'author_fallback' => 'Guest',
+
+            'columns' => [
+                'rating' => 'Rating',
+                'author' => 'Reviewer',
+                'body' => 'Review',
+                'status' => 'Status',
+                'owner_reply' => 'Your reply',
+                'reported' => 'Reported',
+                'created_at' => 'Submitted',
+            ],
+
+            'status' => [
+                'pending' => 'Pending',
+                'published' => 'Published',
+                'rejected' => 'Rejected',
+            ],
+
+            'actions' => [
+                'reply' => 'Reply',
+                'report' => 'Report',
+            ],
+
+            'reply_form' => [
+                'owner_reply' => 'Your reply',
+            ],
+
+            'report_form' => [
+                'report_reason' => 'Reason',
+            ],
+
+            'notifications' => [
+                'replied' => 'Reply posted.',
+                'reported' => 'Review reported.',
+            ],
+        ],
     ],
 
 ];

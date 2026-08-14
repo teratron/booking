@@ -78,7 +78,11 @@ final class RoleSeeder extends Seeder
             [
                 'key' => 'object_owner', 'system' => true,
                 'name' => ['en' => 'Object Owner', 'ru' => 'Владелец объекта'],
-                'permissions' => ['object.view', 'object.edit', 'cabinet_access'],
+                // `content.*` covers the owner's own news/promotion
+                // authoring screens — scoped down to just this object's own
+                // rows by `CabinetAccessResolver`, the same ownership check
+                // `object.edit` already relies on, not by a broader grant.
+                'permissions' => ['object.view', 'object.edit', 'content.view', 'content.create', 'content.edit', 'cabinet_access'],
             ],
             [
                 'key' => 'object_staff_member', 'system' => true,

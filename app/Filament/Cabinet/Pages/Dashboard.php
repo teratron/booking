@@ -31,13 +31,11 @@ class Dashboard extends Page
 {
     /**
      * Each quick action's icon and the Filament route name the screen it
-     * points to is expected to register. Object editing now has one — the
-     * `ObjectResource` edit page — so `edit_object` names that resource's
-     * own generated route rather than the standalone-page name this task
-     * anticipated before the resource existed. Bumping, photos, news, and
-     * promotions are still built by other tasks; until one of those routes
+     * points to is expected to register. Object editing, photos, news, and
+     * promotions each name a real resource route now; only bumping still
+     * targets a screen with no route registered yet — until that route
      * exists, {@see self::quickActions()} resolves it to a disabled action
-     * instead of a broken link, and each starts working the moment its own
+     * instead of a broken link, and it starts working the moment its own
      * route is registered — no change needed here.
      *
      * @var array<string, array{icon: Heroicon, route: string}>

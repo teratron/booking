@@ -1159,6 +1159,110 @@ return [
                 'selected_count' => 'Выбрано услуг',
             ],
         ],
+
+        'news_items' => [
+            'title' => 'Новости',
+            'model_label' => 'новость',
+
+            'form' => [
+                'title' => 'Заголовок',
+                'summary' => 'Краткое описание',
+                'body' => 'Текст',
+                'image' => 'Изображение',
+                'publish_at' => 'Дата публикации',
+            ],
+
+            'columns' => [
+                'title' => 'Заголовок',
+                'status' => 'Статус',
+                'publish_at' => 'Дата публикации',
+            ],
+
+            'status' => [
+                'draft' => 'Черновик',
+                'scheduled' => 'Запланировано',
+                'published' => 'Опубликовано',
+                'withdrawn' => 'Снято с публикации',
+            ],
+
+            'lifecycle' => [
+                'published' => 'Опубликовано.',
+                'submitted_for_review' => 'Отправлено на проверку. Новость появится после подтверждения модератором.',
+            ],
+        ],
+
+        'promotions' => [
+            'title' => 'Акции',
+            'model_label' => 'акция',
+
+            'form' => [
+                'title' => 'Заголовок',
+                'description' => 'Описание',
+                'image' => 'Изображение',
+                'starts_at' => 'Дата начала',
+                'ends_at' => 'Дата окончания',
+            ],
+
+            'columns' => [
+                'title' => 'Заголовок',
+                'status' => 'Статус',
+                'starts_at' => 'Дата начала',
+                'ends_at' => 'Дата окончания',
+            ],
+
+            'status' => [
+                'draft' => 'Черновик',
+                'scheduled' => 'Запланировано',
+                'published' => 'Опубликовано',
+                'archived' => 'В архиве',
+            ],
+
+            'lifecycle' => [
+                'published' => 'Опубликовано.',
+                'submitted_for_review' => 'Отправлено на проверку. Акция появится после подтверждения модератором.',
+            ],
+        ],
+
+        'reviews' => [
+            'title' => 'Отзывы',
+            'model_label' => 'отзыв',
+            'empty' => 'Отзывов пока нет.',
+            'author_fallback' => 'Гость',
+
+            'columns' => [
+                'rating' => 'Оценка',
+                'author' => 'Автор',
+                'body' => 'Отзыв',
+                'status' => 'Статус',
+                'owner_reply' => 'Ваш ответ',
+                'reported' => 'Жалоба',
+                'created_at' => 'Дата отправки',
+            ],
+
+            'status' => [
+                'pending' => 'На проверке',
+                'published' => 'Опубликован',
+                'rejected' => 'Отклонён',
+            ],
+
+            'actions' => [
+                'reply' => 'Ответить',
+                'report' => 'Пожаловаться',
+            ],
+
+            'reply_form' => [
+                'owner_reply' => 'Ваш ответ',
+            ],
+
+            'report_form' => [
+                'report_reason' => 'Причина',
+            ],
+
+            'notifications' => [
+                'replied' => 'Ответ опубликован.',
+                'reported' => 'Жалоба на отзыв отправлена.',
+            ],
+        ],
     ],
 
 ];
