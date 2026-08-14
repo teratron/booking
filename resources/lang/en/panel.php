@@ -1019,6 +1019,28 @@ return [
             ],
         ],
 
+        'statistics' => [
+            'title' => 'Statistics',
+            'object_name' => 'Object',
+            'page_views' => 'Page views',
+            'photo_views' => 'Photo views',
+            'contact_clicks_total' => 'Contact clicks (total)',
+            'favorite_count' => 'Favorites',
+            'channel_breakdown_title' => 'Contact clicks by channel',
+            'channel_breakdown_empty' => 'No contact clicks recorded yet.',
+            'traffic_source_title' => 'Traffic sources',
+            'traffic_source_empty' => 'No traffic-source data recorded yet.',
+            'traffic_source_campaign' => 'Campaign: :campaign',
+            'traffic_channels' => [
+                'direct' => 'Direct',
+                'search' => 'Search',
+                'social' => 'Social',
+                'referral' => 'Referral',
+                'internal' => 'Internal (portal)',
+                'campaign' => 'Campaign',
+            ],
+        ],
+
         'availability' => [
             'mark_available' => 'Mark as available',
             'mark_unavailable' => 'Mark as unavailable',

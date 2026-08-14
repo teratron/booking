@@ -1018,6 +1018,28 @@ return [
             ],
         ],
 
+        'statistics' => [
+            'title' => 'Статистика',
+            'object_name' => 'Объект',
+            'page_views' => 'Просмотры страницы',
+            'photo_views' => 'Просмотры фото',
+            'contact_clicks_total' => 'Клики по контактам (всего)',
+            'favorite_count' => 'В избранном',
+            'channel_breakdown_title' => 'Клики по контактам по каналам',
+            'channel_breakdown_empty' => 'Клики по контактам пока не зафиксированы.',
+            'traffic_source_title' => 'Источники трафика',
+            'traffic_source_empty' => 'Данные об источниках трафика пока не зафиксированы.',
+            'traffic_source_campaign' => 'Кампания: :campaign',
+            'traffic_channels' => [
+                'direct' => 'Прямые заходы',
+                'search' => 'Поиск',
+                'social' => 'Соцсети',
+                'referral' => 'Переходы с других сайтов',
+                'internal' => 'Внутри портала',
+                'campaign' => 'Рекламная кампания',
+            ],
+        ],
+
         'availability' => [
             'mark_available' => 'Отметить как доступен',
             'mark_unavailable' => 'Отметить как недоступен',
