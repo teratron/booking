@@ -42,7 +42,7 @@ query and the policy, and usable by someone with no technical training.
 
 ### Track D — Statistics, Bump & Settings
 
-- [ ] [T-4D01] Statistics, including favorite count
+- [x] [T-4D01] Statistics, including favorite count
 - [ ] [T-4D02] Bump entry point
 - [ ] [T-4D03] Settings & notification preferences
 - [ ] [T-4D04] Staleness surfacing
@@ -228,12 +228,14 @@ against real traffic that cannot exist yet.
 ### [T-4D01] Statistics, including favorite count
 
 - **Spec:** l1-analytics.md §5.4, §5.6; l1-object-onboarding.md §5.6a
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** T-4A01
 - **Verify:** `docker compose exec app ./vendor/bin/pest --filter=CabinetStatistics` proves the statistics page calls `AnalyticsReportingService`'s owner-scoped query method (built in `T-3C03`) and renders page views, photo views, per-channel contact clicks, and a traffic-source breakdown (channel/domain/campaign, never a full referrer) for the owner's object, all-time only per this release's scope; the favorite count renders from whatever aggregate Phase 1/2's schema already carries for it; an owner querying their own statistics never sees another owner's figures — reuses `T-3C03`'s own owner-isolation guarantee, re-asserted here at the cabinet-UI layer rather than assumed.
 - **Handoff:** none within this phase — Phase 5 is what makes the underlying numbers non-zero.
 - **Notes:** Per the phase's own Known Dependency, seed `StatDaily` fixtures directly in this task's tests rather than expecting real traffic — the query and rendering are what this task proves, not live data that cannot exist until Phase 5.
+- **Changes:** New `App\Filament\Cabinet\Pages\Statistics` (auto-discovered, no manual panel registration) backed by a new `ObjectStatisticsService`. Kind-level totals (page views, photo views, contact clicks) come from `AnalyticsReportingService::forOwner()`, scoped to the object's own owner with an explicit `object_id` filter as a second layer of ownership defense. The per-channel contact-click breakdown reads `stat_dailies` directly (joined against the contact-channel-type registry and its translations, falling back to a humanized key when untranslated) since the flat `forOwner()` summary cannot express that dimension. The traffic-source breakdown deliberately reads the raw `stat_events` tier, not the `stat_dailies` rollup — the aggregate table's grain excludes `source_channel`/`source_domain`/`source_campaign` entirely (a documented invariant of the two-tier analytics model), so this is an honest reading of whatever window the raw-retention policy still holds, never a synthesized all-time figure the schema can't support. Favorite count reads the existing `favorites` table directly (no Eloquent model existed for it, and nothing in the codebase writes to it yet — a visitor-facing favorite toggle hasn't shipped, so the figure legitimately reads zero until it does, stated plainly rather than papered over).
+- **Evidence:** `tests/Feature/Cabinet/CabinetStatisticsTest.php`, 4 cases against real seeded fixtures, including an explicit owner-isolation assertion (two owners, each seeing only their own object's figures) beyond `forOwner()`'s own guarantee. Independently re-verified: full-repo Pint and PHPStan (level 8) clean; full non-slow suite 554 passed, 0 failed, 3 skipped (up from 550). One process note: this task's code was originally built and verified on a different machine than where it was ultimately committed — an unrelated automated dependency-update commit (`c285d2e`) on this machine absorbed the still-uncommitted working tree via a broad stage-everything operation, landing the feature under a commit message that only describes the dependency bump. Content was independently re-verified in full here regardless (nothing was taken on faith from the mismatched commit message). Also surfaced and fixed a genuine, pre-existing `composer.lock`/`composer.json` version mismatch on `pestphp/pest` that blocked a truly clean `composer install` on this fresh environment — see the separate `fix(deps)` commit.
 
 ### [T-4D02] Bump entry point
 

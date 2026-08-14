@@ -32,7 +32,7 @@ archival would have overwritten them.
 | [Phase 1](archives/tasks/phase-1.md) | Foundation, schema, registries, scoped authorization, module gating, quality gates | `Done (Archived)` |
 | [Phase 2](archives/tasks/phase-2.md) | Back office core — staff panel, objects, owners, geography, taxonomy, moderation, action journal | `Done (Archived)` (25/25) |
 | [Phase 3](archives/tasks/phase-3.md) | Commerce, advertising, analytics ingest, notifications, content pipeline | `Done (Archived)` (23/23) |
-| [Phase 4](tasks/phase-4.md) | Owner cabinet — the second Filament panel, owner-scoped throughout | `In Progress` (9/16) |
+| [Phase 4](tasks/phase-4.md) | Owner cabinet — the second Filament panel, owner-scoped throughout | `In Progress` (10/16) |
 | [Phase 5](tasks/phase-5.md) | Public site — shell, home, catalog, object profile, territory pages, built from Figma | `Todo` |
 | [Phase 6](tasks/phase-6.md) | SEO, portal-wide reporting, public REST API | `Todo` |
 | [Phase 7](tasks/phase-7.md) | Import/export, backups and rehearsed restore, production provisioning, load test | `Todo` |

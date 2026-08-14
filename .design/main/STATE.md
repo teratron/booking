@@ -4,32 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-14 08:50
+**Updated:** 2026-08-14 12:45
 **Phase:** 4 — Owner Cabinet
-**Status:** Active — paused by explicit user instruction (see below), not blocked
+**Status:** Active
 
 ## Current Position
 
-- **Task:** Track A (`T-4A01`, `T-4A02`), Track B (`T-4B01`–`T-4B05`), and Track C (`T-4C01`, `T-4C02`) are all Done — 9/16. Remaining: Track D (`T-4D01` statistics, `T-4D02` bump, `T-4D03` settings/notification preferences, `T-4D04` staleness surfacing — all four require only `T-4A01`, no ordering between them) and Track T (`T-4T01`–`T-4T03` validation, requires everything else). **Session paused here on explicit user instruction** — after this checkpoint's commit, push, and PR update, work stops until the user resumes (possibly from a different machine; this file plus the committed history is the full handoff). Commit policy: commit after each completed task/batch. Push policy: push at natural checkpoints (this pause point, and previously after `T-4A01`) rather than only at full completion — also an explicit, standing instruction from the user, superseding the original "push only once everything is done."
+- **Task:** Track A, Track B, and Track C are Done; `T-4D01` (statistics) is now Done too — 10/16. Remaining: `T-4D02` bump, `T-4D03` settings/notification preferences, `T-4D04` staleness surfacing (all three require only `T-4A01`, no ordering between them), then Track T (`T-4T01`–`T-4T03` validation, requires everything else). This session is continuing across machines — see the two new Blocking Constraints below (Workflow tool availability, uncommitted-work risk) before starting further work in a new environment.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Resume with T-4D01 (statistics) via /magic.run main — see Current Position above for the template files and remaining track order.
+- **Next Action:** T-4D02 (bump entry point) — `BumpService::bump()` already exists (`app/Services/Placement/BumpService.php`); this task is a UI entry point and owner-facing refusal-message mapping only, no new bump logic. The dashboard's "Bump object" quick action already expects route name `filament.cabinet.pages.bump-object` (`Dashboard::QUICK_ACTIONS`) — register it.
 
 ## Progress
 
 ```
-Phase 4: [9/16] █████░░░ 56%
+Phase 4: [10/16] ██████░░ 63%
 Overall: [3/7] ███░░░░░ 43%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1-3 archived, Phase 4 in progress, 5-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [9/16] Phase 4 IN PROGRESS
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [10/16] Phase 4 IN PROGRESS
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-14 **Decision: paused Phase 4 mid-track on explicit user instruction, after Track C closed, to let the user check remaining weekly token budget before continuing (possibly on a different machine)** — pushed the branch and updated the PR at this checkpoint rather than holding until full completion, a standing policy change from earlier in this same session. See the Workflow session-limit constraint below for the batch-size lesson this pause point's own retries confirmed.
-- 2026-08-14 **Decision: `T-4C01`/`T-4C02` (owner news/promotions, reviews) closed Track C** — `T-4C01` reused the exact moderation-routing shape `T-4B01`'s `ObjectEditService` established, adapted for creation rather than editing (a `ContentSubmissionOutcome` value object parallels `ObjectEditOutcome`), and found two real pre-existing gaps blocking the screens from being reachable at all: `NewsItemPolicy`/`PromotionPolicy` had no ownership-based authorization path (only the staff scope-table path present in every admin-side Policy), and the `object_owner` role had zero `content.*` permissions — both fixed. `T-4C02` built a `Review` model and Policy from scratch (none existed) whose `update`/`delete` abilities are refused unconditionally for every actor including the review's own object owner — reviews are never editable/deletable through this policy, proven by two falsifying tests (cross-owner, and same-owner-but-protected-field). Full non-slow suite: 550 passed, 0 failed, 3 skipped (up from 536).
-- 2026-08-13 **Decision: `T-4B02`–`T-4B04` (media, rooms & prices, services) closed Track B, and surfaced a genuine cross-cutting regression** — adding `Room` as a new `Translatable` model made `TranslatableEntityRegistry`'s reflection-based discovery pick it up, and the existing `TranslationCompletenessReport` crashed querying a `needs_review` column `room_translations` never had (it predates that convention). Fixed with a migration mirroring an exact precedent an earlier phase already established for the identical gap class on a different table set — now a standing constraint below for any future new `Translatable` model.
+- 2026-08-14 **Decision: `T-4D01` (statistics) closed, after a machine switch mid-session that initially appeared to have lost its uncommitted work** — it hadn't: an unrelated automated dependency-update commit (`c285d2e`, "update fallow to v3.16.0") swept the still-uncommitted working tree into itself via a broad stage-everything operation, landing the whole feature under a commit message that never mentions it. Content was independently re-verified in full on the new machine regardless, not taken on faith. The new machine also had no Workflow tool access at all (disabled for that session) and a completely empty `vendor/` that failed to install cleanly — see both new Blocking Constraints below. Full non-slow suite: 554 passed, 0 failed, 3 skipped (up from 550).
+- 2026-08-14 **Decision: `T-4C01`/`T-4C02` (owner news/promotions, reviews) closed Track C** — `T-4C01` reused the exact moderation-routing shape `T-4B01`'s `ObjectEditService` established, adapted for creation rather than editing (a `ContentSubmissionOutcome` value object parallels `ObjectEditOutcome`), and found two real pre-existing gaps blocking the screens from being reachable at all: `NewsItemPolicy`/`PromotionPolicy` had no ownership-based authorization path (only the staff scope-table path present in every admin-side Policy), and the `object_owner` role had zero `content.*` permissions — both fixed. `T-4C02` built a `Review` model and Policy from scratch (none existed) whose `update`/`delete` abilities are refused unconditionally for every actor including the review's own object owner. Full non-slow suite: 550 passed, 0 failed, 3 skipped (up from 536).
 
 ## Blockers
 
@@ -93,6 +92,9 @@ Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 
 - **A resolved `Translator` singleton keeps whatever `translation.loader` it was built with** — `astrotomic/laravel-translatable`'s `Locales` class depends on `TranslatorContract`, so resolving it (even just to sync the locale registry) locks the loader in; any `extend('translation.loader', …)` must run first in `boot()`, not after.
 - **`ModerationScope` (global scope hiding unapproved `Object_` rows) silently breaks any query an owner needs to run against their own not-yet-approved object** — this bit both Filament's tenancy (default tenant route-binding, `User::getTenants()`/`canAccessTenant()`) and will bite every future cabinet query the same way unless explicitly stripped (`withoutGlobalScope(ModerationScope::class)`). The rule going forward: this scope belongs on public-facing/catalog queries only, never on a query resolving what an *authenticated, already-authorized* owner or staff member can reach about their own listing. Every Track B/C/D resource querying `Object_` (or anything scoped through it) must check this before assuming a draft/pending fixture will behave like an approved one in its own tests.
 - **Filament's tenant-menu (and anywhere else reading a tenant's display label) calls `getAttributeValue('name')` directly, bypassing any model's overridden `getAttribute()`** — a translated attribute (astrotomic) or any other custom accessor built on `getAttribute()` renders blank there unless the model also implements `Filament\Models\Contracts\HasName::getFilamentName()`. `Object_` already does; any other model later given a Filament label/name needs the same check.
+- **The Workflow tool is not guaranteed available — it is disabled entirely in some sessions/machines.** Check before relying on it; if unavailable, dispatch via the Agent tool or build directly. A prior machine's detailed task report (even for uncommitted work) is still valuable context to hand to whatever approach replaces it.
+- **Uncommitted work does not transfer across a machine switch — commit early, even mid-task, when work might continue elsewhere.** One task's fully-built, fully-verified-but-uncommitted code was nearly lost this way; it survived only by accident (an unrelated automated tool's broad `git add -A` on the original machine happened to sweep it in before the switch). Do not rely on that happening again.
+- **A fresh environment's `composer install` can fail outright (exit 4, installs nothing) if `composer.lock` doesn't satisfy a `composer.json` constraint** — this can be a long-latent, pre-existing gap that only surfaces on a truly empty `vendor/`. Fix with a targeted `composer update <package> --with-all-dependencies`, not a broad `composer update`. Verify `vendor/` on any new machine before trusting `composer analyse`/`pest` results there.
 
 ## Session Continuity
 
