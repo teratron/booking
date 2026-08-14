@@ -41,7 +41,7 @@ lost.
 
 ### Track C — Catalog & Territory Listing Pages
 
-- [ ] [T-5C01] Catalog / search results page
+- [x] [T-5C01] Catalog / search results page
 - [ ] [T-5C02] Territory landing pages
 
 ### Track D — Home Page & Content Surfaces
@@ -251,12 +251,15 @@ than per-task.
 ### [T-5C01] Catalog / search results page
 
 - **Spec:** l1-object-catalog.md §3.3, §5.1
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** T-5A01, T-5A03, T-5A05, T-5A06
 - **Verify:** `docker compose exec app ./vendor/bin/pest --filter=PublicCatalog` proves the search surface accepts the full parameter set (§5.1: geography, identity, taxonomy, amenities, commercial, proximity, facilities, stay) and round-trips it through the URL, so a filtered view is shareable and back-navigable; changing a filter never silently discards the active sort and vice versa; results render as both grid and list, and the choice persists for the visitor; results and map pins update in the same round trip; pagination is addressable by page number in the URL, not only by infinite scroll.
 - **Handoff:** T-5T01 (tier-ordering invariant), T-5T03 (performance budget).
 - **Notes:** This page is a caller of T-5A03, never a second retrieval implementation — if this task finds itself writing an `ORDER BY` clause, that belongs in T-5A03 instead.
+- **Changes:** No dedicated Figma catalog-search-page node beyond the card visual language `T-5A05` already pulled — filter sidebar and grid/list layout built from the specification directly. New `App\Livewire\Public\CatalogSearch` (full-page Livewire component, `#[Layout('components.layouts.public')]`) — every §5.1 parameter class (geography via a territory picker, identity via name search, taxonomy via type, amenities, commercial via price/rating range, and proximity/facilities/stay via the selected type's own `attribute_schema`, generic min/max/boolean/text inputs rather than hand-coded per-facet fields) is a `#[Url]`-bound public property, so the full filter state round-trips through the query string by construction. Grid/list view mode is a sibling `#[Url]` property, untouched by any filter's own `updating*` hook — proven independent rather than assumed. The embedded `<x-public.map>` is wrapped in `wire:ignore` (Livewire must never touch a subtree MapLibre owns) and stays synchronized by the SAME mechanism `T-5A06` built: `render()` dispatches `catalog-filters-changed` on every response, which is the map's own listener already wired to catch — no second synchronization scheme. Pagination reuses Livewire's `WithPagination` trait purely for its URL-page-tracking half; the actual page of results still comes from `CatalogQueryService::search()`, never a second retrieval path.
+  Two real, pre-existing bugs surfaced and fixed, both latent because no earlier caller combined their triggering conditions: `CatalogQueryService::applyFilters()`'s `object_type_id` filter was unqualified, which becomes an ambiguous-column SQL error the moment `PlacementOrderingService::apply()`'s join against `placement_packages` (which carries its own nullable, package-scoping `object_type_id`) and a type filter are both present in the same query — fixed with a table-qualified `objects.object_type_id`. And `ObjectCardPresenter::present()`'s `loadMissing()` omitted the `translations`, `territory.translations`, and `amenities.translations` relations a rendered card actually reads — invisible while every existing card-rendering test's fixtures happened to load those relations by some other path already in scope, surfaced the moment a real paginated `CatalogQueryService` result (which loads nothing beyond what the ordering/filter query itself touches) was the one constructing the card.
+- **Evidence:** `tests/Feature/Public/PublicCatalogTest.php`, 5 cases: every bound filter property reads back correctly from `Livewire::withQueryParams()`, proving the URL round-trip; the view-mode property survives a filter change and a filter property survives a view-mode change, proven in the same test rather than assumed from independence; type/name/price filtering renders the matching fixture and excludes both a wrong-type and (implicitly, via the shared `CatalogQueryService` call) an out-of-range one; a filter change dispatches `catalog-filters-changed` carrying the new criteria, proving the map's own refresh trigger fires in the same response; and a filter change resets pagination to page one even when the request arrived with an explicit `page=2` in the URL. Independently re-verified: Pint and PHPStan (level 8, whole app) clean; `composer audit`/`composer unused` clean; full non-slow suite 619 passed, 0 failed, 3 skipped (up from 614), including the architecture test's "Livewire components reach the database only through services" case (Eloquent model queries inside the component are the established, allowed pattern — the rule targets the `DB` facade specifically) and the containment test.
 
 ### [T-5C02] Territory landing pages
 
