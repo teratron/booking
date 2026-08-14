@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Cabinet\Resources\Promotions;
 
+use App\Filament\Cabinet\Resources\Photos\PhotoResource;
 use App\Filament\Cabinet\Resources\Promotions\Pages\CreatePromotion;
 use App\Filament\Cabinet\Resources\Promotions\Pages\EditPromotion;
 use App\Filament\Cabinet\Resources\Promotions\Pages\ListPromotions;
@@ -50,11 +51,17 @@ class PromotionResource extends CabinetResource
      * `ModerationScope` exists to keep unapproved content off public pages —
      * it must never hide an owner's own submission from their own cabinet,
      * the same reasoning `ObjectResource::getEloquentQuery()` already
-     * documents.
+     * documents. Two relations are eager-loaded, each for its own row-level
+     * reason: the owning object, the same reason
+     * {@see PhotoResource::getEloquentQuery()}
+     * already documents (every row's `EditAction` resolves through
+     * `PromotionPolicy`, which dereferences `Promotion::object()`); and the
+     * translations astrotomic's own `title` accessor reads for the table's
+     * title column — left lazy, either one fires one extra query per row.
      */
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->withoutGlobalScope(ModerationScope::class);
+        return parent::getEloquentQuery()->withoutGlobalScope(ModerationScope::class)->with(['object', 'translations']);
     }
 
     public static function table(Table $table): Table
