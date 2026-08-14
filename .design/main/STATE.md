@@ -4,30 +4,30 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-14 22:15
+**Updated:** 2026-08-14 22:55
 **Phase:** 5 — Public Site
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Track A complete — `T-5A01`–`T-5A06` all Done, 6/18. `T-5A06` (clustered map) closed last: `CatalogQueryService::pins()` shares its filter logic with `search()` via an extracted `applyFilters()`; `MapTileConfigResolver` structurally cannot produce an OpenStreetMap tile URL; the MapLibre component and its own Vite entry (`resources/js/map.js`) are built and wired but not embedded on any page yet — nothing in Tracks B/C/D exists to embed it in until those tasks land. Every remaining Phase 5 task now has every Track A dependency it could need.
+- **Task:** Track A complete (6/18); `T-5C01` (catalog/search page) also closed — 7/18. `App\Livewire\Public\CatalogSearch` is the first Livewire component in the project, every §5.1 filter `#[Url]`-bound so state round-trips through the query string; embeds `<x-public.map>` (`wire:ignore`) synced via the `catalog-filters-changed` event `T-5A06` built. Explicit user instruction this session: build `T-5C01` → `T-5C02` → `T-5D03` next, non-stop, committing after each — out of the plan's own stated order (which puts Track B and T-5D01/T-5D02 first); graceful Route::has()-guarded degradation covers the links this creates into not-yet-built pages, the same pattern already proven throughout Track A.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** `T-5B01` (object profile composition) opens Track B — independent of Tracks C/D, its own four-task chain.
+- **Next Action:** `T-5C02` (territory landing pages) — in progress per explicit user sequencing, then `T-5D03` (home page). Track B and `T-5D01`/`T-5D02` remain for after.
 
 ## Progress
 
 ```
-Phase 5: [6/18] ███░░░░░ 33%
+Phase 5: [7/18] ███░░░░░ 39%
 Overall: [4/7] █████░░░ 57%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1-4 complete & archived, Phase 5 in progress, 6-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [6/18] Phase 5 IN PROGRESS
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [7/18] Phase 5 IN PROGRESS
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-14 **Decision: `T-5A06` (clustered map) closed — Track A complete (6/18)** — no Figma node exists for the map, built from the specification directly. `CatalogQueryService::pins()` and `search()` now share one extracted `applyFilters()` so the map and the paginated list can never disagree about "the filtered result set"; pins skip tier ordering (unordered markers) and add a PostGIS bbox constraint instead. `MapTileConfigResolver` resolves the MapLibre style URL through a template map that structurally cannot name the OSMF-prohibited public OpenStreetMap host. A pin's compact card is rendered through the same `ObjectCardPresenter` every list card uses, so "same contact actions" holds by construction. `maplibre-gl` added as a pnpm dependency with its own Vite entry so its ~950 KB bundle loads only on pages embedding the map — none exist yet, so the component is built and wired but not linked to, the same state the shell's not-yet-registered routes were in before their owning tasks landed. Full non-slow suite: 614 passed, 0 failed, 3 skipped (up from 610).
+- 2026-08-14 **Decision: `T-5C01` (catalog/search page) closed** — `App\Livewire\Public\CatalogSearch`, every §5.1 parameter class `#[Url]`-bound; view-mode (grid/list) proven independent of filter state in the same test rather than assumed. Map sync reuses `T-5A06`'s `catalog-filters-changed` event, no second scheme. Two pre-existing bugs surfaced (latent because no earlier caller combined their trigger conditions) and fixed: `CatalogQueryService`'s `object_type_id` filter was unqualified, ambiguous once joined against `placement_packages`' own same-named column; `ObjectCardPresenter::present()`'s `loadMissing()` omitted `translations`/`territory.translations`/`amenities.translations`, invisible until a real paginated (not hand-fixtured) result set hit it. Full non-slow suite: 619 passed, 0 failed, 3 skipped (up from 614).
 
 ## Blockers
 
