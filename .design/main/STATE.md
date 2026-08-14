@@ -4,30 +4,30 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-14 15:10
+**Updated:** 2026-08-14 15:45
 **Phase:** 4 — Owner Cabinet
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Track A, Track B, Track C, Track D, and now `T-4T01` are Done — 14/16. Remaining: `T-4T02` (moderation-gating & availability-bypass invariant), `T-4T03` (query budget). Both require every other Phase 4 task, now satisfied. Push is unblocked as of this session — the user will push locally-committed work themselves.
+- **Task:** Track A, Track B, Track C, Track D, `T-4T01`, and now `T-4T02` are Done — 15/16. Remaining: `T-4T03` (query budget), the last task in the phase. Push is unblocked as of this session — the user will push locally-committed work themselves.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** `T-4T02` (moderation-gating & availability-bypass invariant) — prove the moderation-routing contract `T-4B01`/`T-4C01` both depend on holds together (review-mode enqueues without mutating the live record, immediate-mode applies directly, for both object edits and news/promotion submissions), and that the availability toggle's own bypass survives even when the scope is switched to review-mode mid-test — falsify by temporarily routing the toggle through `ModerationPipeline` and confirming the test fails, then restore.
+- **Next Action:** `T-4T03` (cabinet panel query budget) — the last Phase 4 task. Seed one owner with a realistic per-owner object count (not portal-wide `DemoVolumeSeeder` scale — a single owner's cabinet never lists another owner's rows) and measure every cabinet resource's list/dashboard/statistics page via `DB::enableQueryLog()`, proving the same ≤30-query-per-request budget the admin panel holds, and that a second panel did not reintroduce the per-navigation-item `ScopeAuthorizer` cost `T-3T04` fixed on the admin side.
 
 ## Progress
 
 ```
-Phase 4: [14/16] █████████░ 88%
+Phase 4: [15/16] █████████░ 94%
 Overall: [3/7] ███░░░░░ 43%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1-3 archived, Phase 4 in progress, 5-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [14/16] Phase 4 IN PROGRESS
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [15/16] Phase 4 IN PROGRESS
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-14 **Decision: `T-4T01` (ownership isolation invariant) closed** — new `CabinetOwnershipIsolationTest` reads the panel's live resource registry rather than an enumerated list, proving isolation holds across all eight registered resources, not a hand-picked subset. Confirmed the generic mechanism (Filament's own tenancy refusing an unowned `{tenant}` route parameter) covers all seven tenant-scoped resources uniformly; added a deeper per-record check for the three resources with a genuinely distinct child row (Room, NewsItem, Promotion); `NotificationResource` (the one non-tenant-scoped resource) verified separately via its `recipient_id` scoping. Pure verification — no product code changed. Full non-slow suite: 574 passed, 0 failed, 3 skipped (up from 570).
+- 2026-08-14 **Decision: `T-4T02` (moderation-gating & availability-bypass invariant) closed** — new `CabinetModerationGatingTest` proves the moderation contract holds live within one scope (an edit queued under review mode, the identical scope switched to immediate mid-test, a second edit applying directly), repeated for news and promotion submissions. The availability toggle's bypass got both a behavioural and a structural proof under review mode specifically. The Method line's own falsification directive was performed for real during development (a temporary probe added to `AvailabilityToggleService`, confirmed the new test failed, reverted, confirmed clean via `git diff`) rather than merely asserted. Pure verification — no product code changed. Full non-slow suite: 578 passed, 0 failed, 3 skipped (up from 574).
 
 ## Blockers
 

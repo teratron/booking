@@ -50,7 +50,7 @@ query and the policy, and usable by someone with no technical training.
 ### Track T — Validation
 
 - [x] [T-4T01] Ownership isolation invariant across every cabinet resource
-- [ ] [T-4T02] Moderation-gating & availability-bypass invariant
+- [x] [T-4T02] Moderation-gating & availability-bypass invariant
 - [ ] [T-4T03] Cabinet panel query budget under seeded volume
 
 ## Track Ordering
@@ -286,8 +286,10 @@ against real traffic that cannot exist yet.
 
 - **Goal:** Verify the moderation-routing contract `T-4B01`/`T-4C01` both depend on, and the availability toggle's own bypass of it, hold together rather than merely in each task's own isolated tests.
 - **Method:** `docker compose exec app ./vendor/bin/pest --filter=CabinetModerationGating` — proves an owner edit to a published object under review-mode enters the queue and does not mutate the published record; the same edit under immediate-mode publishes directly; a news/promotion submission behaves identically under both modes; the availability toggle, run immediately after switching the same scope to review-mode, still bypasses the queue entirely — falsify by temporarily routing the toggle through `ModerationPipeline` and confirming this test fails, then restore.
-- **Status:** Todo
+- **Status:** Done
 - **Requires:** T-4B01, T-4B05, T-4C01
+- **Changes:** No product code changed — this task is pure verification. New `tests/Feature/Cabinet/CabinetModerationGatingTest.php` proves the contract holds live within one scope rather than only across separately-configured fixtures: the same object's edit is queued under review mode, then the identical scope is switched to immediate mid-test and a second edit applies directly — repeated for news and promotion submissions. The availability toggle gets both a behavioural and a structural proof, specifically with review mode active for the same scope (not an unset default): first an ordinary edit confirms the scope is genuinely gated, then the toggle runs immediately after and bypasses it, and finally `ModerationPipeline`/`ModerationModeResolver` are rebound to throw (both `final`, ruling out a Mockery spy) to prove the bypass is structural.
+- **Evidence:** `tests/Feature/Cabinet/CabinetModerationGatingTest.php`, 4 cases. The falsification the Method line calls for was performed directly during development, not merely asserted: a temporary `app(ModerationModeResolver::class)` call was added inside `AvailabilityToggleService::toggle()`, confirmed the new bypass test failed with the exact expected `RuntimeException`, then the probe was reverted (confirmed via a clean `git diff` on the file). Also confirmed a pre-existing, differently-scoped admin-side test (`ModerationInvariantsTest`'s own availability-bypass case, covering the staff `AvailabilityAdministrationService` override path) was unaffected by the probe, since it targets a different service entirely — no overlap between the two invariants. Independently re-verified: Pint and PHPStan (level 8) clean; combined cabinet regression filter (all fifteen cabinet suites) 104 passed, 0 failed; full non-slow suite 578 passed, 0 failed, 3 skipped (up from 574).
 
 ### [T-4T03] Cabinet panel query budget under seeded volume
 
