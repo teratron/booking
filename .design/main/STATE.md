@@ -4,30 +4,30 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-14 13:56
+**Updated:** 2026-08-14 14:35
 **Phase:** 4 — Owner Cabinet
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Track A, Track B, Track C, and now `T-4D01`–`T-4D03` are Done — 12/16. Remaining: `T-4D04` staleness surfacing (requires only `T-4A01`), then Track T (`T-4T01`–`T-4T03` validation, requires everything else). This session is continuing across machines — see the Blocking Constraints below (Workflow tool availability, uncommitted-work risk, unresolved git-push auth) before starting further work in a new environment.
+- **Task:** Track A, Track B, Track C, and all of Track D (`T-4D01`–`T-4D04`) are Done — 13/16. Remaining: Track T (`T-4T01`–`T-4T03` validation, requires everything else). This session is continuing across machines — see the Blocking Constraints below (Workflow tool availability, uncommitted-work risk, unresolved git-push auth) before starting further work in a new environment.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** T-4D04 (staleness surfacing) — surface `StalenessSweepJob`'s existing `information_out_of_date` notification visibly on the dashboard and/or object edit screen; advisory only, never hides the object or blocks any action. No new staleness mechanism — read the existing state Phase 2/3 already produce.
+- **Next Action:** `T-4T01` (ownership isolation invariant) — for every registered `CabinetResource` (discovered dynamically via the panel), seed two owners with one object each and assert owner A's session reaches only owner A's rows, refused as not-found (never merely hidden) for owner B's, across every list/edit/action route each resource exposes.
 
 ## Progress
 
 ```
-Phase 4: [12/16] ███████░ 75%
+Phase 4: [13/16] ████████░ 81%
 Overall: [3/7] ███░░░░░ 43%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1-3 archived, Phase 4 in progress, 5-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [12/16] Phase 4 IN PROGRESS
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [13/16] Phase 4 IN PROGRESS
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-14 **Decision: `T-4D03` (settings & notification preferences) closed** — added the long-flagged `users.locale` column, wired `NotificationDispatchService` to prefer it, built `Settings` on Filament's own `EditProfile` base class, and gave the cabinet its own notification inbox. Found and fixed a panel-wide bug along the way: overriding the page's route name broke the shared layout's "my profile" link on every page in the panel (`Panel::getProfileUrl()` hardcodes the base route name) — fixed by overriding only the URL slug, not the route name. Full non-slow suite: 565 passed, 0 failed, 3 skipped (up from 560).
+- 2026-08-14 **Decision: `T-4D04` (staleness surfacing) closed, completing Track D** — new `ObjectStalenessService` reads the existing `information_out_of_date` notification `StalenessSweepJob` already raises, with no second detection mechanism; the flag only counts a notification as live while it postdates the object's own last edit, so it self-clears once the owner updates the listing rather than nagging forever. Surfaced on both the dashboard and the object's own edit screen, both purely advisory (never blocks a save, proven directly). Full non-slow suite: 570 passed, 0 failed, 3 skipped (up from 565).
 
 ## Blockers
 

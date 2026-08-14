@@ -45,7 +45,7 @@ query and the policy, and usable by someone with no technical training.
 - [x] [T-4D01] Statistics, including favorite count
 - [x] [T-4D02] Bump entry point
 - [x] [T-4D03] Settings & notification preferences
-- [ ] [T-4D04] Staleness surfacing
+- [x] [T-4D04] Staleness surfacing
 
 ### Track T — Validation
 
@@ -264,12 +264,14 @@ against real traffic that cannot exist yet.
 ### [T-4D04] Staleness surfacing
 
 - **Spec:** l1-object-onboarding.md §5.10
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** T-4A01
 - **Verify:** `docker compose exec app ./vendor/bin/pest --filter=CabinetStaleness` proves an object flagged stale by `T-3D03`'s `StalenessSweepJob` (an `information_out_of_date` notification exists for it) surfaces that fact visibly in the cabinet — on the dashboard and/or the object's own edit screen, not only buried in the notification inbox; the flag is advisory only — it never hides the object or blocks any cabinet action, asserted directly against a flagged fixture.
 - **Handoff:** none within this phase.
 - **Notes:** All staleness detection, reminder cadence, and back-office administrator override already exist (Phase 2's availability staleness, Phase 3's `StalenessSweepJob`) — this task adds only the owner-visible surface reading that existing state, not a second staleness mechanism.
+- **Changes:** New `ObjectStalenessService::isFlagged()` reads whatever state the sweep job already produced — a query for an `information_out_of_date` `Notification` related to the object, with no detection logic of its own. The flag only counts a notification as a live "still stale" signal while it postdates the object's own last edit (`notification.created_at >= object.updated_at`): once an owner updates the object, `updated_at` moves past the notification's `created_at` and the flag clears on its own, without re-deriving the sweep job's own `updated_at`-versus-threshold condition a second time. Wired into two places, both read-only and purely informational: `ObjectDashboardService`/`ObjectDashboardSummary` gained an `isStale` field, rendered on the dashboard as a banner alongside the existing expiry-warning one; `ObjectForm` gained a `stalenessSection()` following the exact same conditional-section pattern as the existing moderation-feedback and eligibility notices.
+- **Evidence:** `tests/Feature/Cabinet/CabinetStalenessTest.php`, 5 cases: the notice surfaces on the dashboard for a flagged object and stays absent for an unflagged one; the same notice surfaces on the object's own edit screen; a falsifying freshness case (a stale notification predating the object's last edit no longer flags it, proving the flag reads relative freshness rather than mere existence); and a direct proof that the flag never blocks a save — a flagged draft object's edit still applies and persists. Independently re-verified: Pint and PHPStan (level 8) clean; combined cabinet regression filter (all thirteen cabinet suites) 96 passed, 0 failed; full non-slow suite 570 passed, 0 failed, 3 skipped (up from 565).
 
 ### [T-4T01] Ownership isolation invariant across every cabinet resource
 
