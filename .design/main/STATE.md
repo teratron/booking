@@ -4,30 +4,30 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-14 13:36
+**Updated:** 2026-08-14 18:10
 **Phase:** 5 — Public Site
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Phase 4 is complete and archived (16/16). Phase 5 is now decomposed into 18 atomic tasks across four tracks plus validation in `tasks/phase-5.md` — the public site is greenfield, built on top of the schema, admin panel, and owner cabinet Phases 1–4 already shipped. Nothing in Phase 5 is started yet.
+- **Task:** `T-5A03` (`CatalogQueryService`) is Done — 1/18. `T-5A01` (shell) remains the other independent Track A starting point; `T-5A04`–`T-5A06` and every Track B/C/D task now have a real ordering/retrieval contract to build against.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Execute T-5A01 Public layout shell — header, navigation, switchers, footer via /magic.run main
+- **Next Action:** `T-5A01` (public layout shell) or `T-5A04` (`ContactChannelType` model + deep-link resolution service, needed by both `T-5A05`'s card and `T-5B02`'s contact rail) — both are unblocked and independent of each other and of the now-complete `T-5A03`.
 
 ## Progress
 
 ```
-Phase 5: [0/18] ░░░░░░░░ 0%
+Phase 5: [1/18] ░░░░░░░░ 6%
 Overall: [4/7] █████░░░ 57%
-Plan:           [7 phases] Bootstrap/tentative; Phase 1-4 complete & archived, Phase 5 decomposed, 6-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [0/18] Phase 5 TODO
+Plan:           [7 phases] Bootstrap/tentative; Phase 1-4 complete & archived, Phase 5 in progress, 6-7 scoped
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [1/18] Phase 5 IN PROGRESS
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-14 **Decision: Phase 5 decomposed into 18 atomic tasks (Tracks A/B/C/D + T) via `/magic.task main`** — recon confirmed the public site is fully greenfield: no catalog retrieval/ranking query, `ContactChannelType` model, map component, or public event-emission caller exists yet, though `EventCaptureService`/`CaptureStatEventJob` (Phase 3) already exist and just need new callers wired in, not a second capture mechanism. `T-5A03` (`CatalogQueryService`) is the phase's hard gate — every listing surface (object profile's nearby/similar, catalog, every territory-page catalog block, five home-page blocks) is a caller of this one tier-ordered retrieval contract. `T-5A01` (shell) is a second, independent gate. Full decomposition in `tasks/phase-5.md`. Pre-flight ran under the same RFC-only spec posture every prior phase used (no Stable specs; PLAN.md documents this as the project's own standing, successful convention).
+- 2026-08-14 **Decision: `T-5A03` (`CatalogQueryService`) closed** — delegates tier-first ordering entirely to the existing `PlacementOrderingService::apply()` (found already built ahead of time for this exact call site; the task's own Verify/Notes were corrected before implementation to reuse it rather than reimplement a second `ORDER BY`). Added scope resolution (territory descendant expansion, with a `country_id` filter alongside `territory_id` so the existing composite index serves as a true leading-column match), amenity/price/rating/type-attribute filtering, and pagination. A second planning correction: removed a newly-added index migration after discovering a comprehensive index-plan migration already existed from an earlier phase, covering everything needed. A containment near-miss (two docblocks naming a spec file and a phase number) was caught and fixed before commit. Full non-slow suite: 587 passed, 0 failed, 3 skipped (up from 578).
 
 ## Blockers
 
