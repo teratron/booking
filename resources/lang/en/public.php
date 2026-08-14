@@ -17,6 +17,24 @@ return [
                 'unspecified' => 'Availability not stated',
             ],
         ],
+        'title' => 'Catalog',
+        'empty' => 'No objects match your filters yet — try widening your search.',
+        'results_count' => ':count object found|:count objects found',
+        'view' => [
+            'grid' => 'Grid',
+            'list' => 'List',
+        ],
+        'filters' => [
+            'any' => 'Any',
+            'territory' => 'Destination',
+            'type' => 'Type',
+            'price' => 'Price range',
+            'price_min' => 'From',
+            'price_max' => 'To',
+            'rating_min' => 'Minimum rating',
+            'amenities' => 'Amenities',
+            'more' => 'More filters',
+        ],
     ],
 
     'shell' => [

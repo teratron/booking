@@ -28,7 +28,7 @@
 @vite(['resources/js/map.js'])
 <div
     x-data="catalogMap(@js($config))"
-    class="h-[480px] w-full overflow-hidden rounded-lg"
+    class="h-120 w-full overflow-hidden rounded-lg"
     role="application"
     aria-label="{{ __('public.shell.map.label') }}"
 >

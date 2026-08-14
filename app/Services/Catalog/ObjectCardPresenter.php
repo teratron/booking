@@ -45,7 +45,10 @@ final class ObjectCardPresenter
 
     public function present(Object_ $object): ObjectCardViewModel
     {
-        $object->loadMissing(['objectType', 'territory', 'placement.package.tier', 'contactChannels.contactChannelType']);
+        $object->loadMissing([
+            'translations', 'objectType', 'territory.translations', 'amenities.translations',
+            'placement.package.tier', 'contactChannels.contactChannelType',
+        ]);
 
         [$ratingAverage, $reviewCount] = $this->reviewSummary($object);
         [$priceAmount, $priceCurrency] = $this->priceFrom($object);

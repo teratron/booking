@@ -9,6 +9,7 @@ use App\Http\Controllers\Public\FeedbackSubmissionController;
 use App\Http\Controllers\Public\LegalPageController;
 use App\Http\Controllers\Public\MapPinsController;
 use App\Http\Middleware\ResolvePublicLocale;
+use App\Livewire\Public\CatalogSearch;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => view('welcome'));
@@ -36,4 +37,5 @@ Route::prefix('{lang}')
         Route::get('/terms', [LegalPageController::class, 'terms'])->name('legal.terms');
         Route::get('/map/pins', [MapPinsController::class, 'index'])->name('map.pins.index');
         Route::get('/map/pins/{object}', [MapPinsController::class, 'show'])->name('map.pins.show');
+        Route::get('/catalog', CatalogSearch::class)->name('catalog.index');
     });

@@ -119,7 +119,12 @@ final class CatalogQueryService
         }
 
         if ($criteria->objectTypeId !== null) {
-            $query->where('object_type_id', $criteria->objectTypeId);
+            // Table-qualified: PlacementOrderingService::apply() joins
+            // placement_packages, which carries its own nullable
+            // object_type_id (a package may target one type) — an
+            // unqualified reference here is ambiguous the moment both are
+            // present in the same query.
+            $query->where('objects.object_type_id', $criteria->objectTypeId);
         }
 
         if ($criteria->name !== null && trim($criteria->name) !== '') {
