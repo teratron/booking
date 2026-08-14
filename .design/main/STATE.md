@@ -4,30 +4,30 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-14 22:55
+**Updated:** 2026-08-15 00:05
 **Phase:** 5 — Public Site
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Track A complete (6/18); `T-5C01` (catalog/search page) also closed — 7/18. `App\Livewire\Public\CatalogSearch` is the first Livewire component in the project, every §5.1 filter `#[Url]`-bound so state round-trips through the query string; embeds `<x-public.map>` (`wire:ignore`) synced via the `catalog-filters-changed` event `T-5A06` built. Explicit user instruction this session: build `T-5C01` → `T-5C02` → `T-5D03` next, non-stop, committing after each — out of the plan's own stated order (which puts Track B and T-5D01/T-5D02 first); graceful Route::has()-guarded degradation covers the links this creates into not-yet-built pages, the same pattern already proven throughout Track A.
+- **Task:** Track A and Track C both complete — 8/18. `T-5C02` (territory pages) closed: plain controller (no reactive state needed), one `CatalogQueryService`-backed block per active type, ID-addressed (`/{lang}/territory/{territory}`) rather than the full nested-slug grammar `l1-seo.md` eventually wants — deliberately deferred, noted, swappable later. Explicit user instruction this session: build `T-5C01` → `T-5C02` → `T-5D03` next, non-stop, committing after each — out of the plan's own stated order (Track B and `T-5D01`/`T-5D02` normally come first); graceful `Route::has()`-guarded degradation covers links into not-yet-built pages throughout.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** `T-5C02` (territory landing pages) — in progress per explicit user sequencing, then `T-5D03` (home page). Track B and `T-5D01`/`T-5D02` remain for after.
+- **Next Action:** `T-5D03` (home page composition) — in progress per explicit user sequencing. It normally requires `T-5D01`/`T-5D02` (blog/news/promotions pages) too; those are skipped for now, so the home page's news/promotions/articles rails will read real Phase 3 data directly and link out via the same `Route::has()` guard pattern, inert until those two tasks land later.
 
 ## Progress
 
 ```
-Phase 5: [7/18] ███░░░░░ 39%
+Phase 5: [8/18] ████░░░░ 44%
 Overall: [4/7] █████░░░ 57%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1-4 complete & archived, Phase 5 in progress, 6-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [7/18] Phase 5 IN PROGRESS
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [8/18] Phase 5 IN PROGRESS
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-14 **Decision: `T-5C01` (catalog/search page) closed** — `App\Livewire\Public\CatalogSearch`, every §5.1 parameter class `#[Url]`-bound; view-mode (grid/list) proven independent of filter state in the same test rather than assumed. Map sync reuses `T-5A06`'s `catalog-filters-changed` event, no second scheme. Two pre-existing bugs surfaced (latent because no earlier caller combined their trigger conditions) and fixed: `CatalogQueryService`'s `object_type_id` filter was unqualified, ambiguous once joined against `placement_packages`' own same-named column; `ObjectCardPresenter::present()`'s `loadMissing()` omitted `translations`/`territory.translations`/`amenities.translations`, invisible until a real paginated (not hand-fixtured) result set hit it. Full non-slow suite: 619 passed, 0 failed, 3 skipped (up from 614).
+- 2026-08-15 **Decision: `T-5C02` (territory pages) closed — Track C complete** — plain controller composing breadcrumb/hero/description/per-type catalog blocks/news/promotions/map/child-nav, each independently omitted when empty. Two wrong-parameter route guesses from `T-5A01`-era shell code (predating this route's registration) surfaced and fixed: the footer's "popular destinations" now links real top-level territories via a new `PublicShellDataProvider::popularDestinations()`, and the country switcher's redirect resolves the selected country's own top-level territory. Full non-slow suite: 623 passed, 0 failed, 3 skipped (up from 619).
 
 ## Blockers
 
