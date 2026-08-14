@@ -135,16 +135,16 @@ resource count, is the task that decides the phase.
 Decomposed into 23 atomic tasks across five tracks plus validation in
 [archives/tasks/phase-3.md](archives/tasks/phase-3.md).
 
-## Phase 4 — Owner Cabinet — **Active**
+## Phase 4 — Owner Cabinet — **Done**
 
 *The second Filament panel: the same toolkit, owner-scoped in both query and policy.*
 
-- [ ] **Object Onboarding & Owner Cabinet** — the full cabinet lifecycle ([l1-object-onboarding.md](specifications/l1-object-onboarding.md)) [L1]
-- [ ] **Availability Status** §5.3 — the one-tap toggle, no form, no save step ([l1-availability-status.md](specifications/l1-availability-status.md)) [L1]
-- [ ] **Analytics** §5.4 — cabinet dashboard and statistics surfaces ([l1-analytics.md](specifications/l1-analytics.md)) [L1]
-- [ ] **Content Publishing** §3.3–§3.4 — owner-authored news and promotions ([l1-content-publishing.md](specifications/l1-content-publishing.md)) [L1]
+- [x] **Object Onboarding & Owner Cabinet** — the full cabinet lifecycle ([l1-object-onboarding.md](specifications/l1-object-onboarding.md)) [L1]
+- [x] **Availability Status** §5.3 — the one-tap toggle, no form, no save step ([l1-availability-status.md](specifications/l1-availability-status.md)) [L1]
+- [x] **Analytics** §5.4 — cabinet dashboard and statistics surfaces ([l1-analytics.md](specifications/l1-analytics.md)) [L1]
+- [x] **Content Publishing** §3.3–§3.4 — owner-authored news and promotions ([l1-content-publishing.md](specifications/l1-content-publishing.md)) [L1]
 
-## Phase 5 — Public Site
+## Phase 5 — Public Site — **Active**
 
 *Built against the Figma source, node by node. Server-rendered Blade with Livewire for
 catalog interactivity.*
@@ -228,10 +228,11 @@ critical path out of Phase 2.
 
 ## Next Step
 
-`/magic.task main` — decompose Phase 5 (Public site: shell, home, catalog, object
-profile, territory pages, built from Figma). Phase registry in [TASKS.md](TASKS.md).
-Phases 1 through 4 are complete and archived at
-[archives/tasks/phase-1.md](archives/tasks/phase-1.md),
+`/magic.run main` — execute Phase 5 (Public Site), decomposed into 18 atomic tasks in
+[tasks/phase-5.md](tasks/phase-5.md). `T-5A03` (`CatalogQueryService`) and `T-5A01`
+(public layout shell) are both independent Track A gates and the recommended starting
+points. Phase registry in [TASKS.md](TASKS.md). Phases 1 through 4 are complete and
+archived at [archives/tasks/phase-1.md](archives/tasks/phase-1.md),
 [archives/tasks/phase-2.md](archives/tasks/phase-2.md),
 [archives/tasks/phase-3.md](archives/tasks/phase-3.md), and
 [archives/tasks/phase-4.md](archives/tasks/phase-4.md) respectively.

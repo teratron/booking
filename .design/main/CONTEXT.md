@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-08-13
+**Generated:** 2026-08-14
 
 ## Active Technologies
 
@@ -112,7 +112,8 @@
 ├── storage/
 │   ├── app/
 │   ├── framework/
-│   └── logs/
+│   ├── logs/
+│   └── media-library/
 ├── tests/
 │   ├── Architecture/
 │   ├── Feature/

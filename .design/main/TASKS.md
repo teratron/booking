@@ -14,7 +14,9 @@ the per-phase files under `tasks/`.
 
 **Decomposition state.** Phases 1 through 4 are complete (21/21, 25/25, 23/23, 16/16)
 against the same `RFC`-status posture each was successfully decomposed and executed
-under — no Pre-flight gate has ever HALTed on any of them. Phases 5 through 7 still
+under — no Pre-flight gate has ever HALTed on any of them. Phase 5 is now decomposed
+into 18 atomic tasks across four tracks plus validation in
+[tasks/phase-5.md](tasks/phase-5.md), against that same posture. Phases 6 and 7 still
 carry frontmatter, a strategic goal, and their scope only — no `T-XXXX` items yet; each
 is decomposed by the `/magic.task` invocation that activates it, against the
 specification set as it stands at that point.
@@ -32,7 +34,7 @@ archival would have overwritten them.
 | [Phase 2](archives/tasks/phase-2.md) | Back office core — staff panel, objects, owners, geography, taxonomy, moderation, action journal | `Done (Archived)` (25/25) |
 | [Phase 3](archives/tasks/phase-3.md) | Commerce, advertising, analytics ingest, notifications, content pipeline | `Done (Archived)` (23/23) |
 | [Phase 4](archives/tasks/phase-4.md) | Owner cabinet — the second Filament panel, owner-scoped throughout | `Done (Archived)` (16/16) |
-| [Phase 5](tasks/phase-5.md) | Public site — shell, home, catalog, object profile, territory pages, built from Figma | `Todo` |
+| [Phase 5](tasks/phase-5.md) | Public site — shell, home, catalog, object profile, territory pages, built from Figma | `In Progress` (0/18) |
 | [Phase 6](tasks/phase-6.md) | SEO, portal-wide reporting, public REST API | `Todo` |
 | [Phase 7](tasks/phase-7.md) | Import/export, backups and rehearsed restore, production provisioning, load test | `Todo` |
 
@@ -65,6 +67,16 @@ before `T-3A04` (the expiry sweep raises notifications against a model that must
 already exist), and `T-3C01` before `T-3B02` (banner impressions/clicks are `StatEvent`
 rows, not a second counting scheme). Full rationale in
 [tasks/phase-3.md](archives/tasks/phase-3.md) §Track Ordering.
+
+**Phase 5 is four-wide** (`A` shell/catalog-query/card foundation, `B` object profile,
+`C` catalog/territory listings, `D` home/content surfaces), because the public site is
+greenfield — Phases 1–4 built the schema, the admin panel, and the owner cabinet, but
+no public-facing retrieval query, card, contact deep-link resolver, or map component
+exists yet. `T-5A03` (`CatalogQueryService`) is the phase's hard gate: every listing
+surface in Tracks B, C, and D is a caller of this one tier-ordered retrieval contract,
+never a reimplementation — the same role `T-2A02` played for Phase 2. `T-5A01` (shell)
+is a second, independent gate, since every page in the phase renders inside it. Full
+rationale in [tasks/phase-5.md](tasks/phase-5.md) §Track Ordering.
 
 ## Meta Information
 

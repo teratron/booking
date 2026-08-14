@@ -4,30 +4,30 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-14 16:25
-**Phase:** 4 — Owner Cabinet (Done, 16/16 — archived this session)
+**Updated:** 2026-08-14 13:36
+**Phase:** 5 — Public Site
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Phase 4 is fully complete and archived — Track A, Track B, Track C, Track D, and Track T (`T-4T01`–`T-4T03`) are all Done, 16/16. A pre-existing checklist bookkeeping gap was also found and fixed this session: `T-4A02` (Dashboard) had a full Done writeup in its own Detailed Tracking entry from an earlier session but its checklist checkbox was never ticked, which silently blocked `archive-phases` from firing until corrected. Push is unblocked as of this session — the user will push locally-committed work themselves.
+- **Task:** Phase 4 is complete and archived (16/16). Phase 5 is now decomposed into 18 atomic tasks across four tracks plus validation in `tasks/phase-5.md` — the public site is greenfield, built on top of the schema, admin panel, and owner cabinet Phases 1–4 already shipped. Nothing in Phase 5 is started yet.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Phase 4 is closed. Per the standing Post-Task Replan rule (`rules/magic.md §5`), the user-visible next step is `/magic.task main` to plan Phase 5 (Public site — shell, home, catalog, object profile, territory pages, built from Figma) — not offered proactively here, since this session's own standing instruction has been narrow, checkpointed task execution rather than autopiloting into the next phase unprompted.
+- **Next Action:** Execute T-5A01 Public layout shell — header, navigation, switchers, footer via /magic.run main
 
 ## Progress
 
 ```
-Phase 4: [16/16] ██████████ 100% DONE (Archived)
-Overall: [4/7] ████░░░ 57%
-Plan:           [7 phases] Bootstrap/tentative; Phase 1-4 complete & archived, 5-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE
+Phase 5: [0/18] ░░░░░░░░ 0%
+Overall: [4/7] █████░░░ 57%
+Plan:           [7 phases] Bootstrap/tentative; Phase 1-4 complete & archived, Phase 5 decomposed, 6-7 scoped
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [0/18] Phase 5 TODO
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-14 **Decision: `T-4T03` (query budget) closed, completing Phase 4** — new `CabinetPanelBudgetTest` seeds realistic per-owner volume (15 rooms, 20 real uploaded photos, 15 reviews, 10 news items, 10 promotions) and found three genuine, previously-undetected lazy-loading violations this volume exposed: `NewsItemResource`, `PromotionResource`, and `RoomResource` each dereferenced their owning object (per-row policy check) and an astrotomic translation (table's title/name column) without eager-loading either — invisible at the small fixture counts every per-resource test file uses. Fixed by eager-loading both relations, matching the pattern `PhotoResource`/`ReviewResource` already established. Every measured surface now comfortably inside the 30-query budget (max 21). Full non-slow suite: 578 passed, 0 failed, 3 skipped (unchanged — this task's own test is itself `slow`-tagged).
+- 2026-08-14 **Decision: Phase 5 decomposed into 18 atomic tasks (Tracks A/B/C/D + T) via `/magic.task main`** — recon confirmed the public site is fully greenfield: no catalog retrieval/ranking query, `ContactChannelType` model, map component, or public event-emission caller exists yet, though `EventCaptureService`/`CaptureStatEventJob` (Phase 3) already exist and just need new callers wired in, not a second capture mechanism. `T-5A03` (`CatalogQueryService`) is the phase's hard gate — every listing surface (object profile's nearby/similar, catalog, every territory-page catalog block, five home-page blocks) is a caller of this one tier-ordered retrieval contract. `T-5A01` (shell) is a second, independent gate. Full decomposition in `tasks/phase-5.md`. Pre-flight ran under the same RFC-only spec posture every prior phase used (no Stable specs; PLAN.md documents this as the project's own standing, successful convention).
 
 ## Blockers
 
@@ -99,9 +99,9 @@ Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 
 
 **Reading order for a fresh session:** this file (position, decisions,
 constraints) → `CLAUDE.md` (stack, conventions, engineering discipline) →
-`.design/main/tasks/phase-4.md` (active phase — decomposed, T-4A01 Done) →
-`.design/main/PLAN.md` only for cross-phase context. Phase 3's own task file
-is archived at `.design/main/archives/tasks/phase-3.md` for historical
+`.design/main/tasks/phase-5.md` (active phase — decomposed, nothing started) →
+`.design/main/PLAN.md` only for cross-phase context. Phases 1–4's own task files
+are archived at `.design/main/archives/tasks/phase-{1,2,3,4}.md` for historical
 reference.
 
 **Do not carry forward** anything about Next.js, TypeScript, Drizzle, Better Auth,
