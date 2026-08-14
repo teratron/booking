@@ -31,4 +31,10 @@ final class ContactChannel extends Model
     {
         return $this->belongsTo(Object_::class, 'object_id');
     }
+
+    /** @return BelongsTo<ContactChannelType, $this> */
+    public function contactChannelType(): BelongsTo
+    {
+        return $this->belongsTo(ContactChannelType::class);
+    }
 }
