@@ -336,12 +336,22 @@ it('never varies page content by placement package — only the tier badge diffe
         ->assertSee(__('public.object.services_heading'))
         ->assertSee('Free Parking');
 
-    $unrankedResponse->assertOk()->assertDontSee('VIP')
+    $unrankedResponse->assertOk()
         ->assertSee(__('public.object.rooms_heading'))
         ->assertSee('Standard Room')
         ->assertSee('Quiet hours after 10pm.')
         ->assertSee(__('public.object.services_heading'))
         ->assertSee('Free Parking');
+
+    // The unranked object's own page content carries no VIP badge — the
+    // VIP fixture legitimately appears further down, in the unranked
+    // object's own "similar objects" block (same territory and type),
+    // showing its own badge on its own card, which this narrows past.
+    $html = (string) $unrankedResponse->getContent();
+    $servicesPosition = strpos($html, e(__('public.object.services_heading')));
+    expect($servicesPosition)->not->toBeFalse();
+    $ownContent = substr($html, 0, $servicesPosition);
+    expect($ownContent)->not->toContain('VIP');
 });
 
 it('404s an object that is not published', function (): void {

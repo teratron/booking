@@ -7,16 +7,20 @@ namespace App\Services\Catalog;
 use App\Models\Amenity;
 use App\Models\ContactChannel;
 use App\Models\ContactChannelType;
+use App\Models\NewsItem;
 use App\Models\Object_;
 use App\Models\ObjectType;
 use App\Models\PlacementTier;
 use App\Models\Price;
+use App\Models\Promotion;
 use App\Models\Review;
 use App\Models\Room;
+use App\Models\Territory;
 use App\Models\User;
 use App\Services\Contact\ContactChannelLinkResolver;
 use App\Services\Modules\ModuleContext;
 use App\Services\Modules\ModuleResolver;
+use App\Support\Catalog\CatalogSearchCriteria;
 use App\Support\Catalog\ObjectCardContactAction;
 use App\Support\Catalog\ObjectProfileViewModel;
 use Illuminate\Support\Facades\DB;
@@ -30,9 +34,16 @@ use Illuminate\Support\Facades\DB;
  */
 final class ObjectProfilePresenter
 {
+    private const int RELATED_OBJECTS_PER_BLOCK = 6;
+
+    private const int NEWS_PER_BLOCK = 4;
+
+    private const int PROMOTIONS_PER_BLOCK = 4;
+
     public function __construct(
         private readonly ContactChannelLinkResolver $contactLinks,
         private readonly ModuleResolver $modules,
+        private readonly CatalogQueryService $catalog,
     ) {}
 
     public function present(Object_ $object): ObjectProfileViewModel
@@ -77,7 +88,11 @@ final class ObjectProfilePresenter
             objectPrices: $hasRooms ? [] : $this->objectPrices($object),
             attributes: $this->attributeEntries($object, $type),
             amenityGroups: $this->amenityGroups($object),
+            objectPromotions: $this->objectPromotions($object),
+            objectNews: $this->objectNews($object),
             reviews: $reviewsEnabled ? $this->reviews($object) : [],
+            nearbyObjects: $this->nearbyObjects($object),
+            similarObjects: $this->similarObjects($object),
         );
     }
 
@@ -320,5 +335,76 @@ final class ObjectProfilePresenter
             array_keys($groups),
             array_values($groups),
         );
+    }
+
+    /** @return list<Promotion> */
+    private function objectPromotions(Object_ $object): array
+    {
+        return array_values(Promotion::published()
+            ->where('object_id', $object->id)
+            ->with('translations')
+            ->limit(self::PROMOTIONS_PER_BLOCK)
+            ->get()
+            ->all());
+    }
+
+    /** @return list<NewsItem> */
+    private function objectNews(Object_ $object): array
+    {
+        return array_values(NewsItem::published()
+            ->where('object_id', $object->id)
+            ->with('translations')
+            ->latest('publish_at')
+            ->limit(self::NEWS_PER_BLOCK)
+            ->get()
+            ->all());
+    }
+
+    /**
+     * Objects sharing this object's own territory, tier-ordered through
+     * the same {@see CatalogQueryService} every other listing surface
+     * calls — never a bespoke query. The object's own row is dropped from
+     * the rendered set rather than excluded at the query level (no such
+     * criterion exists), which can occasionally hand back one fewer than
+     * the block's usual count; a short related-objects rail is a cosmetic
+     * cost, not a correctness one.
+     *
+     * @return list<Object_>
+     */
+    private function nearbyObjects(Object_ $object): array
+    {
+        $territory = $object->territory;
+
+        if (! $territory instanceof Territory) {
+            return [];
+        }
+
+        $criteria = new CatalogSearchCriteria(territory: $territory, perPage: self::RELATED_OBJECTS_PER_BLOCK);
+
+        return array_values($this->catalog->search($criteria)->getCollection()
+            ->reject(fn (Object_ $candidate): bool => $candidate->id === $object->id)
+            ->all());
+    }
+
+    /**
+     * Objects sharing this object's own type within the same country,
+     * tier-ordered through {@see CatalogQueryService} — deliberately
+     * country-wide rather than territory-scoped, since "similar" is a
+     * comparison of *what* an object is, not *where* it is; that is
+     * {@see self::nearbyObjects()}'s own job.
+     *
+     * @return list<Object_>
+     */
+    private function similarObjects(Object_ $object): array
+    {
+        $criteria = new CatalogSearchCriteria(
+            countryId: $object->country_id,
+            objectTypeId: $object->object_type_id,
+            perPage: self::RELATED_OBJECTS_PER_BLOCK,
+        );
+
+        return array_values($this->catalog->search($criteria)->getCollection()
+            ->reject(fn (Object_ $candidate): bool => $candidate->id === $object->id)
+            ->all());
     }
 }

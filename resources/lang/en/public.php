@@ -73,6 +73,8 @@ return [
             'anonymous' => 'Guest',
             'owner_reply' => 'Owner reply',
         ],
+        'nearby_heading' => 'Nearby objects',
+        'similar_heading' => 'Similar objects',
     ],
 
     'home' => [

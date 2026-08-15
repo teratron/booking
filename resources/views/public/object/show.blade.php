@@ -206,6 +206,38 @@
             </section>
         @endif
 
+        {{-- Object promotions --}}
+        @if (count($profile->objectPromotions) > 0)
+            <section class="mt-10">
+                <h2 class="text-xl font-semibold text-ink">{{ __('public.territory.promotions') }}</h2>
+                <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    @foreach ($profile->objectPromotions as $promotion)
+                        <x-public.content-card
+                            :title="$promotion->title"
+                            :summary="$promotion->summary"
+                            :href="\Illuminate\Support\Facades\Route::has('public.promotions.show') ? route('public.promotions.show', ['lang' => app()->getLocale(), 'promotion' => $promotion->id]) : null"
+                        />
+                    @endforeach
+                </div>
+            </section>
+        @endif
+
+        {{-- Object news --}}
+        @if (count($profile->objectNews) > 0)
+            <section class="mt-10">
+                <h2 class="text-xl font-semibold text-ink">{{ __('public.shell.nav.news') }}</h2>
+                <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    @foreach ($profile->objectNews as $newsItem)
+                        <x-public.content-card
+                            :title="$newsItem->title"
+                            :summary="$newsItem->summary"
+                            :href="\Illuminate\Support\Facades\Route::has('public.news.show') ? route('public.news.show', ['lang' => app()->getLocale(), 'newsItem' => $newsItem->id]) : null"
+                        />
+                    @endforeach
+                </div>
+            </section>
+        @endif
+
         {{-- Reviews: aggregate (in the header above) + itemized + owner
              replies — omitted entirely (never an empty block) whenever
              there is nothing published to show, whether that is because
@@ -234,6 +266,31 @@
                                 </div>
                             @endif
                         </div>
+                    @endforeach
+                </div>
+            </section>
+        @endif
+
+        {{-- Nearby objects — the object's own territory, tier-ordered
+             through CatalogQueryService like every other listing surface. --}}
+        @if (count($profile->nearbyObjects) > 0)
+            <section class="mt-10">
+                <h2 class="text-xl font-semibold text-ink">{{ __('public.object.nearby_heading') }}</h2>
+                <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    @foreach ($profile->nearbyObjects as $nearbyObject)
+                        <x-object-card :object="$nearbyObject" wire:key="nearby-card-{{ $nearbyObject->id }}" />
+                    @endforeach
+                </div>
+            </section>
+        @endif
+
+        {{-- Similar objects — same type, country-wide, tier-ordered. --}}
+        @if (count($profile->similarObjects) > 0)
+            <section class="mt-10">
+                <h2 class="text-xl font-semibold text-ink">{{ __('public.object.similar_heading') }}</h2>
+                <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    @foreach ($profile->similarObjects as $similarObject)
+                        <x-object-card :object="$similarObject" wire:key="similar-card-{{ $similarObject->id }}" />
                     @endforeach
                 </div>
             </section>

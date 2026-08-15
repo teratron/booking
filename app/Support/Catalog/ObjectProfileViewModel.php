@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Support\Catalog;
 
+use App\Models\NewsItem;
+use App\Models\Object_;
+use App\Models\Promotion;
 use App\Services\Catalog\ObjectProfilePresenter;
 
 /**
@@ -20,7 +23,11 @@ final readonly class ObjectProfileViewModel
      * @param  list<array{label: ?string, amount: string, currency: string, unit: string}>  $objectPrices
      * @param  list<array{label: string, value: string}>  $attributes
      * @param  list<array{groupName: string, amenities: list<array{iconPath: ?string, label: string}>}>  $amenityGroups
+     * @param  list<Promotion>  $objectPromotions
+     * @param  list<NewsItem>  $objectNews
      * @param  list<array{rating: int, body: string, authorName: string, date: string, ownerReply: ?string, ownerReplyDate: ?string}>  $reviews
+     * @param  list<Object_>  $nearbyObjects
+     * @param  list<Object_>  $similarObjects
      */
     public function __construct(
         public int $objectId,
@@ -44,6 +51,10 @@ final readonly class ObjectProfileViewModel
         public array $objectPrices,
         public array $attributes,
         public array $amenityGroups,
+        public array $objectPromotions,
+        public array $objectNews,
         public array $reviews,
+        public array $nearbyObjects,
+        public array $similarObjects,
     ) {}
 }

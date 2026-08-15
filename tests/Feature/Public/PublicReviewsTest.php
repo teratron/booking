@@ -164,8 +164,15 @@ it('shows the reviews section only when the module resolves enabled for the obje
 
     // The aggregate score is part of the same gated section, not a
     // separate, always-visible teaser — a visitor must not learn a
-    // disabled scope's rating through the page header.
-    $disabledResponse->assertDontSee('5.0 / 5');
+    // disabled scope's rating through the page header. Narrowed to the
+    // disabled object's own content, before its "nearby objects" block:
+    // the two fixtures share a territory and type, so the enabled
+    // object's own 5.0 rating legitimately appears there, on its own
+    // card, unrelated to the disabled object's own gating.
+    $html = (string) $disabledResponse->getContent();
+    $nearbyStart = strpos($html, __('public.object.nearby_heading'));
+    $ownContent = $nearbyStart === false ? $html : substr($html, 0, $nearbyStart);
+    expect($ownContent)->not->toContain('5.0 / 5');
 });
 
 it('renders only published reviews — a pending or rejected review never appears', function (): void {

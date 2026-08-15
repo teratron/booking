@@ -73,6 +73,8 @@ return [
             'anonymous' => 'Гость',
             'owner_reply' => 'Ответ владельца',
         ],
+        'nearby_heading' => 'Рядом',
+        'similar_heading' => 'Похожие объекты',
     ],
 
     'home' => [
