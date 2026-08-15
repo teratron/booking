@@ -23,6 +23,7 @@ use App\Services\Modules\ModuleResolver;
 use App\Support\Catalog\CatalogSearchCriteria;
 use App\Support\Catalog\ObjectCardContactAction;
 use App\Support\Catalog\ObjectProfileViewModel;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -65,6 +66,7 @@ final class ObjectProfilePresenter
         ));
         [$ratingAverage, $reviewCount] = $reviewsEnabled ? $this->reviewSummary($object) : [null, 0];
         $tier = $object->placement?->package?->tier;
+        [$nearbyObjects, $similarObjects] = $this->relatedObjects($object);
 
         return new ObjectProfileViewModel(
             objectId: $object->id,
@@ -91,8 +93,8 @@ final class ObjectProfilePresenter
             objectPromotions: $this->objectPromotions($object),
             objectNews: $this->objectNews($object),
             reviews: $reviewsEnabled ? $this->reviews($object) : [],
-            nearbyObjects: $this->nearbyObjects($object),
-            similarObjects: $this->similarObjects($object),
+            nearbyObjects: $nearbyObjects,
+            similarObjects: $similarObjects,
         );
     }
 
@@ -361,50 +363,45 @@ final class ObjectProfilePresenter
     }
 
     /**
-     * Objects sharing this object's own territory, tier-ordered through
-     * the same {@see CatalogQueryService} every other listing surface
-     * calls — never a bespoke query. The object's own row is dropped from
-     * the rendered set rather than excluded at the query level (no such
-     * criterion exists), which can occasionally hand back one fewer than
-     * the block's usual count; a short related-objects rail is a cosmetic
-     * cost, not a correctness one.
+     * Nearby (same territory) and similar (same type, same country)
+     * objects, each its own {@see CatalogQueryService::search()} call —
+     * "similar" deliberately country-wide rather than territory-scoped,
+     * since it compares *what* an object is, not *where* it is. Each
+     * object's own row is dropped from its own rendered set rather than
+     * excluded at the query level (no such criterion exists), which can
+     * occasionally hand back one fewer than the block's usual count; a
+     * short related-objects rail is a cosmetic cost, not a correctness one.
      *
-     * @return list<Object_>
+     * @return array{0: list<Object_>, 1: list<Object_>}
      */
-    private function nearbyObjects(Object_ $object): array
+    private function relatedObjects(Object_ $object): array
     {
-        $territory = $object->territory;
-
-        if (! $territory instanceof Territory) {
-            return [];
-        }
-
-        $criteria = new CatalogSearchCriteria(territory: $territory, perPage: self::RELATED_OBJECTS_PER_BLOCK);
-
-        return array_values($this->catalog->search($criteria)->getCollection()
-            ->reject(fn (Object_ $candidate): bool => $candidate->id === $object->id)
-            ->all());
-    }
-
-    /**
-     * Objects sharing this object's own type within the same country,
-     * tier-ordered through {@see CatalogQueryService} — deliberately
-     * country-wide rather than territory-scoped, since "similar" is a
-     * comparison of *what* an object is, not *where* it is; that is
-     * {@see self::nearbyObjects()}'s own job.
-     *
-     * @return list<Object_>
-     */
-    private function similarObjects(Object_ $object): array
-    {
-        $criteria = new CatalogSearchCriteria(
+        $similarCriteria = new CatalogSearchCriteria(
             countryId: $object->country_id,
             objectTypeId: $object->object_type_id,
             perPage: self::RELATED_OBJECTS_PER_BLOCK,
         );
 
-        return array_values($this->catalog->search($criteria)->getCollection()
-            ->reject(fn (Object_ $candidate): bool => $candidate->id === $object->id)
-            ->all());
+        $similar = $this->catalog->search($similarCriteria)->getCollection();
+
+        $territory = $object->territory;
+
+        if (! $territory instanceof Territory) {
+            return [[], $this->excludingSelf($similar, $object)];
+        }
+
+        $nearbyCriteria = new CatalogSearchCriteria(territory: $territory, perPage: self::RELATED_OBJECTS_PER_BLOCK);
+        $nearby = $this->catalog->search($nearbyCriteria)->getCollection();
+
+        return [$this->excludingSelf($nearby, $object), $this->excludingSelf($similar, $object)];
+    }
+
+    /**
+     * @param  Collection<int, Object_>  $candidates
+     * @return list<Object_>
+     */
+    private function excludingSelf(Collection $candidates, Object_ $object): array
+    {
+        return array_values($candidates->reject(fn (Object_ $candidate): bool => $candidate->id === $object->id)->all());
     }
 }

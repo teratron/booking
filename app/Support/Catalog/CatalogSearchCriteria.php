@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support\Catalog;
 
+use App\Models\ObjectType;
 use App\Models\Territory;
 use App\Services\Catalog\CatalogQueryService;
 use Illuminate\Support\Carbon;
@@ -31,6 +32,16 @@ final readonly class CatalogSearchCriteria
         /** Country-wide scoping with no specific territory — the home page's own blocks. Ignored when `$territory` is set, which already implies its own country. */
         public ?int $countryId = null,
         public ?int $objectTypeId = null,
+        /**
+         * The same object type `$objectTypeId` names, already hydrated —
+         * an optional hint so a caller that resolved it anyway (to render
+         * a filter label, say) hands it over instead of making
+         * {@see CatalogQueryService}'s own ordering-scope resolution fetch
+         * the identical row a second time. `$objectTypeId` still drives
+         * filtering either way; this changes only how the scope is
+         * resolved, never what result set or ordering the criteria means.
+         */
+        public ?ObjectType $objectType = null,
         public ?string $name = null,
         public array $amenityIds = [],
         public ?float $priceMin = null,

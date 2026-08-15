@@ -14,6 +14,7 @@ use App\Services\Catalog\CatalogQueryService;
 use App\Support\Catalog\CatalogSearchCriteria;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * A territory's own public landing page: breadcrumb, hero, description, one
@@ -32,6 +33,15 @@ final class TerritoryPageController extends Controller
 
     private const int PROMOTIONS_PER_BLOCK = 6;
 
+    /**
+     * The territory page's own "cache hit" budget in practice — the
+     * news/promotions/child-territory reads below are cached as a unit;
+     * `catalogBlocks()` needs no cache of its own here, since every block it
+     * builds is already a {@see CatalogQueryService::search()} call, which
+     * caches at that shared layer.
+     */
+    private const int SIDEBAR_CACHE_TTL_SECONDS = 300;
+
     public function __construct(
         private readonly CatalogQueryService $catalog,
     ) {}
@@ -42,24 +52,31 @@ final class TerritoryPageController extends Controller
 
         $territory->loadMissing('translations');
 
-        return view('public.territory.show', [
+        $sidebar = Cache::remember(
+            sprintf('territory:sidebar:%d:%s', $territory->id, $lang),
+            self::SIDEBAR_CACHE_TTL_SECONDS,
+            fn (): array => [
+                'newsItems' => NewsItem::published()->where('territory_id', $territory->id)
+                    ->with('translations')
+                    ->latest('publish_at')
+                    ->limit(self::NEWS_PER_BLOCK)
+                    ->get(),
+                'promotions' => Promotion::published()->where('territory_id', $territory->id)
+                    ->with('translations')
+                    ->limit(self::PROMOTIONS_PER_BLOCK)
+                    ->get(),
+                'childTerritories' => $territory->children()->where('is_active', true)
+                    ->orderBy('display_order')
+                    ->with('translations')
+                    ->get(),
+            ]
+        );
+
+        return view('public.territory.show', array_merge($sidebar, [
             'territory' => $territory,
             'breadcrumbs' => $this->breadcrumbs($territory),
             'catalogBlocks' => $this->catalogBlocks($territory),
-            'newsItems' => NewsItem::published()->where('territory_id', $territory->id)
-                ->with('translations')
-                ->latest('publish_at')
-                ->limit(self::NEWS_PER_BLOCK)
-                ->get(),
-            'promotions' => Promotion::published()->where('territory_id', $territory->id)
-                ->with('translations')
-                ->limit(self::PROMOTIONS_PER_BLOCK)
-                ->get(),
-            'childTerritories' => $territory->children()->where('is_active', true)
-                ->orderBy('display_order')
-                ->with('translations')
-                ->get(),
-        ]);
+        ]));
     }
 
     /** @return list<array{label: string, url: string}> */

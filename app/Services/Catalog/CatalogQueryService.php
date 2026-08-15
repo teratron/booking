@@ -11,12 +11,16 @@ use App\Models\Price;
 use App\Models\Room;
 use App\Models\Territory;
 use App\Services\Placement\PlacementOrderingService;
+use App\Support\Analytics\StatEventKind;
 use App\Support\Catalog\CatalogSearchCriteria;
 use App\Support\Catalog\MapBounds;
 use App\Support\Catalog\MapPin;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -35,6 +39,68 @@ use Illuminate\Support\Facades\DB;
  */
 final class CatalogQueryService
 {
+    /**
+     * Every listing surface in the phase reads through this one cache —
+     * catalog search, each territory-page block, the home page's rails, and
+     * an object profile's nearby/similar blocks — so a single short TTL is
+     * the portal's entire "catalog page, cache hit" budget in practice. No
+     * write-path invalidation: a placement change or a new listing becomes
+     * visible within one TTL window, which this catalog's own domain
+     * (browse, not a live order book) tolerates without needing an
+     * event-driven invalidation pipeline.
+     */
+    private const int RESULT_CACHE_TTL_SECONDS = 300;
+
+    /**
+     * Keys {@see ObjectCardPresenter} reads before falling back to its own
+     * live per-object query — set once per page here instead of once per
+     * card there. Public because the presenter, a sibling service, is the
+     * one caller these are addressed to.
+     */
+    public const string CARD_REVIEW_AVERAGE_KEY = 'catalog_card_review_average';
+
+    public const string CARD_REVIEW_COUNT_KEY = 'catalog_card_review_count';
+
+    public const string CARD_VIEW_COUNT_KEY = 'catalog_card_view_count';
+
+    public const string CARD_PRICE_AMOUNT_KEY = 'catalog_card_price_amount';
+
+    public const string CARD_PRICE_CURRENCY_KEY = 'catalog_card_price_currency';
+
+    /**
+     * The tier badge/border a card renders — batched the same way as the
+     * three aggregates above, via a plain join query rather than
+     * Eloquent's own `placement.package.tier` relation chain: eager-loading
+     * that relation here, whether via `with()` at query-build time or
+     * `Collection::load()` after, reproducibly breaks and drastically slows
+     * a query already going through {@see PlacementOrderingService::apply()}'s
+     * own joins against the identical `object_placements`/
+     * `placement_packages`/`placement_tiers` tables (root cause not
+     * isolated further within this change's own scope) — a plain,
+     * relation-free query sidesteps whatever that interaction is.
+     */
+    public const string CARD_TIER_BADGE_TEXT_KEY = 'catalog_card_tier_badge_text';
+
+    public const string CARD_TIER_BADGE_COLOUR_KEY = 'catalog_card_tier_badge_colour';
+
+    public const string CARD_TIER_BORDER_COLOUR_KEY = 'catalog_card_tier_border_colour';
+
+    /**
+     * Every relation {@see ObjectCardPresenter} and {@see ObjectProfilePresenter}
+     * read via their own per-object `loadMissing()` — listed here so Eloquent
+     * batches one query per relation for the whole page instead of one per
+     * object. `loadMissing()` downstream then finds every one of these
+     * already loaded and does nothing; nothing downstream needs to change
+     * to benefit. Deliberately excludes `placement.package.tier` — see
+     * {@see self::CARD_TIER_BADGE_TEXT_KEY}'s own docblock.
+     *
+     * @var list<string>
+     */
+    private const array CARD_RELATIONS = [
+        'translations', 'objectType', 'territory.translations', 'amenities.translations',
+        'contactChannels.contactChannelType.translations', 'media',
+    ];
+
     public function __construct(
         private readonly PlacementOrderingService $ordering,
     ) {}
@@ -44,13 +110,163 @@ final class CatalogQueryService
      */
     public function search(CatalogSearchCriteria $criteria): LengthAwarePaginator
     {
-        $query = Object_::query()->where('status', 'published');
+        return Cache::remember(
+            $this->cacheKey($criteria),
+            self::RESULT_CACHE_TTL_SECONDS,
+            function () use ($criteria): LengthAwarePaginator {
+                $query = $this->buildQuery($criteria);
+
+                $results = $query->paginate($criteria->perPage, ['*'], 'page', $criteria->page);
+
+                $this->attachCardAggregates($results->getCollection());
+
+                return $results;
+            }
+        );
+    }
+
+    /**
+     * @return Builder<Object_>
+     */
+    private function buildQuery(CatalogSearchCriteria $criteria): Builder
+    {
+        $query = Object_::query()->where('status', 'published')->with(self::CARD_RELATIONS);
 
         $scope = $this->applyFilters($query, $criteria);
 
         $this->ordering->apply($query, $scope);
 
-        return $query->paginate($criteria->perPage, ['*'], 'page', $criteria->page);
+        return $query;
+    }
+
+    /**
+     * Batches the three aggregates every card reads (review average/count,
+     * lifetime page-view count, cheapest price) into three queries for the
+     * whole page, rather than the three-per-card cost a naive per-object
+     * read would pay. Prices attach either directly to the object or to one
+     * of its rooms — the same either/or {@see applyPriceFilter()} already
+     * tests — resolved here in PHP after one query for each side, since
+     * "cheapest row, but I also need its currency" has no single built-in
+     * Eloquent aggregate helper that returns more than one column.
+     *
+     * @param  Collection<int, Object_>  $objects
+     */
+    private function attachCardAggregates(Collection $objects): void
+    {
+        $ids = $objects->pluck('id')->unique()->all();
+
+        if ($ids === []) {
+            return;
+        }
+
+        $reviewsByObjectId = DB::table('reviews')
+            ->select('object_id', DB::raw('avg(rating) as average'), DB::raw('count(*) as total'))
+            ->whereIn('object_id', $ids)
+            ->where('status', 'published')
+            ->whereNull('deleted_at')
+            ->groupBy('object_id')
+            ->get()
+            ->keyBy(fn (object $row): int => (int) $row->object_id);
+
+        $viewCountsByObjectId = DB::table('stat_dailies')
+            ->select('subject_id', DB::raw('sum(count) as total'))
+            ->where('subject_type', Object_::class)
+            ->whereIn('subject_id', $ids)
+            ->where('kind', StatEventKind::ObjectPageView->value)
+            ->groupBy('subject_id')
+            ->get()
+            ->keyBy(fn (object $row): int => (int) $row->subject_id);
+
+        $objectIdByRoomId = DB::table('rooms')->whereIn('object_id', $ids)->pluck('object_id', 'id');
+
+        $cheapestPriceByObjectId = [];
+
+        $priceCandidates = DB::table('prices')
+            ->where(function (\Illuminate\Database\Query\Builder $target) use ($ids, $objectIdByRoomId): void {
+                $target->where(function (\Illuminate\Database\Query\Builder $direct) use ($ids): void {
+                    $direct->where('priceable_type', Object_::class)->whereIn('priceable_id', $ids);
+                });
+
+                if ($objectIdByRoomId->isNotEmpty()) {
+                    $target->orWhere(function (\Illuminate\Database\Query\Builder $viaRoom) use ($objectIdByRoomId): void {
+                        $viaRoom->where('priceable_type', Room::class)->whereIn('priceable_id', $objectIdByRoomId->keys()->all());
+                    });
+                }
+            })
+            ->orderBy('amount')
+            ->get(['priceable_type', 'priceable_id', 'amount', 'currency']);
+
+        foreach ($priceCandidates as $row) {
+            $objectId = $row->priceable_type === Object_::class
+                ? (int) $row->priceable_id
+                : (int) ($objectIdByRoomId[(int) $row->priceable_id] ?? 0);
+
+            // Rows arrive ordered by amount ascending — the first row seen
+            // for a given object is already its cheapest.
+            if ($objectId === 0 || array_key_exists($objectId, $cheapestPriceByObjectId)) {
+                continue;
+            }
+
+            $cheapestPriceByObjectId[$objectId] = $row;
+        }
+
+        $tiersByObjectId = DB::table('object_placements')
+            ->join('placement_packages', 'placement_packages.id', '=', 'object_placements.placement_package_id')
+            ->join('placement_tiers', 'placement_tiers.id', '=', 'placement_packages.placement_tier_id')
+            ->leftJoin('placement_tier_translations', function (JoinClause $join): void {
+                $join->on('placement_tier_translations.placement_tier_id', '=', 'placement_tiers.id')
+                    ->where('placement_tier_translations.locale', '=', app()->getLocale());
+            })
+            ->whereIn('object_placements.object_id', $ids)
+            ->get([
+                'object_placements.object_id',
+                'placement_tier_translations.badge_text',
+                'placement_tiers.badge_colour',
+                'placement_tiers.border_colour',
+            ])
+            ->keyBy(fn (object $row): int => (int) $row->object_id);
+
+        foreach ($objects as $object) {
+            $review = $reviewsByObjectId->get($object->id);
+            $object->setAttribute(self::CARD_REVIEW_AVERAGE_KEY, $review !== null && $review->average !== null ? round((float) $review->average, 1) : null);
+            $object->setAttribute(self::CARD_REVIEW_COUNT_KEY, (int) ($review->total ?? 0));
+
+            $view = $viewCountsByObjectId->get($object->id);
+            $object->setAttribute(self::CARD_VIEW_COUNT_KEY, (int) ($view->total ?? 0));
+
+            $price = $cheapestPriceByObjectId[$object->id] ?? null;
+            $object->setAttribute(self::CARD_PRICE_AMOUNT_KEY, $price !== null ? (string) $price->amount : null);
+            $object->setAttribute(self::CARD_PRICE_CURRENCY_KEY, $price !== null ? (string) $price->currency : null);
+
+            $tier = $tiersByObjectId->get($object->id);
+            $object->setAttribute(self::CARD_TIER_BADGE_TEXT_KEY, $tier?->badge_text);
+            $object->setAttribute(self::CARD_TIER_BADGE_COLOUR_KEY, $tier?->badge_colour);
+            $object->setAttribute(self::CARD_TIER_BORDER_COLOUR_KEY, $tier?->border_colour);
+        }
+    }
+
+    /**
+     * Every criterion that can change the result set or its ordering, plus
+     * the locale (translated name/label columns vary the rendered output
+     * even when the row set does not).
+     */
+    private function cacheKey(CatalogSearchCriteria $criteria): string
+    {
+        return 'catalog:search:'.hash('sha256', json_encode([
+            'territoryId' => $criteria->territory?->id,
+            'countryId' => $criteria->countryId,
+            'objectTypeId' => $criteria->objectTypeId,
+            'name' => $criteria->name,
+            'amenityIds' => $criteria->amenityIds,
+            'priceMin' => $criteria->priceMin,
+            'priceMax' => $criteria->priceMax,
+            'ratingMin' => $criteria->ratingMin,
+            'attributeFilters' => $criteria->attributeFilters,
+            'createdAfter' => $criteria->createdAfter?->toIso8601String(),
+            'page' => $criteria->page,
+            'perPage' => $criteria->perPage,
+            'locale' => app()->getLocale(),
+        ], JSON_THROW_ON_ERROR));
     }
 
     /**
@@ -169,6 +385,10 @@ final class CatalogQueryService
     {
         if ($criteria->territory instanceof Territory) {
             return $criteria->territory;
+        }
+
+        if ($criteria->objectType instanceof ObjectType) {
+            return $criteria->objectType;
         }
 
         if ($criteria->objectTypeId !== null) {

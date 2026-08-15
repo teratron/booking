@@ -45,14 +45,20 @@ final class ObjectCardPresenter
 
     public function present(Object_ $object): ObjectCardViewModel
     {
-        $object->loadMissing([
-            'translations', 'objectType', 'territory.translations', 'amenities.translations',
-            'placement.package.tier', 'contactChannels.contactChannelType.translations',
-        ]);
+        $attributes = $object->getAttributes();
+        $hasBatchedTier = array_key_exists(CatalogQueryService::CARD_TIER_BADGE_TEXT_KEY, $attributes);
+
+        $relations = ['translations', 'objectType', 'territory.translations', 'amenities.translations', 'contactChannels.contactChannelType.translations'];
+
+        if (! $hasBatchedTier) {
+            $relations[] = 'placement.package.tier';
+        }
+
+        $object->loadMissing($relations);
 
         [$ratingAverage, $reviewCount] = $this->reviewSummary($object);
         [$priceAmount, $priceCurrency] = $this->priceFrom($object);
-        $tier = $object->placement?->package?->tier;
+        [$tierBadgeText, $tierBadgeColour, $tierBorderColour] = $this->tierBadge($object, $hasBatchedTier, $attributes);
 
         return new ObjectCardViewModel(
             objectId: $object->id,
@@ -64,15 +70,44 @@ final class ObjectCardPresenter
             ratingAverage: $ratingAverage,
             reviewCount: $reviewCount,
             viewCount: $this->viewCount($object),
-            tierBadgeText: $tier instanceof PlacementTier ? $tier->badge_text : null,
-            tierBadgeColour: $tier instanceof PlacementTier ? $tier->badge_colour : null,
-            tierBorderColour: $tier instanceof PlacementTier ? $tier->border_colour : null,
+            tierBadgeText: $tierBadgeText,
+            tierBadgeColour: $tierBadgeColour,
+            tierBorderColour: $tierBorderColour,
             availabilityStatus: $this->availabilityStatus($object),
             priceFromAmount: $priceAmount,
             priceCurrency: $priceCurrency,
             detailsUrl: $this->detailsUrl($object),
             contactActions: $this->contactActions($object),
         );
+    }
+
+    /**
+     * Reads {@see CatalogQueryService::attachCardAggregates()}'s own
+     * page-wide tier batch when present, the same fallback shape
+     * {@see reviewSummary()}, {@see viewCount()}, and {@see priceFrom()}
+     * use — falling back to the live `placement.package.tier` relation
+     * chain otherwise.
+     *
+     * @param  array<string, mixed>  $attributes
+     * @return array{0: ?string, 1: ?string, 2: ?string}
+     */
+    private function tierBadge(Object_ $object, bool $hasBatchedTier, array $attributes): array
+    {
+        if ($hasBatchedTier) {
+            return [
+                $attributes[CatalogQueryService::CARD_TIER_BADGE_TEXT_KEY],
+                $attributes[CatalogQueryService::CARD_TIER_BADGE_COLOUR_KEY],
+                $attributes[CatalogQueryService::CARD_TIER_BORDER_COLOUR_KEY],
+            ];
+        }
+
+        $tier = $object->placement?->package?->tier;
+
+        return [
+            $tier instanceof PlacementTier ? $tier->badge_text : null,
+            $tier instanceof PlacementTier ? $tier->badge_colour : null,
+            $tier instanceof PlacementTier ? $tier->border_colour : null,
+        ];
     }
 
     private function coverPhotoUrl(Object_ $object): ?string
@@ -94,9 +129,23 @@ final class ObjectCardPresenter
             ->all());
     }
 
-    /** @return array{0: ?float, 1: int} */
+    /**
+     * Reads {@see CatalogQueryService::attachCardAggregates()}'s own
+     * page-wide batch when the object came from that call — every real
+     * caller does — falling back to a live per-object query otherwise, so
+     * this stays correct for a caller that hands the presenter a bare
+     * object outside that path.
+     *
+     * @return array{0: ?float, 1: int}
+     */
     private function reviewSummary(Object_ $object): array
     {
+        $attributes = $object->getAttributes();
+
+        if (array_key_exists(CatalogQueryService::CARD_REVIEW_AVERAGE_KEY, $attributes)) {
+            return [$attributes[CatalogQueryService::CARD_REVIEW_AVERAGE_KEY], (int) $attributes[CatalogQueryService::CARD_REVIEW_COUNT_KEY]];
+        }
+
         $row = DB::table('reviews')
             ->where('object_id', $object->id)
             ->where('status', 'published')
@@ -111,6 +160,12 @@ final class ObjectCardPresenter
 
     private function viewCount(Object_ $object): int
     {
+        $attributes = $object->getAttributes();
+
+        if (array_key_exists(CatalogQueryService::CARD_VIEW_COUNT_KEY, $attributes)) {
+            return (int) $attributes[CatalogQueryService::CARD_VIEW_COUNT_KEY];
+        }
+
         return (int) StatDaily::query()
             ->where('subject_type', Object_::class)
             ->where('subject_id', $object->id)
@@ -137,13 +192,22 @@ final class ObjectCardPresenter
     /**
      * The lowest price among every row attached directly to the object or
      * to one of its rooms — the same "either kind of price row" reading
-     * {@see CatalogQueryService}'s own price filter
-     * uses, here fetching a value instead of testing a range.
+     * {@see CatalogQueryService}'s own price filter uses, here fetching a
+     * value instead of testing a range. Reads
+     * {@see CatalogQueryService::attachCardAggregates()}'s own page-wide
+     * batch first, the same fallback shape {@see reviewSummary()} and
+     * {@see viewCount()} use.
      *
      * @return array{0: ?string, 1: ?string}
      */
     private function priceFrom(Object_ $object): array
     {
+        $attributes = $object->getAttributes();
+
+        if (array_key_exists(CatalogQueryService::CARD_PRICE_AMOUNT_KEY, $attributes)) {
+            return [$attributes[CatalogQueryService::CARD_PRICE_AMOUNT_KEY], $attributes[CatalogQueryService::CARD_PRICE_CURRENCY_KEY]];
+        }
+
         $row = DB::table('prices')
             ->where(function ($query) use ($object): void {
                 $query->where(function ($direct) use ($object): void {

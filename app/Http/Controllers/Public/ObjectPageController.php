@@ -10,6 +10,7 @@ use App\Models\Territory;
 use App\Services\Analytics\EventCaptureService;
 use App\Services\Catalog\ObjectProfilePresenter;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * The public object profile page: one type-aware composition covering
@@ -21,6 +22,13 @@ use Illuminate\Contracts\View\View;
  */
 final class ObjectPageController extends Controller
 {
+    /**
+     * The object page's own "cache hit" budget in practice — the
+     * presenter's read model, not the event captures above it, which must
+     * fire on every real visit regardless of cache state.
+     */
+    private const int PROFILE_CACHE_TTL_SECONDS = 300;
+
     public function __construct(
         private readonly ObjectProfilePresenter $presenter,
         private readonly EventCaptureService $events,
@@ -53,9 +61,15 @@ final class ObjectPageController extends Controller
             ]);
         }
 
+        $profile = Cache::remember(
+            sprintf('object:profile:%d:%s', $object->id, $lang),
+            self::PROFILE_CACHE_TTL_SECONDS,
+            fn () => $this->presenter->present($object)
+        );
+
         return view('public.object.show', [
             'object' => $object,
-            'profile' => $this->presenter->present($object),
+            'profile' => $profile,
             'breadcrumbs' => $this->breadcrumbs($object),
         ]);
     }

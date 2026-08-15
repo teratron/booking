@@ -109,9 +109,17 @@ final class CatalogSearch extends Component
 
     public function render(): View
     {
+        // Resolved once and reused both for the criteria's own ordering-scope
+        // hint and the amenity-group facet lookup below — two independent
+        // ObjectType::find() calls for the same id on every render is
+        // exactly the kind of per-request duplication a real query budget
+        // catches that a dozen-fixture test never would.
+        $selectedType = $this->type !== null ? ObjectType::query()->with('translations')->find($this->type) : null;
+
         $criteria = new CatalogSearchCriteria(
             territory: $this->territoryId !== null ? Territory::query()->find($this->territoryId) : null,
             objectTypeId: $this->type,
+            objectType: $selectedType,
             name: $this->q !== '' ? $this->q : null,
             amenityIds: $this->amenities,
             priceMin: $this->priceMin,
@@ -134,11 +142,9 @@ final class CatalogSearch extends Component
 
         return view('livewire.public.catalog-search', [
             'results' => $results,
-            'selectedType' => $this->type !== null
-                ? ObjectType::query()->with('translations')->find($this->type)
-                : null,
+            'selectedType' => $selectedType,
             'typeGroups' => app(PublicShellDataProvider::class)->navigationGroups(),
-            'amenityGroups' => $this->filterableAmenityGroups(),
+            'amenityGroups' => $this->filterableAmenityGroups($selectedType),
             'territories' => Territory::query()->where('is_active', true)
                 ->orderBy('display_order')
                 ->with('translations')
@@ -163,14 +169,8 @@ final class CatalogSearch extends Component
     }
 
     /** @return Collection<int, AmenityGroup> */
-    private function filterableAmenityGroups(): Collection
+    private function filterableAmenityGroups(?ObjectType $type): Collection
     {
-        if ($this->type === null) {
-            return collect();
-        }
-
-        $type = ObjectType::query()->find($this->type);
-
         if (! $type instanceof ObjectType) {
             return collect();
         }
