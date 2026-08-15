@@ -35,10 +35,12 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  *
  * @property-read ?string $name virtual, proxied through the active translation
  * @property-read ?string $short_description virtual, proxied through the active translation
+ * @property-read ?string $full_description virtual, proxied through the active translation
  * @property ?int $owner_id null once an owner has been deliberately detached, or
  *                          whenever a user row backing a previous owner is removed
  * @property ?Carbon $availability_changed_at
  * @property ?Carbon $availability_last_confirmed_at
+ * @property ?array<string, mixed> $attributes the type-varying bag, keyed by the object type's own declared attribute_schema
  */
 #[UsePolicy(Object_Policy::class)]
 class Object_ extends Model implements AuditableContract, HasMedia, HasName, TranslatableContract

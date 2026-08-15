@@ -29,16 +29,13 @@
             </span>
         @endif
 
-        @if ($card->availabilityStatus)
-            <span
-                @class([
-                    'absolute bottom-2 right-2 rounded px-2 py-1 text-xs font-medium text-white',
-                    'bg-emerald-600' => $card->availabilityStatus === 'available',
-                    'bg-rose-600' => $card->availabilityStatus === 'unavailable',
-                    'bg-gray-500' => $card->availabilityStatus === 'unspecified',
-                ])
-            >
-                {{ __('public.catalog.card.availability.'.$card->availabilityStatus) }}
+        {{-- Only the positive state ever renders a badge — a false
+             "available" is recoverable by a phone call, a false "no
+             vacancies" is not, so the negative and unspecified states
+             render nothing at all. --}}
+        @if ($card->availabilityStatus === 'available')
+            <span class="absolute bottom-2 right-2 rounded bg-emerald-600 px-2 py-1 text-xs font-medium text-white">
+                {{ __('public.catalog.card.availability.available') }}
             </span>
         @endif
     </div>

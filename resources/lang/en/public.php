@@ -43,6 +43,33 @@ return [
         'explore' => 'Explore nearby',
     ],
 
+    'object' => [
+        'rooms_heading' => 'Rooms & prices',
+        'prices_heading' => 'Prices',
+        'details_heading' => 'Details',
+        'services_heading' => 'Services & facilities',
+        'room' => [
+            'capacity' => 'Capacity',
+            'room_count' => 'Rooms available',
+            'area' => 'Area',
+            'max_guests' => 'Max guests',
+            'extra_bed' => 'Extra bed available',
+        ],
+        'price' => [
+            'calculation_unit' => [
+                'per_room' => 'per room',
+                'per_person' => 'per person',
+                'per_night' => 'per night',
+                'per_service' => 'per service',
+                'from' => 'from',
+            ],
+        ],
+        'attributes' => [
+            'yes' => 'Yes',
+            'no' => 'No',
+        ],
+    ],
+
     'home' => [
         'hero' => [
             'title' => 'Find your next stay',

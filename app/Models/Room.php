@@ -24,6 +24,9 @@ use Override;
  * {@see self::prices()}, never a single column on this table. Name and
  * description are translated, following the same per-locale table pattern
  * as every other translatable entity in this codebase.
+ *
+ * @property-read ?string $name virtual, proxied through the active translation
+ * @property-read ?string $description virtual, proxied through the active translation
  */
 #[UsePolicy(RoomPolicy::class)]
 final class Room extends Model implements TranslatableContract

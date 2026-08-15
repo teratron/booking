@@ -9,6 +9,7 @@ use App\Http\Controllers\Public\FeedbackSubmissionController;
 use App\Http\Controllers\Public\HomePageController;
 use App\Http\Controllers\Public\LegalPageController;
 use App\Http\Controllers\Public\MapPinsController;
+use App\Http\Controllers\Public\ObjectPageController;
 use App\Http\Controllers\Public\TerritoryPageController;
 use App\Http\Middleware\ResolvePublicLocale;
 use App\Livewire\Public\CatalogSearch;
@@ -47,4 +48,5 @@ Route::prefix('{lang}')
         // domain; this route is swappable for it later without touching the
         // page's own composition.
         Route::get('/territory/{territory}', [TerritoryPageController::class, 'show'])->name('territories.show');
+        Route::get('/objects/{object}', [ObjectPageController::class, 'show'])->name('objects.show');
     });

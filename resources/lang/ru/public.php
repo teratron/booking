@@ -43,6 +43,33 @@ return [
         'explore' => 'Рядом',
     ],
 
+    'object' => [
+        'rooms_heading' => 'Номера и цены',
+        'prices_heading' => 'Цены',
+        'details_heading' => 'Подробности',
+        'services_heading' => 'Услуги и инфраструктура',
+        'room' => [
+            'capacity' => 'Вместимость',
+            'room_count' => 'Доступно номеров',
+            'area' => 'Площадь',
+            'max_guests' => 'Макс. гостей',
+            'extra_bed' => 'Есть дополнительная кровать',
+        ],
+        'price' => [
+            'calculation_unit' => [
+                'per_room' => 'за номер',
+                'per_person' => 'за человека',
+                'per_night' => 'за ночь',
+                'per_service' => 'за услугу',
+                'from' => 'от',
+            ],
+        ],
+        'attributes' => [
+            'yes' => 'Да',
+            'no' => 'Нет',
+        ],
+    ],
+
     'home' => [
         'hero' => [
             'title' => 'Найдите свой следующий отдых',

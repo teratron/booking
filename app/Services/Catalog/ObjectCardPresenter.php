@@ -166,7 +166,7 @@ final class ObjectCardPresenter
     private function detailsUrl(Object_ $object): ?string
     {
         return Route::has('public.objects.show')
-            ? route('public.objects.show', ['object' => $object])
+            ? route('public.objects.show', ['lang' => app()->getLocale(), 'object' => $object])
             : null;
     }
 
