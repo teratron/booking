@@ -4,30 +4,30 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-15 12:38
+**Updated:** 2026-08-15 13:06
 **Phase:** 5 — Public Site
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Track A, Track B, Track C, and `T-5D03` all complete, plus now `T-5D01` — 14/18. `T-5D01` (public blog) closed: paginated listing + article detail, reusing the `<x-public.content-card>` component built one task ago. Registering `public.blog.index`/`public.blog.show` activated four pre-existing `Route::has()` guards (shell nav/header/footer, home page's articles rail) with no further changes needed there. Only `T-5D02` (news/promotions listing) and Track T remain in Phase 5.
+- **Task:** Track A, Track B, Track C, and Track D (`T-5D01`–`T-5D03`) all complete — 15/18. `T-5D02` (news feed, promotion page) closed: portal-wide news feed (pinned-first, no country scoping) plus a detail page one gate-clause looser than `scopePublished()`; a standalone promotion detail page with no listing (promotions are always object/territory-scoped). Only Track T (`T-5T01`–`T-5T03`, cross-cutting invariants) remains in Phase 5.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Execute T-5D02 Public news feed and promotions section via /magic.run main
+- **Next Action:** Execute T-5T01 Placement-tier ordering invariant across every public listing surface via /magic.run main
 
 ## Progress
 
 ```
-Phase 5: [14/18] ███████░ 78%
+Phase 5: [15/18] ████████ 83%
 Overall: [4/7] █████░░░ 57%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1-4 complete & archived, Phase 5 in progress, 6-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [14/18] Phase 5 IN PROGRESS
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [15/18] Phase 5 IN PROGRESS
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-15 **Decision: `T-5D01` (public blog) closed** — first controller in this phase with two full-page actions (`index()`/`show()`); `Article` confirmed to have no `CatalogQueryService`/`ModerationScope` involvement at all (an administrator publishing is the trusted act, no moderation queue). `show()`'s visibility gate mirrors `Article::scopePublished()` exactly against the single bound model. Full non-slow suite: 650 passed, 0 failed, 3 skipped (up from 646).
+- 2026-08-15 **Decision: `T-5D02` (news feed, promotion page) closed — Track D complete** — `NewsController::show()` drops the `end_at` clause from `scopePublished()` (a news item's own `status` never changes on expiry); `PromotionController::show()` drops only `ends_at` (the pre-existing archival job does transition `status`). Registering three routes activated six pre-existing `Route::has()` guards across territory/object/home pages. Full non-slow suite: 655 passed, 0 failed, 3 skipped (up from 650).
 
 ## Blockers
 
