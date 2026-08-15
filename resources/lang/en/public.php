@@ -51,6 +51,15 @@ return [
         'related_territories_heading' => 'Mentioned destinations',
     ],
 
+    'news' => [
+        'empty' => 'No news has been published yet — check back soon.',
+        'pinned' => 'Pinned',
+    ],
+
+    'promotions' => [
+        'valid' => 'Valid :from – :until',
+    ],
+
     'object' => [
         'rooms_heading' => 'Rooms & prices',
         'prices_heading' => 'Prices',

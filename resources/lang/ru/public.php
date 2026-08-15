@@ -51,6 +51,15 @@ return [
         'related_territories_heading' => 'Упомянутые направления',
     ],
 
+    'news' => [
+        'empty' => 'Пока не опубликовано ни одной новости — загляните позже.',
+        'pinned' => 'Закреплено',
+    ],
+
+    'promotions' => [
+        'valid' => 'Действует с :from по :until',
+    ],
+
     'object' => [
         'rooms_heading' => 'Номера и цены',
         'prices_heading' => 'Цены',

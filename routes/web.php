@@ -11,7 +11,9 @@ use App\Http\Controllers\Public\FeedbackSubmissionController;
 use App\Http\Controllers\Public\HomePageController;
 use App\Http\Controllers\Public\LegalPageController;
 use App\Http\Controllers\Public\MapPinsController;
+use App\Http\Controllers\Public\NewsController;
 use App\Http\Controllers\Public\ObjectPageController;
+use App\Http\Controllers\Public\PromotionController;
 use App\Http\Controllers\Public\TerritoryPageController;
 use App\Http\Middleware\ResolvePublicLocale;
 use App\Livewire\Public\CatalogSearch;
@@ -54,4 +56,7 @@ Route::prefix('{lang}')
         Route::get('/objects/{object}/contact/{channel}/click', ContactClickController::class)->name('objects.contact.click');
         Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
         Route::get('/blog/{article}', [BlogController::class, 'show'])->name('blog.show');
+        Route::get('/news', [NewsController::class, 'index'])->name('news.index');
+        Route::get('/news/{newsItem}', [NewsController::class, 'show'])->name('news.show');
+        Route::get('/promotions/{promotion}', PromotionController::class)->name('promotions.show');
     });
