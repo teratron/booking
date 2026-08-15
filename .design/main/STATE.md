@@ -4,31 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-15 05:54
+**Updated:** 2026-08-15 10:47
 **Phase:** 5 — Public Site
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Track A, Track C, `T-5D03`, and now `T-5B01` all complete — 10/18. `T-5B01` (object profile page) closed: breadcrumb, cover/gallery, name/type/category/rating/settlement, descriptions, and services compose in one type-aware pass via a new `ObjectProfilePresenter`; the type-specific block (rooms-with-prices vs. a direct object-level price vs. the generic `attribute_schema`-driven details list) never branches on the type's own key. Built against the real Figma hotel-page node. The explicitly requested `T-5C01` → `T-5C02` → `T-5D03` non-stop sequence closed earlier; `T-5B01` was picked up next per standard dependency-topology continuation (its own `Requires: T-5A01` was already satisfied, and it heads the still-untouched Track B).
+- **Task:** Track A, Track C, `T-5D03`, `T-5B01`, and now `T-5B02` all complete — 11/18. `T-5B02` (contact rail, click-capture) closed: every active channel renders in display order on the object page's own rail, each activation routed through a new `ContactClickController` that measures the `contact_click` event *before* resolving the link, then redirects in one hop to the resolved deep link — mirroring the existing `BannerClickController` pattern. The object card's own quick-contact icons got the same instrumentation, since the spec's "every contact activation is measured" carries no exception for them.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Execute T-5B02 Contact rail, interaction flow, and contact-click emission via /magic.run main
+- **Next Action:** Execute T-5B03 Reviews rendering (module-gated) via /magic.run main
 
 ## Progress
 
 ```
-Phase 5: [10/18] █████░░░ 56%
+Phase 5: [11/18] █████░░░ 61%
 Overall: [4/7] █████░░░ 57%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1-4 complete & archived, Phase 5 in progress, 6-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [10/18] Phase 5 IN PROGRESS
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [11/18] Phase 5 IN PROGRESS
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-15 **Decision: `T-5B01` (object profile page) closed** — new `ObjectPageController`/`ObjectProfilePresenter` compose breadcrumb, cover/gallery, header, descriptions, type-varying detail, and services in one pass; `has_rooms` gates a Rooms section (nested prices) vs. a direct object-level Prices section otherwise, and catering/house-rules/cuisine/hours/visiting-information all read uniformly from the type's own `attribute_schema` — never a per-type branch. Two pre-existing bugs fixed along the way: the object card rendered a badge for all three internal availability states where the spec wants only the positive one shown, and `ObjectCardPresenter::detailsUrl()` was missing the route's required `lang` segment (dormant until this task's own route registration exposed it). Full non-slow suite: 633 passed, 0 failed, 3 skipped (up from 627).
-- 2026-08-15 **Decision: `T-5D03` (home page composition) closed — non-stop sequence complete** — `HomePageController::show()` assembles all sixteen blocks, country-resolved via session with a registry-order fallback. Two real bugs fixed along the way, both pre-existing gaps only a real paginated result surfaced: `CatalogQueryService::applyFilters()`'s unqualified `object_type_id`, and `ObjectCardPresenter::present()`'s incomplete `loadMissing()`. Full non-slow suite: 627 passed, 0 failed, 3 skipped (up from 623).
+- 2026-08-15 **Decision: `T-5B02` (contact rail, click-capture) closed** — event emission ordered *before* link resolution in `ContactClickController`, so a misconfigured channel still measures the visitor's real intent to contact even though the hand-off itself 404s. Three real gaps fixed in the card's own pre-existing `ObjectCardPresenter::contactActions()` along the way: unmeasured href, no `display_order` sort, and the channel's own `label` override never read. Full non-slow suite: 638 passed, 0 failed, 3 skipped (up from 633).
+- 2026-08-15 **Decision: `T-5B01` (object profile page) closed** — new `ObjectPageController`/`ObjectProfilePresenter` compose breadcrumb, cover/gallery, header, descriptions, type-varying detail, and services in one pass; `has_rooms` gates a Rooms section vs. a direct object-level Prices section otherwise, and catering/house-rules/cuisine/hours/visiting-information all read uniformly from the type's own `attribute_schema`. Full non-slow suite: 633 passed, 0 failed, 3 skipped (up from 627).
 
 ## Blockers
 
