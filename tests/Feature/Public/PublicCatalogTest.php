@@ -44,7 +44,8 @@ function publicCatalogRegistry(): array
         'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('territory_translations')->insert([
-        'territory_id' => $territoryId, 'locale' => 'en', 'name' => 'Catalog City', 'slug' => 'catalog-city',
+        'territory_id' => $territoryId, 'country_id' => $countryId, 'locale' => 'en', 'name' => 'Catalog City', 'slug' => 'catalog-city',
+        'full_slug_path' => 'catalog-city',
         'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
     ]);
     $hotelTypeId = DB::table('object_types')->insertGetId([
@@ -52,7 +53,7 @@ function publicCatalogRegistry(): array
         'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('object_type_translations')->insert([
-        'object_type_id' => $hotelTypeId, 'locale' => 'en', 'name' => 'Hotel',
+        'object_type_id' => $hotelTypeId, 'locale' => 'en', 'name' => 'Hotel', 'slug' => 'hotel',
         'created_at' => now(), 'updated_at' => now(),
     ]);
     $restaurantTypeId = DB::table('object_types')->insertGetId([
@@ -60,7 +61,7 @@ function publicCatalogRegistry(): array
         'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('object_type_translations')->insert([
-        'object_type_id' => $restaurantTypeId, 'locale' => 'en', 'name' => 'Restaurant',
+        'object_type_id' => $restaurantTypeId, 'locale' => 'en', 'name' => 'Restaurant', 'slug' => 'restaurant',
         'created_at' => now(), 'updated_at' => now(),
     ]);
 

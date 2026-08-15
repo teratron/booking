@@ -25,7 +25,7 @@ use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
  * @property-read ?string $name virtual, proxied through the active translation
  * @property-read ?string $slug virtual, proxied through the active translation
  * @property ?int $parent_id
- * @property int $country_id
+ * @property int<0, max> $country_id
  */
 #[UsePolicy(TerritoryPolicy::class)]
 class Territory extends Model implements TranslatableContract

@@ -131,7 +131,7 @@ it('reads navigation entries from the object-type registry rather than a hard-co
     ]);
     $glampingId = DB::table('object_types')->where('key', 'glamping')->value('id');
     DB::table('object_type_translations')->insert([
-        'object_type_id' => $glampingId, 'locale' => 'en', 'name' => 'Glamping',
+        'object_type_id' => $glampingId, 'locale' => 'en', 'name' => 'Glamping', 'slug' => 'glamping',
         'created_at' => now(), 'updated_at' => now(),
     ]);
 
@@ -140,7 +140,7 @@ it('reads navigation entries from the object-type registry rather than a hard-co
         'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('object_type_translations')->insert([
-        'object_type_id' => $inactiveId, 'locale' => 'en', 'name' => 'Retired Type',
+        'object_type_id' => $inactiveId, 'locale' => 'en', 'name' => 'Retired Type', 'slug' => 'retired-type',
         'created_at' => now(), 'updated_at' => now(),
     ]);
 

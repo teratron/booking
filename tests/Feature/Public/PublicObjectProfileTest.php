@@ -49,7 +49,8 @@ function publicObjectRegistry(): array
         'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('territory_translations')->insert([
-        'territory_id' => $countryRootId, 'locale' => 'en', 'name' => 'Moldova Root', 'slug' => 'moldova-root',
+        'territory_id' => $countryRootId, 'country_id' => $countryId, 'locale' => 'en', 'name' => 'Moldova Root', 'slug' => 'moldova-root',
+        'full_slug_path' => 'moldova-root',
         'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
     ]);
 
@@ -58,7 +59,8 @@ function publicObjectRegistry(): array
         'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('territory_translations')->insert([
-        'territory_id' => $regionId, 'locale' => 'en', 'name' => 'Central Region', 'slug' => 'central-region',
+        'territory_id' => $regionId, 'country_id' => $countryId, 'locale' => 'en', 'name' => 'Central Region', 'slug' => 'central-region',
+        'full_slug_path' => 'moldova-root/central-region',
         'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
     ]);
 
@@ -67,7 +69,8 @@ function publicObjectRegistry(): array
         'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('territory_translations')->insert([
-        'territory_id' => $cityTerritoryId, 'locale' => 'en', 'name' => 'Capital City', 'slug' => 'capital-city',
+        'territory_id' => $cityTerritoryId, 'country_id' => $countryId, 'locale' => 'en', 'name' => 'Capital City', 'slug' => 'capital-city',
+        'full_slug_path' => 'moldova-root/central-region/capital-city',
         'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
     ]);
 
@@ -91,7 +94,7 @@ function publicObjectMakeAccommodationType(): array
         'display_order' => 0, 'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('object_type_translations')->insert([
-        'object_type_id' => $categoryId, 'locale' => 'en', 'name' => 'Accommodation',
+        'object_type_id' => $categoryId, 'locale' => 'en', 'name' => 'Accommodation', 'slug' => 'accommodation',
         'created_at' => now(), 'updated_at' => now(),
     ]);
 
@@ -104,7 +107,7 @@ function publicObjectMakeAccommodationType(): array
         'display_order' => 0, 'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('object_type_translations')->insert([
-        'object_type_id' => $typeId, 'locale' => 'en', 'name' => 'Hotel',
+        'object_type_id' => $typeId, 'locale' => 'en', 'name' => 'Hotel', 'slug' => 'hotel',
         'created_at' => now(), 'updated_at' => now(),
     ]);
 
@@ -121,7 +124,7 @@ function publicObjectMakeDiningType(): int
         'display_order' => 0, 'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('object_type_translations')->insert([
-        'object_type_id' => $typeId, 'locale' => 'en', 'name' => 'Restaurant',
+        'object_type_id' => $typeId, 'locale' => 'en', 'name' => 'Restaurant', 'slug' => 'restaurant',
         'created_at' => now(), 'updated_at' => now(),
     ]);
 
@@ -238,7 +241,7 @@ it('composes breadcrumb, cover, gallery, header, descriptions, rooms, details, a
         'created_at' => now(), 'updated_at' => now(),
     ]);
 
-    $response = $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $object]));
+    $response = $this->get(publicObjectUrl($object));
 
     $response->assertOk()
         ->assertSeeInOrder(['Moldova Root', 'Central Region', 'Capital City', 'Grand Test Hotel'])
@@ -278,7 +281,7 @@ it('renders the object-level price block for a dining fixture with no rooms, and
         'created_at' => now(), 'updated_at' => now(),
     ]);
 
-    $response = $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $object]));
+    $response = $this->get(publicObjectUrl($object));
 
     $response->assertOk()
         ->assertSee(__('public.object.prices_heading'))
@@ -298,7 +301,7 @@ it('degrades independently — a fixture with a single photo and no optional dat
     $object = publicObjectMake($fixture, $type['typeId'], 'Bare Bones Hotel');
     $object->addMedia(UploadedFile::fake()->image('only.jpg', 800, 600))->toMediaCollection('photos');
 
-    $response = $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $object]));
+    $response = $this->get(publicObjectUrl($object));
 
     $response->assertOk()
         ->assertSee('Bare Bones Hotel')
@@ -326,8 +329,8 @@ it('never varies page content by placement package — only the tier badge diffe
     publicObjectGiveAmenity($unranked, 'General', 'Free Parking');
     publicObjectGivePlacement($vip, 'VIP');
 
-    $vipResponse = $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $vip]));
-    $unrankedResponse = $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $unranked]));
+    $vipResponse = $this->get(publicObjectUrl($vip));
+    $unrankedResponse = $this->get(publicObjectUrl($unranked));
 
     $vipResponse->assertOk()->assertSee('VIP')
         ->assertSee(__('public.object.rooms_heading'))
@@ -359,7 +362,7 @@ it('404s an object that is not published', function (): void {
     $type = publicObjectMakeAccommodationType();
     $object = publicObjectMake($fixture, $type['typeId'], 'Draft Hotel', ['status' => 'draft']);
 
-    $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $object]))->assertNotFound();
+    $this->get(publicObjectUrl($object))->assertNotFound();
 });
 
 it('captures one object_page_view and one photo_view per photo through EventCaptureService', function (): void {
@@ -371,7 +374,7 @@ it('captures one object_page_view and one photo_view per photo through EventCapt
     $object->addMedia(UploadedFile::fake()->image('a.jpg'))->toMediaCollection('photos');
     $object->addMedia(UploadedFile::fake()->image('b.jpg'))->toMediaCollection('photos');
 
-    $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $object]))->assertOk();
+    $this->get(publicObjectUrl($object))->assertOk();
 
     $dispatched = Bus::dispatched(CaptureStatEventJob::class)->map(fn (CaptureStatEventJob $job): array => [
         'kind' => (new ReflectionProperty($job, 'kind'))->getValue($job),

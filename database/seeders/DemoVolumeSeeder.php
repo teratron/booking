@@ -81,12 +81,21 @@ final class DemoVolumeSeeder extends Seeder
         foreach ($countries as $country) {
             $levels = ($levelIdsByCountry[$country->id] ?? collect())->pluck('id', 'depth_rank');
             $bounds = self::COUNTRY_BOUNDS[$country->code];
+            // Reset per country, not accumulated across the whole run: no
+            // country's tree ever references another country's territory as
+            // a parent, and holding every country's paths in memory at once
+            // is exactly the kind of growth this seeder's own chunking
+            // discipline exists to avoid.
+            $fullPathById = [];
+            // The slug this seeder assigns (`territory-{$id}`) is language-
+            // invariant, so one path-by-id map serves every locale — no need
+            // to key it per language the way a real per-language slug would.
 
             $level1Ids = [];
             for ($i = 1; $i <= self::LEVEL1_PER_COUNTRY; $i++) {
                 $id = $nextId++;
                 $level1Ids[] = $id;
-                $this->appendTerritory($territoryBuffer, $translationBuffer, $id, null, $country->id, $levels[1], $bounds, "L1-{$i}", $languages);
+                $this->appendTerritory($territoryBuffer, $translationBuffer, $fullPathById, $id, null, $country->id, $levels[1], $bounds, "L1-{$i}", $languages);
             }
 
             $level2Ids = [];
@@ -94,7 +103,7 @@ final class DemoVolumeSeeder extends Seeder
                 for ($i = 1; $i <= self::LEVEL2_PER_LEVEL1; $i++) {
                     $id = $nextId++;
                     $level2Ids[] = $id;
-                    $this->appendTerritory($territoryBuffer, $translationBuffer, $id, $parentId, $country->id, $levels[2], $bounds, "L2-{$id}", $languages);
+                    $this->appendTerritory($territoryBuffer, $translationBuffer, $fullPathById, $id, $parentId, $country->id, $levels[2], $bounds, "L2-{$id}", $languages);
                 }
             }
 
@@ -103,7 +112,7 @@ final class DemoVolumeSeeder extends Seeder
                 for ($i = 1; $i <= self::LEVEL3_PER_LEVEL2; $i++) {
                     $id = $nextId++;
                     $level3Ids[] = $id;
-                    $this->appendTerritory($territoryBuffer, $translationBuffer, $id, $parentId, $country->id, $levels[3], $bounds, "L3-{$id}", $languages);
+                    $this->appendTerritory($territoryBuffer, $translationBuffer, $fullPathById, $id, $parentId, $country->id, $levels[3], $bounds, "L3-{$id}", $languages);
                 }
             }
 
@@ -111,7 +120,7 @@ final class DemoVolumeSeeder extends Seeder
                 for ($i = 1; $i <= self::LEVEL4_PER_LEVEL3; $i++) {
                     $id = $nextId++;
                     $leafIds[] = $id;
-                    $this->appendTerritory($territoryBuffer, $translationBuffer, $id, $parentId, $country->id, $levels[4], $bounds, "L4-{$id}", $languages);
+                    $this->appendTerritory($territoryBuffer, $translationBuffer, $fullPathById, $id, $parentId, $country->id, $levels[4], $bounds, "L4-{$id}", $languages);
                 }
             }
 
@@ -131,12 +140,14 @@ final class DemoVolumeSeeder extends Seeder
     /**
      * @param  array<int, array<string, mixed>>  $territoryBuffer
      * @param  array<int, array<string, mixed>>  $translationBuffer
+     * @param  array<int, string>  $fullPathById  keyed by territory id, populated as each node is appended
      * @param  array{lat: array{float, float}, lng: array{float, float}}  $bounds
      * @param  array<int, string>  $languages
      */
     private function appendTerritory(
         array &$territoryBuffer,
         array &$translationBuffer,
+        array &$fullPathById,
         int $id,
         ?int $parentId,
         int $countryId,
@@ -166,12 +177,18 @@ final class DemoVolumeSeeder extends Seeder
             'updated_at' => now(),
         ];
 
+        $slug = "territory-{$id}";
+        $fullPath = $parentId !== null ? "{$fullPathById[$parentId]}/{$slug}" : $slug;
+        $fullPathById[$id] = $fullPath;
+
         foreach ($languages as $locale) {
             $translationBuffer[] = [
                 'territory_id' => $id,
+                'country_id' => $countryId,
                 'locale' => $locale,
                 'name' => "{$label} ({$locale})",
-                'slug' => "territory-{$id}",
+                'slug' => $slug,
+                'full_slug_path' => $fullPath,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];

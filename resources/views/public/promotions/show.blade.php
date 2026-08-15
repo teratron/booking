@@ -28,13 +28,13 @@
 
         <div class="mt-8 flex flex-wrap gap-3">
             <a
-                href="{{ route('public.objects.show', ['lang' => app()->getLocale(), 'object' => $promotion->object]) }}"
+                href="{{ $objectUrl }}"
                 class="rounded-lg border border-gray-200 px-4 py-2 text-sm text-ink hover:border-brand"
             >
                 {{ $promotion->object->name }}
             </a>
             <a
-                href="{{ route('public.territories.show', ['lang' => app()->getLocale(), 'territory' => $promotion->territory]) }}"
+                href="{{ $territoryUrl }}"
                 class="rounded-full border border-gray-300 px-4 py-2 text-sm text-ink hover:border-brand hover:text-brand"
             >
                 {{ $promotion->territory->name }}

@@ -11,8 +11,11 @@ use App\Models\ObjectType;
 use App\Models\Promotion;
 use App\Models\Territory;
 use App\Services\Catalog\CatalogQueryService;
+use App\Services\Seo\PublicSlugResolver;
+use App\Services\Seo\PublicUrlGenerator;
 use App\Support\Catalog\CatalogSearchCriteria;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
@@ -24,6 +27,11 @@ use Illuminate\Support\Facades\Cache;
  * {@see CatalogQueryService::search()} — never a page-specific query — so
  * tier ordering and transitive descendant scoping come from that one
  * contract rather than being re-derived here.
+ *
+ * The same action also serves the typed-catalog-within-a-territory page
+ * (`{settlement}/{type}`) — {@see PublicSlugResolver} disambiguates the two
+ * shapes from one `{path}` segment, since both belong to the same territory
+ * addressing space and a second controller would duplicate the resolution.
  */
 final class TerritoryPageController extends Controller
 {
@@ -32,6 +40,8 @@ final class TerritoryPageController extends Controller
     private const int NEWS_PER_BLOCK = 6;
 
     private const int PROMOTIONS_PER_BLOCK = 6;
+
+    private const int TYPED_CATALOG_PER_PAGE = 24;
 
     /**
      * The territory page's own "cache hit" budget in practice — the
@@ -44,13 +54,26 @@ final class TerritoryPageController extends Controller
 
     public function __construct(
         private readonly CatalogQueryService $catalog,
+        private readonly PublicSlugResolver $resolver,
+        private readonly PublicUrlGenerator $urls,
     ) {}
 
-    public function show(string $lang, Territory $territory): View
+    public function show(Request $request, string $lang, string $country, string $path): View
     {
+        $resolved = $this->resolver->resolveTerritoryPath($lang, $country, $path);
+
+        abort_unless($resolved !== null, 404);
+
+        $territory = $resolved['territory'];
+        $objectType = $resolved['objectType'];
+
         abort_unless($territory->is_active, 404);
 
         $territory->loadMissing('translations');
+
+        if ($objectType instanceof ObjectType) {
+            return $this->showTypedCatalog($request, $territory, $objectType);
+        }
 
         $sidebar = Cache::remember(
             sprintf('territory:sidebar:%d:%s', $territory->id, $lang),
@@ -67,7 +90,7 @@ final class TerritoryPageController extends Controller
                     ->get(),
                 'childTerritories' => $territory->children()->where('is_active', true)
                     ->orderBy('display_order')
-                    ->with('translations')
+                    ->with(['translations', 'country'])
                     ->get(),
             ]
         );
@@ -79,14 +102,46 @@ final class TerritoryPageController extends Controller
         ]));
     }
 
+    /**
+     * A focused, indexable single-type listing within one territory —
+     * distinct from `/catalog`'s own query-string-filtered results, which
+     * are not indexable by default. Deliberately a plain paginated list
+     * rather than the full interactive filter set: the clean path is what
+     * makes it eligible for indexing at all.
+     */
+    private function showTypedCatalog(Request $request, Territory $territory, ObjectType $objectType): View
+    {
+        $objectType->loadMissing('translations');
+
+        $criteria = new CatalogSearchCriteria(
+            territory: $territory,
+            objectTypeId: $objectType->id,
+            objectType: $objectType,
+            page: $request->integer('page', 1),
+            perPage: self::TYPED_CATALOG_PER_PAGE,
+        );
+
+        $results = $this->catalog->search($criteria);
+
+        $breadcrumbs = $this->breadcrumbs($territory);
+        $breadcrumbs[] = ['label' => (string) ($objectType->name ?? ''), 'url' => $this->urls->typedCatalogUrl($territory, $objectType) ?? url()->current()];
+
+        return view('public.territory.typed-catalog', [
+            'territory' => $territory,
+            'objectType' => $objectType,
+            'results' => $results,
+            'breadcrumbs' => $breadcrumbs,
+        ]);
+    }
+
     /** @return list<array{label: string, url: string}> */
     private function breadcrumbs(Territory $territory): array
     {
-        $chain = $territory->ancestors()->with('translations')->get()->reverse()->push($territory);
+        $chain = $territory->ancestors()->with(['translations', 'country'])->get()->reverse()->push($territory);
 
         return array_values($chain->map(fn (Territory $node): array => [
             'label' => (string) ($node->name ?? ''),
-            'url' => route('public.territories.show', ['lang' => app()->getLocale(), 'territory' => $node->id]),
+            'url' => $this->urls->territoryUrl($node) ?? url()->current(),
         ])->all());
     }
 

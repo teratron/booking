@@ -1,3 +1,6 @@
+@php
+    $urls = app(\App\Services\Seo\PublicUrlGenerator::class);
+@endphp
 <x-layouts.public :title="$territory->name" :breadcrumbs="$breadcrumbs">
     <div class="mx-auto max-w-7xl px-4 py-8 lg:px-8">
         @if ($territory->hero_image_path)
@@ -91,7 +94,7 @@
                 <div class="mt-4 flex flex-wrap gap-3">
                     @foreach ($childTerritories as $child)
                         <a
-                            href="{{ route('public.territories.show', ['lang' => app()->getLocale(), 'territory' => $child->id]) }}"
+                            href="{{ $urls->territoryUrl($child) }}"
                             class="rounded-full border border-gray-300 px-4 py-2 text-sm text-ink hover:border-brand hover:text-brand"
                         >
                             {{ $child->name }}

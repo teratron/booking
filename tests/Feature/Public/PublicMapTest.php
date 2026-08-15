@@ -44,7 +44,8 @@ function publicMapGeography(): array
         'country_id' => $countryId, 'level_id' => $levelId, 'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('territory_translations')->insert([
-        'territory_id' => $territoryId, 'locale' => 'en', 'name' => 'Map City', 'slug' => 'map-city',
+        'territory_id' => $territoryId, 'country_id' => $countryId, 'locale' => 'en', 'name' => 'Map City', 'slug' => 'map-city',
+        'full_slug_path' => 'map-city',
         'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
     ]);
     $typeId = DB::table('object_types')->insertGetId([

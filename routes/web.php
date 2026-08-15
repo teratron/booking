@@ -6,6 +6,7 @@ use App\Http\Controllers\BannerClickController;
 use App\Http\Controllers\ExitImpersonationController;
 use App\Http\Controllers\Public\BlogController;
 use App\Http\Controllers\Public\ContactClickController;
+use App\Http\Controllers\Public\CountryLandingController;
 use App\Http\Controllers\Public\CountryPreferenceController;
 use App\Http\Controllers\Public\FeedbackSubmissionController;
 use App\Http\Controllers\Public\HomePageController;
@@ -46,17 +47,29 @@ Route::prefix('{lang}')
         Route::get('/map/pins', [MapPinsController::class, 'index'])->name('map.pins.index');
         Route::get('/map/pins/{object}', [MapPinsController::class, 'show'])->name('map.pins.show');
         Route::get('/catalog', CatalogSearch::class)->name('catalog.index');
-        // ID-addressed rather than the full per-language nested-slug path
-        // l1-seo.md §5.1 eventually describes — that URL grammar (and the
-        // denormalized ancestor-slug-path caching it needs) is l1-seo's own
-        // domain; this route is swappable for it later without touching the
-        // page's own composition.
-        Route::get('/territory/{territory}', [TerritoryPageController::class, 'show'])->name('territories.show');
-        Route::get('/objects/{object}', [ObjectPageController::class, 'show'])->name('objects.show');
+        // Flat object addressing (§5.1): an object may be recategorized or
+        // reassigned to a neighbouring territory, and a hierarchical object
+        // URL would break a ranked page on every such move.
+        Route::get('/o/{slug}', [ObjectPageController::class, 'show'])->name('objects.show');
         Route::get('/objects/{object}/contact/{channel}/click', ContactClickController::class)->name('objects.contact.click');
         Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
         Route::get('/blog/{article}', [BlogController::class, 'show'])->name('blog.show');
         Route::get('/news', [NewsController::class, 'index'])->name('news.index');
         Route::get('/news/{newsItem}', [NewsController::class, 'show'])->name('news.show');
         Route::get('/promotions/{promotion}', PromotionController::class)->name('promotions.show');
+        // Territory paths mirror the hierarchy (§5.1): `{path}` is the
+        // territory's own cached `full_slug_path`, optionally followed by an
+        // object-type slug for the typed-catalog-within-a-territory case
+        // (`{settlement}/{type}`) — PublicSlugResolver disambiguates the two.
+        // Both wildcard routes stay last so every literal segment above
+        // (`catalog`, `o`, `blog`, `news`, `promotions`, …) is tried first;
+        // none of them can collide with the `{country}` constraint below,
+        // since none is exactly two lowercase letters.
+        Route::get('/{country}/{path}', [TerritoryPageController::class, 'show'])
+            ->where('country', '[a-z]{2}')
+            ->where('path', '.*')
+            ->name('territories.show');
+        Route::get('/{country}', CountryLandingController::class)
+            ->where('country', '[a-z]{2}')
+            ->name('country.show');
     });

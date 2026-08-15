@@ -114,6 +114,8 @@ class ObjectTypeForm
                         TextInput::make("translations.{$language->code}.name")
                             ->label(__('panel.object_types.form.name'))
                             ->maxLength(255),
+                        TextInput::make("translations.{$language->code}.slug")
+                            ->label(__('panel.object_types.form.slug')),
                         TextInput::make("translations.{$language->code}.seo_title")
                             ->label(__('panel.object_types.form.seo_title')),
                         TextInput::make("translations.{$language->code}.seo_description")

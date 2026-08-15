@@ -31,7 +31,7 @@
                 <div class="mt-4 flex gap-3 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-4">
                     @foreach ($popularDestinations as $destination)
                         <a
-                            href="{{ route('public.territories.show', ['lang' => app()->getLocale(), 'territory' => $destination->id]) }}"
+                            href="{{ $destination->url }}"
                             class="w-48 shrink-0 rounded-lg border border-gray-200 p-4 text-center hover:border-brand sm:w-auto"
                         >
                             {{ $destination->name }}
@@ -120,7 +120,7 @@
                 <div class="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-6">
                     @foreach ($popularCities as $city)
                         <a
-                            href="{{ route('public.territories.show', ['lang' => app()->getLocale(), 'territory' => $city->id]) }}"
+                            href="{{ $city->url }}"
                             class="rounded-lg border border-gray-200 p-3 text-center text-sm hover:border-brand"
                         >
                             {{ $city->name }}

@@ -68,7 +68,7 @@ function territoryFixture(): array
 
     foreach ([$region => 'Region', $city => 'City', $resort => 'Resort', $siblingRegion => 'Sibling Region'] as $id => $name) {
         DB::table('territory_translations')->insert([
-            'territory_id' => $id, 'locale' => 'en', 'name' => $name,
+            'territory_id' => $id, 'country_id' => $countryMd, 'locale' => 'en', 'name' => $name,
             'slug' => Str::slug($name).'-'.$id, 'created_at' => now(), 'updated_at' => now(),
         ]);
     }

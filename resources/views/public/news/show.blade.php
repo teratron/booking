@@ -1,3 +1,6 @@
+@php
+    $urls = app(\App\Services\Seo\PublicUrlGenerator::class);
+@endphp
 <x-layouts.public :title="$newsItem->title" :breadcrumbs="$breadcrumbs">
     <div class="mx-auto max-w-3xl px-4 py-8 lg:px-8">
         @if ($newsItem->is_pinned)
@@ -24,17 +27,17 @@
 
         @if ($newsItem->territory || $newsItem->object)
             <div class="mt-8 flex flex-wrap gap-3">
-                @if ($newsItem->territory)
+                @if ($newsItem->territory && $urls->territoryUrl($newsItem->territory))
                     <a
-                        href="{{ route('public.territories.show', ['lang' => app()->getLocale(), 'territory' => $newsItem->territory]) }}"
+                        href="{{ $urls->territoryUrl($newsItem->territory) }}"
                         class="rounded-full border border-gray-300 px-4 py-2 text-sm text-ink hover:border-brand hover:text-brand"
                     >
                         {{ $newsItem->territory->name }}
                     </a>
                 @endif
-                @if ($newsItem->object)
+                @if ($newsItem->object && $urls->objectUrl($newsItem->object))
                     <a
-                        href="{{ route('public.objects.show', ['lang' => app()->getLocale(), 'object' => $newsItem->object]) }}"
+                        href="{{ $urls->objectUrl($newsItem->object) }}"
                         class="rounded-lg border border-gray-200 px-4 py-2 text-sm text-ink hover:border-brand"
                     >
                         {{ $newsItem->object->name }}

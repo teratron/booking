@@ -41,6 +41,7 @@ return [
         'promotions' => 'Акции',
         'map' => 'Карта',
         'explore' => 'Рядом',
+        'typed_catalog_empty' => 'Объекты этого типа пока не опубликованы в :territory.',
     ],
 
     'blog' => [

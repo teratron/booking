@@ -42,7 +42,8 @@ function publicObjectRelatedRegistry(): array
         'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('territory_translations')->insert([
-        'territory_id' => $territoryAId, 'locale' => 'en', 'name' => 'Territory A', 'slug' => 'territory-a',
+        'territory_id' => $territoryAId, 'country_id' => $countryId, 'locale' => 'en', 'name' => 'Territory A', 'slug' => 'territory-a',
+        'full_slug_path' => 'territory-a',
         'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
     ]);
     $territoryBId = DB::table('territories')->insertGetId([
@@ -50,7 +51,8 @@ function publicObjectRelatedRegistry(): array
         'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('territory_translations')->insert([
-        'territory_id' => $territoryBId, 'locale' => 'en', 'name' => 'Territory B', 'slug' => 'territory-b',
+        'territory_id' => $territoryBId, 'country_id' => $countryId, 'locale' => 'en', 'name' => 'Territory B', 'slug' => 'territory-b',
+        'full_slug_path' => 'territory-b',
         'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
     ]);
     $hotelTypeId = DB::table('object_types')->insertGetId([
@@ -58,7 +60,7 @@ function publicObjectRelatedRegistry(): array
         'display_order' => 0, 'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('object_type_translations')->insert([
-        'object_type_id' => $hotelTypeId, 'locale' => 'en', 'name' => 'Hotel',
+        'object_type_id' => $hotelTypeId, 'locale' => 'en', 'name' => 'Hotel', 'slug' => 'hotel',
         'created_at' => now(), 'updated_at' => now(),
     ]);
     $restaurantTypeId = DB::table('object_types')->insertGetId([
@@ -66,7 +68,7 @@ function publicObjectRelatedRegistry(): array
         'display_order' => 1, 'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('object_type_translations')->insert([
-        'object_type_id' => $restaurantTypeId, 'locale' => 'en', 'name' => 'Restaurant',
+        'object_type_id' => $restaurantTypeId, 'locale' => 'en', 'name' => 'Restaurant', 'slug' => 'restaurant',
         'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('modules')->insert([
@@ -136,7 +138,7 @@ it('renders nearby objects tier-ordered through CatalogQueryService — a lower-
     $higherTier = publicObjectRelatedMake($fixture, $fixture['territoryAId'], $fixture['hotelTypeId'], 'VIP Nearby Hotel');
     publicObjectRelatedGivePlacement($higherTier, 'VIP');
 
-    $html = (string) $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $main]))->getContent();
+    $html = (string) $this->get(publicObjectUrl($main))->getContent();
 
     expect(strpos($html, 'VIP Nearby Hotel'))->toBeLessThan(strpos($html, 'Standard Nearby Hotel'));
 });
@@ -151,7 +153,7 @@ it("scopes nearby to the object's own territory and similar to the object's own 
     // Different territory, same type, same country — belongs in "similar", not "nearby".
     $similarDifferentTerritory = publicObjectRelatedMake($fixture, $fixture['territoryBId'], $fixture['hotelTypeId'], 'Similar Hotel Elsewhere');
 
-    $response = $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $main]));
+    $response = $this->get(publicObjectUrl($main));
     $html = (string) $response->getContent();
 
     $response->assertOk()
@@ -202,7 +204,7 @@ it("renders the object's own published news and promotions through the shared co
         'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
     ]);
 
-    $withContentResponse = $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $withContent]));
+    $withContentResponse = $this->get(publicObjectUrl($withContent));
     $withContentResponse->assertOk()
         ->assertSee(__('public.shell.nav.news'))
         ->assertSee('Object-specific News')
@@ -215,7 +217,7 @@ it("renders the object's own published news and promotions through the shared co
     // nearby/similar blocks are not empty — only its news/promotions are,
     // since those are scoped to this object's own id, not its territory
     // or type.
-    $bareResponse = $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $bare]));
+    $bareResponse = $this->get(publicObjectUrl($bare));
     $bareResponse->assertOk()
         ->assertDontSee('Object-specific News')
         ->assertDontSee('Object-specific Promotion');
@@ -225,7 +227,7 @@ it('omits the nearby and similar blocks entirely when no other object shares thi
     $fixture = publicObjectRelatedRegistry();
     $isolated = publicObjectRelatedMake($fixture, $fixture['territoryBId'], $fixture['restaurantTypeId'], 'Isolated Restaurant');
 
-    $response = $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $isolated]));
+    $response = $this->get(publicObjectUrl($isolated));
 
     // "News" and "Promotions" also appear in the shell's own site-wide
     // nav bar, so these two assert the block's own heading markup rather

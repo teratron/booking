@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\Object_;
+use App\Models\Territory;
 use App\Services\Shell\PublicShellDataProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -86,7 +87,8 @@ function perfBudgetTerritoryTree(int $countryId): array
         'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('territory_translations')->insert([
-        'territory_id' => $rootId, 'locale' => 'en', 'name' => 'Perf Country', 'slug' => 'perf-country',
+        'territory_id' => $rootId, 'country_id' => $countryId, 'locale' => 'en', 'name' => 'Perf Country', 'slug' => 'perf-country',
+        'full_slug_path' => 'perf-country',
         'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
     ]);
 
@@ -97,8 +99,11 @@ function perfBudgetTerritoryTree(int $countryId): array
             'country_id' => $countryId, 'level_id' => $levelId, 'parent_id' => $rootId, 'is_active' => true,
             'created_at' => now(), 'updated_at' => now(),
         ]);
+        $regionSlug = "perf-region-{$region}";
+        $regionPath = "perf-country/{$regionSlug}";
         DB::table('territory_translations')->insert([
-            'territory_id' => $regionId, 'locale' => 'en', 'name' => "Perf Region {$region}", 'slug' => "perf-region-{$region}",
+            'territory_id' => $regionId, 'country_id' => $countryId, 'locale' => 'en', 'name' => "Perf Region {$region}", 'slug' => $regionSlug,
+            'full_slug_path' => $regionPath,
             'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
         ]);
 
@@ -107,8 +112,10 @@ function perfBudgetTerritoryTree(int $countryId): array
                 'country_id' => $countryId, 'level_id' => $levelId, 'parent_id' => $regionId, 'is_active' => true,
                 'created_at' => now(), 'updated_at' => now(),
             ]);
+            $citySlug = "perf-city-{$region}-{$city}";
             DB::table('territory_translations')->insert([
-                'territory_id' => $cityId, 'locale' => 'en', 'name' => "Perf City {$region}-{$city}", 'slug' => "perf-city-{$region}-{$city}",
+                'territory_id' => $cityId, 'country_id' => $countryId, 'locale' => 'en', 'name' => "Perf City {$region}-{$city}", 'slug' => $citySlug,
+                'full_slug_path' => "{$regionPath}/{$citySlug}",
                 'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
             ]);
             $cityIds[] = $cityId;
@@ -125,7 +132,7 @@ function perfBudgetMakeType(string $key, bool $hasAvailability): int
         'display_order' => 0, 'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('object_type_translations')->insert([
-        'object_type_id' => $typeId, 'locale' => 'en', 'name' => ucfirst($key),
+        'object_type_id' => $typeId, 'locale' => 'en', 'name' => ucfirst($key), 'slug' => $key,
         'created_at' => now(), 'updated_at' => now(),
     ]);
 
@@ -392,8 +399,9 @@ it('meets the query-count budget on every request and measurably benefits from c
 
     // --- Territory page ---
     $cityId = $tree['cityIds'][0];
-    $territoryMiss = perfBudgetMeasureRequest(fn () => $this->get(route('public.territories.show', ['lang' => 'en', 'territory' => $cityId])));
-    $territoryHit = perfBudgetMeasureRequest(fn () => $this->get(route('public.territories.show', ['lang' => 'en', 'territory' => $cityId])));
+    $cityUrl = publicTerritoryUrl(Territory::query()->findOrFail($cityId));
+    $territoryMiss = perfBudgetMeasureRequest(fn () => $this->get($cityUrl));
+    $territoryHit = perfBudgetMeasureRequest(fn () => $this->get($cityUrl));
 
     expect($territoryMiss['queryCount'])->toBeLessThanOrEqual(30, "Territory page (cache miss) issued {$territoryMiss['queryCount']} queries.")
         ->and($territoryHit['queryCount'])->toBeLessThanOrEqual(30, "Territory page (cache hit) issued {$territoryHit['queryCount']} queries.")
@@ -421,8 +429,9 @@ it('meets the query-count budget on every request and measurably benefits from c
     // project's stated budget — closing the remaining gap to ≤30 is real
     // follow-up work, not something this task silently absorbed by
     // loosening the number everywhere else in this file.
-    $objectMiss = perfBudgetMeasureRequest(fn () => $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $heroObjectId])));
-    $objectHit = perfBudgetMeasureRequest(fn () => $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $heroObjectId])));
+    $heroObjectUrl = publicObjectUrl(Object_::query()->findOrFail($heroObjectId));
+    $objectMiss = perfBudgetMeasureRequest(fn () => $this->get($heroObjectUrl));
+    $objectHit = perfBudgetMeasureRequest(fn () => $this->get($heroObjectUrl));
 
     expect($objectMiss['queryCount'])->toBeLessThanOrEqual(70, "Object page (cache miss) issued {$objectMiss['queryCount']} queries — regression guard, see comment above; the project's own ≤30 budget is not yet met here.")
         ->and($objectHit['queryCount'])->toBeLessThanOrEqual(70, "Object page (cache hit) issued {$objectHit['queryCount']} queries.")

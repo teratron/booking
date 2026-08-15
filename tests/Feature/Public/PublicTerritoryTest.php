@@ -40,7 +40,7 @@ function publicTerritoryRegistry(): array
         'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('object_type_translations')->insert([
-        'object_type_id' => $hotelTypeId, 'locale' => 'en', 'name' => 'Hotel',
+        'object_type_id' => $hotelTypeId, 'locale' => 'en', 'name' => 'Hotel', 'slug' => 'hotel',
         'created_at' => now(), 'updated_at' => now(),
     ]);
     $restaurantTypeId = DB::table('object_types')->insertGetId([
@@ -48,14 +48,15 @@ function publicTerritoryRegistry(): array
         'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('object_type_translations')->insert([
-        'object_type_id' => $restaurantTypeId, 'locale' => 'en', 'name' => 'Restaurant',
+        'object_type_id' => $restaurantTypeId, 'locale' => 'en', 'name' => 'Restaurant', 'slug' => 'restaurant',
         'created_at' => now(), 'updated_at' => now(),
     ]);
 
     return compact('languageId', 'countryId', 'hotelTypeId', 'restaurantTypeId');
 }
 
-function publicTerritoryMake(int $countryId, string $name, ?int $parentId = null): Territory
+/** @param  array<string, string>  $overrides */
+function publicTerritoryMake(int $countryId, string $name, ?int $parentId = null, array $overrides = []): Territory
 {
     $levelId = DB::table('territory_levels')->insertGetId([
         'country_id' => $countryId, 'depth_rank' => 1, 'created_at' => now(), 'updated_at' => now(),
@@ -65,12 +66,18 @@ function publicTerritoryMake(int $countryId, string $name, ?int $parentId = null
         'latitude' => 47.0, 'longitude' => 28.8,
         'created_at' => now(), 'updated_at' => now(),
     ]);
-    DB::table('territory_translations')->insert([
-        'territory_id' => $territoryId, 'locale' => 'en', 'name' => $name, 'slug' => Str::slug($name),
+    $slug = Str::slug($name);
+    $parentPath = $parentId !== null
+        ? DB::table('territory_translations')->where('territory_id', $parentId)->where('locale', 'en')->value('full_slug_path')
+        : null;
+
+    DB::table('territory_translations')->insert(array_merge([
+        'territory_id' => $territoryId, 'country_id' => $countryId, 'locale' => 'en', 'name' => $name, 'slug' => $slug,
+        'full_slug_path' => $parentPath !== null ? "{$parentPath}/{$slug}" : $slug,
         'short_description' => "{$name} is a lovely place to visit.",
         'full_description' => "Everything a visitor needs to know about {$name}.",
         'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
-    ]);
+    ], $overrides));
 
     /** @var Territory $territory */
     $territory = Territory::query()->findOrFail($territoryId);
@@ -136,7 +143,7 @@ it('composes breadcrumb, hero, description, a catalog block per active type, and
     publicTerritoryMakeObject($fixture['countryId'], $city->id, $fixture['hotelTypeId'], 'Capital Grand Hotel');
     // No restaurant seeded — that block must be omitted entirely.
 
-    $response = $this->get(route('public.territories.show', ['lang' => 'en', 'territory' => $city->id]));
+    $response = $this->get(publicTerritoryUrl($city));
 
     $response->assertOk()
         ->assertSeeInOrder(['Moldova Country Root', 'Central Region', 'Capital City'])
@@ -158,7 +165,7 @@ it('scopes transitively — an object on a descendant node appears in an ancesto
 
     publicTerritoryMakeObject($fixture['countryId'], $city->id, $fixture['hotelTypeId'], 'Deep Descendant Hotel');
 
-    $response = $this->get(route('public.territories.show', ['lang' => 'en', 'territory' => $region->id]));
+    $response = $this->get(publicTerritoryUrl($region));
 
     $response->assertOk()->assertSee('Deep Descendant Hotel');
 });
@@ -176,8 +183,8 @@ it('restarts tier ordering per territory — the same tier distribution under tw
     $bVip = publicTerritoryMakeObject($fixture['countryId'], $siblingB->id, $fixture['hotelTypeId'], 'B VIP Hotel');
     publicTerritoryGivePlacement($bVip, 'VIP');
 
-    $responseA = (string) $this->get(route('public.territories.show', ['lang' => 'en', 'territory' => $siblingA->id]))->getContent();
-    $responseB = (string) $this->get(route('public.territories.show', ['lang' => 'en', 'territory' => $siblingB->id]))->getContent();
+    $responseA = (string) $this->get(publicTerritoryUrl($siblingA))->getContent();
+    $responseB = (string) $this->get(publicTerritoryUrl($siblingB))->getContent();
 
     // Each territory's own VIP object outranks its own standard object —
     // proven independently per page, not merely that a VIP exists somewhere.
@@ -192,5 +199,5 @@ it('404s an inactive territory', function (): void {
     $territory = publicTerritoryMake($fixture['countryId'], 'Inactive Territory');
     $territory->update(['is_active' => false]);
 
-    $this->get(route('public.territories.show', ['lang' => 'en', 'territory' => $territory->id]))->assertNotFound();
+    $this->get(publicTerritoryUrl($territory))->assertNotFound();
 });

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Livewire\Public\CatalogSearch;
 use App\Models\Object_;
+use App\Models\Territory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -60,8 +61,10 @@ function tierInvariantMakeTerritory(int $countryId, string $name): int
         'country_id' => $countryId, 'level_id' => $levelId, 'is_active' => true,
         'created_at' => now(), 'updated_at' => now(),
     ]);
+    $slug = Str::slug($name);
     DB::table('territory_translations')->insert([
-        'territory_id' => $territoryId, 'locale' => 'en', 'name' => $name, 'slug' => Str::slug($name),
+        'territory_id' => $territoryId, 'country_id' => $countryId, 'locale' => 'en', 'name' => $name, 'slug' => $slug,
+        'full_slug_path' => $slug,
         'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
     ]);
 
@@ -75,7 +78,7 @@ function tierInvariantMakeType(string $key, bool $isActive = true): int
         'display_order' => 0, 'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('object_type_translations')->insert([
-        'object_type_id' => $typeId, 'locale' => 'en', 'name' => ucfirst($key),
+        'object_type_id' => $typeId, 'locale' => 'en', 'name' => ucfirst($key), 'slug' => $key,
         'created_at' => now(), 'updated_at' => now(),
     ]);
 
@@ -149,7 +152,7 @@ it("holds tier precedence in a territory page's own catalog block", function ():
     $vip = tierInvariantMakeObject($fixture['countryId'], $territoryId, $typeId, 'Territory VIP');
     tierInvariantGivePlacement($vip, 'VIP');
 
-    $html = (string) $this->get(route('public.territories.show', ['lang' => 'en', 'territory' => $territoryId]))->getContent();
+    $html = (string) $this->get(publicTerritoryUrl(Territory::query()->findOrFail($territoryId)))->getContent();
 
     expect(strpos($html, 'Territory VIP'))->toBeLessThan(strpos($html, 'Territory Standard'));
 })->group('slow');
@@ -193,7 +196,7 @@ it("holds tier precedence in an object profile page's own nearby and similar blo
     $similarVip = tierInvariantMakeObject($fixture['countryId'], $elsewhereTerritoryId, $typeId, 'Similar VIP');
     tierInvariantGivePlacement($similarVip, 'VIP');
 
-    $html = (string) $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $main]))->getContent();
+    $html = (string) $this->get(publicObjectUrl($main))->getContent();
 
     $nearbyHeadingStart = strpos($html, __('public.object.nearby_heading'));
     $similarHeadingStart = strpos($html, __('public.object.similar_heading'));

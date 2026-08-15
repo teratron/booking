@@ -24,7 +24,7 @@ and a versioned read-only REST contract behind issued tokens.
 
 ### Track A — Addressing Foundation
 
-- [ ] [T-6A01] Per-language slug resolution and the territory-hierarchy URL grammar
+- [x] [T-6A01] Per-language slug resolution and the territory-hierarchy URL grammar
 - [ ] [T-6A02] Redirect table — model, administration, same-operation creation on slug change
 
 ### Track B — Metadata, Indexation, Structured Data & Sitemaps
@@ -67,6 +67,10 @@ slug. The denormalized `territory_translations.full_slug_path` column already ex
 and is written by the territory administrator on reparenting — this task makes it the
 read path, backfills the rows no administrator has touched, and adds the uniqueness
 constraint the lookup assumes.
+**One host, language as the leading path segment — settled, not open.** There are no
+language subdomains and no per-country domains. Alternates are therefore path swaps on
+the same host, canonicals always name that host, and no part of this task should be
+built to keep a subdomain migration cheap.
 *Verify:* `docker compose exec app php artisan test --filter=SeoUrlGrammarTest` — asserts
 a five-level territory path resolves to the right record, that an object URL is
 unchanged by reparenting its territory, and that two territories in different countries
@@ -314,13 +318,19 @@ mitigation. `T-6D01` carries the second-largest blast radius relative to its siz
 someone probes for it, which is precisely why `T-6T02` exists as a separate invariant.
 
 **Plan stability.** All three specifications remain `RFC`, as every phase before this
-one was planned and executed under. Two open questions actually touch this phase, and
-one of them is unusually consequential for a task rather than merely for a document:
-the deferred decision on country-specific domains changes canonical and alternate-link
-strategy, and `T-6A01` is the task that makes the current answer permanent — the
-specification notes plainly that URL decisions become irreversible the moment pages are
-indexed. The second, the absence of any stated rate-limit figure or data-licensing
-position, is a business decision that `T-6D04` must pick a defensible default for rather
+one was planned and executed under. Two open questions touched this phase at planning
+time; **one is now closed.** The deferred question of country-specific domains — the
+one genuinely consequential for a task rather than merely for a document, since
+`T-6A01` is what would have made the answer permanent — was settled by the project
+owner on 2026-08-15: **a single host, with language as the leading path segment, and no
+subdomains of any kind.** That removes the phase's only irreversible fork. It also
+means `T-6A01` should not carry defensive structure to keep a subdomain migration
+mechanical; the specification's §2 note and `l1-localization.md` §7 both anticipate a
+migration that is no longer planned, and building for it would be paying for optionality
+the owner has declined.
+
+The remaining question — the absence of any stated rate-limit figure or data-licensing
+position — is a business decision `T-6D04` should pick a defensible default for rather
 than wait on, since the design is deliberately conservative enough that opening it later
 is a policy change rather than a redesign.
 
@@ -357,9 +367,25 @@ is a policy change rather than a redesign.
 - **Object URLs stay flat** (`/{lang}/o/{slug}`) while territory URLs mirror the
   hierarchy. An administrator may move an object between cities and resorts, and under a
   hierarchical object URL every such move would break a ranked page.
+- **One host; language is the leading path segment; no subdomains.** Not a default
+  awaiting review — a settled decision. Alternates are path swaps on the same host, and
+  neither language subdomains nor per-country domains are to be built toward.
 - **One published-only visibility filter, shared** between the indexation policy and the
   API's query layer. One forgotten filter exposes unmoderated content.
 - Rate-limit before doing work. A limiter that runs after the query protects nothing.
 - The API read contract layers over `CatalogQueryService`; it never opens a second
   retrieval path.
 - Sitemaps are generated artefacts written by a job, never computed per request.
+
+## Detailed Tracking
+
+### [T-6A01] Per-language slug resolution and the territory-hierarchy URL grammar
+
+- **Spec:** l1-seo.md §5.1, §6.1
+- **Status:** Done
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Public/SeoUrlGrammarTest.php` — 8 cases: a five-level territory path resolves correctly; the typed-catalog trailing segment disambiguates from a plain territory path; an object's own URL survives both a direct territory reassignment and a territory reparent; two territories in different countries share an identical leaf slug and full path without collision; the bare country segment redirects to its own landing territory; an unknown/inactive country 404s; a territory path resolved against the wrong country segment 404s. Full non-slow suite: 668 passed, 0 failed, 3 skipped. `composer analyse` (PHPStan level 8), `pint --test`, and both architecture tests (including `ContainmentTest`) clean.
+- **Handoff:** All of Track B (metadata, indexation, sitemaps) builds on this grammar. `T-6A02` (redirects) depends on it directly — a redirect's target is expressed in this same grammar.
+- **Notes:** The retrofit turned out larger than the original task description anticipated, for three compounding reasons found only by reading the schema rather than assuming it: (1) `Country` and `ObjectType` carried no slug at all — the country segment uses the country's own stable ISO code instead (no per-language country name exists in the spec), and `object_type_translations` gained a new per-language `slug` column for the typed-catalog segment; (2) `territory_translations`' original `unique(locale, slug)` constraint was already flagged at creation time as an approximation and had to be replaced with the real boundary; (3) that real boundary turned out to be `(locale, country_id, full_slug_path)`, not `(locale, full_slug_path)` alone — a bare path-only constraint rejects two identically-named root territories in different countries, which is exactly the case the spec promises to allow. `country_id` is denormalized onto `territory_translations` (Postgres cannot scope a unique index through a foreign key's own parent table) and kept in sync by `TerritoryAdministrator::recomputeSlugPaths()`, the one place that already writes `full_slug_path`. `PublicSlugResolver`/`PublicUrlGenerator` (new, `app/Services/Seo/`) are the sole inbound/outbound halves of the grammar; every prior direct `route('public.territories.show', …)`/`route('public.objects.show', …)` call site (21 files: controllers, Blade views, `ObjectCardPresenter`, `PublicShellDataProvider`) now goes through them. The typed-catalog page (`{settlement}/{type}`) is a new, minimal server-rendered paginated listing — deliberately not the full interactive filter UI `/catalog` already provides, since the clean path is what makes it eligible for indexing at all (Track B's own concern, not re-litigated here).
+- **Changes:** Two new migrations: `add_seo_slug_support_to_object_types_and_territories` (slug on `object_type_translations`; replaces `territory_translations`' `unique(locale, slug)` with `unique(locale, full_slug_path)`) and `scope_territory_slug_path_uniqueness_by_country` (adds `territory_translations.country_id`, backfills it, replaces the constraint again with `unique(locale, country_id, full_slug_path)`). New `App\Services\Seo\PublicUrlGenerator` and `App\Services\Seo\PublicSlugResolver`. New `CountryLandingController` (bare `/{lang}/{country}` redirects to that country's own top-level landing territory, reusing the same resolution `CountryPreferenceController` already had). `TerritoryPageController::show()` now resolves `(country, path)` via the resolver and branches to either the existing territory-landing composition or the new typed-catalog view. `ObjectPageController::show()` resolves a flat slug instead of binding `Object_` by id. `ObjectType` gained `slug` as a translated attribute; its Filament form/edit pages gained the field. `PublicShellDataProvider`'s `PublicDestinationOption` DTO gained a pre-resolved `url`, computed at cache-build time (the DTO never carried enough — country, full path — for a view to resolve it itself). `TerritoryAdministrator::recomputeSlugPaths()` now also syncs `country_id`. `DemoVolumeSeeder` computes `full_slug_path`/`country_id` inline during tree construction rather than a second pass, with the per-node path map reset at each country boundary (bounds its memory to one country's tree, not the whole run).
+- **Evidence:** New `tests/Feature/Public/SeoUrlGrammarTest.php` (8 cases, listed above). Two real bugs caught by PHPStan before they shipped: an inverted boolean (`! Str::lower(...) === Str::lower(...)`, operator precedence) in the resolver's country check would have accepted every country unconditionally, caught by manual re-read before the first test run; a nullable-relation type mismatch passing `$promotion->object`/`$promotion->territory` into the generator's non-nullable parameters, fixed with an explicit `instanceof` guard backed by the domain invariant that a promotion always carries both. One real functional gap found only by running the full suite, not by design review: the Filament `ObjectType` create/edit form had no slug field at all — creating or editing a type through the admin panel would have failed outright the moment `slug` became `NOT NULL`; fixed in the same change (`ObjectTypeForm`, `EditObjectType::mutateFormDataBeforeFill()`). A second full-suite pass surfaced the country-scoped uniqueness gap directly (a test seeding two identically-named root territories in different countries hit a real unique-constraint violation), which is what drove the second migration rather than leaving the boundary too narrow. Full non-slow suite (668/0/3), full architecture suite (8/8 including `ContainmentTest`), `composer unused` (0 unused), `composer audit` (clean) all independently re-verified after the fix. The `slow`-group suite reproduces `DemoVolumeSeederTest`'s own pre-existing, documented memory-ceiling flake (STATE.md) under an artificial 128 MB PHP limit designed to stress its chunking — confirmed unrelated to this task's own changes (the container's real memory limit is 3.7 GB, in active use at ~130 MB baseline) and left as-is rather than papered over; `PlacementOrderingVolumeTest` and `PublicPerformanceBudgetTest` (65 objects and 30 territory-page queries respectively, both within their stated budgets) pass cleanly in the same group.

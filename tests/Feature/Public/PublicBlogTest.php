@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\Object_;
+use App\Models\Territory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -42,7 +43,8 @@ function publicBlogRegistry(): array
         'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('territory_translations')->insert([
-        'territory_id' => $territoryId, 'locale' => 'en', 'name' => 'Mentioned Territory', 'slug' => 'mentioned-territory',
+        'territory_id' => $territoryId, 'country_id' => $countryId, 'locale' => 'en', 'name' => 'Mentioned Territory', 'slug' => 'mentioned-territory',
+        'full_slug_path' => 'mentioned-territory',
         'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
     ]);
     $objectTypeId = DB::table('object_types')->insertGetId([
@@ -50,7 +52,7 @@ function publicBlogRegistry(): array
         'display_order' => 0, 'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('object_type_translations')->insert([
-        'object_type_id' => $objectTypeId, 'locale' => 'en', 'name' => 'Hotel',
+        'object_type_id' => $objectTypeId, 'locale' => 'en', 'name' => 'Hotel', 'slug' => 'hotel',
         'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('modules')->insert([
@@ -161,11 +163,13 @@ it('renders full body, author, category, tags, and real links to related objects
 
     /** @var Object_ $object */
     $object = Object_::query()->findOrFail($objectId);
+    /** @var Territory $territory */
+    $territory = Territory::query()->findOrFail($fixture['territoryId']);
 
     $response = $this->get(route('public.blog.show', ['lang' => 'en', 'article' => $articleId]));
 
-    $objectHref = route('public.objects.show', ['lang' => 'en', 'object' => $object]);
-    $territoryHref = route('public.territories.show', ['lang' => 'en', 'territory' => $fixture['territoryId']]);
+    $objectHref = publicObjectUrl($object);
+    $territoryHref = publicTerritoryUrl($territory);
 
     $response->assertOk()
         ->assertSee('Full Article')

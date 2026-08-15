@@ -44,7 +44,7 @@ function seedCoreFixture(): array
     $level->save();
 
     $objectType = ObjectType::create(['key' => 'hotel']);
-    $objectType->translateOrNew('en')->name = 'Hotel';
+    $objectType->translateOrNew('en')->fill(['name' => 'Hotel', 'slug' => 'hotel']);
     $objectType->save();
 
     $owner = User::factory()->create();
@@ -56,15 +56,15 @@ test('a translated territory subtree expands through staudenmeir/laravel-adjacen
     ['country' => $country, 'level' => $level] = seedCoreFixture();
 
     $region = Territory::create(['country_id' => $country->id, 'level_id' => $level->id]);
-    $region->translateOrNew('en')->fill(['name' => 'Gagauzia', 'slug' => 'gagauzia']);
+    $region->translateOrNew('en')->fill(['country_id' => $country->id, 'name' => 'Gagauzia', 'slug' => 'gagauzia']);
     $region->save();
 
     $city = Territory::create(['country_id' => $country->id, 'level_id' => $level->id, 'parent_id' => $region->id]);
-    $city->translateOrNew('en')->fill(['name' => 'Comrat', 'slug' => 'comrat']);
+    $city->translateOrNew('en')->fill(['country_id' => $country->id, 'name' => 'Comrat', 'slug' => 'comrat']);
     $city->save();
 
     $resort = Territory::create(['country_id' => $country->id, 'level_id' => $level->id, 'parent_id' => $city->id]);
-    $resort->translateOrNew('en')->fill(['name' => 'Beșalma', 'slug' => 'besalma']);
+    $resort->translateOrNew('en')->fill(['country_id' => $country->id, 'name' => 'Beșalma', 'slug' => 'besalma']);
     $resort->save();
 
     // astrotomic/laravel-translatable: round-trips through the translation
@@ -91,7 +91,7 @@ test('an object round-trips a translation, attaches media, and records an audit 
     ['country' => $country, 'level' => $level, 'objectType' => $objectType, 'owner' => $owner] = seedCoreFixture();
 
     $territory = Territory::create(['country_id' => $country->id, 'level_id' => $level->id]);
-    $territory->translateOrNew('en')->fill(['name' => 'Chișinău', 'slug' => 'chisinau']);
+    $territory->translateOrNew('en')->fill(['country_id' => $country->id, 'name' => 'Chișinău', 'slug' => 'chisinau']);
     $territory->save();
 
     $object = Object_::create([

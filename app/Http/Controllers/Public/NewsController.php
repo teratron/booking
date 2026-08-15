@@ -44,7 +44,7 @@ final class NewsController extends Controller
     {
         abort_unless($this->isPubliclyVisible($newsItem), 404);
 
-        $newsItem->loadMissing(['translations', 'territory.translations', 'object.translations']);
+        $newsItem->loadMissing(['translations', 'territory.translations', 'territory.country', 'object.translations']);
 
         return view('public.news.show', [
             'newsItem' => $newsItem,

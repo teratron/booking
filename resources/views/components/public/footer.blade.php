@@ -70,7 +70,7 @@
             <ul class="mt-2 flex flex-col gap-1 text-sm text-white/90">
                 @foreach ($destinations as $destination)
                     <li>
-                        <x-public.nav-link :href="$urlIfRouted('public.territories.show', ['territory' => $destination->id])">
+                        <x-public.nav-link :href="$destination->url">
                             {{ $destination->name }}
                         </x-public.nav-link>
                     </li>

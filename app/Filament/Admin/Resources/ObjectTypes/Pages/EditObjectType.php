@@ -27,7 +27,7 @@ class EditObjectType extends EditRecord
 
         /** @var ObjectTypeTranslation $translation */
         foreach ($record->translations as $translation) {
-            $data['translations'][$translation->locale] = $translation->only(['name', 'seo_title', 'seo_description']);
+            $data['translations'][$translation->locale] = $translation->only(['name', 'slug', 'seo_title', 'seo_description']);
         }
 
         return $data;

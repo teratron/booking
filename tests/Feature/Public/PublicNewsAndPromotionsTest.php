@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Territory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -43,7 +44,8 @@ function publicNewsRegistry(): array
         'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('territory_translations')->insert([
-        'territory_id' => $territoryId, 'locale' => 'en', 'name' => 'News Territory', 'slug' => 'news-territory',
+        'territory_id' => $territoryId, 'country_id' => $countryId, 'locale' => 'en', 'name' => 'News Territory', 'slug' => 'news-territory',
+        'full_slug_path' => 'news-territory',
         'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
     ]);
     $objectTypeId = DB::table('object_types')->insertGetId([
@@ -51,7 +53,7 @@ function publicNewsRegistry(): array
         'display_order' => 0, 'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('object_type_translations')->insert([
-        'object_type_id' => $objectTypeId, 'locale' => 'en', 'name' => 'Hotel',
+        'object_type_id' => $objectTypeId, 'locale' => 'en', 'name' => 'Hotel', 'slug' => 'hotel',
         'created_at' => now(), 'updated_at' => now(),
     ]);
     $objectId = DB::table('objects')->insertGetId([
@@ -158,7 +160,7 @@ it('excludes an elapsed promotion from the section that lists it, proven on the 
         'starts_at' => now()->subDays(20)->toDateString(), 'ends_at' => now()->subDay()->toDateString(),
     ]);
 
-    $territoryResponse = $this->get(route('public.territories.show', ['lang' => 'en', 'territory' => $fixture['territoryId']]));
+    $territoryResponse = $this->get(publicTerritoryUrl(Territory::query()->findOrFail($fixture['territoryId'])));
 
     $territoryResponse->assertOk()
         ->assertSee('Valid Promotion')

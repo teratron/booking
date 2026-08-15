@@ -8,6 +8,7 @@ use App\Models\Country;
 use App\Models\Language;
 use App\Models\ObjectType;
 use App\Models\Territory;
+use App\Services\Seo\PublicUrlGenerator;
 use App\Support\Shell\PublicCountryOption;
 use App\Support\Shell\PublicDestinationOption;
 use App\Support\Shell\PublicLanguageOption;
@@ -28,6 +29,8 @@ final class PublicShellDataProvider
     private const string CACHE_TAG = 'public-shell';
 
     private const int CACHE_TTL_SECONDS = 3600;
+
+    public function __construct(private readonly PublicUrlGenerator $urls) {}
 
     /** @return list<PublicNavigationEntry> */
     public function navigationGroups(): array
@@ -119,12 +122,13 @@ final class PublicShellDataProvider
                     ->where('is_featured', true)
                     ->when($countryId !== null, fn ($query) => $query->where('country_id', $countryId))
                     ->orderBy('display_order')
-                    ->with('translations')
+                    ->with(['translations', 'country'])
                     ->limit(8)
                     ->get()
                     ->map(fn (Territory $territory): PublicDestinationOption => new PublicDestinationOption(
                         id: $territory->id,
                         name: (string) $territory->name,
+                        url: $this->urls->territoryUrl($territory),
                     ))
                     ->all(),
             ),
@@ -153,12 +157,13 @@ final class PublicShellDataProvider
                     ->where('is_featured', true)
                     ->when($countryId !== null, fn ($query) => $query->where('country_id', $countryId))
                     ->orderBy('display_order')
-                    ->with('translations')
+                    ->with(['translations', 'country'])
                     ->limit(8)
                     ->get()
                     ->map(fn (Territory $territory): PublicDestinationOption => new PublicDestinationOption(
                         id: $territory->id,
                         name: (string) $territory->name,
+                        url: $this->urls->territoryUrl($territory),
                     ))
                     ->all(),
             ),

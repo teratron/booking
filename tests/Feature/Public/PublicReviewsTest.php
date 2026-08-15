@@ -42,7 +42,8 @@ function publicReviewsRegistry(): array
         'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('territory_translations')->insert([
-        'territory_id' => $territoryId, 'locale' => 'en', 'name' => 'Capital City', 'slug' => 'capital-city',
+        'territory_id' => $territoryId, 'country_id' => $countryId, 'locale' => 'en', 'name' => 'Capital City', 'slug' => 'capital-city',
+        'full_slug_path' => 'capital-city',
         'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
     ]);
     $typeId = DB::table('object_types')->insertGetId([
@@ -50,7 +51,7 @@ function publicReviewsRegistry(): array
         'display_order' => 0, 'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('object_type_translations')->insert([
-        'object_type_id' => $typeId, 'locale' => 'en', 'name' => 'Hotel',
+        'object_type_id' => $typeId, 'locale' => 'en', 'name' => 'Hotel', 'slug' => 'hotel',
         'created_at' => now(), 'updated_at' => now(),
     ]);
 
@@ -117,7 +118,7 @@ it('shows an aggregate score plus itemized reviews, each carrying rating, text, 
         'rating' => 3, 'body' => 'Decent but noisy at night.', 'author_name' => 'Anonymous Guest',
     ]);
 
-    $response = $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $object]));
+    $response = $this->get(publicObjectUrl($object));
 
     $response->assertOk()
         ->assertSee('4.0 / 5')
@@ -137,7 +138,7 @@ it('renders without an empty review block for an object with zero reviews', func
     $fixture = publicReviewsRegistry();
     $object = publicReviewsMakeObject($fixture, 'Unreviewed Hotel');
 
-    $response = $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $object]));
+    $response = $this->get(publicObjectUrl($object));
 
     $response->assertOk()->assertDontSee(__('public.object.reviews.heading'));
 });
@@ -156,8 +157,8 @@ it('shows the reviews section only when the module resolves enabled for the obje
         'state' => 'disabled', 'set_at' => now(), 'created_at' => now(), 'updated_at' => now(),
     ]);
 
-    $enabledResponse = $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $enabledObject]));
-    $disabledResponse = $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $disabledObject]));
+    $enabledResponse = $this->get(publicObjectUrl($enabledObject));
+    $disabledResponse = $this->get(publicObjectUrl($disabledObject));
 
     $enabledResponse->assertOk()->assertSee(__('public.object.reviews.heading'))->assertSee('Gated review content.');
     $disabledResponse->assertOk()->assertDontSee(__('public.object.reviews.heading'))->assertDontSee('Gated review content.');
@@ -184,7 +185,7 @@ it('renders only published reviews — a pending or rejected review never appear
     publicReviewsGiveReview($object, ['body' => 'Still awaiting moderation.', 'status' => 'pending']);
     publicReviewsGiveReview($object, ['body' => 'Rejected by moderation.', 'status' => 'rejected']);
 
-    $response = $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $object]));
+    $response = $this->get(publicObjectUrl($object));
 
     $response->assertOk()
         ->assertSee('Published and visible.')

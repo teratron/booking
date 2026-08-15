@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
+use App\Models\Object_;
 use App\Models\Promotion;
+use App\Models\Territory;
+use App\Services\Seo\PublicUrlGenerator;
 use Illuminate\Contracts\View\View;
 
 /**
@@ -16,6 +19,8 @@ use Illuminate\Contracts\View\View;
  */
 final class PromotionController extends Controller
 {
+    public function __construct(private readonly PublicUrlGenerator $urls) {}
+
     /**
      * `$lang` is unused but must stay declared first: Laravel's controller
      * dependency resolver splices route parameters by reflection position,
@@ -26,12 +31,24 @@ final class PromotionController extends Controller
     {
         abort_unless($this->isPubliclyVisible($promotion), 404);
 
-        $promotion->loadMissing(['translations', 'object.translations', 'territory.translations']);
+        $promotion->loadMissing(['translations', 'object.translations', 'territory.translations', 'territory.country']);
+
+        $object = $promotion->object;
+        $territory = $promotion->territory;
+
+        // A promotion is always scoped to exactly one object and one
+        // territory — a data-integrity guarantee this task does not own,
+        // not a reachable public state.
+        abort_unless($object instanceof Object_ && $territory instanceof Territory, 500);
+
+        $objectUrl = $this->urls->objectUrl($object, $lang) ?? url()->current();
 
         return view('public.promotions.show', [
             'promotion' => $promotion,
+            'objectUrl' => $objectUrl,
+            'territoryUrl' => $this->urls->territoryUrl($territory, $lang) ?? url()->current(),
             'breadcrumbs' => [
-                ['label' => (string) ($promotion->object->name ?? ''), 'url' => route('public.objects.show', ['lang' => $lang, 'object' => $promotion->object])],
+                ['label' => (string) ($object->name ?? ''), 'url' => $objectUrl],
                 ['label' => (string) ($promotion->title ?? ''), 'url' => route('public.promotions.show', ['lang' => $lang, 'promotion' => $promotion])],
             ],
         ]);

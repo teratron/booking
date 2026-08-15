@@ -43,7 +43,8 @@ function publicContactRailRegistry(): array
         'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('territory_translations')->insert([
-        'territory_id' => $territoryId, 'locale' => 'en', 'name' => 'Capital City', 'slug' => 'capital-city',
+        'territory_id' => $territoryId, 'country_id' => $countryId, 'locale' => 'en', 'name' => 'Capital City', 'slug' => 'capital-city',
+        'full_slug_path' => 'capital-city',
         'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
     ]);
     $typeId = DB::table('object_types')->insertGetId([
@@ -51,7 +52,7 @@ function publicContactRailRegistry(): array
         'display_order' => 0, 'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('object_type_translations')->insert([
-        'object_type_id' => $typeId, 'locale' => 'en', 'name' => 'Hotel',
+        'object_type_id' => $typeId, 'locale' => 'en', 'name' => 'Hotel', 'slug' => 'hotel',
         'created_at' => now(), 'updated_at' => now(),
     ]);
 
@@ -126,7 +127,7 @@ it("renders every active contact channel on the object page's own rail, in displ
     publicContactRailGiveChannel($object, $phone['typeId'], '37360000000', displayOrder: 1);
     publicContactRailGiveChannel($object, $phone['typeId'], '37360000002', displayOrder: 3, isActive: false);
 
-    $response = $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $object]));
+    $response = $this->get(publicObjectUrl($object));
 
     $response->assertOk()->assertSeeInOrder(['Phone', 'WhatsApp']);
 
@@ -227,8 +228,8 @@ it('keeps contact channels functional regardless of availability status or place
         'internal_priority' => 0, 'created_at' => now(), 'updated_at' => now(),
     ]);
 
-    $unavailableResponse = $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $unavailable]));
-    $vipResponse = $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $vip]));
+    $unavailableResponse = $this->get(publicObjectUrl($unavailable));
+    $vipResponse = $this->get(publicObjectUrl($vip));
 
     $unavailableResponse->assertOk()->assertSee('Phone');
     $vipResponse->assertOk()->assertSee('Phone')->assertSee('VIP');
@@ -250,7 +251,7 @@ it('keeps the contact rail above the fold — it appears before the description 
     ]);
     publicContactRailGiveChannel($object, $phone['typeId'], '37360000000', displayOrder: 0);
 
-    $html = (string) $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $object]))->getContent();
+    $html = (string) $this->get(publicObjectUrl($object))->getContent();
 
     $railPosition = strpos($html, 'objects/'.$object->id.'/contact/');
     $descriptionPosition = strpos($html, 'A short teaser for layout ordering.');

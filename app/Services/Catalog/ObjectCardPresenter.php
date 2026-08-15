@@ -12,11 +12,11 @@ use App\Models\PlacementTier;
 use App\Models\Room;
 use App\Models\StatDaily;
 use App\Services\Contact\ContactChannelLinkResolver;
+use App\Services\Seo\PublicUrlGenerator;
 use App\Support\Analytics\StatEventKind;
 use App\Support\Catalog\ObjectCardContactAction;
 use App\Support\Catalog\ObjectCardViewModel;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Route;
 
 /**
  * Resolves one {@see Object_} into the read model the card component
@@ -41,6 +41,7 @@ final class ObjectCardPresenter
 
     public function __construct(
         private readonly ContactChannelLinkResolver $contactLinks,
+        private readonly PublicUrlGenerator $urls,
     ) {}
 
     public function present(Object_ $object): ObjectCardViewModel
@@ -229,9 +230,7 @@ final class ObjectCardPresenter
 
     private function detailsUrl(Object_ $object): ?string
     {
-        return Route::has('public.objects.show')
-            ? route('public.objects.show', ['lang' => app()->getLocale(), 'object' => $object])
-            : null;
+        return $this->urls->objectUrl($object);
     }
 
     /**

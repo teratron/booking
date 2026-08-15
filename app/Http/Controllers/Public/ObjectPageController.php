@@ -9,6 +9,8 @@ use App\Models\Object_;
 use App\Models\Territory;
 use App\Services\Analytics\EventCaptureService;
 use App\Services\Catalog\ObjectProfilePresenter;
+use App\Services\Seo\PublicSlugResolver;
+use App\Services\Seo\PublicUrlGenerator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Cache;
 
@@ -32,20 +34,18 @@ final class ObjectPageController extends Controller
     public function __construct(
         private readonly ObjectProfilePresenter $presenter,
         private readonly EventCaptureService $events,
+        private readonly PublicSlugResolver $resolver,
+        private readonly PublicUrlGenerator $urls,
     ) {}
 
-    /**
-     * `$lang` is unused but must stay declared first: Laravel's controller
-     * dependency resolver splices container-resolved parameters into the
-     * route's own parameter list by reflection position, and a leading
-     * route segment with no corresponding method parameter throws that
-     * splice out of alignment, silently misassigning `$object`.
-     */
-    public function show(string $lang, Object_ $object): View
+    public function show(string $lang, string $slug): View
     {
+        $object = $this->resolver->resolveObjectSlug($lang, $slug);
+
+        abort_unless($object instanceof Object_, 404);
         abort_unless($object->status === 'published', 404);
 
-        $object->loadMissing(['translations', 'territory.translations']);
+        $object->loadMissing(['translations', 'territory.translations', 'territory.country']);
 
         $this->events->capture('object_page_view', $object, [
             'territory_id' => $object->territory_id,
@@ -83,16 +83,16 @@ final class ObjectPageController extends Controller
             return [];
         }
 
-        $chain = $territory->ancestors()->with('translations')->get()->reverse()->push($territory);
+        $chain = $territory->ancestors()->with(['translations', 'country'])->get()->reverse()->push($territory);
 
-        $crumbs = array_values($chain->map(fn ($node): array => [
+        $crumbs = array_values($chain->map(fn (Territory $node): array => [
             'label' => (string) ($node->name ?? ''),
-            'url' => route('public.territories.show', ['lang' => app()->getLocale(), 'territory' => $node->id]),
+            'url' => $this->urls->territoryUrl($node) ?? url()->current(),
         ])->all());
 
         $crumbs[] = [
             'label' => (string) ($object->name ?? ''),
-            'url' => route('public.objects.show', ['lang' => app()->getLocale(), 'object' => $object]),
+            'url' => $this->urls->objectUrl($object) ?? url()->current(),
         ];
 
         return $crumbs;

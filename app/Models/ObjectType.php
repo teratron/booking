@@ -17,6 +17,7 @@ use Override;
 
 /**
  * @property-read ?string $name virtual, proxied through the active translation
+ * @property-read ?string $slug virtual, proxied through the active translation
  * @property ?int $parent_id
  */
 #[UsePolicy(ObjectTypePolicy::class)]
@@ -28,7 +29,7 @@ class ObjectType extends Model implements TranslatableContract
     public ?string $translationModel = null;
 
     /** @var list<string> */
-    public array $translatedAttributes = ['name', 'seo_title', 'seo_description'];
+    public array $translatedAttributes = ['name', 'slug', 'seo_title', 'seo_description'];
 
     protected $guarded = ['id'];
 

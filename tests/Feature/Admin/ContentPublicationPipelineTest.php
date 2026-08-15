@@ -55,11 +55,11 @@ function publicationPipelineGeography(): array
     $level->save();
 
     $territory = Territory::create(['country_id' => $country->id, 'level_id' => $level->id]);
-    $territory->translateOrNew('en')->fill(['name' => 'Gagauzia', 'slug' => 'gagauzia']);
+    $territory->translateOrNew('en')->fill(['country_id' => $country->id, 'name' => 'Gagauzia', 'slug' => 'gagauzia']);
     $territory->save();
 
     $objectType = ObjectType::create(['key' => 'hotel']);
-    $objectType->translateOrNew('en')->name = 'Hotel';
+    $objectType->translateOrNew('en')->fill(['name' => 'Hotel', 'slug' => 'hotel']);
     $objectType->save();
 
     $owner = User::factory()->create();

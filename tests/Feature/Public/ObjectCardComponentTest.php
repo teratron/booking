@@ -46,7 +46,8 @@ function objectCardGeography(): array
         'country_id' => $countryId, 'level_id' => $levelId, 'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('territory_translations')->insert([
-        'territory_id' => $territoryId, 'locale' => 'en', 'name' => 'Seaside City', 'slug' => 'seaside-city',
+        'territory_id' => $territoryId, 'country_id' => $countryId, 'locale' => 'en', 'name' => 'Seaside City', 'slug' => 'seaside-city',
+        'full_slug_path' => 'seaside-city',
         'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
     ]);
     $accommodationTypeId = DB::table('object_types')->insertGetId([

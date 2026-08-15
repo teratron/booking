@@ -281,6 +281,7 @@ return [
         'form' => [
             'key' => 'Key',
             'name' => 'Name',
+            'slug' => 'URL slug',
             'parent' => 'Parent type',
             'no_parent' => 'None — top-level type',
             'icon' => 'Icon path',

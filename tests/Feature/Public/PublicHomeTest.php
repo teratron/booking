@@ -51,7 +51,7 @@ function publicHomeRegistry(): array
         'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('object_type_translations')->insert([
-        'object_type_id' => $hotelTypeId, 'locale' => 'en', 'name' => 'Hotel',
+        'object_type_id' => $hotelTypeId, 'locale' => 'en', 'name' => 'Hotel', 'slug' => 'hotel',
         'created_at' => now(), 'updated_at' => now(),
     ]);
 
@@ -68,8 +68,10 @@ function publicHomeMakeFeaturedTerritory(int $countryId, string $name): array
         'country_id' => $countryId, 'level_id' => $levelId, 'is_active' => true, 'is_featured' => true,
         'created_at' => now(), 'updated_at' => now(),
     ]);
+    $slug = Str::slug($name);
     DB::table('territory_translations')->insert([
-        'territory_id' => $territoryId, 'locale' => 'en', 'name' => $name, 'slug' => Str::slug($name),
+        'territory_id' => $territoryId, 'country_id' => $countryId, 'locale' => 'en', 'name' => $name, 'slug' => $slug,
+        'full_slug_path' => $slug,
         'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
     ]);
 
@@ -93,8 +95,9 @@ function publicHomeDefaultTerritoryId(int $countryId): int
         'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('territory_translations')->insert([
-        'territory_id' => $territoryId, 'locale' => 'en', 'name' => 'Default Territory '.$territoryId,
+        'territory_id' => $territoryId, 'country_id' => $countryId, 'locale' => 'en', 'name' => 'Default Territory '.$territoryId,
         'slug' => 'default-territory-'.$territoryId,
+        'full_slug_path' => 'default-territory-'.$territoryId,
         'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
     ]);
 
@@ -145,7 +148,8 @@ it('renders every block for a fixture with content in each, and omits blocks wit
         'is_active' => true, 'is_featured' => true, 'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('territory_translations')->insert([
-        'territory_id' => $cityId, 'locale' => 'en', 'name' => 'Featured City', 'slug' => 'featured-city',
+        'territory_id' => $cityId, 'country_id' => $fixture['countryId'], 'locale' => 'en', 'name' => 'Featured City', 'slug' => 'featured-city',
+        'full_slug_path' => 'featured-city',
         'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
     ]);
 

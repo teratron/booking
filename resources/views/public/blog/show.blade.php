@@ -1,3 +1,6 @@
+@php
+    $urls = app(\App\Services\Seo\PublicUrlGenerator::class);
+@endphp
 <x-layouts.public :title="$article->title" :breadcrumbs="$breadcrumbs">
     <div class="mx-auto max-w-3xl px-4 py-8 lg:px-8">
         @if ($article->category)
@@ -46,7 +49,7 @@
                 <div class="mt-4 flex flex-wrap gap-3">
                     @foreach ($article->objects as $relatedObject)
                         <a
-                            href="{{ route('public.objects.show', ['lang' => app()->getLocale(), 'object' => $relatedObject]) }}"
+                            href="{{ $urls->objectUrl($relatedObject) }}"
                             class="rounded-lg border border-gray-200 px-4 py-2 text-sm text-ink hover:border-brand"
                         >
                             {{ $relatedObject->name }}
@@ -63,7 +66,7 @@
                 <div class="mt-4 flex flex-wrap gap-3">
                     @foreach ($article->territories as $relatedTerritory)
                         <a
-                            href="{{ route('public.territories.show', ['lang' => app()->getLocale(), 'territory' => $relatedTerritory]) }}"
+                            href="{{ $urls->territoryUrl($relatedTerritory) }}"
                             class="rounded-full border border-gray-300 px-4 py-2 text-sm text-ink hover:border-brand hover:text-brand"
                         >
                             {{ $relatedTerritory->name }}

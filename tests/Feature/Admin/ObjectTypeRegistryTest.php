@@ -83,7 +83,7 @@ it('creates a nested type with icon, amenity groups, attribute schema and SEO de
             'attribute_schema' => [
                 ['key' => 'cuisine', 'type' => 'text', 'label' => ['en' => 'Cuisine']],
             ],
-            'translations' => ['en' => ['name' => 'Guesthouse', 'seo_title' => 'Guesthouses']],
+            'translations' => ['en' => ['name' => 'Guesthouse', 'slug' => 'guesthouse', 'seo_title' => 'Guesthouses']],
         ])
         ->call('create')
         ->assertHasNoFormErrors();

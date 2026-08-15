@@ -45,7 +45,7 @@ final class BlogController extends Controller
 
         $article->loadMissing([
             'translations', 'category.translations', 'tags',
-            'objects.translations', 'territories.translations',
+            'objects.translations', 'territories.translations', 'territories.country',
         ]);
 
         return view('public.blog.show', [

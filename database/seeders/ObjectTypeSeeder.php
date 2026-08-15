@@ -7,6 +7,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * Seeds a representative launch subset of the object type registry — the
@@ -50,6 +51,7 @@ final class ObjectTypeSeeder extends Seeder
                     'object_type_id' => $typeId,
                     'locale' => $locale,
                     'name' => $name,
+                    'slug' => Str::slug($name),
                     'created_at' => $now,
                     'updated_at' => $now,
                 ]);

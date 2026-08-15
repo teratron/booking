@@ -122,6 +122,11 @@ final class TerritoryAdministrator
                     continue;
                 }
 
+                // Denormalized alongside full_slug_path — Postgres cannot
+                // scope a unique index through a foreign key's own parent
+                // table, and the resolver's uniqueness boundary is the path
+                // within a country, not the path alone.
+                $translation->country_id = $node->country_id;
                 $translation->full_slug_path = implode('/', $segments);
                 $translation->save();
             }

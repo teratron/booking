@@ -51,7 +51,8 @@ function eventInvariantRegistry(): array
         'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('territory_translations')->insert([
-        'territory_id' => $territoryId, 'locale' => 'en', 'name' => 'Emission City', 'slug' => 'emission-city',
+        'territory_id' => $territoryId, 'country_id' => $countryId, 'locale' => 'en', 'name' => 'Emission City', 'slug' => 'emission-city',
+        'full_slug_path' => 'emission-city',
         'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
     ]);
     $typeId = DB::table('object_types')->insertGetId([
@@ -59,7 +60,7 @@ function eventInvariantRegistry(): array
         'display_order' => 0, 'created_at' => now(), 'updated_at' => now(),
     ]);
     DB::table('object_type_translations')->insert([
-        'object_type_id' => $typeId, 'locale' => 'en', 'name' => 'Hotel',
+        'object_type_id' => $typeId, 'locale' => 'en', 'name' => 'Hotel', 'slug' => 'hotel',
         'created_at' => now(), 'updated_at' => now(),
     ]);
 
@@ -136,7 +137,7 @@ it('keeps the object page itself rendering even when the capture path is forced 
     $fixture = eventInvariantRegistry();
     $object = eventInvariantMakeObject($fixture, 'Resilient Profile Hotel');
 
-    $response = $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $object]));
+    $response = $this->get(publicObjectUrl($object));
 
     $response->assertOk()->assertSee('Resilient Profile Hotel');
     expect(StatEvent::query()->count())->toBe(0);
@@ -161,7 +162,7 @@ it('never writes stat events synchronously when the object page renders, page-vi
     $object->addMedia(UploadedFile::fake()->image('a.jpg'))->toMediaCollection('photos');
     $object->addMedia(UploadedFile::fake()->image('b.jpg'))->toMediaCollection('photos');
 
-    $this->get(route('public.objects.show', ['lang' => 'en', 'object' => $object]))->assertOk();
+    $this->get(publicObjectUrl($object))->assertOk();
 
     expect(StatEvent::query()->count())->toBe(0);
     Queue::assertPushed(CaptureStatEventJob::class, 3);

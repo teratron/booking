@@ -68,6 +68,18 @@ test('the object name index uses the trigram operator class', function (): void 
 });
 
 test('every translation table with a slug carries a unique index on (locale, slug), and every translation table on (entity id, locale)', function (): void {
+    // territory_translations is the one deliberate exception: two
+    // territories under different parents (or different countries
+    // entirely) may legitimately share a leaf slug or even an identical
+    // full path — "Centru" as a root territory in both Moldova and
+    // Georgia, say — so its real uniqueness boundary is the full
+    // hierarchical path scoped by country, not the bare slug. The index is
+    // composite (`locale, country_id, full_slug_path`), so the check below
+    // matches on the trailing column rather than an exact two-column shape.
+    $slugUniqueColumnByTable = [
+        'territory_translations' => 'full_slug_path',
+    ];
+
     $translationTables = collect(DB::select(
         "select table_name from information_schema.tables where table_schema = 'public' and table_name like '%\\_translations'"
     ))->pluck('table_name');
@@ -84,8 +96,13 @@ test('every translation table with a slug carries a unique index on (locale, slu
         expect($hasLocaleUnique)->toBeTrue("Expected {$table} to carry a unique index ending in (..., locale).");
 
         if (Schema::hasColumn($table, 'slug')) {
-            $hasSlugUnique = $uniqueDefs->contains(fn (string $def): bool => str_contains($def, '(locale, slug)'));
-            expect($hasSlugUnique)->toBeTrue("Expected {$table} to carry a unique index on (locale, slug).");
+            $slugColumn = $slugUniqueColumnByTable[$table] ?? 'slug';
+            // Matches both the plain two-column shape ("(locale, slug)")
+            // and territory_translations' composite one ("(locale,
+            // country_id, full_slug_path)") — either way, the trailing
+            // column before the closing paren is what matters.
+            $hasSlugUnique = $uniqueDefs->contains(fn (string $def): bool => str_contains($def, ", {$slugColumn})"));
+            expect($hasSlugUnique)->toBeTrue("Expected {$table} to carry a unique index on (locale, ..., {$slugColumn}).");
         }
     }
 });

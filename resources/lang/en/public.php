@@ -41,6 +41,7 @@ return [
         'promotions' => 'Promotions',
         'map' => 'Map',
         'explore' => 'Explore nearby',
+        'typed_catalog_empty' => 'No listings of this type are published in :territory yet.',
     ],
 
     'blog' => [
