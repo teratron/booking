@@ -4,31 +4,30 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-15 11:31
+**Updated:** 2026-08-15 12:15
 **Phase:** 5 — Public Site
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Track A, Track C, `T-5D03`, `T-5B01`, `T-5B02`, and now `T-5B03` all complete — 12/18. `T-5B03` (module-gated reviews) closed: an aggregate score plus itemized reviews render only when the existing `ModuleResolver`/`ModuleContext` ladder resolves the `reviews` module enabled for the object's own scope — the header's own rating is gated together with the itemized list, resolved once, so a disabled scope can never leak a number through the header alone.
+- **Task:** Track A, Track C, `T-5D03`, and now the whole of Track B (`T-5B01`–`T-5B04`) all complete — 13/18. `T-5B04` (nearby/similar objects, object news/promotions) closed: both listing blocks tier-ordered through the existing `CatalogQueryService`, never a bespoke query; "nearby" is territory-scoped, "similar" is same-type/country-wide. First real shared `<x-public.content-card>` component built, ahead of the blog/news-listing tasks that would normally introduce it.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Execute T-5B04 Nearby/similar objects and the object's own news/promotions feed via /magic.run main
+- **Next Action:** Execute T-5D01 Public blog — listing and article detail via /magic.run main
 
 ## Progress
 
 ```
-Phase 5: [12/18] ██████░░ 67%
+Phase 5: [13/18] ███████░ 72%
 Overall: [4/7] █████░░░ 57%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1-4 complete & archived, Phase 5 in progress, 6-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [12/18] Phase 5 IN PROGRESS
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [13/18] Phase 5 IN PROGRESS
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-15 **Decision: `T-5B03` (module-gated reviews) closed** — `ObjectProfilePresenter` reads the real `Review` Eloquent model (not the raw aggregate-only query the card and this page's own prior header used), gated by the same `ModuleResolver` ladder the Cabinet panel already established (`objectId/ownerId/categoryId/countryId`). A real Larastan false-positive caught along the way: `Review::author()` (genuinely nullable, guest reviews have none) mis-inferred as non-nullable — fixed with the established `instanceof`-narrowed local variable, not a blind nullsafe removal. Full non-slow suite: 642 passed, 0 failed, 3 skipped (up from 638).
-- 2026-08-15 **Decision: `T-5B02` (contact rail, click-capture) closed** — event emission ordered *before* link resolution in `ContactClickController`, so a misconfigured channel still measures the visitor's real intent to contact even though the hand-off itself 404s. Three real gaps fixed in the card's own pre-existing `ObjectCardPresenter::contactActions()` along the way: unmeasured href, no `display_order` sort, and the channel's own `label` override never read. Full non-slow suite: 638 passed, 0 failed, 3 skipped (up from 633).
+- 2026-08-15 **Decision: `T-5B04` (nearby/similar, object content feed) closed — Track B complete** — new `<x-public.content-card>` (built from the territory page's own established convention) is the first real shared article/content card; the territory and home pages' own existing inline blocks were deliberately left untouched rather than retrofitted. Two already-shipped tests needed narrower assertions after this landed, not because of a regression: their own fixtures share a territory and type, so those objects now legitimately appear in each other's new related-objects blocks. Full non-slow suite: 646 passed, 0 failed, 3 skipped (up from 642).
 
 ## Blockers
 
