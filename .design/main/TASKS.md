@@ -1,8 +1,8 @@
 # Master Task Index (Registry)
 
-**Version:** 1.2.0
+**Version:** 1.3.0
 **Generated:** 2026-08-05
-**Based on:** .design/main/PLAN.md v3.1.1
+**Based on:** .design/main/PLAN.md v3.2.0
 **Based on RULES:** .design/RULES.md v1.4.0
 **Execution Mode:** Parallel
 **Status:** Active
@@ -12,14 +12,14 @@
 Tactical registry of all phases and their statuses. Atomic checklists (`T-XXXX`) live in
 the per-phase files under `tasks/`.
 
-**Decomposition state.** Phases 1 through 4 are complete (21/21, 25/25, 23/23, 16/16)
-against the same `RFC`-status posture each was successfully decomposed and executed
-under — no Pre-flight gate has ever HALTed on any of them. Phase 5 is now decomposed
-into 18 atomic tasks across four tracks plus validation in
-[tasks/phase-5.md](tasks/phase-5.md), against that same posture. Phases 6 and 7 still
-carry frontmatter, a strategic goal, and their scope only — no `T-XXXX` items yet; each
-is decomposed by the `/magic.task` invocation that activates it, against the
-specification set as it stands at that point.
+**Decomposition state.** Phases 1 through 5 are complete (21/21, 25/25, 23/23, 16/16,
+18/18) against the same `RFC`-status posture each was successfully decomposed and
+executed under — no Pre-flight gate has ever HALTed on any of them. Phase 6 is now
+decomposed into 16 atomic tasks across four tracks plus validation in
+[tasks/phase-6.md](tasks/phase-6.md), against that same posture. Phase 7 still carries
+frontmatter, a strategic goal, and its scope only — no `T-XXXX` items yet; it is
+decomposed by the `/magic.task` invocation that activates it, against the specification
+set as it stands at that point.
 
 The superseded Next.js-era archives now live under `archives/tasks/v1-nextjs/`. They
 previously occupied the filenames `archives/tasks/phase-1.md` through `phase-6.md`,
@@ -34,8 +34,8 @@ archival would have overwritten them.
 | [Phase 2](archives/tasks/phase-2.md) | Back office core — staff panel, objects, owners, geography, taxonomy, moderation, action journal | `Done (Archived)` (25/25) |
 | [Phase 3](archives/tasks/phase-3.md) | Commerce, advertising, analytics ingest, notifications, content pipeline | `Done (Archived)` (23/23) |
 | [Phase 4](archives/tasks/phase-4.md) | Owner cabinet — the second Filament panel, owner-scoped throughout | `Done (Archived)` (16/16) |
-| [Phase 5](tasks/phase-5.md) | Public site — shell, home, catalog, object profile, territory pages, built from Figma | `Done` (18/18) |
-| [Phase 6](tasks/phase-6.md) | SEO, portal-wide reporting, public REST API | `Todo` |
+| [Phase 5](archives/tasks/phase-5.md) | Public site — shell, home, catalog, object profile, territory pages, built from Figma | `Done (Archived)` (18/18) |
+| [Phase 6](tasks/phase-6.md) | SEO, portal-wide reporting, public REST API | `Active` (0/16) |
 | [Phase 7](tasks/phase-7.md) | Import/export, backups and rehearsed restore, production provisioning, load test | `Todo` |
 
 ## Execution Notes
@@ -76,9 +76,28 @@ exists yet. `T-5A03` (`CatalogQueryService`) is the phase's hard gate: every lis
 surface in Tracks B, C, and D is a caller of this one tier-ordered retrieval contract,
 never a reimplementation — the same role `T-2A02` played for Phase 2. `T-5A01` (shell)
 is a second, independent gate, since every page in the phase renders inside it. Full
-rationale in [tasks/phase-5.md](tasks/phase-5.md) §Track Ordering.
+rationale in [archives/tasks/phase-5.md](archives/tasks/phase-5.md) §Track Ordering.
+
+**Phase 6 is three-wide**, not four: `(A → B) ∥ C ∥ D → T`. Track C (portal-wide
+reporting) reads the aggregate tier Phase 3 built and Phase 4 already reports against,
+and Track D (public API) layers over Phase 5's `CatalogQueryService` — neither consumes
+the SEO addressing chain, so both start immediately. Only Track B waits, and it waits
+entirely on `T-6A01`.
+
+`T-6A01` (URL grammar and slug resolution) is the phase's hard gate, and it differs in
+kind from the gates before it: `T-2A02` and `T-5A03` were greenfield contracts that
+later work adopted, while this one **retrofits** addressing that 21 existing files
+already depend on. A broken landing fails Phase 5's whole feature suite at once, so it
+is verified against that existing suite rather than only against its own new test.
+
+One cross-track contract is scheduled rather than left to be discovered: `T-6B02` and
+`T-6D03` must share a single published-only visibility filter. Both specifications ask
+for it in their own vocabulary — the indexation policy excludes non-public records, the
+API applies visibility in the shared query layer — and two implementations would drift,
+with the drift exposing unmoderated content on whichever side was forgotten. Full
+rationale in [tasks/phase-6.md](tasks/phase-6.md) §Track Ordering.
 
 ## Meta Information
 
-- **Last Updated**: 2026-08-15 (T-5T03 — Phase 5 complete, 18/18)
+- **Last Updated**: 2026-08-15 (Phase 6 activated and decomposed — 16 tasks)
 - **Maintainer**: Core Team

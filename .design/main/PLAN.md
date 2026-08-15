@@ -1,6 +1,6 @@
 # Implementation Plan
 
-**Version:** 3.1.1
+**Version:** 3.2.0
 **Generated:** 2026-08-05
 **Based on:** .design/main/INDEX.md v2.4.2
 **Based on RULES:** .design/RULES.md v1.4.0
@@ -144,25 +144,41 @@ Decomposed into 23 atomic tasks across five tracks plus validation in
 - [x] **Analytics** §5.4 — cabinet dashboard and statistics surfaces ([l1-analytics.md](specifications/l1-analytics.md)) [L1]
 - [x] **Content Publishing** §3.3–§3.4 — owner-authored news and promotions ([l1-content-publishing.md](specifications/l1-content-publishing.md)) [L1]
 
-## Phase 5 — Public Site — **Active**
+## Phase 5 — Public Site — **Done**
 
 *Built against the Figma source, node by node. Server-rendered Blade with Livewire for
 catalog interactivity.*
 
-- [ ] **Platform Shell** — header, data-driven navigation, both switchers, footer, 404, legal pages ([l1-platform-shell.md](specifications/l1-platform-shell.md)) [L1]
-- [ ] **Home Page** — the sixteen-block composition across four viewport classes ([l1-home-page.md](specifications/l1-home-page.md)) [L1]
-- [ ] **Object Catalog** §5.1–§5.4 — search, filters, tier-governed ordering, clustered map ([l1-object-catalog.md](specifications/l1-object-catalog.md)) [L1]
-- [ ] **Object Profile** — page composition and the contact rail conversion contract ([l1-object-profile.md](specifications/l1-object-profile.md)) [L1]
-- [ ] **Geography** §5.3 — territory landing pages ([l1-geography.md](specifications/l1-geography.md)) [L1]
-- [ ] **Content Publishing** §5.3 — public blog, news, and promotion surfaces ([l1-content-publishing.md](specifications/l1-content-publishing.md)) [L1]
-- [ ] **Analytics** §3.1–§3.2 — first-party event emission from every measured surface ([l1-analytics.md](specifications/l1-analytics.md)) [L1]
-- [ ] **Third-Party Integrations** §5.3, §5.5 — map tiles and CAPTCHA ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
+- [x] **Platform Shell** — header, data-driven navigation, both switchers, footer, 404, legal pages ([l1-platform-shell.md](specifications/l1-platform-shell.md)) [L1]
+- [x] **Home Page** — the sixteen-block composition across four viewport classes ([l1-home-page.md](specifications/l1-home-page.md)) [L1]
+- [x] **Object Catalog** §5.1–§5.4 — search, filters, tier-governed ordering, clustered map ([l1-object-catalog.md](specifications/l1-object-catalog.md)) [L1]
+- [x] **Object Profile** — page composition and the contact rail conversion contract ([l1-object-profile.md](specifications/l1-object-profile.md)) [L1]
+- [x] **Geography** §5.3 — territory landing pages ([l1-geography.md](specifications/l1-geography.md)) [L1]
+- [x] **Content Publishing** §5.3 — public blog, news, and promotion surfaces ([l1-content-publishing.md](specifications/l1-content-publishing.md)) [L1]
+- [x] **Analytics** §3.1–§3.2 — first-party event emission from every measured surface ([l1-analytics.md](specifications/l1-analytics.md)) [L1]
+- [x] **Third-Party Integrations** §5.3, §5.5 — map tiles and CAPTCHA ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
 
-## Phase 6 — Discovery, Reporting & Public API
+Delivered as 18 atomic tasks across four tracks plus validation, archived at
+[archives/tasks/phase-5.md](archives/tasks/phase-5.md). Two deliberate deferrals are
+recorded there and collected by Phase 6: the public route group ships an ID-addressed
+placeholder grammar rather than the SEO specification's nested per-language slug paths,
+and the object page's query budget (68) exceeds the ≤30 target — documented with a
+regression guard rather than silently loosened.
+
+## Phase 6 — Discovery, Reporting & Public API — **Active**
+
+*Findability and legibility: the addressing the public site deferred, the reporting the
+aggregate tier already supports, and a read-only contract for consumers outside it.*
 
 - [ ] **SEO** — URL grammar, metadata resolution, indexation policy, structured data, sitemaps, redirects ([l1-seo.md](specifications/l1-seo.md)) [L1]
-- [ ] **Analytics** §5.3, §5.5–§5.6 — portal-wide reporting, exports, traffic sources ([l1-analytics.md](specifications/l1-analytics.md)) [L1]
+- [ ] **Analytics** §5.3, §5.4, §5.6 — portal-wide reporting, exports, traffic sources ([l1-analytics.md](specifications/l1-analytics.md)) [L1]
 - [ ] **Public API** — versioned read contract, issued tokens, scoping, rate limits, generated documentation ([l1-public-api.md](specifications/l1-public-api.md)) [L1]
+
+Decomposed into 16 atomic tasks across four tracks plus validation in
+[tasks/phase-6.md](tasks/phase-6.md), which carries this phase's own planning audit.
+The phase is genuinely three-wide — `(A → B) ∥ C ∥ D → T` — because reporting layers
+over the aggregate tier and the API layers over the catalog retrieval contract, and
+neither touches the SEO addressing chain that gates Track B.
 
 ## Phase 7 — Operations & Launch Readiness
 
@@ -228,15 +244,18 @@ critical path out of Phase 2.
 
 ## Next Step
 
-`/magic.run main` — execute Phase 5 (Public Site), decomposed into 18 atomic tasks in
-[tasks/phase-5.md](tasks/phase-5.md). `T-5A03` (`CatalogQueryService`) and `T-5A01`
-(public layout shell) are both independent Track A gates and the recommended starting
-points. Phase registry in [TASKS.md](TASKS.md). Phases 1 through 4 are complete and
-archived at [archives/tasks/phase-1.md](archives/tasks/phase-1.md),
+`/magic.run main` — execute Phase 6 (Discovery, Reporting & Public API), decomposed into
+16 atomic tasks in [tasks/phase-6.md](tasks/phase-6.md). `T-6A01` (URL grammar and slug
+resolution) is the phase's hard gate and blocks all of Track B; `T-6C01` (derived
+reporting figures) and `T-6D01` (API module gate) are both independent starting points
+that need nothing from it, so all three can begin at once. Phase registry in
+[TASKS.md](TASKS.md). Phases 1 through 5 are complete and archived at
+[archives/tasks/phase-1.md](archives/tasks/phase-1.md),
 [archives/tasks/phase-2.md](archives/tasks/phase-2.md),
-[archives/tasks/phase-3.md](archives/tasks/phase-3.md), and
-[archives/tasks/phase-4.md](archives/tasks/phase-4.md) respectively.
+[archives/tasks/phase-3.md](archives/tasks/phase-3.md),
+[archives/tasks/phase-4.md](archives/tasks/phase-4.md), and
+[archives/tasks/phase-5.md](archives/tasks/phase-5.md) respectively.
 
-Phases 5 through 7 carry frontmatter and scope only. They are decomposed into atomic
-tasks by the `/magic.task` invocation that activates each, so the decomposition is
-derived from the specification set as it stands then rather than as it stands now.
+Phase 7 carries frontmatter and scope only. It is decomposed into atomic tasks by the
+`/magic.task` invocation that activates it, so the decomposition is derived from the
+specification set as it stands then rather than as it stands now.

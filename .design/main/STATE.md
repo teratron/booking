@@ -4,23 +4,23 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-15 15:10
-**Phase:** 5 — Public Site (complete)
+**Updated:** 2026-08-15 15:13
+**Phase:** 6 — Discovery, Reporting & Public API
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Phase 5 complete — 18/18. `T-5T03` closed the phase: added the response-caching layer the phase's own performance budget assumed but no earlier task built (`Cache::remember()` around `CatalogQueryService::search()`, the shared retrieval contract every listing surface calls, plus the territory and object pages' own sidebar/presenter reads), found and fixed two genuine N+1 sources at realistic seeded volume, and closed one real bug (`placement_tiers.badge_text` doesn't exist — it's a translated attribute on `placement_tier_translations`). Catalog and territory pages meet the ≤30-query budget cleanly; the object page does not (68 queries, down 83% from 404, asserted with an explicit regression guard rather than a redefinition of the budget) — a documented, real gap, not a silent one. A riskier optimization (sharing retrieval between the object page's own nearby/similar blocks) caused a real regression and was reverted rather than shipped broken.
-- **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Phase 5 fully complete — per this project's own post-phase protocol, the one next step is `/magic.task` to revalidate the plan and decompose Phase 6. Not started proactively.
+- **Task:** Phase 6 activated and decomposed — 16 atomic tasks across four tracks plus validation. Phase 5 archived at 18/18. Nothing executed yet. The phase is genuinely three-wide (`(A → B) ∥ C ∥ D → T`): Track C reads the aggregate tier Phase 3 built, Track D layers over Phase 5's `CatalogQueryService`, and neither consumes the SEO addressing chain that gates Track B. `T-6A01` (URL grammar) is the hard gate and the phase's real risk — it **retrofits** addressing that 21 existing files already reference, unlike the greenfield gates of Phases 2 and 5.
+- **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean. Phase 6's three specs (`l1-seo`, `l1-analytics`, `l1-public-api`) carry two open questions that touch it — see PLAN.md.
+- **Next Action:** Execute T-6A01 Per-language slug resolution and the territory-hierarchy URL grammar via /magic.run main
 
 ## Progress
 
 ```
-Phase 5: [18/18] █████████ 100%
+Phase 6: [0/16] ░░░░░░░░ 0%
 Overall: [5/7] ██████░░ 71%
-Plan:           [7 phases] Bootstrap/tentative; Phase 1-5 complete & archived/archiving, 6-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [18/18] Phase 5 DONE
+Plan:           [7 phases] Bootstrap/tentative; Phase 1-5 complete & archived, 6 active, 7 scoped
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [18/18] Phase 5 DONE · [0/16] Phase 6 ACTIVE
 ```
 
 ## Recent Decisions
@@ -29,6 +29,7 @@ Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 
 
 - 2026-08-15 **Decision: `T-5T02` (event-emission invariant) closed** — new `PublicEventEmissionInvariantTest.php`, no product changes. The Method's container-rebind falsification technique doesn't transplant literally (`EventCaptureService` has no rebindable collaborator on its queue-dispatch path); adapted to `config()->set('queue.default', 'nonexistent-connection')`, applied against real public routes rather than a bare service call. Falsified directly against product code (catch block temporarily made to rethrow, confirmed failure, reverted). Full non-slow suite: 660 passed, 0 failed, 3 skipped.
 - 2026-08-15 **Decision: `T-5T03` (performance budget) closed — Phase 5 complete** — new `PublicPerformanceBudgetTest.php` (`slow`), plus real product changes: response caching (`CatalogQueryService::search()`, territory sidebar, object presenter), two genuine N+1 fixes (per-object `loadMissing()` cannot batch; three raw per-card aggregates batched via ad-hoc attributes), and a real bug fix (`badge_text` is translated, not a plain `placement_tiers` column). One relation (`placement.package.tier`) could not be safely eager-loaded via Eloquent at all — reproducibly broke and slowed a query already joining the same tables via `PlacementOrderingService::apply()` — resolved via a plain join query instead. A riskier shared-retrieval optimization for the object page's own nearby/similar blocks caused a real, caught regression and was reverted. Catalog/territory meet the ≤30-query budget; object page does not (68, documented gap, not silently loosened). Full non-slow suite: 660 passed, 0 failed, 3 skipped; full `slow`-group clean except `DemoVolumeSeederTest`'s own pre-existing, unrelated memory-limit flake.
+- 2026-08-15 **Decision: Phase 6 planned — 16 tasks, three-wide** — decomposition derived from the codebase's actual gaps rather than from the specs alone, which changed three things. The `redirects` and `api_clients` tables and Sanctum already exist from the schema pass, so their tasks are model-and-wiring, not migrations. `territory_translations.full_slug_path` already exists and is maintained by `TerritoryAdministrator`, but nothing reads it and only one code path writes it — `T-6A01` makes it the read path and backfills the rest. `AnalyticsReport` already serves period-scoped filterable counts with export, so Track C is narrowed to the derived figures (most-viewed, CTR, new-owner/object counts) and surfacing the traffic-source data `TrafficSourceRecorder` already records but nothing displays. `spatie/laravel-sitemap` is named in the project's package list but is **not installed** — `T-6B04` adds it. Corrected a phantom spec reference in PLAN.md (`l1-analytics.md §5.5` does not exist; the section set is §5.1–§5.4 and §5.6).
 
 ## Blockers
 
@@ -72,10 +73,10 @@ Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 
 
 **Reading order for a fresh session:** this file (position, decisions,
 constraints) → `CLAUDE.md` (stack, conventions, engineering discipline) →
-`.design/main/tasks/phase-5.md` (Phase 5, complete) →
-`.design/main/PLAN.md` only for cross-phase context. Phases 1–4's own task files
-are archived at `.design/main/archives/tasks/phase-{1,2,3,4}.md` for historical
-reference.
+`.design/main/tasks/phase-6.md` (Phase 6, active — carries the task detail,
+track ordering, and planning audit) → `.design/main/PLAN.md` only for
+cross-phase context. Phases 1–5's own task files are archived at
+`.design/main/archives/tasks/phase-{1,2,3,4,5}.md` for historical reference.
 
 **Do not carry forward** anything about Next.js, TypeScript, Drizzle, Better Auth,
 react-admin, or Vercel — that stack is superseded and preserved only at tag `v0.1.34`.

@@ -1,14 +1,32 @@
 ---
 phase: 5
 name: "Public Site"
-status: Todo
+status: Done
 subsystem: "resources/views, app/Livewire, app/Services"
 requires: ["phase-1", "phase-2", "phase-3"]
-provides: []
+provides:
+  - "Public route scaffold under a {lang} prefix, resolved by ResolvePublicLocale"
+  - "CatalogQueryService — the shared tier-ordered retrieval contract every listing surface calls"
+  - "ObjectCardPresenter and ObjectProfilePresenter"
+  - "Contact deep-link resolution and contact-click event emission"
+  - "Public shell: header, data-driven navigation, both switchers, footer, 404, legal pages"
+  - "Territory landing pages, catalog/search page, object profile, blog, news, promotions, home"
+  - "Response caching around catalog retrieval, territory sidebar, and object presenter"
 key_files:
-  created: []
-  modified: []
-patterns_established: []
+  created:
+    - "app/Services/Catalog/CatalogQueryService.php"
+    - "app/Services/Catalog/ObjectCardPresenter.php"
+    - "app/Services/Catalog/ObjectProfilePresenter.php"
+    - "app/Services/Shell/PublicShellDataProvider.php"
+    - "app/Http/Controllers/Public/"
+    - "app/Livewire/Public/CatalogSearch.php"
+    - "routes/web.php (public group)"
+  modified:
+    - "app/Services/Analytics/EventCaptureService.php"
+patterns_established:
+  - "Every public listing surface is a caller of CatalogQueryService, never a reimplementation"
+  - "Tier badge/border data batched via a plain join query, never eager-loaded through placement.package.tier"
+  - "Event emission is fire-and-forget: a measurement failure never surfaces to the visitor"
 duration_minutes: ~
 ---
 

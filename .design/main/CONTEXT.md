@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-08-14
+**Generated:** 2026-08-15
 
 ## Active Technologies
 
@@ -11,8 +11,7 @@
 ```plaintext
 .
 ├── .claude/
-│   ├── rules/
-│   └── scheduled_tasks.lock
+│   └── rules/
 ├── .design/
 │   ├── .version
 │   ├── INDEX.md
@@ -50,7 +49,8 @@
 │   ├── Policies/
 │   ├── Providers/
 │   ├── Services/
-│   └── Support/
+│   ├── Support/
+│   └── View/
 ├── artisan
 ├── biome.json
 ├── bootstrap/
@@ -98,6 +98,7 @@
 ├── public/
 │   ├── .htaccess
 │   ├── favicon.ico
+│   ├── images/
 │   ├── index.php
 │   └── robots.txt
 ├── rector.php
