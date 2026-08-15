@@ -4,31 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-15 01:10
+**Updated:** 2026-08-15 05:54
 **Phase:** 5 — Public Site
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Track A, Track C, and `T-5D03` all complete — 9/18. `T-5D03` (home page composition) closed: sixteen blocks assembled in one server pass, each independently omitted when it has nothing to show, every listing block a caller of an existing service (`CatalogQueryService`, `PublicShellDataProvider`, `ObjectCardPresenter`) rather than a page-local reimplementation. Built ahead of `T-5D01`/`T-5D02` per explicit non-stop instruction; the articles/news/promotions rails render real content already reachable through existing models, with outbound links `Route::has()`-guarded until those two tasks land. This closes the explicitly requested `T-5C01` → `T-5C02` → `T-5D03` non-stop sequence — work pauses here pending further instruction.
+- **Task:** Track A, Track C, `T-5D03`, and now `T-5B01` all complete — 10/18. `T-5B01` (object profile page) closed: breadcrumb, cover/gallery, name/type/category/rating/settlement, descriptions, and services compose in one type-aware pass via a new `ObjectProfilePresenter`; the type-specific block (rooms-with-prices vs. a direct object-level price vs. the generic `attribute_schema`-driven details list) never branches on the type's own key. Built against the real Figma hotel-page node. The explicitly requested `T-5C01` → `T-5C02` → `T-5D03` non-stop sequence closed earlier; `T-5B01` was picked up next per standard dependency-topology continuation (its own `Requires: T-5A01` was already satisfied, and it heads the still-untouched Track B).
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Awaiting further instruction — remaining Phase 5 work (Track B, `T-5D01`/`T-5D02`, Track T) was not part of the requested sequence and should not start without it.
+- **Next Action:** Execute T-5B02 Contact rail, interaction flow, and contact-click emission via /magic.run main
 
 ## Progress
 
 ```
-Phase 5: [9/18] ████░░░░ 50%
+Phase 5: [10/18] █████░░░ 56%
 Overall: [4/7] █████░░░ 57%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1-4 complete & archived, Phase 5 in progress, 6-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [9/18] Phase 5 IN PROGRESS
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [10/18] Phase 5 IN PROGRESS
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-15 **Decision: `T-5D03` (home page composition) closed — non-stop sequence complete** — `HomePageController::show()` assembles all sixteen blocks, country-resolved via session with a registry-order fallback. `PublicShellDataProvider::popularDestinations()`/`popularCities()` gained an optional country filter (footer stays portal-wide, home page's own blocks are country-scoped) and `Territory` gained an `is_featured` curation flag, depth distinguishing destinations from cities. Two real bugs fixed along the way, both pre-existing gaps only a real paginated result surfaced: `CatalogQueryService::applyFilters()`'s unqualified `object_type_id` (ambiguous once joined against `placement_packages`'s own column of that name), and `ObjectCardPresenter::present()`'s incomplete `loadMissing()`. Full non-slow suite: 627 passed, 0 failed, 3 skipped (up from 623).
-- 2026-08-15 **Decision: `T-5C02` (territory pages) closed — Track C complete** — plain controller composing breadcrumb/hero/description/per-type catalog blocks/news/promotions/map/child-nav, each independently omitted when empty. Two wrong-parameter route guesses from `T-5A01`-era shell code (predating this route's registration) surfaced and fixed: the footer's "popular destinations" now links real top-level territories via a new `PublicShellDataProvider::popularDestinations()`, and the country switcher's redirect resolves the selected country's own top-level territory. Full non-slow suite: 623 passed, 0 failed, 3 skipped (up from 619).
+- 2026-08-15 **Decision: `T-5B01` (object profile page) closed** — new `ObjectPageController`/`ObjectProfilePresenter` compose breadcrumb, cover/gallery, header, descriptions, type-varying detail, and services in one pass; `has_rooms` gates a Rooms section (nested prices) vs. a direct object-level Prices section otherwise, and catering/house-rules/cuisine/hours/visiting-information all read uniformly from the type's own `attribute_schema` — never a per-type branch. Two pre-existing bugs fixed along the way: the object card rendered a badge for all three internal availability states where the spec wants only the positive one shown, and `ObjectCardPresenter::detailsUrl()` was missing the route's required `lang` segment (dormant until this task's own route registration exposed it). Full non-slow suite: 633 passed, 0 failed, 3 skipped (up from 627).
+- 2026-08-15 **Decision: `T-5D03` (home page composition) closed — non-stop sequence complete** — `HomePageController::show()` assembles all sixteen blocks, country-resolved via session with a registry-order fallback. Two real bugs fixed along the way, both pre-existing gaps only a real paginated result surfaced: `CatalogQueryService::applyFilters()`'s unqualified `object_type_id`, and `ObjectCardPresenter::present()`'s incomplete `loadMissing()`. Full non-slow suite: 627 passed, 0 failed, 3 skipped (up from 623).
 
 ## Blockers
 
