@@ -4,31 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-15 10:47
+**Updated:** 2026-08-15 11:31
 **Phase:** 5 — Public Site
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Track A, Track C, `T-5D03`, `T-5B01`, and now `T-5B02` all complete — 11/18. `T-5B02` (contact rail, click-capture) closed: every active channel renders in display order on the object page's own rail, each activation routed through a new `ContactClickController` that measures the `contact_click` event *before* resolving the link, then redirects in one hop to the resolved deep link — mirroring the existing `BannerClickController` pattern. The object card's own quick-contact icons got the same instrumentation, since the spec's "every contact activation is measured" carries no exception for them.
+- **Task:** Track A, Track C, `T-5D03`, `T-5B01`, `T-5B02`, and now `T-5B03` all complete — 12/18. `T-5B03` (module-gated reviews) closed: an aggregate score plus itemized reviews render only when the existing `ModuleResolver`/`ModuleContext` ladder resolves the `reviews` module enabled for the object's own scope — the header's own rating is gated together with the itemized list, resolved once, so a disabled scope can never leak a number through the header alone.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Execute T-5B03 Reviews rendering (module-gated) via /magic.run main
+- **Next Action:** Execute T-5B04 Nearby/similar objects and the object's own news/promotions feed via /magic.run main
 
 ## Progress
 
 ```
-Phase 5: [11/18] █████░░░ 61%
+Phase 5: [12/18] ██████░░ 67%
 Overall: [4/7] █████░░░ 57%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1-4 complete & archived, Phase 5 in progress, 6-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [11/18] Phase 5 IN PROGRESS
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [12/18] Phase 5 IN PROGRESS
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
+- 2026-08-15 **Decision: `T-5B03` (module-gated reviews) closed** — `ObjectProfilePresenter` reads the real `Review` Eloquent model (not the raw aggregate-only query the card and this page's own prior header used), gated by the same `ModuleResolver` ladder the Cabinet panel already established (`objectId/ownerId/categoryId/countryId`). A real Larastan false-positive caught along the way: `Review::author()` (genuinely nullable, guest reviews have none) mis-inferred as non-nullable — fixed with the established `instanceof`-narrowed local variable, not a blind nullsafe removal. Full non-slow suite: 642 passed, 0 failed, 3 skipped (up from 638).
 - 2026-08-15 **Decision: `T-5B02` (contact rail, click-capture) closed** — event emission ordered *before* link resolution in `ContactClickController`, so a misconfigured channel still measures the visitor's real intent to contact even though the hand-off itself 404s. Three real gaps fixed in the card's own pre-existing `ObjectCardPresenter::contactActions()` along the way: unmeasured href, no `display_order` sort, and the channel's own `label` override never read. Full non-slow suite: 638 passed, 0 failed, 3 skipped (up from 633).
-- 2026-08-15 **Decision: `T-5B01` (object profile page) closed** — new `ObjectPageController`/`ObjectProfilePresenter` compose breadcrumb, cover/gallery, header, descriptions, type-varying detail, and services in one pass; `has_rooms` gates a Rooms section vs. a direct object-level Prices section otherwise, and catering/house-rules/cuisine/hours/visiting-information all read uniformly from the type's own `attribute_schema`. Full non-slow suite: 633 passed, 0 failed, 3 skipped (up from 627).
 
 ## Blockers
 
