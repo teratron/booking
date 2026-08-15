@@ -15,6 +15,7 @@ final readonly class ObjectProfileViewModel
 {
     /**
      * @param  list<string>  $galleryPhotoUrls
+     * @param  list<ObjectCardContactAction>  $contactActions
      * @param  list<array{name: string, description: ?string, capacity: ?int, roomCount: ?int, areaSqm: ?string, bedConfiguration: ?string, maxGuests: ?int, hasExtraBed: bool, amenities: list<string>, prices: list<array{label: ?string, amount: string, currency: string, unit: string}>}>  $rooms
      * @param  list<array{label: ?string, amount: string, currency: string, unit: string}>  $objectPrices
      * @param  list<array{label: string, value: string}>  $attributes
@@ -34,6 +35,7 @@ final readonly class ObjectProfileViewModel
         public ?string $tierBadgeText,
         public ?string $tierBadgeColour,
         public ?string $tierBorderColour,
+        public array $contactActions,
         public ?string $shortDescription,
         public ?string $fullDescription,
         public bool $hasRooms,

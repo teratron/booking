@@ -47,7 +47,7 @@ final class ObjectCardPresenter
     {
         $object->loadMissing([
             'translations', 'objectType', 'territory.translations', 'amenities.translations',
-            'placement.package.tier', 'contactChannels.contactChannelType',
+            'placement.package.tier', 'contactChannels.contactChannelType.translations',
         ]);
 
         [$ratingAverage, $reviewCount] = $this->reviewSummary($object);
@@ -170,30 +170,39 @@ final class ObjectCardPresenter
             : null;
     }
 
-    /** @return list<ObjectCardContactAction> */
+    /**
+     * The card's own href routes through the click-capture redirect, not
+     * the resolved deep link directly — a quick-contact tap from a listing
+     * page is as real a conversion as one from the object page's own rail,
+     * and the spec's own contract ("every contact activation is a measured
+     * event") does not carve out an exception for it.
+     *
+     * @return list<ObjectCardContactAction>
+     */
     private function contactActions(Object_ $object): array
     {
         return array_values($object->contactChannels
             ->filter(fn (ContactChannel $channel): bool => $channel->is_active)
+            ->sortBy('display_order')
             ->take(self::MAX_CONTACT_ACTIONS)
-            ->map(function (ContactChannel $channel): ?ObjectCardContactAction {
+            ->map(function (ContactChannel $channel) use ($object): ?ObjectCardContactAction {
                 $type = $channel->contactChannelType;
 
                 if (! $type instanceof ContactChannelType) {
                     return null;
                 }
 
-                $href = $this->contactLinks->resolve($type, $channel->raw_value);
-
-                if ($href === null) {
+                if ($this->contactLinks->resolve($type, $channel->raw_value) === null) {
                     return null;
                 }
 
                 return new ObjectCardContactAction(
                     contactChannelTypeId: $type->id,
                     channelKey: $type->key,
-                    label: (string) ($type->display_name ?? $type->key),
-                    href: $href,
+                    label: (string) ($channel->label ?? $type->display_name ?? $type->key),
+                    href: route('public.objects.contact.click', [
+                        'lang' => app()->getLocale(), 'object' => $object->id, 'channel' => $channel->id,
+                    ]),
                 );
             })
             ->filter()

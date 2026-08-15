@@ -146,7 +146,7 @@ it('renders every field the card contract names: cover, name, settlement, descri
         'contact_channel_type_id' => $channelTypeId, 'locale' => 'en', 'display_name' => 'Phone',
         'created_at' => now(), 'updated_at' => now(),
     ]);
-    DB::table('contact_channels')->insert([
+    $channelId = DB::table('contact_channels')->insertGetId([
         'object_id' => $object->id, 'contact_channel_type_id' => $channelTypeId,
         'raw_value' => '+37360000000', 'is_active' => true, 'display_order' => 0,
         'created_at' => now(), 'updated_at' => now(),
@@ -154,13 +154,18 @@ it('renders every field the card contract names: cover, name, settlement, descri
 
     $view = $this->blade('<x-object-card :object="$object" />', ['object' => $object->fresh()]);
 
+    // The card's own contact action routes through the click-capture
+    // redirect rather than the raw tel: link, so the click itself is
+    // always measured before the visitor leaves the portal.
+    $clickUrl = route('public.objects.contact.click', ['lang' => 'en', 'object' => $object->id, 'channel' => $channelId]);
+
     $view->assertSee('Seaside Villa')
         ->assertSee('Seaside City')
         ->assertSee('A short teaser description for the card.')
         ->assertSee('Free Wi-Fi', escape: false)
         ->assertSee('5.0 / 5')
         ->assertSee('42', escape: false)
-        ->assertSee('tel:+37360000000', escape: false);
+        ->assertSee($clickUrl, escape: false);
 });
 
 it('renders the availability badge for a type that declares it, never for one that does not', function (): void {

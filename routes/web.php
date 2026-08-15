@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\BannerClickController;
 use App\Http\Controllers\ExitImpersonationController;
+use App\Http\Controllers\Public\ContactClickController;
 use App\Http\Controllers\Public\CountryPreferenceController;
 use App\Http\Controllers\Public\FeedbackSubmissionController;
 use App\Http\Controllers\Public\HomePageController;
@@ -49,4 +50,5 @@ Route::prefix('{lang}')
         // page's own composition.
         Route::get('/territory/{territory}', [TerritoryPageController::class, 'show'])->name('territories.show');
         Route::get('/objects/{object}', [ObjectPageController::class, 'show'])->name('objects.show');
+        Route::get('/objects/{object}/contact/{channel}/click', ContactClickController::class)->name('objects.contact.click');
     });

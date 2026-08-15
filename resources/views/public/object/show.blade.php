@@ -62,6 +62,21 @@
             @endif
         </div>
 
+        {{-- Contact rail — the page's own conversion element, kept above
+             the fold rather than buried below the description. --}}
+        @if (count($profile->contactActions) > 0)
+            <div class="sticky top-4 z-10 mt-4 flex flex-wrap gap-2 bg-white py-2">
+                @foreach ($profile->contactActions as $action)
+                    <a
+                        href="{{ $action->href }}"
+                        class="rounded-full border border-brand px-4 py-2 text-sm font-medium text-brand hover:bg-brand hover:text-white"
+                    >
+                        {{ $action->label }}
+                    </a>
+                @endforeach
+            </div>
+        @endif
+
         {{-- Short description --}}
         @if ($profile->shortDescription)
             <p class="mt-4 max-w-3xl text-lg text-ink">{{ $profile->shortDescription }}</p>

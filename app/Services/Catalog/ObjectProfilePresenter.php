@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace App\Services\Catalog;
 
 use App\Models\Amenity;
+use App\Models\ContactChannel;
+use App\Models\ContactChannelType;
 use App\Models\Object_;
 use App\Models\ObjectType;
 use App\Models\PlacementTier;
 use App\Models\Price;
 use App\Models\Room;
+use App\Services\Contact\ContactChannelLinkResolver;
+use App\Support\Catalog\ObjectCardContactAction;
 use App\Support\Catalog\ObjectProfileViewModel;
 use Illuminate\Support\Facades\DB;
 
@@ -22,12 +26,16 @@ use Illuminate\Support\Facades\DB;
  */
 final class ObjectProfilePresenter
 {
+    public function __construct(
+        private readonly ContactChannelLinkResolver $contactLinks,
+    ) {}
+
     public function present(Object_ $object): ObjectProfileViewModel
     {
         $object->loadMissing([
             'translations', 'objectType.translations', 'objectType.parent.translations',
             'territory.translations', 'amenities.translations', 'amenities.group.translations',
-            'placement.package.tier',
+            'placement.package.tier', 'contactChannels.contactChannelType.translations',
         ]);
 
         $type = $object->objectType;
@@ -50,6 +58,7 @@ final class ObjectProfilePresenter
             tierBadgeText: $tier instanceof PlacementTier ? $tier->badge_text : null,
             tierBadgeColour: $tier instanceof PlacementTier ? $tier->badge_colour : null,
             tierBorderColour: $tier instanceof PlacementTier ? $tier->border_colour : null,
+            contactActions: $this->contactActions($object),
             shortDescription: $object->short_description,
             fullDescription: $object->full_description,
             hasRooms: $hasRooms,
@@ -209,6 +218,45 @@ final class ObjectProfilePresenter
         }
 
         return $entries;
+    }
+
+    /**
+     * Every active channel, in display order — unlike the compact card's
+     * own capped reading, the object page's rail is the portal's primary
+     * conversion surface and shows every one an owner has configured.
+     * `href` routes through the click-capture redirect rather than the
+     * resolved deep link directly, so the click itself is always measured
+     * before the visitor leaves the portal.
+     *
+     * @return list<ObjectCardContactAction>
+     */
+    private function contactActions(Object_ $object): array
+    {
+        return array_values($object->contactChannels
+            ->filter(fn (ContactChannel $channel): bool => $channel->is_active)
+            ->sortBy('display_order')
+            ->map(function (ContactChannel $channel) use ($object): ?ObjectCardContactAction {
+                $type = $channel->contactChannelType;
+
+                if (! $type instanceof ContactChannelType) {
+                    return null;
+                }
+
+                if ($this->contactLinks->resolve($type, $channel->raw_value) === null) {
+                    return null;
+                }
+
+                return new ObjectCardContactAction(
+                    contactChannelTypeId: $type->id,
+                    channelKey: $type->key,
+                    label: (string) ($channel->label ?? $type->display_name ?? $type->key),
+                    href: route('public.objects.contact.click', [
+                        'lang' => app()->getLocale(), 'object' => $object->id, 'channel' => $channel->id,
+                    ]),
+                );
+            })
+            ->filter()
+            ->all());
     }
 
     /**

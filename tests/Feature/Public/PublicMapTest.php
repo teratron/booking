@@ -144,8 +144,15 @@ it("opens a pin's compact card carrying the same contact actions as the list car
     $pinCardResponse = $this->get("/en/map/pins/{$object->id}");
 
     $pinCardResponse->assertOk();
-    expect($listCardHtml)->toContain('tel:+37360000000');
-    $pinCardResponse->assertSee('tel:+37360000000', false);
+
+    // Both cards route the same channel through the identical click-capture
+    // redirect — the click itself is measured the same way regardless of
+    // which surface the visitor contacted the owner from.
+    $channelId = DB::table('contact_channels')->where('object_id', $object->id)->value('id');
+    $clickUrl = route('public.objects.contact.click', ['lang' => 'en', 'object' => $object->id, 'channel' => $channelId]);
+
+    expect($listCardHtml)->toContain($clickUrl);
+    $pinCardResponse->assertSee($clickUrl, false);
 });
 
 it('never configures the OSMF-prohibited public OpenStreetMap tile host, for any provider setting', function (): void {
