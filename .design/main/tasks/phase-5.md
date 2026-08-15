@@ -37,7 +37,7 @@ lost.
 - [x] [T-5B01] Object profile composition and type-varying detail
 - [x] [T-5B02] Contact rail, interaction flow, and contact-click emission
 - [x] [T-5B03] Reviews rendering (module-gated)
-- [ ] [T-5B04] Nearby/similar objects and the object's own news/promotions feed
+- [x] [T-5B04] Nearby/similar objects and the object's own news/promotions feed
 
 ### Track C — Catalog & Territory Listing Pages
 
@@ -247,12 +247,14 @@ than per-task.
 ### [T-5B04] Nearby/similar objects and the object's own news/promotions feed
 
 - **Spec:** l1-object-profile.md §5.1; l1-content-publishing.md §5.3, §5.5
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** T-5A03, T-5A05, T-5B01
 - **Verify:** `docker compose exec app ./vendor/bin/pest --filter=PublicObjectRelated` proves nearby/similar objects render through T-5A03's own `CatalogQueryService` (tier-ordered, not a bespoke query, falsified by seeding a lower-tier nearby object and asserting it never outranks a higher-tier one), scoped to the object's own territory; the object's own published news and promotions render using the shared content component, never a bespoke one; a section with nothing to show is omitted entirely.
 - **Handoff:** none within this phase.
 - **Notes:** Reuse the article component from l1-content-publishing.md rather than authoring a bespoke one for this page (Implementation Note #4 of l1-object-profile.md).
+- **Changes:** `ObjectProfilePresenter` gained a `CatalogQueryService` dependency and four new methods: `nearbyObjects()` (`CatalogSearchCriteria(territory: $object->territory)`, matching every other listing surface) and `similarObjects()` (`objectTypeId` + `countryId`, deliberately country-wide rather than territory-scoped — "similar" compares *what* an object is, "nearby" compares *where* it is), both rendering through the existing `<x-object-card>` component; `objectPromotions()`/`objectNews()` (`where('object_id', $object->id)`, the exact column both `NewsItem` and `Promotion` already expose for this — territory-scoping, which `TerritoryPageController` uses, was the wrong column to reach for here). No `CatalogSearchCriteria` field excludes an object's own id from its own related-objects query, and none of this project's own precedent anywhere requests one extra row to compensate; the object's own row is rejected from the already-fetched collection instead, which can occasionally hand back one fewer than the block's usual count — a cosmetic cost, not a correctness one, and explicitly the simpler of two viable designs. First real shared component of the "article/content card" shape `l1-content-publishing.md`'s own Implementation Note calls for (`<x-public.content-card>`) — built from the territory page's own fuller existing convention (border, hover state, optional summary) since T-5D01/T-5D02 (the tasks that would normally introduce it) are still `Todo`; used only in this task's own new markup, the territory and home pages' existing inline news/promotion blocks were deliberately left untouched rather than retrofitted, since neither is broken and touching either would re-open two already-shipped, already-tested pages for a purely cosmetic consolidation.
+- **Evidence:** `tests/Feature/Public/PublicObjectRelatedTest.php`, 4 cases: a lower-tier nearby object never outranks a higher-tier one, proving tier-ordering flows through unmodified; a same-territory-different-type fixture proves "nearby" and a different-territory-same-type-same-country fixture proves "similar" are genuinely distinct lists, each excluding what the other includes, narrowed to each block's own HTML region rather than the whole page; the object's own published news and promotions render through the new shared card, each carrying its title and summary; and a fully isolated object (its own territory, its own type, nothing else in the registry) omits all four related sections entirely. Two real interactions with already-shipped tests surfaced and fixed, both false failures rather than product bugs: `PublicObjectProfileTest`'s and `PublicReviewsTest`'s own "placement package doesn't vary content" / "module gate" fixtures each use two objects sharing a territory and type, so those objects now legitimately appear in each other's nearby/similar blocks, showing their own real badge or rating on their own card — both assertions narrowed from "nowhere on the page" to "within this object's own content, before its related-objects blocks begin," which is what each test actually intended to prove. Independently re-verified: Pint and PHPStan (level 8, whole app) clean — including a containment leak caught and fixed before commit (a spec filename in a new Blade component's own comment, rewritten in plain language); `composer audit`/`composer unused` clean; full non-slow suite 646 passed, 0 failed, 3 skipped (up from 642), including the architecture and containment tests.
 
 ### [T-5C01] Catalog / search results page
 
