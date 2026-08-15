@@ -68,6 +68,11 @@ return [
             'yes' => 'Yes',
             'no' => 'No',
         ],
+        'reviews' => [
+            'heading' => 'Reviews',
+            'anonymous' => 'Guest',
+            'owner_reply' => 'Owner reply',
+        ],
     ],
 
     'home' => [

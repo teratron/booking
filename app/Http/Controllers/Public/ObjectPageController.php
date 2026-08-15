@@ -15,9 +15,9 @@ use Illuminate\Contracts\View\View;
  * The public object profile page: one type-aware composition covering
  * every section {@see ObjectProfilePresenter} resolves — breadcrumb,
  * cover/gallery, name/type/category/rating/settlement, descriptions, the
- * type-varying detail block, and services/infrastructure. Contact rail,
- * reviews, and nearby/similar objects compose into this page from their
- * own, separately built sections.
+ * contact rail, the type-varying detail block, services/infrastructure,
+ * and reviews. Nearby/similar objects compose into this page from their
+ * own, separately built section.
  */
 final class ObjectPageController extends Controller
 {

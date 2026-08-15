@@ -20,6 +20,7 @@ final readonly class ObjectProfileViewModel
      * @param  list<array{label: ?string, amount: string, currency: string, unit: string}>  $objectPrices
      * @param  list<array{label: string, value: string}>  $attributes
      * @param  list<array{groupName: string, amenities: list<array{iconPath: ?string, label: string}>}>  $amenityGroups
+     * @param  list<array{rating: int, body: string, authorName: string, date: string, ownerReply: ?string, ownerReplyDate: ?string}>  $reviews
      */
     public function __construct(
         public int $objectId,
@@ -43,5 +44,6 @@ final readonly class ObjectProfileViewModel
         public array $objectPrices,
         public array $attributes,
         public array $amenityGroups,
+        public array $reviews,
     ) {}
 }

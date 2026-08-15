@@ -68,6 +68,11 @@ return [
             'yes' => 'Да',
             'no' => 'Нет',
         ],
+        'reviews' => [
+            'heading' => 'Отзывы',
+            'anonymous' => 'Гость',
+            'owner_reply' => 'Ответ владельца',
+        ],
     ],
 
     'home' => [

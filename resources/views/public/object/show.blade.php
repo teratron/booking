@@ -205,5 +205,38 @@
                 </div>
             </section>
         @endif
+
+        {{-- Reviews: aggregate (in the header above) + itemized + owner
+             replies — omitted entirely (never an empty block) whenever
+             there is nothing published to show, whether that is because
+             no review exists yet or because the reviews module resolves
+             disabled for this object's own scope. --}}
+        @if (count($profile->reviews) > 0)
+            <section class="mt-10">
+                <h2 class="text-xl font-semibold text-ink">{{ __('public.object.reviews.heading') }}</h2>
+                <div class="mt-4 flex flex-col gap-4">
+                    @foreach ($profile->reviews as $review)
+                        <div class="rounded-lg border border-gray-200 p-4">
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="font-medium text-ink">{{ $review['authorName'] }}</span>
+                                <span class="text-sm text-ink-muted">{{ $review['date'] }}</span>
+                            </div>
+                            <div class="mt-1 text-sm font-semibold text-brand">{{ $review['rating'] }} / 5</div>
+                            <p class="mt-2 text-ink">{{ $review['body'] }}</p>
+
+                            @if ($review['ownerReply'])
+                                <div class="mt-3 rounded-lg bg-surface-muted p-3">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <span class="text-sm font-medium text-ink">{{ __('public.object.reviews.owner_reply') }}</span>
+                                        <span class="text-xs text-ink-muted">{{ $review['ownerReplyDate'] }}</span>
+                                    </div>
+                                    <p class="mt-1 text-sm text-ink">{{ $review['ownerReply'] }}</p>
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </section>
+        @endif
     </div>
 </x-layouts.public>

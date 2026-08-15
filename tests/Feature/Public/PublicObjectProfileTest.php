@@ -71,6 +71,15 @@ function publicObjectRegistry(): array
         'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
     ]);
 
+    // Reviews ships default-enabled in production (ModuleSeeder); these
+    // fixtures reproduce that baseline directly rather than assuming a
+    // seeder ran, since module gating (a later task) reads this registry.
+    DB::table('modules')->insert([
+        'key' => 'reviews', 'default_state' => 'enabled',
+        'scopable_levels' => json_encode(['portal', 'country', 'category', 'object']),
+        'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+
     return compact('languageId', 'countryId', 'cityTerritoryId');
 }
 

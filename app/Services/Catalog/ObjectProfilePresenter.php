@@ -11,8 +11,12 @@ use App\Models\Object_;
 use App\Models\ObjectType;
 use App\Models\PlacementTier;
 use App\Models\Price;
+use App\Models\Review;
 use App\Models\Room;
+use App\Models\User;
 use App\Services\Contact\ContactChannelLinkResolver;
+use App\Services\Modules\ModuleContext;
+use App\Services\Modules\ModuleResolver;
 use App\Support\Catalog\ObjectCardContactAction;
 use App\Support\Catalog\ObjectProfileViewModel;
 use Illuminate\Support\Facades\DB;
@@ -28,6 +32,7 @@ final class ObjectProfilePresenter
 {
     public function __construct(
         private readonly ContactChannelLinkResolver $contactLinks,
+        private readonly ModuleResolver $modules,
     ) {}
 
     public function present(Object_ $object): ObjectProfileViewModel
@@ -41,7 +46,13 @@ final class ObjectProfilePresenter
         $type = $object->objectType;
         $hasRooms = $type instanceof ObjectType && $type->has_rooms;
         $parentType = $type instanceof ObjectType ? $type->parent : null;
-        [$ratingAverage, $reviewCount] = $this->reviewSummary($object);
+        $reviewsEnabled = $this->modules->isEnabled('reviews', new ModuleContext(
+            objectId: $object->id,
+            ownerId: $object->owner_id,
+            categoryId: $object->object_type_id,
+            countryId: $object->country_id,
+        ));
+        [$ratingAverage, $reviewCount] = $reviewsEnabled ? $this->reviewSummary($object) : [null, 0];
         $tier = $object->placement?->package?->tier;
 
         return new ObjectProfileViewModel(
@@ -66,6 +77,7 @@ final class ObjectProfilePresenter
             objectPrices: $hasRooms ? [] : $this->objectPrices($object),
             attributes: $this->attributeEntries($object, $type),
             amenityGroups: $this->amenityGroups($object),
+            reviews: $reviewsEnabled ? $this->reviews($object) : [],
         );
     }
 
@@ -257,6 +269,36 @@ final class ObjectProfilePresenter
             })
             ->filter()
             ->all());
+    }
+
+    /**
+     * Itemized, published reviews, newest first. `SoftDeletes` on
+     * {@see Review} already excludes a removed review from `get()` without
+     * an explicit `whereNull('deleted_at')` here.
+     *
+     * @return list<array{rating: int, body: string, authorName: string, date: string, ownerReply: ?string, ownerReplyDate: ?string}>
+     */
+    private function reviews(Object_ $object): array
+    {
+        $reviews = Review::query()
+            ->where('object_id', $object->id)
+            ->where('status', 'published')
+            ->with('author')
+            ->latest()
+            ->get();
+
+        return array_values($reviews->map(function (Review $review): array {
+            $author = $review->author;
+
+            return [
+                'rating' => $review->rating,
+                'body' => $review->body,
+                'authorName' => (string) ($review->author_name ?? ($author instanceof User ? $author->name : null) ?? __('public.object.reviews.anonymous')),
+                'date' => $review->created_at?->toDateString() ?? '',
+                'ownerReply' => $review->owner_reply,
+                'ownerReplyDate' => $review->owner_replied_at?->toDateString(),
+            ];
+        })->all());
     }
 
     /**
