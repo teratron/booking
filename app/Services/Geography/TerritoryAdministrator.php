@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Services\Geography;
 
+use App\Exceptions\SlugReuseRefusedException;
 use App\Exceptions\TerritoryCycleException;
+use App\Models\Country;
 use App\Models\Territory;
 use App\Models\TerritoryTranslation;
 use App\Models\User;
 use App\Services\Audit\AuditJournal;
+use App\Services\Seo\RedirectRegistrar;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -17,7 +20,10 @@ use Illuminate\Support\Facades\DB;
  */
 final class TerritoryAdministrator
 {
-    public function __construct(private readonly AuditJournal $journal) {}
+    public function __construct(
+        private readonly AuditJournal $journal,
+        private readonly RedirectRegistrar $redirects,
+    ) {}
 
     /**
      * The count an administrator must see before a reparent proceeds —
@@ -94,43 +100,73 @@ final class TerritoryAdministrator
      * descendant, in every language either carries a translation for. Called
      * after a reparent, and must also be called after any slug edit — an
      * ancestor's own slug change invalidates every descendant's cached path
-     * just as surely as a reparent does.
+     * just as surely as a reparent does. Registers a redirect from each
+     * translation's own previous `(country, path)` to its new one, in the
+     * same pass — the address a visitor or search engine already has must
+     * keep resolving. The whole recomputation is one transaction: a refused
+     * reuse partway through a large subtree must leave every already-written
+     * node in this call rolled back, not half-migrated.
+     *
+     * @throws SlugReuseRefusedException when a computed path is already claimed by another node's active redirect
      */
     public function recomputeSlugPaths(Territory $territory): void
     {
-        $nodes = $territory->descendantsAndSelf()->with('translations')->get();
+        DB::transaction(function () use ($territory): void {
+            /** @var array<int, string> $countryCodesById */
+            $countryCodesById = Country::query()->pluck('code', 'id')->all();
 
-        /** @var Territory $node */
-        foreach ($nodes as $node) {
-            $ancestorChain = $node->ancestorsAndSelf()->with('translations')->orderBy('depth')->get();
+            $nodes = $territory->descendantsAndSelf()->with('translations')->get();
 
-            /** @var TerritoryTranslation $translation */
-            foreach ($node->translations as $translation) {
-                $segments = [];
+            /** @var Territory $node */
+            foreach ($nodes as $node) {
+                $ancestorChain = $node->ancestorsAndSelf()->with('translations')->orderBy('depth')->get();
 
-                /** @var Territory $ancestor */
-                foreach ($ancestorChain as $ancestor) {
-                    /** @var ?TerritoryTranslation $ancestorTranslation */
-                    $ancestorTranslation = $ancestor->id === $node->id
-                        ? $translation
-                        : $ancestor->translations->firstWhere('locale', $translation->locale);
+                /** @var TerritoryTranslation $translation */
+                foreach ($node->translations as $translation) {
+                    $segments = [];
 
-                    $segments[] = $ancestorTranslation->slug ?? null;
+                    /** @var Territory $ancestor */
+                    foreach ($ancestorChain as $ancestor) {
+                        /** @var ?TerritoryTranslation $ancestorTranslation */
+                        $ancestorTranslation = $ancestor->id === $node->id
+                            ? $translation
+                            : $ancestor->translations->firstWhere('locale', $translation->locale);
+
+                        $segments[] = $ancestorTranslation->slug ?? null;
+                    }
+
+                    if (in_array(null, $segments, true)) {
+                        continue;
+                    }
+
+                    $previousCountryCode = isset($countryCodesById[$translation->country_id])
+                        ? mb_strtolower($countryCodesById[$translation->country_id])
+                        : null;
+                    $previousPath = $translation->full_slug_path;
+                    $oldPath = $previousCountryCode !== null && $previousPath !== null
+                        ? "{$previousCountryCode}/{$previousPath}"
+                        : null;
+
+                    $newCountryCode = mb_strtolower($countryCodesById[$node->country_id] ?? '');
+                    $newFullSlugPath = implode('/', $segments);
+                    $newPath = "{$newCountryCode}/{$newFullSlugPath}";
+
+                    if ($newPath !== $oldPath && $this->redirects->isClaimed($translation->locale, $newPath)) {
+                        throw SlugReuseRefusedException::forPath($translation->locale, $newPath);
+                    }
+
+                    // Denormalized alongside full_slug_path — Postgres cannot
+                    // scope a unique index through a foreign key's own parent
+                    // table, and the resolver's uniqueness boundary is the
+                    // path within a country, not the path alone.
+                    $translation->country_id = $node->country_id;
+                    $translation->full_slug_path = $newFullSlugPath;
+                    $translation->save();
+
+                    $this->redirects->registerPathChange($translation->locale, $oldPath, $newPath);
                 }
-
-                if (in_array(null, $segments, true)) {
-                    continue;
-                }
-
-                // Denormalized alongside full_slug_path — Postgres cannot
-                // scope a unique index through a foreign key's own parent
-                // table, and the resolver's uniqueness boundary is the path
-                // within a country, not the path alone.
-                $translation->country_id = $node->country_id;
-                $translation->full_slug_path = implode('/', $segments);
-                $translation->save();
             }
-        }
+        });
     }
 
     private function assertNoCycle(Territory $territory, int $newParentId): void

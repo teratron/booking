@@ -17,6 +17,7 @@ use App\Http\Controllers\Public\ObjectPageController;
 use App\Http\Controllers\Public\PromotionController;
 use App\Http\Controllers\Public\TerritoryPageController;
 use App\Http\Middleware\ResolvePublicLocale;
+use App\Http\Middleware\ResolveRedirect;
 use App\Livewire\Public\CatalogSearch;
 use Illuminate\Support\Facades\Route;
 
@@ -36,7 +37,7 @@ Route::get('/banners/{banner}/click', BannerClickController::class)
 Route::pattern('lang', '[a-z]{2}');
 
 Route::prefix('{lang}')
-    ->middleware(ResolvePublicLocale::class)
+    ->middleware([ResolvePublicLocale::class, ResolveRedirect::class])
     ->name('public.')
     ->group(function (): void {
         Route::get('/', [HomePageController::class, 'show'])->name('home');

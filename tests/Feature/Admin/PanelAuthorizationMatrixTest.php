@@ -16,6 +16,7 @@ use App\Filament\Admin\Resources\ObjectTypes\ObjectTypeResource;
 use App\Filament\Admin\Resources\PlacementPackages\PlacementPackageResource;
 use App\Filament\Admin\Resources\PlacementTiers\PlacementTierResource;
 use App\Filament\Admin\Resources\PromotionLabels\PromotionLabelResource;
+use App\Filament\Admin\Resources\Redirects\RedirectResource;
 use App\Filament\Admin\Resources\Territories\TerritoryResource;
 use App\Models\User;
 use Filament\Facades\Filament;
@@ -252,6 +253,12 @@ function seedProbeRowFor(string $resourceClass): void
                 'created_at' => now(), 'updated_at' => now(),
             ]);
         })(),
+        // Reuses the "en" language row matrixGeography() already seeded —
+        // redirects.locale is a foreign key against languages.code.
+        RedirectResource::class => DB::table('redirects')->insert([
+            'locale' => 'en', 'from_path' => 'matrix-probe/old', 'to_path' => 'matrix-probe/new',
+            'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+        ]),
         default => throw new RuntimeException("No probe-row fixture registered for {$resourceClass}."),
     };
 }
@@ -334,7 +341,7 @@ it('reaches every global-registry resource only through an unrestricted grant, n
 
     // The registry drives which resources are exercised — a resource
     // declaring no scope axis in a later phase is picked up here without
-    // this file changing. These seven are today's, asserted so the
+    // this file changing. These fourteen are today's, asserted so the
     // fixture switch above cannot silently stop covering one of them.
     expect($axisLessResources->all())->toEqualCanonicalizing([
         ActionJournalResource::class,
@@ -350,6 +357,7 @@ it('reaches every global-registry resource only through an unrestricted grant, n
         PlacementPackageResource::class,
         PlacementTierResource::class,
         PromotionLabelResource::class,
+        RedirectResource::class,
     ]);
 
     foreach ($axisLessResources as $resourceClass) {

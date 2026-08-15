@@ -148,6 +148,7 @@ return [
             'seo_slug' => 'URL-слаг',
             'seo_title' => 'SEO-заголовок',
             'seo_description' => 'SEO-описание',
+            'slug_claimed_by_redirect' => 'Адрес :path уже занят активным редиректом — изменение для этого языка не сохранено. Сначала удалите редирект, если переиспользование адреса намеренное.',
             'contact_value' => 'Значение',
             'contact_label' => 'Подпись',
             'out_of_scope' => 'Эта страна или категория вне вашей зоны ответственности.',
@@ -258,6 +259,7 @@ return [
             'slug' => 'URL-слаг',
             'short_description' => 'Краткое описание',
             'seo_title' => 'SEO-заголовок',
+            'slug_claimed_by_redirect' => 'Изменение слага отклонено — итоговый адрес уже занят активным редиректом.',
         ],
 
         'actions' => [
@@ -300,6 +302,22 @@ return [
             'attribute_label' => 'Подпись (:language)',
             'seo_title' => 'SEO-заголовок',
             'seo_description' => 'SEO-описание',
+        ],
+    ],
+
+    'redirects' => [
+        'title' => 'Редиректы',
+        'model_label' => 'редирект',
+        'columns' => [
+            'updated_at' => 'Обновлено',
+        ],
+        'form' => [
+            'locale' => 'Язык',
+            'from_path' => 'Старый путь',
+            'from_path_hint' => 'Старый адрес без языкового сегмента — например, md/old-region-slug или o/old-object-slug.',
+            'to_path' => 'Новый путь',
+            'to_path_hint' => 'Актуальный адрес, на который должен попасть посетитель по старой ссылке.',
+            'active' => 'Активен',
         ],
     ],
 

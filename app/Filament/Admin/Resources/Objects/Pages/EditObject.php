@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Services\Objects\AvailabilityAdministrationService;
 use App\Services\Objects\ObjectLifecycleService;
 use App\Services\Placement\BumpService;
+use App\Services\Seo\RedirectRegistrar;
 use App\Services\Settings\SettingsRepository;
 use Closure;
 use Filament\Actions\Action;
@@ -110,10 +111,30 @@ class EditObject extends EditRecord
                 continue;
             }
 
-            $fields['slug'] ??= $record->translations()->where('locale', $locale)->value('slug')
-                ?? Str::slug($fields['name'] ?? (string) $record->id);
+            $previousSlug = $record->translations()->where('locale', $locale)->value('slug');
+
+            $fields['slug'] ??= $previousSlug ?? Str::slug($fields['name'] ?? (string) $record->id);
+
+            $newPath = "o/{$fields['slug']}";
+            $oldPath = $previousSlug !== null ? "o/{$previousSlug}" : null;
+            $redirects = app(RedirectRegistrar::class);
+
+            // A refused reuse skips only this locale's write — the rest of
+            // the form's changes still save, matching this page's own
+            // per-lifecycle-action pattern of a notification in place of a
+            // hard failure for a foreseeable, correctable input mistake.
+            if ($newPath !== $oldPath && $redirects->isClaimed($locale, $newPath)) {
+                Notification::make()
+                    ->danger()
+                    ->title(__('panel.objects.form.slug_claimed_by_redirect', ['path' => $newPath]))
+                    ->send();
+
+                continue;
+            }
 
             $record->translations()->updateOrCreate(['locale' => $locale], $fields);
+
+            $redirects->registerPathChange($locale, $oldPath, $newPath);
         }
 
         return $record;

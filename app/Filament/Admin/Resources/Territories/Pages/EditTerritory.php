@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources\Territories\Pages;
 
+use App\Exceptions\SlugReuseRefusedException;
 use App\Exceptions\TerritoryCycleException;
 use App\Filament\Admin\Resources\Territories\TerritoryResource;
 use App\Models\Territory;
@@ -87,7 +88,15 @@ class EditTerritory extends EditRecord
             /** @var Territory $reloaded */
             $reloaded = $record->fresh();
 
-            app(TerritoryAdministrator::class)->recomputeSlugPaths($reloaded);
+            try {
+                app(TerritoryAdministrator::class)->recomputeSlugPaths($reloaded);
+            } catch (SlugReuseRefusedException $exception) {
+                Notification::make()
+                    ->danger()
+                    ->title(__('panel.territories.form.slug_claimed_by_redirect'))
+                    ->body($exception->getMessage())
+                    ->send();
+            }
         }
 
         return $record;

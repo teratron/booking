@@ -149,6 +149,7 @@ return [
             'seo_slug' => 'URL slug',
             'seo_title' => 'SEO title',
             'seo_description' => 'SEO description',
+            'slug_claimed_by_redirect' => 'The address :path is already claimed by an active redirect — this language\'s change was not saved. Retire the redirect first if this reuse is intentional.',
             'contact_value' => 'Value',
             'contact_label' => 'Label',
             'out_of_scope' => 'This country or category is outside your assigned scope.',
@@ -259,6 +260,7 @@ return [
             'slug' => 'URL slug',
             'short_description' => 'Short description',
             'seo_title' => 'SEO title',
+            'slug_claimed_by_redirect' => 'Slug change refused — the resulting address is already claimed by an active redirect.',
         ],
 
         'actions' => [
@@ -301,6 +303,22 @@ return [
             'attribute_label' => 'Label (:language)',
             'seo_title' => 'SEO title',
             'seo_description' => 'SEO description',
+        ],
+    ],
+
+    'redirects' => [
+        'title' => 'Redirects',
+        'model_label' => 'redirect',
+        'columns' => [
+            'updated_at' => 'Last updated',
+        ],
+        'form' => [
+            'locale' => 'Language',
+            'from_path' => 'From path',
+            'from_path_hint' => 'The old address, without the language segment — e.g. md/old-region-slug or o/old-object-slug.',
+            'to_path' => 'To path',
+            'to_path_hint' => 'The current address a visitor following the old link should land on.',
+            'active' => 'Active',
         ],
     ],
 

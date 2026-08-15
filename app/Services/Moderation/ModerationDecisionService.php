@@ -7,10 +7,13 @@ namespace App\Services\Moderation;
 use App\Exceptions\ModerationDecisionRefusedException;
 use App\Models\ModerationRequest;
 use App\Models\NotificationType;
+use App\Models\Object_;
 use App\Models\User;
 use App\Services\Audit\AuditJournal;
 use App\Services\Localization\LanguageRegistry;
 use App\Services\Notifications\NotificationDispatchService;
+use App\Services\Seo\PublicUrlGenerator;
+use App\Services\Seo\RedirectRegistrar;
 use App\Services\Settings\SettingsRepository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -39,6 +42,7 @@ final class ModerationDecisionService
         private readonly LanguageRegistry $languages,
         private readonly SettingsRepository $settings,
         private readonly NotificationDispatchService $notifications,
+        private readonly RedirectRegistrar $redirects,
     ) {}
 
     public function approve(ModerationRequest $request, User $actor): void
@@ -168,8 +172,93 @@ final class ModerationDecisionService
             $target->setDefaultLocale($this->languages->primaryLocale());
         }
 
+        $previousSlugs = $target instanceof Object_ ? $this->currentSlugsByLocale($target, array_keys($data)) : [];
+
+        if ($target instanceof Object_) {
+            $data = $this->stripClaimedSlugs($data, $previousSlugs);
+        }
+
         $target->fill($data);
         $target->save();
+
+        if ($target instanceof Object_) {
+            $this->registerObjectSlugRedirects($target, $previousSlugs);
+        }
+    }
+
+    /**
+     * Drops a proposed `slug` from `$data` for any locale whose new value
+     * would reuse a path an active redirect still claims — approving the
+     * rest of the moderated change is not blocked by one field a submitter
+     * could not have known was unavailable.
+     *
+     * @param  array<string, mixed>  $data
+     * @param  array<string, ?string>  $previousSlugs
+     * @return array<string, mixed>
+     */
+    private function stripClaimedSlugs(array $data, array $previousSlugs): array
+    {
+        foreach ($previousSlugs as $locale => $previousSlug) {
+            $proposedSlug = $data[$locale]['slug'] ?? null;
+
+            if (! is_string($proposedSlug) || $proposedSlug === $previousSlug) {
+                continue;
+            }
+
+            if ($this->redirects->isClaimed($locale, "o/{$proposedSlug}")) {
+                unset($data[$locale]['slug']);
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * The object's own slug per locale, read before {@see self::applyData()}
+     * overwrites it. `$keys` is `$data`'s own top-level key set — astrotomic's
+     * `fill()` only routes the ones that name an active locale to a
+     * translation row, so a non-locale key here (`address`, `attributes`, …)
+     * simply resolves no slug and is dropped by {@see
+     * self::registerObjectSlugRedirects()}'s own null guard.
+     *
+     * @param  list<string>  $keys
+     * @return array<string, ?string>
+     */
+    private function currentSlugsByLocale(Object_ $object, array $keys): array
+    {
+        $slugs = [];
+
+        foreach ($keys as $key) {
+            $slugs[$key] = $object->translations()->where('locale', $key)->value('slug');
+        }
+
+        return $slugs;
+    }
+
+    /**
+     * A moderated object edit is the same kind of address-changing write as
+     * an admin-panel one — the flat `/o/{slug}` path this registers against
+     * is {@see PublicUrlGenerator::objectUrl()}'s own
+     * grammar, restated here rather than injected, since building it needs
+     * nothing beyond the slug itself.
+     *
+     * @param  array<string, ?string>  $previousSlugs
+     */
+    private function registerObjectSlugRedirects(Object_ $object, array $previousSlugs): void
+    {
+        foreach ($previousSlugs as $locale => $previousSlug) {
+            $newSlug = $object->translations()->where('locale', $locale)->value('slug');
+
+            if ($newSlug === null) {
+                continue;
+            }
+
+            $this->redirects->registerPathChange(
+                $locale,
+                $previousSlug !== null ? "o/{$previousSlug}" : null,
+                "o/{$newSlug}",
+            );
+        }
     }
 
     private function settle(ModerationRequest $request, string $decision, User $actor): void
