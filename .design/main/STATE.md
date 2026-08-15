@@ -4,30 +4,30 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-15 12:15
+**Updated:** 2026-08-15 12:38
 **Phase:** 5 — Public Site
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Track A, Track C, `T-5D03`, and now the whole of Track B (`T-5B01`–`T-5B04`) all complete — 13/18. `T-5B04` (nearby/similar objects, object news/promotions) closed: both listing blocks tier-ordered through the existing `CatalogQueryService`, never a bespoke query; "nearby" is territory-scoped, "similar" is same-type/country-wide. First real shared `<x-public.content-card>` component built, ahead of the blog/news-listing tasks that would normally introduce it.
+- **Task:** Track A, Track B, Track C, and `T-5D03` all complete, plus now `T-5D01` — 14/18. `T-5D01` (public blog) closed: paginated listing + article detail, reusing the `<x-public.content-card>` component built one task ago. Registering `public.blog.index`/`public.blog.show` activated four pre-existing `Route::has()` guards (shell nav/header/footer, home page's articles rail) with no further changes needed there. Only `T-5D02` (news/promotions listing) and Track T remain in Phase 5.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Execute T-5D01 Public blog — listing and article detail via /magic.run main
+- **Next Action:** Execute T-5D02 Public news feed and promotions section via /magic.run main
 
 ## Progress
 
 ```
-Phase 5: [13/18] ███████░ 72%
+Phase 5: [14/18] ███████░ 78%
 Overall: [4/7] █████░░░ 57%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1-4 complete & archived, Phase 5 in progress, 6-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [13/18] Phase 5 IN PROGRESS
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [14/18] Phase 5 IN PROGRESS
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-15 **Decision: `T-5B04` (nearby/similar, object content feed) closed — Track B complete** — new `<x-public.content-card>` (built from the territory page's own established convention) is the first real shared article/content card; the territory and home pages' own existing inline blocks were deliberately left untouched rather than retrofitted. Two already-shipped tests needed narrower assertions after this landed, not because of a regression: their own fixtures share a territory and type, so those objects now legitimately appear in each other's new related-objects blocks. Full non-slow suite: 646 passed, 0 failed, 3 skipped (up from 642).
+- 2026-08-15 **Decision: `T-5D01` (public blog) closed** — first controller in this phase with two full-page actions (`index()`/`show()`); `Article` confirmed to have no `CatalogQueryService`/`ModerationScope` involvement at all (an administrator publishing is the trusted act, no moderation queue). `show()`'s visibility gate mirrors `Article::scopePublished()` exactly against the single bound model. Full non-slow suite: 650 passed, 0 failed, 3 skipped (up from 646).
 
 ## Blockers
 
