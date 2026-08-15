@@ -46,7 +46,7 @@ lost.
 
 ### Track D — Home Page & Content Surfaces
 
-- [ ] [T-5D01] Public blog — listing and article detail
+- [x] [T-5D01] Public blog — listing and article detail
 - [ ] [T-5D02] Public news feed and promotions section
 - [x] [T-5D03] Home page composition
 
@@ -286,12 +286,14 @@ than per-task.
 ### [T-5D01] Public blog — listing and article detail
 
 - **Spec:** l1-content-publishing.md §3.2, §5.1, §5.3
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** T-5A01
 - **Verify:** `docker compose exec app ./vendor/bin/pest --filter=PublicBlog` proves the blog listing renders published articles only (never a draft), each carrying its category and tags; an article page renders its full body, author, category, tags, and its many-to-many related objects and territories, each rendered as a real link; an unpublished or future-scheduled article's detail route is unreachable publicly.
 - **Handoff:** T-5D03 (home page's articles rail links here).
 - **Notes:** Articles already exist as an Eloquent model with categories and tags (Phase 3) — this task is the public rendering surface only, no new authoring or moderation logic.
+- **Changes:** New `App\Http\Controllers\Public\BlogController` — first controller in this phase with two full-page actions (`index()`, `show()`) rather than one, following the `MapPinsController`-established `index`/`show` naming even though no prior controller paired it with two rendered HTML pages; `Article` was never routed through `CatalogQueryService` (confirmed it has no article-aware code at all) since blog content is a `l1-content-publishing` concern, not the object catalog's. `show()`'s visibility gate mirrors `Article::scopePublished()` exactly, applied to the single already-bound model rather than re-querying, since `Article` carries no `ModerationScope` the way `Object_`/reviews do (an administrator publishing an article is already the trusted act — confirmed in the migration's own comment, no `moderation_status` column exists on `articles` at all). Registering the two routes (`public.blog.index`, `public.blog.show`) activates four pre-existing `Route::has()` guards written ahead of this task — the shell's nav, header, and footer blog links, and the home page's own articles rail — all now resolve live with no further changes. The shared `<x-public.content-card>` component (built in the immediately preceding task) gained one addition: an optional default slot for trailing content, so the blog listing can append its own tag chips without forcing a `tags` prop onto news/promotion cards that have no tags at all.
+- **Evidence:** `tests/Feature/Public/PublicBlogTest.php`, 4 cases: the listing renders a published article's title, summary, category, and tags while a draft article's title never appears; an object with nothing published yet shows the empty-state copy rather than an empty grid; an article's own page renders its full body, author name, category, one tag, and real `<a href>` links to a related object's and a related territory's own public pages (asserted against each link's real, resolved URL, not just the label text); and a draft article and a future-`publish_at` article both 404 on their own detail route. Two real fixture gaps caught before the suite ever ran, both required (`NOT NULL`) `slug` columns on `article_categories` and `article_tags` that a naive fixture omitted — closed in the test's own helper functions, not a product defect. Independently re-verified: Pint and PHPStan (level 8, whole app) clean; `composer audit`/`composer unused` clean; full non-slow suite 650 passed, 0 failed, 3 skipped (up from 646), including the architecture and containment tests.
 
 ### [T-5D02] Public news feed and promotions section
 
