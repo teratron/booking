@@ -47,7 +47,7 @@ lost.
 ### Track D — Home Page & Content Surfaces
 
 - [x] [T-5D01] Public blog — listing and article detail
-- [ ] [T-5D02] Public news feed and promotions section
+- [x] [T-5D02] Public news feed and promotions section
 - [x] [T-5D03] Home page composition
 
 ### Track T — Validation
@@ -298,12 +298,14 @@ than per-task.
 ### [T-5D02] Public news feed and promotions section
 
 - **Spec:** l1-content-publishing.md §3.3, §3.4, §5.1, §5.3
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** T-5A01
 - **Verify:** `docker compose exec app ./vendor/bin/pest --filter=PublicNewsAndPromotions` proves the portal-wide news feed lists published, non-withdrawn items (an item past its own end date is excluded from the feed but its own page stays reachable, per the spec's own withdrawn-from-feeds-page-retained distinction); the promotions section lists only promotions whose end date has not yet passed, proven by seeding one elapsed promotion and asserting its absence from this section specifically (its own archival is a scheduled job this task does not own, only reads the resulting state); pinned news items sort first within the feed.
 - **Handoff:** T-5D03 (home page's news and promotions rails link here).
 - **Notes:** Promotion archival is a scheduled job that already exists (Phase 3) — this task reads `status`/`moderation_status` as already maintained; it does not implement the archival transition itself.
+- **Changes:** New `App\Http\Controllers\Public\NewsController` (`index()`/`show()`, portal-wide, no country/territory scoping — dropped `HomePageController::newsItems()`'s own scoping since that rail is deliberately narrower, this feed is not) and `App\Http\Controllers\Public\PromotionController` (`show()` only — `Promotion` is always object- and territory-scoped, never portal-wide, so there is no listing to pair it with; the nav bar's own `public.promotions.index` link, built anticipating one, stays inertly guarded exactly as it already was). Both detail pages apply a gate one clause looser than the model's own `scopePublished()`, for two different underlying reasons: a news item's `end_at` never changes its `status` (an administrator would have to separately withdraw it), so `NewsController::show()` drops the `end_at` check entirely — the spec's own explicit "feed drops it, page keeps it" contract. A promotion's own scheduled archival job (pre-existing, this task doesn't own it) *does* transition `status` away from `published` once elapsed, so `status` alone almost carries the whole gate; `PromotionController::show()` keeps only the `starts_at` clause, guarding against a promotion published administratively ahead of its own start date, since nothing enforces that a `published` status implies a past `starts_at`. Registering the three routes (`public.news.index`, `public.news.show`, `public.promotions.show`) activates six pre-existing `Route::has()` guards across the territory, object, and home pages, all built ahead of this task — no further changes needed there.
+- **Evidence:** `tests/Feature/Public/PublicNewsAndPromotionsTest.php`, 5 cases: the feed lists published items with pinned ones sorted first and a past-`end_at` item excluded — while that same item's own detail page still returns 200 with its content; an empty feed shows the empty-state copy; a draft or withdrawn news item 404s on its own page; an elapsed promotion is proven absent from an *already-shipped* section (the territory page's own promotions block, built two tasks ago) while its own detail page — reachable exactly because this fixture's `status` hasn't been transitioned by the archival job it doesn't own — still 200s; a draft or archived promotion 404s. Independently re-verified: Pint and PHPStan (level 8, whole app) clean — including a genuine PHPStan catch, not a false positive this time: a defensive `starts_at !== null` check flagged as always-true, correctly, since the column is a real `NOT NULL` — removed rather than worked around. `composer audit`/`composer unused` clean; full non-slow suite 655 passed, 0 failed, 3 skipped (up from 650), including the architecture and containment tests.
 
 ### [T-5D03] Home page composition
 
