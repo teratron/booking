@@ -43,6 +43,14 @@ return [
         'explore' => 'Рядом',
     ],
 
+    'blog' => [
+        'empty' => 'Пока не опубликовано ни одной статьи — загляните позже.',
+        'by' => 'Автор: :name',
+        'tags_heading' => 'Теги',
+        'related_objects_heading' => 'Упомянутые объекты',
+        'related_territories_heading' => 'Упомянутые направления',
+    ],
+
     'object' => [
         'rooms_heading' => 'Номера и цены',
         'prices_heading' => 'Цены',

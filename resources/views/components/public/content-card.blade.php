@@ -13,4 +13,5 @@
     @if ($summary)
         <p class="mt-1 line-clamp-2 text-sm text-ink-muted">{{ $summary }}</p>
     @endif
+    {{ $slot ?? '' }}
 </x-public.nav-link>

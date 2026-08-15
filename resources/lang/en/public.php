@@ -43,6 +43,14 @@ return [
         'explore' => 'Explore nearby',
     ],
 
+    'blog' => [
+        'empty' => 'No articles have been published yet — check back soon.',
+        'by' => 'By :name',
+        'tags_heading' => 'Tags',
+        'related_objects_heading' => 'Mentioned objects',
+        'related_territories_heading' => 'Mentioned destinations',
+    ],
+
     'object' => [
         'rooms_heading' => 'Rooms & prices',
         'prices_heading' => 'Prices',
