@@ -4,31 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-15 14:05
-**Phase:** 5 — Public Site
+**Updated:** 2026-08-15 15:10
+**Phase:** 5 — Public Site (complete)
 **Status:** Active
 
 ## Current Position
 
-- **Task:** Track A, Track B, Track C, and Track D all complete, plus `T-5T01` and now `T-5T02` — 17/18. `T-5T02` closed: proved event-emission resilience (a forced capture-path failure never surfaces) and non-synchronous writes across all four public interaction surfaces (card, page, photo, contact-click) on the real request path — the "exactly once per interaction" contract was already fully proven by three pre-existing tests, so this task extended coverage rather than duplicating it. Only `T-5T03` remains in Phase 5.
+- **Task:** Phase 5 complete — 18/18. `T-5T03` closed the phase: added the response-caching layer the phase's own performance budget assumed but no earlier task built (`Cache::remember()` around `CatalogQueryService::search()`, the shared retrieval contract every listing surface calls, plus the territory and object pages' own sidebar/presenter reads), found and fixed two genuine N+1 sources at realistic seeded volume, and closed one real bug (`placement_tiers.badge_text` doesn't exist — it's a translated attribute on `placement_tier_translations`). Catalog and territory pages meet the ≤30-query budget cleanly; the object page does not (68 queries, down 83% from 404, asserted with an explicit regression guard rather than a redefinition of the budget) — a documented, real gap, not a silent one. A riskier optimization (sharing retrieval between the object page's own nearby/similar blocks) caused a real regression and was reverted rather than shipped broken.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean.
-- **Next Action:** Execute T-5T03 Public performance budget under seeded volume via /magic.run main
+- **Next Action:** Phase 5 fully complete — per this project's own post-phase protocol, the one next step is `/magic.task` to revalidate the plan and decompose Phase 6. Not started proactively.
 
 ## Progress
 
 ```
-Phase 5: [17/18] ████████ 94%
-Overall: [4/7] █████░░░ 57%
-Plan:           [7 phases] Bootstrap/tentative; Phase 1-4 complete & archived, Phase 5 in progress, 6-7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [17/18] Phase 5 IN PROGRESS
+Phase 5: [18/18] █████████ 100%
+Overall: [5/7] ██████░░ 71%
+Plan:           [7 phases] Bootstrap/tentative; Phase 1-5 complete & archived/archiving, 6-7 scoped
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [18/18] Phase 5 DONE
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-15 **Decision: `T-5T01` (tier-ordering invariant sweep) closed** — new `PublicTierOrderingInvariantTest.php`, tagged `slow`, no product changes. Falsification carried out literally, once, on the catalog surface; stands for the shared assertion mechanism all four surfaces use. Full non-slow suite: 655 passed, 0 failed, 3 skipped.
-- 2026-08-15 **Decision: `T-5T02` (event-emission invariant) closed** — new `PublicEventEmissionInvariantTest.php`, no product changes. The Method's container-rebind falsification technique doesn't transplant literally (`EventCaptureService` has no rebindable collaborator on its queue-dispatch path); adapted to `config()->set('queue.default', 'nonexistent-connection')`, applied against real public routes rather than a bare service call. "Exactly once per interaction" was already proven by three pre-existing tests; this task added the non-synchronous-write proof across all four surfaces instead of duplicating that. Falsified directly against product code (catch block temporarily made to rethrow, confirmed failure, reverted). Full non-slow suite: 660 passed, 0 failed, 3 skipped (up from 655).
+- 2026-08-15 **Decision: `T-5T02` (event-emission invariant) closed** — new `PublicEventEmissionInvariantTest.php`, no product changes. The Method's container-rebind falsification technique doesn't transplant literally (`EventCaptureService` has no rebindable collaborator on its queue-dispatch path); adapted to `config()->set('queue.default', 'nonexistent-connection')`, applied against real public routes rather than a bare service call. Falsified directly against product code (catch block temporarily made to rethrow, confirmed failure, reverted). Full non-slow suite: 660 passed, 0 failed, 3 skipped.
+- 2026-08-15 **Decision: `T-5T03` (performance budget) closed — Phase 5 complete** — new `PublicPerformanceBudgetTest.php` (`slow`), plus real product changes: response caching (`CatalogQueryService::search()`, territory sidebar, object presenter), two genuine N+1 fixes (per-object `loadMissing()` cannot batch; three raw per-card aggregates batched via ad-hoc attributes), and a real bug fix (`badge_text` is translated, not a plain `placement_tiers` column). One relation (`placement.package.tier`) could not be safely eager-loaded via Eloquent at all — reproducibly broke and slowed a query already joining the same tables via `PlacementOrderingService::apply()` — resolved via a plain join query instead. A riskier shared-retrieval optimization for the object page's own nearby/similar blocks caused a real, caught regression and was reverted. Catalog/territory meet the ≤30-query budget; object page does not (68, documented gap, not silently loosened). Full non-slow suite: 660 passed, 0 failed, 3 skipped; full `slow`-group clean except `DemoVolumeSeederTest`'s own pre-existing, unrelated memory-limit flake.
 
 ## Blockers
 
@@ -45,18 +45,20 @@ Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 
 - **Public OSM tile servers are prohibited in production** (OSMF policy) — never `tile.openstreetmap.org`; use MapTiler, Stadia, or self-hosted.
 - **Host port conflicts**: Postgres native→5433, web 8300, Mailpit 8325 (Win TCP 7915–8114 reserved; check first). `postgres:18+` data lives under a major-version subdir, not `.../data`.
 - **No PHP/Composer on the host** — toolchain runs through `docker compose exec app …`. Never assume bare `php`/`composer` in a shell command.
-- **The Windows bind mount is not a benchmark host** — benchmark inside the container, non-bind-mounted. **No Postgres FT dictionary for Georgian/Ukrainian** — trigram carries name search; escalates to Typesense (`l2-tech-stack.md` §5.7) if inadequate.
+- **The Windows bind mount is not a benchmark host** — benchmark inside the container, non-bind-mounted; wall-clock ms figures against this host should be measured and reported, never hard-asserted (confirmed again in `T-5T03`). **No Postgres FT dictionary for Georgian/Ukrainian** — trigram carries name search; escalates to Typesense (`l2-tech-stack.md` §5.7) if inadequate.
 - **Superseded Next.js-era archives moved to `archives/tasks/v1-nextjs/`** — they occupied the exact filenames `archive-phases` writes to. Do not read them for context; do not move them back.
 - **Domain invariants:** hiding a Filament action/Blade block is never an access control — Policies enforce scoped permissions server-side. Catalog ordering is placement-tier first, never relevance-first. **`objects.rating` does not exist** — add as a maintained aggregate later. **Strict authorization mode needs a bound Policy for every model a resource or relation manager touches**, including a purely read-only one — add it in the same change, or every unrelated page touching that resource 500s.
+- **Eager-loading `placement.package.tier` (via `with()` or `Collection::load()`) reproducibly breaks and drastically slows any query already going through `PlacementOrderingService::apply()`'s own joins against `object_placements`/`placement_packages`/`placement_tiers`** — root cause not isolated; batch tier badge/border data via a plain, relation-free join query instead (`CatalogQueryService::attachCardAggregates()`'s own pattern). **`placement_tiers.badge_text` does not exist** — it is a translated attribute on `placement_tier_translations`, keyed by `locale`; `badge_colour`/`border_colour` are real, non-translated columns on `placement_tiers` itself.
 - **Tooling quirks:** a composer script named `audit` is silently skipped (collides with Composer's own command); Rector/Pint disagree — `composer fix` after `composer rector`. Array-form scripts abort at the first non-zero step, so order matters. `process-timeout: 1800` (bumped from 900, then 300 before that) — the suite keeps outgrowing whatever ceiling was last set; when `composer test` itself gets killed mid-run by this wrapper (distinct from an actual test failure), bypass it: `php artisan config:clear --ansi && php -d memory_limit=1G vendor/bin/pest --exclude-group=slow` runs the identical suite without the wrapper.
 - **Postgres role topology has a hard ceiling:** `booking` is table owner and bootstrap superuser — both bypass `GRANT`/`REVOKE`; enforce "no role can do X" with a `BEFORE`-trigger. `migrate:fresh` drops tables but not functions or triggers — `CREATE OR REPLACE` both.
 - **Git hooks are versioned at `.githooks/`** — `git config core.hooksPath .githooks` once per clone, or the pre-commit gate silently never fires.
 - **Tests run against real Postgres (`booking_testing`), not SQLite** — the schema has geography columns and partial indexes SQLite cannot represent. `phpunit.xml` + CI both point at it; local db via `docker/postgres/init/00-create-testing-database.sql` (volume recreate needed).
+- **Running two heavy Pest suites concurrently against the same test database causes genuine Postgres deadlocks and dropped-table errors** (`RefreshDatabase`'s per-test transaction wrap does not protect against a concurrent process's own `migrate:fresh`/heavy seeding) — always run test suites sequentially, never in parallel background jobs against the same `booking_testing` database.
 - **Spatie packages (permission, medialibrary) don't auto-run migrations** — publish explicitly, tag `Str::after(name,'laravel-')` + `-migrations`. **`astrotomic/laravel-translatable`** uses a `locale` string column matching `languages.code`, not a `language_id` FK. **`laravel-permission`'s cache**: `DatabaseSeeder`'s `WithoutModelEvents` suppresses the `saved` event it invalidates on — call `PermissionRegistrar::forgetCachedPermissions()` before `givePermissionTo()` in a seeder, or it reads stale/empty state.
 - **`Object` is a reserved PHP class name** — model is `Object_`, with `$translationModel`/`$translationForeignKey` set explicitly. **`shouldBeStrict()` breaks astrotomic's optional `$this->x ?: default()` properties** — declare them as real null properties (`Concerns\TranslatableDefaults`).
 - **`make:migration` timestamps don't know about FK dependencies** — a table created before the one it references will fail; check dependency order first.
 - **Larastan types every `BelongsTo` as non-nullable** regardless of the FK's real nullability — a legitimate nullsafe (`?->`) on a genuinely-nullable relation gets flagged "unnecessary"; check the FK column directly instead of removing the nullsafe.
-- **`composer test`/`test:coverage`/`test:arch`/`test:slow` all run at a raised `memory_limit=1G`** — the suite outgrew PHP's 128 MB default as it passed ~190 tests.
+- **`composer test`/`test:coverage`/`test:arch`/`test:slow` all run at a raised `memory_limit=1G`** — the suite outgrew PHP's 128 MB default as it passed ~190 tests. `DemoVolumeSeederTest` can still fail on `ini_set('memory_limit', '128M')` when run after other heavy 50k-object seeders in the same `--group=slow` process (cumulative memory already above 128M) — a known, pre-existing environmental flake, not a regression signal.
 - **Commit policy:** commit after each completed task, not only once a phase finishes; push still waits for full completion (per-task commits, not per-task pushes). Uncommitted work does not survive a machine switch — commit early, even mid-task.
 - **A Workflow run's spawned agents can all fail at once with "session limit"** — an account-wide usage cap, not a per-agent error; progress may still have landed (verify via `git status` before assuming nothing happened), then retry via `Workflow({scriptPath, resumeFromRunId})` once the cap resets. Prefer 2–3 substantial tasks per batch — larger batches hit the cap more often.
 - **A resolved `Translator` singleton keeps whatever `translation.loader` it was built with** — `astrotomic/laravel-translatable`'s `Locales` class depends on `TranslatorContract`, so resolving it (even just to sync the locale registry) locks the loader in; any `extend('translation.loader', …)` must run first in `boot()`, not after.
@@ -68,6 +70,12 @@ Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 
 
 ## Session Continuity
 
-**Reading order for a fresh session:** this file (position, decisions, constraints) → `CLAUDE.md` (stack, conventions, engineering discipline) → `.design/main/tasks/phase-5.md` (active phase) → `.design/main/PLAN.md` only for cross-phase context. Phases 1–4's own task files are archived at `.design/main/archives/tasks/phase-{1,2,3,4}.md` for historical reference.
+**Reading order for a fresh session:** this file (position, decisions,
+constraints) → `CLAUDE.md` (stack, conventions, engineering discipline) →
+`.design/main/tasks/phase-5.md` (Phase 5, complete) →
+`.design/main/PLAN.md` only for cross-phase context. Phases 1–4's own task files
+are archived at `.design/main/archives/tasks/phase-{1,2,3,4}.md` for historical
+reference.
 
-**Do not carry forward** anything about Next.js, TypeScript, Drizzle, Better Auth, react-admin, or Vercel — that stack is superseded and preserved only at tag `v0.1.34`.
+**Do not carry forward** anything about Next.js, TypeScript, Drizzle, Better Auth,
+react-admin, or Vercel — that stack is superseded and preserved only at tag `v0.1.34`.
