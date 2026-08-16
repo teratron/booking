@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Policies\CatalogFilterPromotionPolicy;
+use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Model;
 use Override;
 
@@ -14,6 +16,7 @@ use Override;
  * more is never promotable, so this table never represents more than one
  * active filter at a time.
  */
+#[UsePolicy(CatalogFilterPromotionPolicy::class)]
 class CatalogFilterPromotion extends Model
 {
     protected $guarded = ['id'];

@@ -58,7 +58,12 @@ final class RoleSeeder extends Seeder
             [
                 'key' => 'seo_specialist', 'system' => true,
                 'name' => ['en' => 'SEO Specialist', 'ru' => 'SEO-специалист'],
-                'permissions' => ['object.view', 'object.edit', 'content.view', 'content.edit', 'admin_panel_access'],
+                // Object, content (news/promotions/articles), and geography
+                // (territories) each carry the per-entity SEO fields this
+                // role edits directly on their own forms; `settings.*`
+                // additionally covers the object-type (category) registry's
+                // own SEO fields, since ObjectTypeResource is gated there.
+                'permissions' => ['object.view', 'object.edit', 'content.view', 'content.edit', 'geography.view', 'geography.edit', 'settings.view', 'settings.edit', 'seo.*', 'admin_panel_access'],
             ],
             [
                 'key' => 'advertising_manager', 'system' => true,

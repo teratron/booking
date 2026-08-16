@@ -25,6 +25,7 @@ return [
         'communication' => 'Communication',
         'content' => 'Content',
         'geography' => 'Geography',
+        'seo' => 'SEO',
         'governance' => 'Governance',
         'access' => 'Access',
         'system' => 'System',
@@ -348,6 +349,83 @@ return [
         'indexable_default' => 'Default (follow the site policy)',
         'indexable_yes' => 'Force indexable',
         'indexable_no' => 'Force noindex',
+    ],
+
+    'seo_metadata_templates' => [
+        'title' => 'SEO Metadata Templates',
+        'model_label' => 'SEO metadata template',
+        'columns' => [
+            'updated_at' => 'Last updated',
+        ],
+        'form' => [
+            'entity_type' => 'Entity type',
+            'entity_types' => [
+                'territory' => 'Territory',
+                'object_type' => 'Object type',
+                'object' => 'Object',
+                'promotion' => 'Promotion',
+                'news_item' => 'News item',
+                'article' => 'Article',
+            ],
+            'locale' => 'Language',
+            'field' => 'Field',
+            'fields' => [
+                'title' => 'Title',
+                'description' => 'Description',
+            ],
+            'template' => 'Template',
+            'template_hint' => 'Placeholders: {name} for the entity\'s own name or title, {territory} for its territory\'s name where one applies. Used only when the entity has no explicit override of its own.',
+        ],
+    ],
+
+    'catalog_filter_promotions' => [
+        'title' => 'Catalog Filter Promotions',
+        'model_label' => 'catalog filter promotion',
+        'columns' => [
+            'updated_at' => 'Last updated',
+        ],
+        'form' => [
+            'signature' => 'Filter signature',
+            'signature_hint' => 'The single filter this promotion makes indexable, as key=value — e.g. object_type=hotel. A catalog view stays indexable only with zero active filters or exactly one promoted filter; any other combination is never indexed.',
+            'active' => 'Active',
+        ],
+    ],
+
+    'error_pages' => [
+        'title' => 'Error Pages',
+        'model_label' => 'error page',
+        'columns' => [
+            'updated_at' => 'Last updated',
+        ],
+        'status_names' => [
+            '404' => '404 — Page not found',
+        ],
+        'form' => [
+            'status_code' => 'Status code',
+            'translations' => 'Content',
+            'title' => 'Title',
+            'body' => 'Body',
+        ],
+    ],
+
+    'seo_health' => [
+        'title' => 'SEO Health',
+        'navigation_label' => 'Health Dashboard',
+        'columns' => [
+            'entity_type' => 'Entity type',
+            'locale' => 'Language',
+            'name' => 'Entity',
+        ],
+        'warnings' => [
+            'missing_title' => 'Missing SEO title',
+            'missing_description' => 'Missing SEO description',
+            'over_length_title' => 'SEO title over 60 characters',
+            'excluded_from_indexing' => 'Excluded from indexing',
+            'duplicate_address' => 'Duplicate canonical URL',
+            'missing_translation' => 'Missing translation',
+        ],
+        'empty_state' => 'No issues found for this check.',
+        'missing_translation_count' => '{1} :count entity missing this translation|[2,*] :count entities missing this translation',
     ],
 
     'placement_tiers' => [

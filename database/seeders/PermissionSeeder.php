@@ -20,7 +20,7 @@ final class PermissionSeeder extends Seeder
     /** @return list<string> */
     public static function resourceVerbKeys(): array
     {
-        $resources = ['object', 'content', 'moderation', 'finance', 'user', 'settings', 'geography', 'commerce', 'advertising', 'analytics', 'notification'];
+        $resources = ['object', 'content', 'moderation', 'finance', 'user', 'settings', 'geography', 'commerce', 'advertising', 'analytics', 'notification', 'seo'];
         $verbs = ['view', 'create', 'edit', 'publish', 'delete', 'export'];
 
         $keys = [];

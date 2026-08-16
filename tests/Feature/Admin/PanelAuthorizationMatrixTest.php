@@ -8,6 +8,8 @@ use App\Filament\Admin\Resources\Articles\ArticleResource;
 use App\Filament\Admin\Resources\ArticleTags\ArticleTagResource;
 use App\Filament\Admin\Resources\Banners\BannerResource;
 use App\Filament\Admin\Resources\BannerSlots\BannerSlotResource;
+use App\Filament\Admin\Resources\CatalogFilterPromotions\CatalogFilterPromotionResource;
+use App\Filament\Admin\Resources\ErrorPages\ErrorPageResource;
 use App\Filament\Admin\Resources\FinancialRecords\FinancialRecordResource;
 use App\Filament\Admin\Resources\Languages\LanguageResource;
 use App\Filament\Admin\Resources\Modules\ModuleResource;
@@ -17,6 +19,7 @@ use App\Filament\Admin\Resources\PlacementPackages\PlacementPackageResource;
 use App\Filament\Admin\Resources\PlacementTiers\PlacementTierResource;
 use App\Filament\Admin\Resources\PromotionLabels\PromotionLabelResource;
 use App\Filament\Admin\Resources\Redirects\RedirectResource;
+use App\Filament\Admin\Resources\SeoMetadataTemplates\SeoMetadataTemplateResource;
 use App\Filament\Admin\Resources\Territories\TerritoryResource;
 use App\Models\User;
 use Filament\Facades\Filament;
@@ -259,6 +262,29 @@ function seedProbeRowFor(string $resourceClass): void
             'locale' => 'en', 'from_path' => 'matrix-probe/old', 'to_path' => 'matrix-probe/new',
             'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
         ]),
+        CatalogFilterPromotionResource::class => DB::table('catalog_filter_promotions')->insert([
+            'signature' => 'object_type=matrix_probe', 'is_active' => true,
+            'created_at' => now(), 'updated_at' => now(),
+        ]),
+        // Reuses the "en" language row matrixGeography() already seeded —
+        // seo_metadata_templates.locale is a foreign key against languages.code.
+        SeoMetadataTemplateResource::class => DB::table('seo_metadata_templates')->insert([
+            'entity_type' => 'territory', 'locale' => 'en', 'field' => 'title',
+            'template' => 'Matrix Probe {name}', 'created_at' => now(), 'updated_at' => now(),
+        ]),
+        // Reuses the "en" language row matrixGeography() already seeded —
+        // error_page_translations.locale is a foreign key against languages.code.
+        ErrorPageResource::class => (function (): void {
+            $errorPageId = DB::table('error_pages')->insertGetId([
+                'status_code' => 404, 'created_at' => now(), 'updated_at' => now(),
+            ]);
+
+            DB::table('error_page_translations')->insert([
+                'error_page_id' => $errorPageId, 'locale' => 'en',
+                'title' => 'Matrix Probe Not Found', 'body' => 'Matrix probe body.',
+                'created_at' => now(), 'updated_at' => now(),
+            ]);
+        })(),
         default => throw new RuntimeException("No probe-row fixture registered for {$resourceClass}."),
     };
 }
@@ -341,7 +367,7 @@ it('reaches every global-registry resource only through an unrestricted grant, n
 
     // The registry drives which resources are exercised — a resource
     // declaring no scope axis in a later phase is picked up here without
-    // this file changing. These fourteen are today's, asserted so the
+    // this file changing. These seventeen are today's, asserted so the
     // fixture switch above cannot silently stop covering one of them.
     expect($axisLessResources->all())->toEqualCanonicalizing([
         ActionJournalResource::class,
@@ -350,6 +376,8 @@ it('reaches every global-registry resource only through an unrestricted grant, n
         ArticleTagResource::class,
         BannerResource::class,
         BannerSlotResource::class,
+        CatalogFilterPromotionResource::class,
+        ErrorPageResource::class,
         FinancialRecordResource::class,
         LanguageResource::class,
         ModuleResource::class,
@@ -358,6 +386,7 @@ it('reaches every global-registry resource only through an unrestricted grant, n
         PlacementTierResource::class,
         PromotionLabelResource::class,
         RedirectResource::class,
+        SeoMetadataTemplateResource::class,
     ]);
 
     foreach ($axisLessResources as $resourceClass) {

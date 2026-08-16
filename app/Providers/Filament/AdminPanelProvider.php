@@ -93,6 +93,7 @@ class AdminPanelProvider extends PanelProvider
             NavigationGroup::make()->label(fn (): string => __('panel.navigation.communication')),
             NavigationGroup::make()->label(fn (): string => __('panel.navigation.content')),
             NavigationGroup::make()->label(fn (): string => __('panel.navigation.geography')),
+            NavigationGroup::make()->label(fn (): string => __('panel.navigation.seo')),
             NavigationGroup::make()->label(fn (): string => __('panel.navigation.governance')),
             NavigationGroup::make()->label(fn (): string => __('panel.navigation.access')),
             NavigationGroup::make()->label(fn (): string => __('panel.navigation.system')),

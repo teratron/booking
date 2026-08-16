@@ -35,7 +35,7 @@ archival would have overwritten them.
 | [Phase 3](archives/tasks/phase-3.md) | Commerce, advertising, analytics ingest, notifications, content pipeline | `Done (Archived)` (23/23) |
 | [Phase 4](archives/tasks/phase-4.md) | Owner cabinet — the second Filament panel, owner-scoped throughout | `Done (Archived)` (16/16) |
 | [Phase 5](archives/tasks/phase-5.md) | Public site — shell, home, catalog, object profile, territory pages, built from Figma | `Done (Archived)` (18/18) |
-| [Phase 6](tasks/phase-6.md) | SEO, portal-wide reporting, public REST API | `Active` (6/16) |
+| [Phase 6](tasks/phase-6.md) | SEO, portal-wide reporting, public REST API | `Active` (7/16) |
 | [Phase 7](tasks/phase-7.md) | Import/export, backups and rehearsed restore, production provisioning, load test | `Todo` |
 
 ## Execution Notes
