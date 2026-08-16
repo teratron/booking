@@ -59,6 +59,7 @@ test('the module registry matches the launch matrix with its dependency chain', 
     expect($modules['guest_accounts'])->toBe('disabled');
     expect($modules['booking'])->toBe('disabled');
     expect($modules['payment'])->toBe('disabled');
+    expect($modules['api'])->toBe('disabled');
 
     $moduleIdByKey = DB::table('modules')->pluck('id', 'key');
 
@@ -88,7 +89,7 @@ test('migrate:fresh --seed applies cleanly and every registry ships non-empty', 
     expect(DB::table('contact_channel_types')->count())->toBeGreaterThan(0);
     expect(DB::table('placement_tiers')->count())->toBe(4);
     expect(DB::table('placement_packages')->count())->toBe(4);
-    expect(DB::table('modules')->count())->toBe(4);
+    expect(DB::table('modules')->count())->toBe(5);
     expect(DB::table('notification_channels')->count())->toBeGreaterThan(0);
     expect(DB::table('notification_types')->count())->toBe(10);
 });

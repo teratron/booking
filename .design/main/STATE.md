@@ -4,32 +4,32 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-16 13:25
+**Updated:** 2026-08-16 13:52
 **Phase:** 6 — Discovery, Reporting & Public API
 **Status:** Active
 
 ## Current Position
 
-- **Task:** `T-6C02` (traffic-source and page-popularity reporting) done — 9/16, **Track C fully complete**. New `TrafficSourceReportingService::byChannel()` reads raw `stat_events` (the one deliberate exception — `stat_dailies`' rollup grain excludes source columns by an already-documented invariant `ObjectStatisticsService` established), always grouped by channel, never a per-visitor row. Rendered as a third card on `AnalyticsReport`; page popularity itself was already covered by `T-6C01`'s "most viewed objects" section on the same screen. Still 18/30 queries at seeded volume. Next: `T-6D01` (API module gate) is the only remaining independent starting point besides Track T.
+- **Task:** `T-6D01` (API module gate, versioned routing, disabled-capability 404) done — 10/16. Reused the existing `EnsureModuleEnabled` middleware (`module:api`) wrapping a new `routes/api_v1.php`, registered via `bootstrap/app.php`'s `withRouting(api: ..., apiPrefix: 'api/v1')` — no new gate mechanism needed. New `GET /api/v1/status` (auth-free liveness/version check, permanent) is the "existing endpoint" the Verify test needs before `T-6D02`'s token model lands. `ModuleSeeder` gained the fifth module, `api`, disabled by default. Next: `T-6D02` (API client and token model) continues Track D's strict chain — `D02 → D03 → D04`.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean. Of the two open questions that touched Phase 6, the consequential one (country-specific domains) is **closed** — see Blocking Constraints. Only the rate-limit / data-licensing question remains, and `T-6D04` picks a conservative default rather than waiting on it. `l1-seo.md` §2's TBD comment still records it as open and should be closed via `/magic.spec` when specs are next revised.
-- **Next Action:** Execute T-6D01 API module gate, versioned routing, and the disabled-capability 404 via /magic.run main
+- **Next Action:** Execute T-6D02 API client and token model — issuance, scoping, revocation, journalling via /magic.run main
 
 ## Progress
 
 ```
-Phase 6: [9/16] ████░░░░ 56%
+Phase 6: [10/16] █████░░░ 63%
 Overall: [5/7] ██████░░ 71%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1-5 complete & archived, 6 active, 7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [18/18] Phase 5 DONE · [9/16] Phase 6 ACTIVE
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [18/18] Phase 5 DONE · [10/16] Phase 6 ACTIVE
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-16 **Decision: `T-6B05` (SEO administration screen and health warnings) closed — Track B fully complete** — `SeoMetadataTemplateResource`/`CatalogFilterPromotionResource` give two existing tables their first admin UI; new `ErrorPage`/`ErrorPageResolver` make the 404 page's copy administrator-editable, falling back to static copy when uncustomized (`[TZ]` §126, previously unbuilt anywhere in the codebase); new `SeoHealthReport`/`SeoHealthDashboard` surface the six health warnings. Two real bugs, both recorded as Blocking Constraints below (`#[Override]` on a Filament hook method; a new `Translatable` model needing `needs_review`/`published_at`). Full non-slow suite: 714 passed (up from 703), 0 failed, 3 skipped.
 - 2026-08-16 **Decision: `T-6C01` (derived figures across every aggregation dimension) closed** — new `PortalReportingService` (eight figures: three event-derived from `stat_dailies`, five operational counts read directly, pending moderation left unfiltered as a live gauge), rendered on the existing `AnalyticsReport` page (18/30 queries at seeded volume). Spatie's `User::role()` scope throws `RoleDoesNotExist` when unseeded — replaced with a plain `whereHas('roles', ...)` (see Blocking Constraints). Full non-slow suite: 717 passed (up from 714), 0 failed, 3 skipped.
 - 2026-08-16 **Decision: `T-6C02` (traffic-source and page-popularity reporting) closed — Track C fully complete** — new `TrafficSourceReportingService::byChannel()`, the one deliberate exception to "aggregate tier only": `stat_dailies`' rollup grain excludes source columns by an invariant `ObjectStatisticsService` already documented, so this reads raw `stat_events` instead, always grouped by channel. Page popularity needed no new work — `T-6C01`'s own most-viewed-objects section already covers it on the same screen. Full non-slow suite: 721 passed (up from 717), 0 failed, 3 skipped.
+- 2026-08-16 **Decision: `T-6D01` (API module gate, versioned routing, disabled-capability 404) closed — Track D started** — reused the pre-existing `EnsureModuleEnabled` middleware wrapping new `routes/api_v1.php`, registered via `bootstrap/app.php`'s `withRouting(api:, apiPrefix: 'api/v1')`; no new gate mechanism needed. New auth-free `GET /api/v1/status` is the permanent "existing endpoint" ahead of `T-6D02`'s token model. `ModuleSeeder` gained the fifth module, `api`, disabled by default. Full non-slow suite: 725 passed (up from 721), 0 failed, 3 skipped.
 
 ## Blockers
 

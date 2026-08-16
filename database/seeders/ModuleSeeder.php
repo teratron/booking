@@ -49,6 +49,12 @@ final class ModuleSeeder extends Seeder
                 'description' => ['en' => 'Prepaid checkout on confirmed bookings.', 'ru' => 'Предоплата при подтверждённом бронировании.'],
                 'dependsOn' => ['booking'],
             ],
+            [
+                'key' => 'api', 'default_state' => 'disabled',
+                'scopable_levels' => ['portal'],
+                'name' => ['en' => 'Public API', 'ru' => 'Публичное API'],
+                'description' => ['en' => 'Read-only, tokened REST access to published catalog data.', 'ru' => 'Публичный доступ на чтение к опубликованным данным каталога по токену.'],
+            ],
         ];
 
         $moduleIdByKey = [];
