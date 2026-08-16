@@ -4,32 +4,32 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-16 12:46
+**Updated:** 2026-08-16 13:25
 **Phase:** 6 — Discovery, Reporting & Public API
 **Status:** Active
 
 ## Current Position
 
-- **Task:** `T-6C01` (derived figures across every aggregation dimension) done — 8/16. New `PortalReportingService` computes the eight `[TZ]` §89/§125 figures beyond `AnalyticsReportingService`'s per-kind totals: three event-derived (most viewed objects, most popular categories, banner CTR, read from `stat_dailies`) plus five operational counts (new owner, new object, bump, published promotion — period-scoped; pending moderation — a live gauge, never period-filtered). Rendered on the existing `AnalyticsReport` back-office page; 18/30 queries at seeded volume. Next: `T-6C02` (same page) or `T-6D01` (independent, API track) remain open; Track T runs last.
+- **Task:** `T-6C02` (traffic-source and page-popularity reporting) done — 9/16, **Track C fully complete**. New `TrafficSourceReportingService::byChannel()` reads raw `stat_events` (the one deliberate exception — `stat_dailies`' rollup grain excludes source columns by an already-documented invariant `ObjectStatisticsService` established), always grouped by channel, never a per-visitor row. Rendered as a third card on `AnalyticsReport`; page popularity itself was already covered by `T-6C01`'s "most viewed objects" section on the same screen. Still 18/30 queries at seeded volume. Next: `T-6D01` (API module gate) is the only remaining independent starting point besides Track T.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean. Of the two open questions that touched Phase 6, the consequential one (country-specific domains) is **closed** — see Blocking Constraints. Only the rate-limit / data-licensing question remains, and `T-6D04` picks a conservative default rather than waiting on it. `l1-seo.md` §2's TBD comment still records it as open and should be closed via `/magic.spec` when specs are next revised.
-- **Next Action:** Execute T-6C02 Traffic-source and page-popularity reporting in the back office via /magic.run main
+- **Next Action:** Execute T-6D01 API module gate, versioned routing, and the disabled-capability 404 via /magic.run main
 
 ## Progress
 
 ```
-Phase 6: [8/16] ████░░░░ 50%
+Phase 6: [9/16] ████░░░░ 56%
 Overall: [5/7] ██████░░ 71%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1-5 complete & archived, 6 active, 7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [18/18] Phase 5 DONE · [8/16] Phase 6 ACTIVE
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [18/18] Phase 5 DONE · [9/16] Phase 6 ACTIVE
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-16 **Decision: `T-6B04` (sitemap index) closed — Track B's `B03 ∥ B04` fork complete** — installed `spatie/laravel-sitemap` (first fixing a pre-existing `composer.lock` drift, see Blocking Constraints). New `SitemapBuilder` writes per-language, per-entity-type XML via `GenerateSitemapsJob` (hourly), served by two routes that only ever read the last generated file. Per-file URL limit is a config value, not a hardcoded constant, specifically so the pagination test doesn't need tens of thousands of seeded rows. Full non-slow suite: 703 passed (up from 698), 0 failed, 3 skipped.
 - 2026-08-16 **Decision: `T-6B05` (SEO administration screen and health warnings) closed — Track B fully complete** — `SeoMetadataTemplateResource`/`CatalogFilterPromotionResource` give two existing tables their first admin UI; new `ErrorPage`/`ErrorPageResolver` make the 404 page's copy administrator-editable, falling back to static copy when uncustomized (`[TZ]` §126, previously unbuilt anywhere in the codebase); new `SeoHealthReport`/`SeoHealthDashboard` surface the six health warnings. Two real bugs, both recorded as Blocking Constraints below (`#[Override]` on a Filament hook method; a new `Translatable` model needing `needs_review`/`published_at`). Full non-slow suite: 714 passed (up from 703), 0 failed, 3 skipped.
 - 2026-08-16 **Decision: `T-6C01` (derived figures across every aggregation dimension) closed** — new `PortalReportingService` (eight figures: three event-derived from `stat_dailies`, five operational counts read directly, pending moderation left unfiltered as a live gauge), rendered on the existing `AnalyticsReport` page (18/30 queries at seeded volume). Spatie's `User::role()` scope throws `RoleDoesNotExist` when unseeded — replaced with a plain `whereHas('roles', ...)` (see Blocking Constraints). Full non-slow suite: 717 passed (up from 714), 0 failed, 3 skipped.
+- 2026-08-16 **Decision: `T-6C02` (traffic-source and page-popularity reporting) closed — Track C fully complete** — new `TrafficSourceReportingService::byChannel()`, the one deliberate exception to "aggregate tier only": `stat_dailies`' rollup grain excludes source columns by an invariant `ObjectStatisticsService` already documented, so this reads raw `stat_events` instead, always grouped by channel. Page popularity needed no new work — `T-6C01`'s own most-viewed-objects section already covers it on the same screen. Full non-slow suite: 721 passed (up from 717), 0 failed, 3 skipped.
 
 ## Blockers
 
@@ -78,6 +78,7 @@ Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 
 - **PHP's `#[\Override]` attribute is invalid on a Filament page's `afterCreate()`/`afterSave()`/`beforeCreate()`/`beforeSave()`/`beforeDelete()`/`afterDelete()` (and the `CreateRecord`/`EditRecord` equivalents)** — these are not real inherited methods; `Filament\Pages\BasePage::callHook()` discovers them purely by name via `method_exists($this, $hook)`, so no parent declaration ever exists for `#[Override]` to point at, and PHP fatals the request outright the moment the class loads. Genuine method overrides on these same pages (`mutateFormDataBeforeFill`, `mutateFormDataBeforeCreate`/`BeforeSave`, `handleRecordCreation`, `handleRecordUpdate`) are real inherited methods and correctly keep `#[Override]` (confirmed by `T-6B05`, which fatally broke `migrate:fresh --seed` this way on four pages before the fix).
 - **A model implementing `Astrotomic\Translatable\Contracts\Translatable` is swept into `TranslatableEntityRegistry`'s reflection-based discovery the moment it exists — with no opt-out** — `TranslationCompletenessReport` then queries `needs_review` on its translation table unconditionally, so a translatable model whose translation table lacks `needs_review`/`published_at` fails every request touching that report with `SQLSTATE[42703]`. Already recorded once in `room_translations`' own migration docblock as a predicted recurrence; hit a second time verbatim by `T-6B05`'s `ErrorPage`. Add both columns directly in the table's own creation migration for any new `Translatable` model, even one (like `ErrorPage`) that never actually enters a review workflow — the columns are read generically regardless of whether anything ever sets them to non-default values.
 - **Spatie's `Model::role('name')` query scope resolves the named role eagerly and throws `RoleDoesNotExist` if it has not been seeded** — a report or dashboard figure built on it 500s in any environment or test fixture that has not run `RoleSeeder` first (confirmed by `T-6C01`'s `newOwnerCount()`, which broke `AnalyticsReportingTest`'s own unrelated permission-gate test this way). Prefer `whereHas('roles', fn ($q) => $q->where('name', 'x'))`, a plain relationship filter that degrades to zero instead of throwing, for any count or report figure that must never fail a page render over a role a specific fixture happens not to seed.
+- **`stat_dailies`' rollup grain is a documented invariant that deliberately excludes `source_channel`/`source_domain`/`source_campaign`** (established by `ObjectStatisticsService`, confirmed again by `T-6C02`) — any traffic-source reporting reads raw `stat_events` instead, the one sanctioned exception to this phase's "aggregate tier only, never `stat_events`" rule. Do not "fix" this by adding source columns to `stat_dailies` or grouping `AnalyticsRollupJob` by them; always group the raw-tier read by channel before it leaves the service, so no caller can reconstruct a per-visitor row.
 
 ## Session Continuity
 

@@ -13,6 +13,7 @@ use App\Models\Territory;
 use App\Models\User;
 use App\Services\Analytics\AnalyticsReportingService;
 use App\Services\Analytics\PortalReportingService;
+use App\Services\Analytics\TrafficSourceReportingService;
 use BackedEnum;
 use Filament\Actions\ExportAction;
 use Filament\Facades\Filament;
@@ -31,7 +32,11 @@ use UnitEnum;
  * with the underlying rows exportable through the same filter set. Each
  * figure is computed on demand by {@see AnalyticsReportingService} against
  * the aggregate tier only — never against raw `stat_events` — so the page
- * stays cheap regardless of retention depth.
+ * stays cheap regardless of retention depth. The traffic-source breakdown is
+ * the one deliberate exception: `stat_dailies`' fixed rollup grain excludes
+ * the source columns, so {@see TrafficSourceReportingService} reads the raw
+ * tier for that section alone, always pre-grouped by channel — never a row
+ * this page or its export could trace back to one visit.
  *
  * @property-read Table $table
  */
@@ -99,6 +104,12 @@ class AnalyticsReport extends Page implements HasTable
     public function derivedFigures(): array
     {
         return app(PortalReportingService::class)->derivedFigures($this->filters());
+    }
+
+    /** @return array<string, int> */
+    public function trafficSourceBreakdown(): array
+    {
+        return app(TrafficSourceReportingService::class)->byChannel($this->filters());
     }
 
     /** @return array<int, string> */

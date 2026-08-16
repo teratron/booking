@@ -689,6 +689,18 @@ return [
             'pending_moderation_count' => 'Ожидают проверки',
             'empty_state' => 'Нет данных за этот период.',
         ],
+
+        'traffic_source' => [
+            'title' => 'Источники трафика',
+            'channels' => [
+                'direct' => 'Прямые заходы',
+                'search' => 'Поиск',
+                'social' => 'Соцсети',
+                'referral' => 'Переходы',
+                'internal' => 'Внутренние (портал)',
+                'campaign' => 'Кампании',
+            ],
+        ],
     ],
 
     'modules' => [

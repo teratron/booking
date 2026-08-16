@@ -690,6 +690,18 @@ return [
             'pending_moderation_count' => 'Pending Moderation',
             'empty_state' => 'No data for this period.',
         ],
+
+        'traffic_source' => [
+            'title' => 'Traffic Sources',
+            'channels' => [
+                'direct' => 'Direct',
+                'search' => 'Search',
+                'social' => 'Social',
+                'referral' => 'Referral',
+                'internal' => 'Internal (portal)',
+                'campaign' => 'Campaign',
+            ],
+        ],
     ],
 
     'modules' => [

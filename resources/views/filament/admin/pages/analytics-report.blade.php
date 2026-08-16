@@ -99,7 +99,7 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div class="fi-section rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
             <h3 class="text-base font-semibold">{{ __('panel.analytics_report.derived.most_viewed_objects') }}</h3>
             <ol class="mt-2 list-decimal space-y-1 ps-5 text-sm">
@@ -119,6 +119,18 @@
                     <li class="list-none text-gray-500 dark:text-gray-400">{{ __('panel.analytics_report.derived.empty_state') }}</li>
                 @endforelse
             </ol>
+        </div>
+        <div class="fi-section rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
+            <h3 class="text-base font-semibold">{{ __('panel.analytics_report.traffic_source.title') }}</h3>
+            @php $trafficSources = $this->trafficSourceBreakdown(); @endphp
+            <ul class="mt-2 space-y-1 text-sm">
+                @foreach ($trafficSources as $channel => $count)
+                    <li class="flex justify-between">
+                        <span>{{ __("panel.analytics_report.traffic_source.channels.{$channel}") }}</span>
+                        <span class="font-medium">{{ $count }}</span>
+                    </li>
+                @endforeach
+            </ul>
         </div>
     </div>
 
