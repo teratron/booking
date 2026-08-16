@@ -244,11 +244,15 @@ critical path out of Phase 2.
 
 ## Next Step
 
-`/magic.run main` — execute Phase 6 (Discovery, Reporting & Public API), decomposed into
-16 atomic tasks in [tasks/phase-6.md](tasks/phase-6.md). `T-6A01` (URL grammar and slug
-resolution) is the phase's hard gate and blocks all of Track B; `T-6C01` (derived
-reporting figures) and `T-6D01` (API module gate) are both independent starting points
-that need nothing from it, so all three can begin at once. Phase registry in
+`/magic.run main` — continue Phase 6 (Discovery, Reporting & Public API) at **11/16**.
+Tracks A (addressing), B (metadata, indexation, structured data, sitemaps), and C
+(portal-wide reporting) are complete; the phase's hard gate `T-6A01` is closed, so
+nothing in the remainder is blocked on it. What is left is the tail of Track D —
+`T-6D03` (read endpoints over `CatalogQueryService`, consuming the token scope
+`T-6D02` built) then `T-6D04` (rate limiting, consumption measurement, generated
+documentation), a strict chain — plus the three independent Track T validation tasks
+(`T-6T01`, `T-6T02`, `T-6T03`). `T-6T02` (API parity) is the one item that must wait on
+`T-6D03`, since it compares API output against the catalog's own ordering. Phase registry in
 [TASKS.md](TASKS.md). Phases 1 through 5 are complete and archived at
 [archives/tasks/phase-1.md](archives/tasks/phase-1.md),
 [archives/tasks/phase-2.md](archives/tasks/phase-2.md),

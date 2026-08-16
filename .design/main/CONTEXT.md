@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-08-15
+**Generated:** 2026-08-16
 
 ## Active Technologies
 
@@ -75,6 +75,7 @@
 │   ├── queue.php
 │   ├── services.php
 │   ├── session.php
+│   ├── sitemap.php
 │   └── translatable.php
 ├── database/
 │   ├── .gitignore
@@ -108,6 +109,7 @@
 │   ├── lang/
 │   └── views/
 ├── routes/
+│   ├── api_v1.php
 │   ├── console.php
 │   └── web.php
 ├── storage/

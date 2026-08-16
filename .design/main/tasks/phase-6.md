@@ -1,7 +1,7 @@
 ---
 phase: 6
 name: "Discovery, Reporting & Public API"
-status: Todo
+status: In Progress
 subsystem: "app/Services/Seo, app/Services/Api, app/Http/Controllers/Api, app/Jobs, app/Filament/Admin"
 requires: ["phase-3", "phase-5"]
 provides: []
@@ -15,7 +15,7 @@ duration_minutes: ~
 # Stage 6 Tasks — Discovery, Reporting & Public API
 
 **Phase:** 6
-**Status:** Todo
+**Status:** In Progress
 **Strategic Goal:** Make the portal findable and its performance legible — URL grammar,
 metadata, structured data, sitemaps and redirects; portal-wide reporting and exports;
 and a versioned read-only REST contract behind issued tokens.
