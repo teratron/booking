@@ -1,7 +1,7 @@
 @php
     $urls = app(\App\Services\Seo\PublicUrlGenerator::class);
 @endphp
-<x-layouts.public :metadata="$metadata" :breadcrumbs="$breadcrumbs">
+<x-layouts.public :metadata="$metadata" :breadcrumbs="$breadcrumbs" :structured-data="$structuredData">
     <div class="mx-auto max-w-3xl px-4 py-8 lg:px-8">
         @if ($newsItem->is_pinned)
             <span class="text-xs font-semibold uppercase text-brand">{{ __('public.news.pinned') }}</span>

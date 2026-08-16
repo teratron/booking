@@ -47,6 +47,17 @@ class ObjectTypeForm
 
             Toggle::make('has_rooms')->label(__('panel.object_types.form.has_rooms')),
             Toggle::make('has_availability_status')->label(__('panel.object_types.form.has_availability_status')),
+
+            Select::make('structured_data_kind')
+                ->label(__('panel.object_types.form.structured_data_kind'))
+                ->options([
+                    'lodging' => __('panel.object_types.form.structured_data_kinds.lodging'),
+                    'food' => __('panel.object_types.form.structured_data_kinds.food'),
+                    'place' => __('panel.object_types.form.structured_data_kinds.place'),
+                ])
+                ->default('place')
+                ->required(),
+
             Toggle::make('is_active')->label(__('panel.object_types.columns.active'))->default(true),
             TextInput::make('display_order')->label(__('panel.object_types.form.display_order'))->numeric()->default(0),
 

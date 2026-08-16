@@ -1,4 +1,4 @@
-<x-layouts.public :metadata="$metadata" :breadcrumbs="$breadcrumbs">
+<x-layouts.public :metadata="$metadata" :breadcrumbs="$breadcrumbs" :structured-data="$structuredData">
     <div class="mx-auto max-w-7xl px-4 py-8 lg:px-8">
         {{-- Cover + placement badge + availability badge --}}
         <div class="relative h-72 w-full overflow-hidden rounded-lg sm:h-96">

@@ -10,6 +10,7 @@ use App\Models\Promotion;
 use App\Models\Territory;
 use App\Services\Seo\MetadataResolver;
 use App\Services\Seo\PublicUrlGenerator;
+use App\Services\Seo\StructuredDataBuilder;
 use Illuminate\Contracts\View\View;
 
 /**
@@ -23,6 +24,7 @@ final class PromotionController extends Controller
     public function __construct(
         private readonly PublicUrlGenerator $urls,
         private readonly MetadataResolver $metadata,
+        private readonly StructuredDataBuilder $structuredData,
     ) {}
 
     /**
@@ -57,6 +59,7 @@ final class PromotionController extends Controller
                 ['label' => (string) ($promotion->title ?? ''), 'url' => $selfUrl],
             ],
             'metadata' => $this->metadata->resolve($promotion, $lang, $selfUrl),
+            'structuredData' => $this->structuredData->forPromotion($promotion),
         ]);
     }
 

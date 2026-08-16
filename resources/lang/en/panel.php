@@ -300,6 +300,12 @@ return [
             'icon' => 'Icon path',
             'has_rooms' => 'Has rooms',
             'has_availability_status' => 'Has availability status',
+            'structured_data_kind' => 'Structured data type',
+            'structured_data_kinds' => [
+                'lodging' => 'Lodging (accommodation)',
+                'food' => 'Food establishment (dining)',
+                'place' => 'Place (attraction or other)',
+            ],
             'display_order' => 'Display order',
             'amenity_groups' => 'Applicable amenity groups',
             'attribute_schema' => 'Custom fields',

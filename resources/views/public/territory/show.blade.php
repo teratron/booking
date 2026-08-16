@@ -1,7 +1,7 @@
 @php
     $urls = app(\App\Services\Seo\PublicUrlGenerator::class);
 @endphp
-<x-layouts.public :metadata="$metadata" :breadcrumbs="$breadcrumbs">
+<x-layouts.public :metadata="$metadata" :breadcrumbs="$breadcrumbs" :structured-data="$structuredData">
     <div class="mx-auto max-w-7xl px-4 py-8 lg:px-8">
         @if ($territory->hero_image_path)
             <div class="h-64 w-full overflow-hidden rounded-lg">

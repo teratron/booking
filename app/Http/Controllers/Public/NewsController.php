@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Models\NewsItem;
 use App\Services\Seo\MetadataResolver;
+use App\Services\Seo\StructuredDataBuilder;
 use Illuminate\Contracts\View\View;
 
 /**
@@ -19,7 +20,10 @@ final class NewsController extends Controller
 {
     private const int NEWS_PER_PAGE = 12;
 
-    public function __construct(private readonly MetadataResolver $metadata) {}
+    public function __construct(
+        private readonly MetadataResolver $metadata,
+        private readonly StructuredDataBuilder $structuredData,
+    ) {}
 
     public function index(string $lang): View
     {
@@ -47,7 +51,7 @@ final class NewsController extends Controller
     {
         abort_unless($this->isPubliclyVisible($newsItem), 404);
 
-        $newsItem->loadMissing(['translations', 'territory.translations', 'territory.country', 'object.translations']);
+        $newsItem->loadMissing(['translations', 'territory.translations', 'territory.country', 'object.translations', 'author']);
 
         $selfUrl = route('public.news.show', ['lang' => $lang, 'newsItem' => $newsItem]);
 
@@ -58,6 +62,12 @@ final class NewsController extends Controller
                 ['label' => (string) ($newsItem->title ?? ''), 'url' => $selfUrl],
             ],
             'metadata' => $this->metadata->resolve($newsItem, $lang, $selfUrl),
+            'structuredData' => $this->structuredData->forArticleLike(
+                (string) ($newsItem->title ?? ''),
+                $newsItem->author?->name,
+                $newsItem->publish_at,
+                $newsItem->getFirstMediaUrl('cover_image') ?: null,
+            ),
         ]);
     }
 

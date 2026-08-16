@@ -14,6 +14,7 @@ use App\Services\Catalog\CatalogQueryService;
 use App\Services\Seo\MetadataResolver;
 use App\Services\Seo\PublicSlugResolver;
 use App\Services\Seo\PublicUrlGenerator;
+use App\Services\Seo\StructuredDataBuilder;
 use App\Support\Catalog\CatalogSearchCriteria;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -58,6 +59,7 @@ final class TerritoryPageController extends Controller
         private readonly PublicSlugResolver $resolver,
         private readonly PublicUrlGenerator $urls,
         private readonly MetadataResolver $metadata,
+        private readonly StructuredDataBuilder $structuredData,
     ) {}
 
     public function show(Request $request, string $lang, string $country, string $path): View
@@ -97,11 +99,14 @@ final class TerritoryPageController extends Controller
             ]
         );
 
+        $catalogBlocks = $this->catalogBlocks($territory);
+
         return view('public.territory.show', array_merge($sidebar, [
             'territory' => $territory,
             'breadcrumbs' => $this->breadcrumbs($territory),
-            'catalogBlocks' => $this->catalogBlocks($territory),
+            'catalogBlocks' => $catalogBlocks,
             'metadata' => $this->metadata->resolve($territory, $lang, $this->urls->territoryUrl($territory, $lang)),
+            'structuredData' => $this->structuredData->forTerritory($territory, $this->containedObjectItems($catalogBlocks)),
         ]));
     }
 
@@ -180,5 +185,25 @@ final class TerritoryPageController extends Controller
         }
 
         return $blocks;
+    }
+
+    /**
+     * Flattens every already-fetched catalog block into the plain
+     * name/url pairs {@see StructuredDataBuilder::forTerritory()}'s own
+     * `ItemList` needs — no query of its own, since `catalogBlocks()` has
+     * already fetched every object this page renders.
+     *
+     * @param  list<array{type: ObjectType, objects: Collection<int, Object_>}>  $catalogBlocks
+     * @return Collection<int, array{name: string, url: string}>
+     */
+    private function containedObjectItems(array $catalogBlocks): Collection
+    {
+        return collect($catalogBlocks)
+            ->flatMap(fn (array $block): Collection => $block['objects'])
+            ->map(fn (Object_ $object): array => [
+                'name' => (string) ($object->name ?? ''),
+                'url' => $this->urls->objectUrl($object) ?? url()->current(),
+            ])
+            ->values();
     }
 }

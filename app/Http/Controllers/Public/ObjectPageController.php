@@ -9,9 +9,12 @@ use App\Models\Object_;
 use App\Models\Territory;
 use App\Services\Analytics\EventCaptureService;
 use App\Services\Catalog\ObjectProfilePresenter;
+use App\Services\Modules\ModuleContext;
+use App\Services\Modules\ModuleResolver;
 use App\Services\Seo\MetadataResolver;
 use App\Services\Seo\PublicSlugResolver;
 use App\Services\Seo\PublicUrlGenerator;
+use App\Services\Seo\StructuredDataBuilder;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Cache;
 
@@ -38,6 +41,8 @@ final class ObjectPageController extends Controller
         private readonly PublicSlugResolver $resolver,
         private readonly PublicUrlGenerator $urls,
         private readonly MetadataResolver $metadata,
+        private readonly StructuredDataBuilder $structuredData,
+        private readonly ModuleResolver $modules,
     ) {}
 
     public function show(string $lang, string $slug): View
@@ -47,7 +52,11 @@ final class ObjectPageController extends Controller
         abort_unless($object instanceof Object_, 404);
         abort_unless($object->status === 'published', 404);
 
-        $object->loadMissing(['translations', 'territory.translations', 'territory.country']);
+        // `objectType` is loaded here, not left to the presenter's own
+        // loadMissing() call below — that call only runs on a cache miss,
+        // and the structured-data type this method also builds needs the
+        // relation on every request, cache hit or not.
+        $object->loadMissing(['translations', 'territory.translations', 'territory.country', 'objectType']);
 
         $this->events->capture('object_page_view', $object, [
             'territory_id' => $object->territory_id,
@@ -69,11 +78,19 @@ final class ObjectPageController extends Controller
             fn () => $this->presenter->present($object)
         );
 
+        $bookingActive = $this->modules->isEnabled('booking', new ModuleContext(
+            objectId: $object->id,
+            ownerId: $object->owner_id,
+            categoryId: $object->object_type_id,
+            countryId: $object->country_id,
+        ));
+
         return view('public.object.show', [
             'object' => $object,
             'profile' => $profile,
             'breadcrumbs' => $this->breadcrumbs($object),
             'metadata' => $this->metadata->resolve($object, $lang, $this->urls->objectUrl($object, $lang)),
+            'structuredData' => $this->structuredData->forObject($object, $profile, $bookingActive),
         ]);
     }
 

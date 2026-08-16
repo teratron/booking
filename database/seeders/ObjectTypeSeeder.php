@@ -25,14 +25,14 @@ final class ObjectTypeSeeder extends Seeder
         $now = now();
 
         $types = [
-            ['key' => 'hotel', 'has_rooms' => true, 'has_availability_status' => true, 'name' => ['en' => 'Hotel', 'ru' => 'Отель']],
-            ['key' => 'guesthouse', 'has_rooms' => true, 'has_availability_status' => true, 'name' => ['en' => 'Guesthouse', 'ru' => 'Гостевой дом']],
-            ['key' => 'apartment', 'has_rooms' => false, 'has_availability_status' => true, 'name' => ['en' => 'Apartment', 'ru' => 'Апартаменты']],
-            ['key' => 'villa', 'has_rooms' => false, 'has_availability_status' => true, 'name' => ['en' => 'Villa', 'ru' => 'Вилла']],
-            ['key' => 'sanatorium', 'has_rooms' => true, 'has_availability_status' => true, 'name' => ['en' => 'Sanatorium', 'ru' => 'Санаторий']],
-            ['key' => 'restaurant', 'has_rooms' => false, 'has_availability_status' => false, 'name' => ['en' => 'Restaurant', 'ru' => 'Ресторан']],
-            ['key' => 'cafe', 'has_rooms' => false, 'has_availability_status' => false, 'name' => ['en' => 'Cafe', 'ru' => 'Кафе']],
-            ['key' => 'attraction', 'has_rooms' => false, 'has_availability_status' => false, 'name' => ['en' => 'Attraction', 'ru' => 'Достопримечательность']],
+            ['key' => 'hotel', 'has_rooms' => true, 'has_availability_status' => true, 'structured_data_kind' => 'lodging', 'name' => ['en' => 'Hotel', 'ru' => 'Отель']],
+            ['key' => 'guesthouse', 'has_rooms' => true, 'has_availability_status' => true, 'structured_data_kind' => 'lodging', 'name' => ['en' => 'Guesthouse', 'ru' => 'Гостевой дом']],
+            ['key' => 'apartment', 'has_rooms' => false, 'has_availability_status' => true, 'structured_data_kind' => 'lodging', 'name' => ['en' => 'Apartment', 'ru' => 'Апартаменты']],
+            ['key' => 'villa', 'has_rooms' => false, 'has_availability_status' => true, 'structured_data_kind' => 'lodging', 'name' => ['en' => 'Villa', 'ru' => 'Вилла']],
+            ['key' => 'sanatorium', 'has_rooms' => true, 'has_availability_status' => true, 'structured_data_kind' => 'lodging', 'name' => ['en' => 'Sanatorium', 'ru' => 'Санаторий']],
+            ['key' => 'restaurant', 'has_rooms' => false, 'has_availability_status' => false, 'structured_data_kind' => 'food', 'name' => ['en' => 'Restaurant', 'ru' => 'Ресторан']],
+            ['key' => 'cafe', 'has_rooms' => false, 'has_availability_status' => false, 'structured_data_kind' => 'food', 'name' => ['en' => 'Cafe', 'ru' => 'Кафе']],
+            ['key' => 'attraction', 'has_rooms' => false, 'has_availability_status' => false, 'structured_data_kind' => 'place', 'name' => ['en' => 'Attraction', 'ru' => 'Достопримечательность']],
         ];
 
         foreach ($types as $order => $type) {
@@ -40,6 +40,7 @@ final class ObjectTypeSeeder extends Seeder
                 'key' => $type['key'],
                 'has_rooms' => $type['has_rooms'],
                 'has_availability_status' => $type['has_availability_status'],
+                'structured_data_kind' => $type['structured_data_kind'],
                 'is_active' => true,
                 'display_order' => $order + 1,
                 'created_at' => $now,

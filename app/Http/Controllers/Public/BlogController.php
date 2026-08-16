@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Models\Article;
 use App\Services\Seo\MetadataResolver;
+use App\Services\Seo\StructuredDataBuilder;
 use Illuminate\Contracts\View\View;
 
 /**
@@ -19,7 +20,10 @@ final class BlogController extends Controller
 {
     private const int ARTICLES_PER_PAGE = 12;
 
-    public function __construct(private readonly MetadataResolver $metadata) {}
+    public function __construct(
+        private readonly MetadataResolver $metadata,
+        private readonly StructuredDataBuilder $structuredData,
+    ) {}
 
     public function index(string $lang): View
     {
@@ -47,7 +51,7 @@ final class BlogController extends Controller
         abort_unless($this->isPubliclyVisible($article), 404);
 
         $article->loadMissing([
-            'translations', 'category.translations', 'tags',
+            'translations', 'category.translations', 'tags', 'author',
             'objects.translations', 'territories.translations', 'territories.country',
         ]);
 
@@ -60,6 +64,12 @@ final class BlogController extends Controller
                 ['label' => (string) ($article->title ?? ''), 'url' => $selfUrl],
             ],
             'metadata' => $this->metadata->resolve($article, $lang, $selfUrl),
+            'structuredData' => $this->structuredData->forArticleLike(
+                (string) ($article->title ?? ''),
+                $article->author?->name,
+                $article->publish_at,
+                $article->getFirstMediaUrl('cover_image') ?: null,
+            ),
         ]);
     }
 

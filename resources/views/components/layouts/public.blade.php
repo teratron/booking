@@ -5,11 +5,15 @@
     already guaranteed non-empty by MetadataResolver) or a bare `:title`
     for the handful of static pages this task does not cover. Once a page
     is below the home page it also passes `:breadcrumbs` (a list of
-    ['label' => ..., 'url' => ...]). `:noindex` emits a robots directive
-    without needing a full metadata object, for pages that must never be
-    indexed, such as the 404 page.
+    ['label' => ..., 'url' => ...]) — used both for the visible breadcrumb
+    trail and, automatically, for a BreadcrumbList structured-data block, so
+    no page needs to build that block itself. `:structuredData` carries any
+    further Schema.org blocks (StructuredDataBuilder's own output) specific
+    to that page's entity. `:noindex` emits a robots directive without
+    needing a full metadata object, for pages that must never be indexed,
+    such as the 404 page.
 --}}
-@props(['title' => null, 'metadata' => null, 'breadcrumbs' => [], 'noindex' => false])
+@props(['title' => null, 'metadata' => null, 'breadcrumbs' => [], 'noindex' => false, 'structuredData' => []])
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
@@ -38,6 +42,36 @@
     @elseif ($noindex)
         <meta name="robots" content="noindex">
     @endif
+
+    @php
+        $structuredDataBlocks = $structuredData;
+
+        if (count($breadcrumbs) > 0) {
+            $structuredDataBlocks[] = [
+                '@context' => 'https://schema.org',
+                '@type' => 'BreadcrumbList',
+                'itemListElement' => collect($breadcrumbs)->values()->map(fn (array $crumb, int $index): array => [
+                    '@type' => 'ListItem',
+                    'position' => $index + 1,
+                    'name' => $crumb['label'],
+                    'item' => $crumb['url'],
+                ])->all(),
+            ];
+        }
+    @endphp
+
+    {{--
+        Deliberately no JSON_UNESCAPED_SLASHES: an unescaped "/" lets any
+        field value containing the literal text "</script>" (an object
+        name, a promotion summary) close this tag early and inject
+        arbitrary markup. The HEX_* flags additionally escape the other
+        HTML-sensitive characters JSON allows unescaped by default. Every
+        structured-data JSON-LD parser accepts the resulting \/ and \u00XX
+        escapes without any loss of meaning.
+    --}}
+    @foreach ($structuredDataBlocks as $block)
+        <script type="application/ld+json">{!! json_encode($block, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
+    @endforeach
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
