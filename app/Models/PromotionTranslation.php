@@ -17,6 +17,6 @@ class PromotionTranslation extends Model
     #[Override]
     protected function casts(): array
     {
-        return ['needs_review' => 'boolean', 'published_at' => 'datetime'];
+        return ['needs_review' => 'boolean', 'published_at' => 'datetime', 'seo_indexable' => 'boolean'];
     }
 }

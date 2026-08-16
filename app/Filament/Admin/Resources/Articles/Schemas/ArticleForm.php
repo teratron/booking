@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources\Articles\Schemas;
 
+use App\Filament\Support\SeoMetadataFields;
 use App\Models\ArticleCategory;
 use App\Models\ArticleTag;
 use App\Models\Language;
@@ -112,10 +113,7 @@ class ArticleForm
                             ->rows(10),
                         TextInput::make("translations.{$language->code}.slug")
                             ->label(__('panel.articles.form.slug')),
-                        TextInput::make("translations.{$language->code}.seo_title")
-                            ->label(__('panel.articles.form.seo_title')),
-                        Textarea::make("translations.{$language->code}.seo_description")
-                            ->label(__('panel.articles.form.seo_description')),
+                        ...SeoMetadataFields::for('panel.articles.form', $language->code),
                     ]))
                 ->all(),
         );

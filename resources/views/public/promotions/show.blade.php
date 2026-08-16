@@ -1,4 +1,4 @@
-<x-layouts.public :title="$promotion->title" :breadcrumbs="$breadcrumbs">
+<x-layouts.public :metadata="$metadata" :breadcrumbs="$breadcrumbs">
     <div class="mx-auto max-w-3xl px-4 py-8 lg:px-8">
         <span class="text-xs font-semibold uppercase text-brand">{{ __('public.territory.promotions') }}</span>
 

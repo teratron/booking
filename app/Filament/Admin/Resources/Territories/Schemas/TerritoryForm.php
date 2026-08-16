@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources\Territories\Schemas;
 
+use App\Filament\Support\SeoMetadataFields;
 use App\Models\Country;
 use App\Models\Language;
 use App\Models\TerritoryLevel;
@@ -81,8 +82,7 @@ class TerritoryForm
                             ->label(__('panel.territories.form.slug')),
                         TextInput::make("translations.{$language->code}.short_description")
                             ->label(__('panel.territories.form.short_description')),
-                        TextInput::make("translations.{$language->code}.seo_title")
-                            ->label(__('panel.territories.form.seo_title')),
+                        ...SeoMetadataFields::for('panel.territories.form', $language->code),
                     ]))
                 ->all(),
         );

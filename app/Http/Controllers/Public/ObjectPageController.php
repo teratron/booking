@@ -9,6 +9,7 @@ use App\Models\Object_;
 use App\Models\Territory;
 use App\Services\Analytics\EventCaptureService;
 use App\Services\Catalog\ObjectProfilePresenter;
+use App\Services\Seo\MetadataResolver;
 use App\Services\Seo\PublicSlugResolver;
 use App\Services\Seo\PublicUrlGenerator;
 use Illuminate\Contracts\View\View;
@@ -36,6 +37,7 @@ final class ObjectPageController extends Controller
         private readonly EventCaptureService $events,
         private readonly PublicSlugResolver $resolver,
         private readonly PublicUrlGenerator $urls,
+        private readonly MetadataResolver $metadata,
     ) {}
 
     public function show(string $lang, string $slug): View
@@ -71,6 +73,7 @@ final class ObjectPageController extends Controller
             'object' => $object,
             'profile' => $profile,
             'breadcrumbs' => $this->breadcrumbs($object),
+            'metadata' => $this->metadata->resolve($object, $lang, $this->urls->objectUrl($object, $lang)),
         ]);
     }
 

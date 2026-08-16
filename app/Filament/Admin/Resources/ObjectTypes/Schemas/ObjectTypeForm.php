@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources\ObjectTypes\Schemas;
 
+use App\Filament\Support\SeoMetadataFields;
 use App\Models\AmenityGroup;
 use App\Models\Language;
 use App\Models\ObjectType;
@@ -116,10 +117,7 @@ class ObjectTypeForm
                             ->maxLength(255),
                         TextInput::make("translations.{$language->code}.slug")
                             ->label(__('panel.object_types.form.slug')),
-                        TextInput::make("translations.{$language->code}.seo_title")
-                            ->label(__('panel.object_types.form.seo_title')),
-                        TextInput::make("translations.{$language->code}.seo_description")
-                            ->label(__('panel.object_types.form.seo_description')),
+                        ...SeoMetadataFields::for('panel.object_types.form', $language->code),
                     ]))
                 ->all(),
         );

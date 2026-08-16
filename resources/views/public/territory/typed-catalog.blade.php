@@ -1,4 +1,4 @@
-<x-layouts.public :title="$objectType->name.' — '.$territory->name" :breadcrumbs="$breadcrumbs">
+<x-layouts.public :metadata="$metadata" :breadcrumbs="$breadcrumbs">
     <div class="mx-auto max-w-7xl px-4 py-8 lg:px-8">
         <h1 class="text-3xl font-semibold text-ink">{{ $objectType->name }} — {{ $territory->name }}</h1>
 

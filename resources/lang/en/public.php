@@ -44,6 +44,10 @@ return [
         'typed_catalog_empty' => 'No listings of this type are published in :territory yet.',
     ],
 
+    'seo' => [
+        'derived_description' => 'Learn more about :name.',
+    ],
+
     'blog' => [
         'empty' => 'No articles have been published yet — check back soon.',
         'by' => 'By :name',

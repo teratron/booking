@@ -148,6 +148,11 @@ return [
             'seo_slug' => 'URL-слаг',
             'seo_title' => 'SEO-заголовок',
             'seo_description' => 'SEO-описание',
+            'seo_canonical_url' => 'Переопределение canonical URL',
+            'seo_indexable' => 'Индексируется',
+            'seo_og_title' => 'Заголовок Open Graph',
+            'seo_og_description' => 'Описание Open Graph',
+            'seo_og_image' => 'URL изображения Open Graph',
             'slug_claimed_by_redirect' => 'Адрес :path уже занят активным редиректом — изменение для этого языка не сохранено. Сначала удалите редирект, если переиспользование адреса намеренное.',
             'contact_value' => 'Значение',
             'contact_label' => 'Подпись',
@@ -259,6 +264,12 @@ return [
             'slug' => 'URL-слаг',
             'short_description' => 'Краткое описание',
             'seo_title' => 'SEO-заголовок',
+            'seo_description' => 'SEO-описание',
+            'seo_canonical_url' => 'Переопределение canonical URL',
+            'seo_indexable' => 'Индексируется',
+            'seo_og_title' => 'Заголовок Open Graph',
+            'seo_og_description' => 'Описание Open Graph',
+            'seo_og_image' => 'URL изображения Open Graph',
             'slug_claimed_by_redirect' => 'Изменение слага отклонено — итоговый адрес уже занят активным редиректом.',
         ],
 
@@ -302,6 +313,11 @@ return [
             'attribute_label' => 'Подпись (:language)',
             'seo_title' => 'SEO-заголовок',
             'seo_description' => 'SEO-описание',
+            'seo_canonical_url' => 'Переопределение canonical URL',
+            'seo_indexable' => 'Индексируется',
+            'seo_og_title' => 'Заголовок Open Graph',
+            'seo_og_description' => 'Описание Open Graph',
+            'seo_og_image' => 'URL изображения Open Graph',
         ],
     ],
 
@@ -319,6 +335,12 @@ return [
             'to_path_hint' => 'Актуальный адрес, на который должен попасть посетитель по старой ссылке.',
             'active' => 'Активен',
         ],
+    ],
+
+    'seo' => [
+        'indexable_default' => 'По умолчанию (по общей политике сайта)',
+        'indexable_yes' => 'Принудительно индексировать',
+        'indexable_no' => 'Принудительно скрыть от индексации',
     ],
 
     'placement_tiers' => [
@@ -629,6 +651,7 @@ return [
             'security' => 'Безопасность',
             'journal' => 'Журнал действий',
             'analytics' => 'Аналитика',
+            'seo' => 'SEO',
         ],
 
         'fields' => [
@@ -680,6 +703,8 @@ return [
             'journal.retention_days' => 'Хранение журнала (дней)',
 
             'analytics.raw_retention_days' => 'Хранение сырых событий (дней)',
+
+            'seo.default_og_image' => 'Изображение Open Graph по умолчанию',
         ],
     ],
 
@@ -895,6 +920,11 @@ return [
             'slug' => 'URL-слаг',
             'seo_title' => 'SEO-заголовок',
             'seo_description' => 'SEO-описание',
+            'seo_canonical_url' => 'Переопределение canonical URL',
+            'seo_indexable' => 'Индексируется',
+            'seo_og_title' => 'Заголовок Open Graph',
+            'seo_og_description' => 'Описание Open Graph',
+            'seo_og_image' => 'URL изображения Open Graph',
         ],
 
         'status' => [
@@ -939,6 +969,11 @@ return [
             'slug' => 'URL-слаг',
             'seo_title' => 'SEO-заголовок',
             'seo_description' => 'SEO-описание',
+            'seo_canonical_url' => 'Переопределение canonical URL',
+            'seo_indexable' => 'Индексируется',
+            'seo_og_title' => 'Заголовок Open Graph',
+            'seo_og_description' => 'Описание Open Graph',
+            'seo_og_image' => 'URL изображения Open Graph',
         ],
 
         'status' => [
@@ -984,6 +1019,11 @@ return [
             'slug' => 'URL-слаг',
             'seo_title' => 'SEO-заголовок',
             'seo_description' => 'SEO-описание',
+            'seo_canonical_url' => 'Переопределение canonical URL',
+            'seo_indexable' => 'Индексируется',
+            'seo_og_title' => 'Заголовок Open Graph',
+            'seo_og_description' => 'Описание Open Graph',
+            'seo_og_image' => 'URL изображения Open Graph',
         ],
 
         'status' => [

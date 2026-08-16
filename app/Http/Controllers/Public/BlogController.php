@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Models\Article;
+use App\Services\Seo\MetadataResolver;
 use Illuminate\Contracts\View\View;
 
 /**
@@ -17,6 +18,8 @@ use Illuminate\Contracts\View\View;
 final class BlogController extends Controller
 {
     private const int ARTICLES_PER_PAGE = 12;
+
+    public function __construct(private readonly MetadataResolver $metadata) {}
 
     public function index(string $lang): View
     {
@@ -48,12 +51,15 @@ final class BlogController extends Controller
             'objects.translations', 'territories.translations', 'territories.country',
         ]);
 
+        $selfUrl = route('public.blog.show', ['lang' => $lang, 'article' => $article]);
+
         return view('public.blog.show', [
             'article' => $article,
             'breadcrumbs' => [
                 ['label' => __('public.shell.nav.blog'), 'url' => route('public.blog.index', ['lang' => $lang])],
-                ['label' => (string) ($article->title ?? ''), 'url' => route('public.blog.show', ['lang' => $lang, 'article' => $article])],
+                ['label' => (string) ($article->title ?? ''), 'url' => $selfUrl],
             ],
+            'metadata' => $this->metadata->resolve($article, $lang, $selfUrl),
         ]);
     }
 

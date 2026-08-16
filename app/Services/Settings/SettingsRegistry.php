@@ -148,6 +148,11 @@ final class SettingsRegistry
             // How long a raw stat_events row survives after its day has
             // been rolled up into stat_dailies — see AnalyticsCompactionJob.
             new SettingDefinition('analytics.raw_retention_days', 'analytics', 'int', 90),
+
+            // The Open Graph image fallback for an entity with neither an
+            // explicit override nor its own cover photo — see
+            // MetadataResolver, which reaches this only after both are absent.
+            new SettingDefinition('seo.default_og_image', 'seo', 'string', ''),
         ];
     }
 }

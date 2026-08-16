@@ -11,6 +11,7 @@ use App\Models\ObjectType;
 use App\Models\Promotion;
 use App\Models\Territory;
 use App\Services\Catalog\CatalogQueryService;
+use App\Services\Seo\MetadataResolver;
 use App\Services\Seo\PublicSlugResolver;
 use App\Services\Seo\PublicUrlGenerator;
 use App\Support\Catalog\CatalogSearchCriteria;
@@ -56,6 +57,7 @@ final class TerritoryPageController extends Controller
         private readonly CatalogQueryService $catalog,
         private readonly PublicSlugResolver $resolver,
         private readonly PublicUrlGenerator $urls,
+        private readonly MetadataResolver $metadata,
     ) {}
 
     public function show(Request $request, string $lang, string $country, string $path): View
@@ -72,7 +74,7 @@ final class TerritoryPageController extends Controller
         $territory->loadMissing('translations');
 
         if ($objectType instanceof ObjectType) {
-            return $this->showTypedCatalog($request, $territory, $objectType);
+            return $this->showTypedCatalog($request, $lang, $territory, $objectType);
         }
 
         $sidebar = Cache::remember(
@@ -99,6 +101,7 @@ final class TerritoryPageController extends Controller
             'territory' => $territory,
             'breadcrumbs' => $this->breadcrumbs($territory),
             'catalogBlocks' => $this->catalogBlocks($territory),
+            'metadata' => $this->metadata->resolve($territory, $lang, $this->urls->territoryUrl($territory, $lang)),
         ]));
     }
 
@@ -109,7 +112,7 @@ final class TerritoryPageController extends Controller
      * rather than the full interactive filter set: the clean path is what
      * makes it eligible for indexing at all.
      */
-    private function showTypedCatalog(Request $request, Territory $territory, ObjectType $objectType): View
+    private function showTypedCatalog(Request $request, string $lang, Territory $territory, ObjectType $objectType): View
     {
         $objectType->loadMissing('translations');
 
@@ -123,14 +126,16 @@ final class TerritoryPageController extends Controller
 
         $results = $this->catalog->search($criteria);
 
+        $selfUrl = $this->urls->typedCatalogUrl($territory, $objectType, $lang);
         $breadcrumbs = $this->breadcrumbs($territory);
-        $breadcrumbs[] = ['label' => (string) ($objectType->name ?? ''), 'url' => $this->urls->typedCatalogUrl($territory, $objectType) ?? url()->current()];
+        $breadcrumbs[] = ['label' => (string) ($objectType->name ?? ''), 'url' => $selfUrl ?? url()->current()];
 
         return view('public.territory.typed-catalog', [
             'territory' => $territory,
             'objectType' => $objectType,
             'results' => $results,
             'breadcrumbs' => $breadcrumbs,
+            'metadata' => $this->metadata->resolveTypedCatalog($territory, $objectType, $lang, $selfUrl),
         ]);
     }
 

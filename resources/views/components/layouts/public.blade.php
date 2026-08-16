@@ -1,10 +1,15 @@
 {{--
-    The layout every public route renders inside. A page passes `:title`
-    and, once it is below the home page, `:breadcrumbs` (a list of
-    ['label' => ..., 'url' => ...]). `:noindex` emits a robots directive for
-    pages that must never be indexed, such as the 404 page.
+    The layout every public route renders inside. A page passes either
+    `:metadata` (a resolved App\Support\Seo\ResolvedMetadata — title, meta
+    description, canonical, indexability, and Open Graph fields, all
+    already guaranteed non-empty by MetadataResolver) or a bare `:title`
+    for the handful of static pages this task does not cover. Once a page
+    is below the home page it also passes `:breadcrumbs` (a list of
+    ['label' => ..., 'url' => ...]). `:noindex` emits a robots directive
+    without needing a full metadata object, for pages that must never be
+    indexed, such as the 404 page.
 --}}
-@props(['title' => null, 'breadcrumbs' => [], 'noindex' => false])
+@props(['title' => null, 'metadata' => null, 'breadcrumbs' => [], 'noindex' => false])
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
@@ -12,9 +17,25 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>{{ $title ?? app(\App\Services\Settings\SettingsRepository::class)->get('portal.name') }}</title>
+    <title>{{ $metadata->title ?? $title ?? app(\App\Services\Settings\SettingsRepository::class)->get('portal.name') }}</title>
 
-    @if ($noindex)
+    @if ($metadata)
+        <meta name="description" content="{{ $metadata->description }}">
+
+        @if ($metadata->canonicalUrl)
+            <link rel="canonical" href="{{ $metadata->canonicalUrl }}">
+        @endif
+
+        @if ($noindex || ! $metadata->indexable)
+            <meta name="robots" content="noindex">
+        @endif
+
+        <meta property="og:title" content="{{ $metadata->ogTitle }}">
+        <meta property="og:description" content="{{ $metadata->ogDescription }}">
+        @if ($metadata->ogImageUrl)
+            <meta property="og:image" content="{{ $metadata->ogImageUrl }}">
+        @endif
+    @elseif ($noindex)
         <meta name="robots" content="noindex">
     @endif
 

@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Models\NewsItem;
+use App\Services\Seo\MetadataResolver;
 use Illuminate\Contracts\View\View;
 
 /**
@@ -17,6 +18,8 @@ use Illuminate\Contracts\View\View;
 final class NewsController extends Controller
 {
     private const int NEWS_PER_PAGE = 12;
+
+    public function __construct(private readonly MetadataResolver $metadata) {}
 
     public function index(string $lang): View
     {
@@ -46,12 +49,15 @@ final class NewsController extends Controller
 
         $newsItem->loadMissing(['translations', 'territory.translations', 'territory.country', 'object.translations']);
 
+        $selfUrl = route('public.news.show', ['lang' => $lang, 'newsItem' => $newsItem]);
+
         return view('public.news.show', [
             'newsItem' => $newsItem,
             'breadcrumbs' => [
                 ['label' => __('public.shell.nav.news'), 'url' => route('public.news.index', ['lang' => $lang])],
-                ['label' => (string) ($newsItem->title ?? ''), 'url' => route('public.news.show', ['lang' => $lang, 'newsItem' => $newsItem])],
+                ['label' => (string) ($newsItem->title ?? ''), 'url' => $selfUrl],
             ],
+            'metadata' => $this->metadata->resolve($newsItem, $lang, $selfUrl),
         ]);
     }
 

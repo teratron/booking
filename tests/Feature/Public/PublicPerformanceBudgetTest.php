@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use App\Models\Object_;
 use App\Models\Territory;
+use App\Services\Seo\MetadataResolver;
 use App\Services\Shell\PublicShellDataProvider;
+use App\Support\Seo\SeoEntityType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -368,6 +370,12 @@ function perfBudgetWarmShellCaches(): void
     $provider->activeCountries();
     $provider->popularDestinations();
     $provider->popularCities();
+
+    // The SEO metadata template lookup is the same class of resource as
+    // the shell caches above — administrator-edited, not traffic-driven —
+    // so it is warmed here rather than paid for on a specific page's own
+    // cache-miss measurement.
+    app(MetadataResolver::class)->warmTemplateCache(SeoEntityType::Territory, 'en');
 }
 
 it('meets the query-count budget on every request and measurably benefits from caching, for catalog, territory, and object pages under seeded volume', function (): void {

@@ -1,7 +1,7 @@
 @php
     $urls = app(\App\Services\Seo\PublicUrlGenerator::class);
 @endphp
-<x-layouts.public :title="$article->title" :breadcrumbs="$breadcrumbs">
+<x-layouts.public :metadata="$metadata" :breadcrumbs="$breadcrumbs">
     <div class="mx-auto max-w-3xl px-4 py-8 lg:px-8">
         @if ($article->category)
             <span class="text-xs font-semibold uppercase text-brand">{{ $article->category->name }}</span>

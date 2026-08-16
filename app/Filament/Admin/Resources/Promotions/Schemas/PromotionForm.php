@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources\Promotions\Schemas;
 
+use App\Filament\Support\SeoMetadataFields;
 use App\Models\Language;
 use App\Models\Object_;
 use App\Models\Territory;
@@ -93,10 +94,7 @@ class PromotionForm
                             ->label(__('panel.promotions.form.summary')),
                         TextInput::make("translations.{$language->code}.slug")
                             ->label(__('panel.promotions.form.slug')),
-                        TextInput::make("translations.{$language->code}.seo_title")
-                            ->label(__('panel.promotions.form.seo_title')),
-                        Textarea::make("translations.{$language->code}.seo_description")
-                            ->label(__('panel.promotions.form.seo_description')),
+                        ...SeoMetadataFields::for('panel.promotions.form', $language->code),
                     ]))
                 ->all(),
         );

@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Object_;
 use App\Models\Promotion;
 use App\Models\Territory;
+use App\Services\Seo\MetadataResolver;
 use App\Services\Seo\PublicUrlGenerator;
 use Illuminate\Contracts\View\View;
 
@@ -19,7 +20,10 @@ use Illuminate\Contracts\View\View;
  */
 final class PromotionController extends Controller
 {
-    public function __construct(private readonly PublicUrlGenerator $urls) {}
+    public function __construct(
+        private readonly PublicUrlGenerator $urls,
+        private readonly MetadataResolver $metadata,
+    ) {}
 
     /**
      * `$lang` is unused but must stay declared first: Laravel's controller
@@ -42,6 +46,7 @@ final class PromotionController extends Controller
         abort_unless($object instanceof Object_ && $territory instanceof Territory, 500);
 
         $objectUrl = $this->urls->objectUrl($object, $lang) ?? url()->current();
+        $selfUrl = route('public.promotions.show', ['lang' => $lang, 'promotion' => $promotion]);
 
         return view('public.promotions.show', [
             'promotion' => $promotion,
@@ -49,8 +54,9 @@ final class PromotionController extends Controller
             'territoryUrl' => $this->urls->territoryUrl($territory, $lang) ?? url()->current(),
             'breadcrumbs' => [
                 ['label' => (string) ($object->name ?? ''), 'url' => $objectUrl],
-                ['label' => (string) ($promotion->title ?? ''), 'url' => route('public.promotions.show', ['lang' => $lang, 'promotion' => $promotion])],
+                ['label' => (string) ($promotion->title ?? ''), 'url' => $selfUrl],
             ],
+            'metadata' => $this->metadata->resolve($promotion, $lang, $selfUrl),
         ]);
     }
 

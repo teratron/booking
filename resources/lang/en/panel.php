@@ -149,6 +149,11 @@ return [
             'seo_slug' => 'URL slug',
             'seo_title' => 'SEO title',
             'seo_description' => 'SEO description',
+            'seo_canonical_url' => 'Canonical URL override',
+            'seo_indexable' => 'Indexable',
+            'seo_og_title' => 'Open Graph title',
+            'seo_og_description' => 'Open Graph description',
+            'seo_og_image' => 'Open Graph image URL',
             'slug_claimed_by_redirect' => 'The address :path is already claimed by an active redirect — this language\'s change was not saved. Retire the redirect first if this reuse is intentional.',
             'contact_value' => 'Value',
             'contact_label' => 'Label',
@@ -260,6 +265,12 @@ return [
             'slug' => 'URL slug',
             'short_description' => 'Short description',
             'seo_title' => 'SEO title',
+            'seo_description' => 'SEO description',
+            'seo_canonical_url' => 'Canonical URL override',
+            'seo_indexable' => 'Indexable',
+            'seo_og_title' => 'Open Graph title',
+            'seo_og_description' => 'Open Graph description',
+            'seo_og_image' => 'Open Graph image URL',
             'slug_claimed_by_redirect' => 'Slug change refused — the resulting address is already claimed by an active redirect.',
         ],
 
@@ -303,6 +314,11 @@ return [
             'attribute_label' => 'Label (:language)',
             'seo_title' => 'SEO title',
             'seo_description' => 'SEO description',
+            'seo_canonical_url' => 'Canonical URL override',
+            'seo_indexable' => 'Indexable',
+            'seo_og_title' => 'Open Graph title',
+            'seo_og_description' => 'Open Graph description',
+            'seo_og_image' => 'Open Graph image URL',
         ],
     ],
 
@@ -320,6 +336,12 @@ return [
             'to_path_hint' => 'The current address a visitor following the old link should land on.',
             'active' => 'Active',
         ],
+    ],
+
+    'seo' => [
+        'indexable_default' => 'Default (follow the site policy)',
+        'indexable_yes' => 'Force indexable',
+        'indexable_no' => 'Force noindex',
     ],
 
     'placement_tiers' => [
@@ -630,6 +652,7 @@ return [
             'security' => 'Security',
             'journal' => 'Action journal',
             'analytics' => 'Analytics',
+            'seo' => 'SEO',
         ],
 
         'fields' => [
@@ -681,6 +704,8 @@ return [
             'journal.retention_days' => 'Journal retention (days)',
 
             'analytics.raw_retention_days' => 'Raw event retention (days)',
+
+            'seo.default_og_image' => 'Default Open Graph image',
         ],
     ],
 
@@ -896,6 +921,11 @@ return [
             'slug' => 'Slug',
             'seo_title' => 'SEO title',
             'seo_description' => 'SEO description',
+            'seo_canonical_url' => 'Canonical URL override',
+            'seo_indexable' => 'Indexable',
+            'seo_og_title' => 'Open Graph title',
+            'seo_og_description' => 'Open Graph description',
+            'seo_og_image' => 'Open Graph image URL',
         ],
 
         'status' => [
@@ -940,6 +970,11 @@ return [
             'slug' => 'Slug',
             'seo_title' => 'SEO title',
             'seo_description' => 'SEO description',
+            'seo_canonical_url' => 'Canonical URL override',
+            'seo_indexable' => 'Indexable',
+            'seo_og_title' => 'Open Graph title',
+            'seo_og_description' => 'Open Graph description',
+            'seo_og_image' => 'Open Graph image URL',
         ],
 
         'status' => [
@@ -985,6 +1020,11 @@ return [
             'slug' => 'Slug',
             'seo_title' => 'SEO title',
             'seo_description' => 'SEO description',
+            'seo_canonical_url' => 'Canonical URL override',
+            'seo_indexable' => 'Indexable',
+            'seo_og_title' => 'Open Graph title',
+            'seo_og_description' => 'Open Graph description',
+            'seo_og_image' => 'Open Graph image URL',
         ],
 
         'status' => [

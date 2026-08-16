@@ -56,6 +56,7 @@ final class ObjectEditService
             /** @var ObjectTranslation $translation */
             $snapshot[$translation->locale] = $translation->only([
                 'name', 'short_description', 'full_description', 'slug', 'seo_title', 'seo_description',
+                'seo_canonical_url', 'seo_indexable', 'seo_og_title', 'seo_og_description', 'seo_og_image',
             ]);
         }
 

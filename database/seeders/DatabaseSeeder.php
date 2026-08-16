@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             CountrySeeder::class,
             TerritoryLevelSeeder::class,
             ObjectTypeSeeder::class,
+            SeoMetadataTemplateSeeder::class,
             AmenitySeeder::class,
             ContactChannelTypeSeeder::class,
             PlacementTierSeeder::class,

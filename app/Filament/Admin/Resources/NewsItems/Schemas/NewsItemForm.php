@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources\NewsItems\Schemas;
 
+use App\Filament\Support\SeoMetadataFields;
 use App\Models\ArticleCategory;
 use App\Models\Language;
 use App\Models\Object_;
@@ -124,10 +125,7 @@ class NewsItemForm
                             ->rows(10),
                         TextInput::make("translations.{$language->code}.slug")
                             ->label(__('panel.news_items.form.slug')),
-                        TextInput::make("translations.{$language->code}.seo_title")
-                            ->label(__('panel.news_items.form.seo_title')),
-                        Textarea::make("translations.{$language->code}.seo_description")
-                            ->label(__('panel.news_items.form.seo_description')),
+                        ...SeoMetadataFields::for('panel.news_items.form', $language->code),
                     ]))
                 ->all(),
         );

@@ -55,7 +55,11 @@ class NewsItem extends Model implements HasMedia, Summarizable, TranslatableCont
     public ?string $translationModel = NewsTranslation::class;
 
     /** @var list<string> */
-    public array $translatedAttributes = ['title', 'summary', 'body', 'seo_title', 'seo_description', 'slug'];
+    public array $translatedAttributes = [
+        'title', 'summary', 'body', 'slug',
+        'seo_title', 'seo_description', 'seo_canonical_url', 'seo_indexable',
+        'seo_og_title', 'seo_og_description', 'seo_og_image',
+    ];
 
     protected $guarded = ['id'];
 

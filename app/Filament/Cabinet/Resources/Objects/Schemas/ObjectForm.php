@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Cabinet\Resources\Objects\Schemas;
 
+use App\Filament\Support\SeoMetadataFields;
 use App\Jobs\StalenessSweepJob;
 use App\Models\Country;
 use App\Models\Language;
@@ -287,10 +288,7 @@ class ObjectForm
             ->schema(self::perLanguageSections(fn (string $code): array => [
                 TextInput::make("translations.{$code}.slug")
                     ->label(__('panel.objects.form.seo_slug')),
-                TextInput::make("translations.{$code}.seo_title")
-                    ->label(__('panel.objects.form.seo_title')),
-                Textarea::make("translations.{$code}.seo_description")
-                    ->label(__('panel.objects.form.seo_description')),
+                ...SeoMetadataFields::for('panel.objects.form', $code),
             ]));
     }
 
