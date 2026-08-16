@@ -71,5 +71,56 @@
         @endforeach
     </div>
 
+    @php $derived = $this->derivedFigures(); @endphp
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        <div class="fi-section rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
+            <div class="text-sm text-gray-500 dark:text-gray-400">{{ __('panel.analytics_report.derived.new_owner_count') }}</div>
+            <div class="text-2xl font-semibold">{{ $derived['new_owner_count'] }}</div>
+        </div>
+        <div class="fi-section rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
+            <div class="text-sm text-gray-500 dark:text-gray-400">{{ __('panel.analytics_report.derived.new_object_count') }}</div>
+            <div class="text-2xl font-semibold">{{ $derived['new_object_count'] }}</div>
+        </div>
+        <div class="fi-section rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
+            <div class="text-sm text-gray-500 dark:text-gray-400">{{ __('panel.analytics_report.derived.bump_count') }}</div>
+            <div class="text-2xl font-semibold">{{ $derived['bump_count'] }}</div>
+        </div>
+        <div class="fi-section rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
+            <div class="text-sm text-gray-500 dark:text-gray-400">{{ __('panel.analytics_report.derived.published_promotion_count') }}</div>
+            <div class="text-2xl font-semibold">{{ $derived['published_promotion_count'] }}</div>
+        </div>
+        <div class="fi-section rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
+            <div class="text-sm text-gray-500 dark:text-gray-400">{{ __('panel.analytics_report.derived.pending_moderation_count') }}</div>
+            <div class="text-2xl font-semibold">{{ $derived['pending_moderation_count'] }}</div>
+        </div>
+        <div class="fi-section rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
+            <div class="text-sm text-gray-500 dark:text-gray-400">{{ __('panel.analytics_report.derived.banner_click_through_rate') }}</div>
+            <div class="text-2xl font-semibold">{{ number_format($derived['banner_click_through_rate'] * 100, 2) }}%</div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div class="fi-section rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
+            <h3 class="text-base font-semibold">{{ __('panel.analytics_report.derived.most_viewed_objects') }}</h3>
+            <ol class="mt-2 list-decimal space-y-1 ps-5 text-sm">
+                @forelse ($derived['most_viewed_objects'] as $row)
+                    <li>{{ $row['name'] }} — {{ $row['views'] }}</li>
+                @empty
+                    <li class="list-none text-gray-500 dark:text-gray-400">{{ __('panel.analytics_report.derived.empty_state') }}</li>
+                @endforelse
+            </ol>
+        </div>
+        <div class="fi-section rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
+            <h3 class="text-base font-semibold">{{ __('panel.analytics_report.derived.most_popular_categories') }}</h3>
+            <ol class="mt-2 list-decimal space-y-1 ps-5 text-sm">
+                @forelse ($derived['most_popular_categories'] as $row)
+                    <li>{{ $row['name'] }} — {{ $row['views'] }}</li>
+                @empty
+                    <li class="list-none text-gray-500 dark:text-gray-400">{{ __('panel.analytics_report.derived.empty_state') }}</li>
+                @endforelse
+            </ol>
+        </div>
+    </div>
+
     {{ $this->table }}
 </x-filament-panels::page>

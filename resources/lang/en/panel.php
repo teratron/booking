@@ -678,6 +678,18 @@ return [
         'notifications' => [
             'export_completed' => '{1} :count row exported.|[2,*] :count rows exported.',
         ],
+
+        'derived' => [
+            'most_viewed_objects' => 'Most Viewed Objects',
+            'most_popular_categories' => 'Most Popular Categories',
+            'banner_click_through_rate' => 'Banner Click-Through Rate',
+            'new_owner_count' => 'New Owners',
+            'new_object_count' => 'New Objects',
+            'bump_count' => 'Bumps',
+            'published_promotion_count' => 'Published Promotions',
+            'pending_moderation_count' => 'Pending Moderation',
+            'empty_state' => 'No data for this period.',
+        ],
     ],
 
     'modules' => [

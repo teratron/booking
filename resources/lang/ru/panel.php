@@ -677,6 +677,18 @@ return [
         'notifications' => [
             'export_completed' => '{1} экспортирована :count строка.|[2,4] экспортировано :count строки.|[5,*] экспортировано :count строк.',
         ],
+
+        'derived' => [
+            'most_viewed_objects' => 'Самые просматриваемые объекты',
+            'most_popular_categories' => 'Самые популярные категории',
+            'banner_click_through_rate' => 'CTR баннеров',
+            'new_owner_count' => 'Новые владельцы',
+            'new_object_count' => 'Новые объекты',
+            'bump_count' => 'Поднятия',
+            'published_promotion_count' => 'Опубликованные акции',
+            'pending_moderation_count' => 'Ожидают проверки',
+            'empty_state' => 'Нет данных за этот период.',
+        ],
     ],
 
     'modules' => [

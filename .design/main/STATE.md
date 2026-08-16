@@ -4,33 +4,32 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-16 11:45
+**Updated:** 2026-08-16 12:46
 **Phase:** 6 — Discovery, Reporting & Public API
 **Status:** Active
 
 ## Current Position
 
-- **Task:** `T-6B05` (SEO administration screen and health warnings) done — 7/16. `SeoMetadataTemplateResource` and `CatalogFilterPromotionResource` give `T-6B01`/`T-6B02`'s own tables their first admin UI; new `ErrorPage`/`ErrorPageTranslation` + `ErrorPageResolver` make the 404 page's copy administrator-editable (`[TZ]` §126), falling back to static copy when uncustomized; new `SeoHealthReport` + `SeoHealthDashboard` surface the six health warnings. Track B (metadata, indexation, structured data, sitemaps, administration) is now fully complete. Next: `T-6C01`/`T-6D01` remain independent starting points; Track T runs last.
+- **Task:** `T-6C01` (derived figures across every aggregation dimension) done — 8/16. New `PortalReportingService` computes the eight `[TZ]` §89/§125 figures beyond `AnalyticsReportingService`'s per-kind totals: three event-derived (most viewed objects, most popular categories, banner CTR, read from `stat_dailies`) plus five operational counts (new owner, new object, bump, published promotion — period-scoped; pending moderation — a live gauge, never period-filtered). Rendered on the existing `AnalyticsReport` back-office page; 18/30 queries at seeded volume. Next: `T-6C02` (same page) or `T-6D01` (independent, API track) remain open; Track T runs last.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean. Of the two open questions that touched Phase 6, the consequential one (country-specific domains) is **closed** — see Blocking Constraints. Only the rate-limit / data-licensing question remains, and `T-6D04` picks a conservative default rather than waiting on it. `l1-seo.md` §2's TBD comment still records it as open and should be closed via `/magic.spec` when specs are next revised.
-- **Next Action:** Execute T-6C01 Derived figures across every aggregation dimension via /magic.run main
+- **Next Action:** Execute T-6C02 Traffic-source and page-popularity reporting in the back office via /magic.run main
 
 ## Progress
 
 ```
-Phase 6: [7/16] ████░░░░ 44%
+Phase 6: [8/16] ████░░░░ 50%
 Overall: [5/7] ██████░░ 71%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1-5 complete & archived, 6 active, 7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [18/18] Phase 5 DONE · [7/16] Phase 6 ACTIVE
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [18/18] Phase 5 DONE · [8/16] Phase 6 ACTIVE
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-16 **Decision: `T-6B02` (indexation policy) closed** — new `IndexationPolicyTest.php` (7 cases) plus `IndexationPolicy` (zero/one/many-filter catalog decision, allowlist-backed for the one-filter case only), `catalog_filter_promotions` table, `MetadataResolver::resolveCatalog()`, and `robots.txt`. `CatalogSearch` (a Livewire full-page component) needed Livewire's `View::layoutData()` macro to receive computed metadata. Full non-slow suite: 691 passed (up from 684), 0 failed, 3 skipped.
-- 2026-08-16 **Decision: `T-6B03` (structured data & breadcrumbs) closed** — new `StructuredDataTest.php` (7 cases) plus `StructuredDataBuilder`, a new `object_types.structured_data_kind` capability column (never branches on a type's `key` — see Blocking Constraints), auto-derived `BreadcrumbList` in the public layout, and booking-module-gated offer availability. A background security review caught a real XSS vector in the initial JSON-LD rendering (`JSON_UNESCAPED_SLASHES` allowed a `</script>`-breakout via any field value) — fixed with `JSON_HEX_*` flags before this entry was written. Full non-slow suite: 698 passed (up from 691), 0 failed, 3 skipped.
 - 2026-08-16 **Decision: `T-6B04` (sitemap index) closed — Track B's `B03 ∥ B04` fork complete** — installed `spatie/laravel-sitemap` (first fixing a pre-existing `composer.lock` drift, see Blocking Constraints). New `SitemapBuilder` writes per-language, per-entity-type XML via `GenerateSitemapsJob` (hourly), served by two routes that only ever read the last generated file. Per-file URL limit is a config value, not a hardcoded constant, specifically so the pagination test doesn't need tens of thousands of seeded rows. Full non-slow suite: 703 passed (up from 698), 0 failed, 3 skipped.
 - 2026-08-16 **Decision: `T-6B05` (SEO administration screen and health warnings) closed — Track B fully complete** — `SeoMetadataTemplateResource`/`CatalogFilterPromotionResource` give two existing tables their first admin UI; new `ErrorPage`/`ErrorPageResolver` make the 404 page's copy administrator-editable, falling back to static copy when uncustomized (`[TZ]` §126, previously unbuilt anywhere in the codebase); new `SeoHealthReport`/`SeoHealthDashboard` surface the six health warnings. Two real bugs, both recorded as Blocking Constraints below (`#[Override]` on a Filament hook method; a new `Translatable` model needing `needs_review`/`published_at`). Full non-slow suite: 714 passed (up from 703), 0 failed, 3 skipped.
+- 2026-08-16 **Decision: `T-6C01` (derived figures across every aggregation dimension) closed** — new `PortalReportingService` (eight figures: three event-derived from `stat_dailies`, five operational counts read directly, pending moderation left unfiltered as a live gauge), rendered on the existing `AnalyticsReport` page (18/30 queries at seeded volume). Spatie's `User::role()` scope throws `RoleDoesNotExist` when unseeded — replaced with a plain `whereHas('roles', ...)` (see Blocking Constraints). Full non-slow suite: 717 passed (up from 714), 0 failed, 3 skipped.
 
 ## Blockers
 
@@ -78,6 +77,7 @@ Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 
 - **When an object type's own kind (accommodation/dining/attraction, or any future classification) needs to drive behaviour, add a declared capability column to `object_types`** — never branch on a type's `key` string. `has_rooms`/`has_availability_status` already established this; `structured_data_kind` (`T-6B03`) is the same pattern. `ObjectProfilePresenter`'s own docblock and `l1-object-catalog.md` both treat a `key`-branch as the specific anti-pattern the admin-managed type registry exists to prevent.
 - **PHP's `#[\Override]` attribute is invalid on a Filament page's `afterCreate()`/`afterSave()`/`beforeCreate()`/`beforeSave()`/`beforeDelete()`/`afterDelete()` (and the `CreateRecord`/`EditRecord` equivalents)** — these are not real inherited methods; `Filament\Pages\BasePage::callHook()` discovers them purely by name via `method_exists($this, $hook)`, so no parent declaration ever exists for `#[Override]` to point at, and PHP fatals the request outright the moment the class loads. Genuine method overrides on these same pages (`mutateFormDataBeforeFill`, `mutateFormDataBeforeCreate`/`BeforeSave`, `handleRecordCreation`, `handleRecordUpdate`) are real inherited methods and correctly keep `#[Override]` (confirmed by `T-6B05`, which fatally broke `migrate:fresh --seed` this way on four pages before the fix).
 - **A model implementing `Astrotomic\Translatable\Contracts\Translatable` is swept into `TranslatableEntityRegistry`'s reflection-based discovery the moment it exists — with no opt-out** — `TranslationCompletenessReport` then queries `needs_review` on its translation table unconditionally, so a translatable model whose translation table lacks `needs_review`/`published_at` fails every request touching that report with `SQLSTATE[42703]`. Already recorded once in `room_translations`' own migration docblock as a predicted recurrence; hit a second time verbatim by `T-6B05`'s `ErrorPage`. Add both columns directly in the table's own creation migration for any new `Translatable` model, even one (like `ErrorPage`) that never actually enters a review workflow — the columns are read generically regardless of whether anything ever sets them to non-default values.
+- **Spatie's `Model::role('name')` query scope resolves the named role eagerly and throws `RoleDoesNotExist` if it has not been seeded** — a report or dashboard figure built on it 500s in any environment or test fixture that has not run `RoleSeeder` first (confirmed by `T-6C01`'s `newOwnerCount()`, which broke `AnalyticsReportingTest`'s own unrelated permission-gate test this way). Prefer `whereHas('roles', fn ($q) => $q->where('name', 'x'))`, a plain relationship filter that degrades to zero instead of throwing, for any count or report figure that must never fail a page render over a role a specific fixture happens not to seed.
 
 ## Session Continuity
 

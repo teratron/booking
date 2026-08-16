@@ -12,6 +12,7 @@ use App\Models\ObjectType;
 use App\Models\Territory;
 use App\Models\User;
 use App\Services\Analytics\AnalyticsReportingService;
+use App\Services\Analytics\PortalReportingService;
 use BackedEnum;
 use Filament\Actions\ExportAction;
 use Filament\Facades\Filament;
@@ -81,6 +82,23 @@ class AnalyticsReport extends Page implements HasTable
     public function summary(): array
     {
         return app(AnalyticsReportingService::class)->summary($this->filters());
+    }
+
+    /**
+     * @return array{
+     *     most_viewed_objects: list<array{objectId: int, name: string, views: int}>,
+     *     most_popular_categories: list<array{objectTypeId: int, name: string, views: int}>,
+     *     banner_click_through_rate: float,
+     *     new_owner_count: int,
+     *     new_object_count: int,
+     *     bump_count: int,
+     *     published_promotion_count: int,
+     *     pending_moderation_count: int,
+     * }
+     */
+    public function derivedFigures(): array
+    {
+        return app(PortalReportingService::class)->derivedFigures($this->filters());
     }
 
     /** @return array<int, string> */
