@@ -33,6 +33,8 @@ final class RobotsController extends Controller
             $lines[] = $extra;
         }
 
+        $lines[] = 'Sitemap: '.route('public.sitemaps.index');
+
         return response(implode("\n", $lines)."\n", 200, ['Content-Type' => 'text/plain']);
     }
 }

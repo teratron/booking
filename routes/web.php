@@ -16,6 +16,7 @@ use App\Http\Controllers\Public\NewsController;
 use App\Http\Controllers\Public\ObjectPageController;
 use App\Http\Controllers\Public\PromotionController;
 use App\Http\Controllers\Public\RobotsController;
+use App\Http\Controllers\Public\SitemapController;
 use App\Http\Controllers\Public\TerritoryPageController;
 use App\Http\Middleware\ResolvePublicLocale;
 use App\Http\Middleware\ResolveRedirect;
@@ -32,6 +33,18 @@ Route::get('/banners/{banner}/click', BannerClickController::class)
     ->name('banners.click');
 
 Route::get('/robots.txt', RobotsController::class)->name('robots');
+
+// Sitemaps are language-agnostic at the index level and read-only static
+// artefacts at every level — deliberately outside the `{lang}` group below,
+// since ResolvePublicLocale/ResolveRedirect have nothing to resolve for a
+// machine-readable XML file.
+Route::name('public.')->group(function (): void {
+    Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemaps.index');
+    Route::get('/sitemaps/{locale}/{filename}', [SitemapController::class, 'child'])
+        ->where('locale', '[a-z]{2}')
+        ->where('filename', '[a-z]+-[0-9]+\.xml')
+        ->name('sitemaps.child');
+});
 
 // Public site: every route below lives under a `{lang}` segment resolved
 // and validated by ResolvePublicLocale. This group is the layout's own

@@ -7,6 +7,7 @@ use App\Jobs\AnalyticsRollupJob;
 use App\Jobs\ArchiveJournalEntriesJob;
 use App\Jobs\AvailabilityConfirmationSweepJob;
 use App\Jobs\DispatchRetryJob;
+use App\Jobs\GenerateSitemapsJob;
 use App\Jobs\NewsItemWithdrawalJob;
 use App\Jobs\PlacementExpirySweepJob;
 use App\Jobs\PromotionArchivalJob;
@@ -70,3 +71,11 @@ Schedule::job(new PromotionArchivalJob)->daily()->name('content:archive-promotio
 // distinct from the promotion sweep above: the item's own detail page
 // stays reachable, only its feed presence ends.
 Schedule::job(new NewsItemWithdrawalJob)->daily()->name('content:withdraw-news');
+
+// Regenerates the sitemap index and its per-language, per-entity-type
+// children — a periodic schedule rather than a hook on every publish/
+// unpublish/edit across five separate content-lifecycle services, since
+// this artefact tolerates being briefly stale far better than it tolerates
+// the coupling five separate event listeners would add. Hourly keeps that
+// staleness window small without regenerating on every request.
+Schedule::job(new GenerateSitemapsJob)->hourly()->name('seo:generate-sitemaps');

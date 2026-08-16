@@ -23,6 +23,7 @@
         "owen-it/laravel-auditing": "^14.0.6",
         "spatie/laravel-medialibrary": "^11.23.5",
         "spatie/laravel-permission": "^8.3.0",
+        "spatie/laravel-sitemap": "^8.2.0",
         "staudenmeir/laravel-adjacency-list": "^1.26.1"
     },
     "require-dev": {
