@@ -46,6 +46,9 @@ return [
 
     'seo' => [
         'derived_description' => 'Узнайте больше: :name.',
+        'catalog_default_title' => 'Каталог',
+        'catalog_in_territory' => 'Каталог: :territory',
+        'catalog_default_description' => 'Отели, гостевые дома, рестораны и достопримечательности с прямым контактом владельца.',
     ],
 
     'blog' => [

@@ -705,6 +705,7 @@ return [
             'analytics.raw_retention_days' => 'Хранение сырых событий (дней)',
 
             'seo.default_og_image' => 'Изображение Open Graph по умолчанию',
+            'seo.robots_extra' => 'Дополнительные директивы robots.txt',
         ],
     ],
 

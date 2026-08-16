@@ -8,6 +8,8 @@ use App\Models\AmenityGroup;
 use App\Models\ObjectType;
 use App\Models\Territory;
 use App\Services\Catalog\CatalogQueryService;
+use App\Services\Seo\IndexationPolicy;
+use App\Services\Seo\MetadataResolver;
 use App\Services\Shell\PublicShellDataProvider;
 use App\Support\Catalog\CatalogSearchCriteria;
 use Illuminate\Contracts\View\View;
@@ -140,6 +142,9 @@ final class CatalogSearch extends Component
             q: $this->q !== '' ? $this->q : null,
         );
 
+        $indexable = app(IndexationPolicy::class)->catalogIndexable($this->activeIndexationFilters(), $this->q !== '');
+        $metadata = app(MetadataResolver::class)->resolveCatalog($selectedType, $criteria->territory, $indexable, app()->getLocale(), url()->full());
+
         return view('livewire.public.catalog-search', [
             'results' => $results,
             'selectedType' => $selectedType,
@@ -149,7 +154,47 @@ final class CatalogSearch extends Component
                 ->orderBy('display_order')
                 ->with('translations')
                 ->get(),
-        ]);
+        ])->layoutData(['metadata' => $metadata]);
+    }
+
+    /**
+     * The active filter dimensions {@see IndexationPolicy} decides
+     * indexability from — one entry per dimension regardless of how many
+     * discrete values it carries (e.g. several amenities still count as
+     * the single `amenity` dimension), since a promotion is a decision
+     * about one dimension's value, never about how many values within it.
+     *
+     * @return array<string, scalar>
+     */
+    private function activeIndexationFilters(): array
+    {
+        $filters = [];
+
+        if ($this->type !== null) {
+            $filters['type'] = $this->type;
+        }
+
+        if ($this->territoryId !== null) {
+            $filters['territory'] = $this->territoryId;
+        }
+
+        if ($this->priceMin !== null || $this->priceMax !== null) {
+            $filters['price'] = sprintf('%s-%s', $this->priceMin ?? '', $this->priceMax ?? '');
+        }
+
+        if ($this->ratingMin !== null) {
+            $filters['rating'] = $this->ratingMin;
+        }
+
+        if ($this->amenities !== []) {
+            $filters['amenity'] = implode(',', $this->amenities);
+        }
+
+        if ($this->activeAttributeFilters() !== []) {
+            $filters['attribute'] = (string) json_encode($this->activeAttributeFilters());
+        }
+
+        return $filters;
     }
 
     /** @return array<string, array{min?: float, max?: float}|scalar> */

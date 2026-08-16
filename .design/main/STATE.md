@@ -4,32 +4,32 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-16 06:34
+**Updated:** 2026-08-16 07:28
 **Phase:** 6 — Discovery, Reporting & Public API
 **Status:** Active
 
 ## Current Position
 
-- **Task:** `T-6B01` (SEO metadata resolution ladder) done — 3/16. `MetadataResolver` (explicit → template → derived, for title/description; canonical/indexable/Open Graph resolved alongside), five new translation columns across six entity types, `seo_metadata_templates` table, shared Filament field set, public layout now emits real meta tags. Next: `T-6B02` (indexation policy) is next in Track B order; `T-6C01`/`T-6D01` remain independent starting points.
+- **Task:** `T-6B02` (indexation policy) done — 4/16. `IndexationPolicy` (zero/one/many-active-filter catalog decision, allowlist-backed for the one-filter case), `catalog_filter_promotions` table, `CatalogSearch` Livewire component now resolves and emits real metadata, `robots.txt` route disallowing `/admin`/`/cabinet`. Next: `T-6B03` (structured data) is next in Track B order; `T-6C01`/`T-6D01` remain independent starting points.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean. Of the two open questions that touched Phase 6, the consequential one (country-specific domains) is **closed** — see Blocking Constraints. Only the rate-limit / data-licensing question remains, and `T-6D04` picks a conservative default rather than waiting on it. `l1-seo.md` §2's TBD comment still records it as open and should be closed via `/magic.spec` when specs are next revised.
-- **Next Action:** Execute T-6B02 Indexation policy — the matrix, filter allowlist, pagination canonicals, robots via /magic.run main
+- **Next Action:** Execute T-6B03 Structured data and breadcrumbs, gated on module state via /magic.run main
 
 ## Progress
 
 ```
-Phase 6: [3/16] ██░░░░░░ 19%
+Phase 6: [4/16] ██░░░░░░ 25%
 Overall: [5/7] ██████░░ 71%
 Plan:           [7 phases] Bootstrap/tentative; Phase 1-5 complete & archived, 6 active, 7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [18/18] Phase 5 DONE · [3/16] Phase 6 ACTIVE
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [18/18] Phase 5 DONE · [4/16] Phase 6 ACTIVE
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-15 **Decision: `T-6A01` (URL grammar) closed** — new `SeoUrlGrammarTest.php` (8 cases) plus real product changes: two new services (`PublicUrlGenerator`, `PublicSlugResolver`), two migrations (slug on `object_type_translations`; `country_id` denormalized onto `territory_translations`). **`composer test:coverage` fails project-wide at 78.9% (floor 80%)** — traced to pre-existing, untouched Phase 3 gaps, not new code; flagged, not silently absorbed.
 - 2026-08-15 **Decision: `T-6A02` (redirect table) closed — Track A complete** — new `RedirectResolutionTest.php` (6 cases) plus `Redirect` model/policy/Filament resource, `RedirectRegistrar`, `ResolveRedirect` middleware, wired into territory edits, reparenting, and both object slug-edit paths. Full non-slow suite: 674 passed (up from 668), 0 failed, 3 skipped. `composer analyse`/`pint --test`/architecture suite clean.
-- 2026-08-16 **Decision: `T-6B01` (metadata ladder) closed** — new `MetadataResolutionTest.php` (10 cases) plus real product changes across six entity types, the public layout (now emits meta description, canonical, Open Graph, and conditional `noindex` — previously only a bare `<title>` existed), five controllers, and every relevant Filament form via a new shared `SeoMetadataFields` fieldset. `seo_metadata_templates` seeded with EN/RU defaults per entity kind; no admin CRUD UI yet — `T-6B05` builds that. `TerritoryForm` was also missing a `seo_description` field entirely (pre-existing gap, fixed in the same change). See Blocking Constraints for the query-budget regression this task caused and fixed within itself.
+- 2026-08-16 **Decision: `T-6B01` (metadata ladder) closed** — new `MetadataResolutionTest.php` (10 cases) plus real product changes across six entity types, the public layout (now emits meta description, canonical, Open Graph, and conditional `noindex`), five controllers, and every relevant Filament form via a new shared `SeoMetadataFields` fieldset. `seo_metadata_templates` seeded with EN/RU defaults; no admin CRUD UI yet — `T-6B05` builds that. See Blocking Constraints for the query-budget regression this task caused and fixed within itself.
+- 2026-08-16 **Decision: `T-6B02` (indexation policy) closed** — new `IndexationPolicyTest.php` (7 cases) plus `IndexationPolicy` (zero/one/many-filter catalog decision, allowlist-backed for the one-filter case only — several filters are never promotable per spec), `catalog_filter_promotions` table, `MetadataResolver::resolveCatalog()`, and `robots.txt`. `CatalogSearch` (a Livewire full-page component, not a plain controller) needed Livewire's `View::layoutData()` macro to receive computed metadata — the first page in this codebase to need it. Full non-slow suite: 691 passed (up from 684), 0 failed, 3 skipped.
 
 ## Blockers
 
@@ -72,6 +72,7 @@ Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 
 - **`node_modules` is bind-mounted and shared between the Windows host and the Linux `app` container — running `pnpm install` from one side installs platform-native optional packages (e.g. `lightningcss-win32-x64-msvc`) that dangle as broken symlinks for the other.** The pre-commit hook's JS gate runs `pnpm` inside the container, so a host-side install can silently break the next commit. Run `pnpm install`/`pnpm run build` inside the container (`docker compose exec app …`) as the default; if a host-side install already happened, re-run `CI=true pnpm install --no-frozen-lockfile` inside the container to rebuild the correct platform binaries before committing.
 - **`PublicPerformanceBudgetTest`'s ≤30-query ceiling has zero headroom on the territory page (tuned exactly to 30 by `T-5T03`)** — any new per-request query on that page fails it. `Cache::rememberForever()` alone does not fix a cold-cache-miss measurement, since that single call still pays the query. The real fix: administrator-edited, traffic-independent lookups (settings, SEO templates, shell navigation) are warmed once via `perfBudgetWarmShellCaches()` before measurement, exactly like `PublicShellDataProvider`'s own caches already are — a new such lookup must be added to that same warm-up, not measured as a fresh page's own miss cost (confirmed by `T-6B01`'s `MetadataResolver::warmTemplateCache()`).
 - **Pest's schema-aware static tooling (PHPStan/Larastan's model-property inference) only recognizes a *literal* `Schema::table('name', …)` / `Schema::create('name', …)` call** — a table name resolved through a loop variable is invisible to it, silently leaving every new column on that table typed as "undefined property" everywhere it's accessed. Write one explicit `Schema::table()` call per table in a migration touching several, even at the cost of repetition (confirmed by `T-6B01`'s SEO-metadata-columns migration).
+- **A full-page Livewire component (`#[Layout(...)]`, e.g. `CatalogSearch`) cannot receive extra layout props the plain `return view(...)->layout` component pattern uses** — the component's own `view(...)` return only controls its own slot content. Pass extra data (title, metadata, breadcrumbs) to the wrapping layout via Livewire's `View::layoutData(['key' => $value])` macro (`Livewire\Features\SupportPageComponents`), chained onto the returned view (confirmed by `T-6B02`'s `CatalogSearch::render()`, the first page in this codebase needing it).
 
 ## Session Continuity
 

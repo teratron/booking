@@ -153,6 +153,9 @@ final class SettingsRegistry
             // explicit override nor its own cover photo — see
             // MetadataResolver, which reaches this only after both are absent.
             new SettingDefinition('seo.default_og_image', 'seo', 'string', ''),
+            // Appended verbatim as its own line in robots.txt, after the
+            // fixed Disallow rules RobotsController always emits.
+            new SettingDefinition('seo.robots_extra', 'seo', 'string', ''),
         ];
     }
 }

@@ -46,6 +46,9 @@ return [
 
     'seo' => [
         'derived_description' => 'Learn more about :name.',
+        'catalog_default_title' => 'Catalog',
+        'catalog_in_territory' => 'Catalog in :territory',
+        'catalog_default_description' => 'Browse hotels, guesthouses, restaurants, and attractions with direct owner contact.',
     ],
 
     'blog' => [

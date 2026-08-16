@@ -706,6 +706,7 @@ return [
             'analytics.raw_retention_days' => 'Raw event retention (days)',
 
             'seo.default_og_image' => 'Default Open Graph image',
+            'seo.robots_extra' => 'Extra robots.txt directives',
         ],
     ],
 

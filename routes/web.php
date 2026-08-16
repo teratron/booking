@@ -15,6 +15,7 @@ use App\Http\Controllers\Public\MapPinsController;
 use App\Http\Controllers\Public\NewsController;
 use App\Http\Controllers\Public\ObjectPageController;
 use App\Http\Controllers\Public\PromotionController;
+use App\Http\Controllers\Public\RobotsController;
 use App\Http\Controllers\Public\TerritoryPageController;
 use App\Http\Middleware\ResolvePublicLocale;
 use App\Http\Middleware\ResolveRedirect;
@@ -29,6 +30,8 @@ Route::get('/support-mode/exit', ExitImpersonationController::class)
 
 Route::get('/banners/{banner}/click', BannerClickController::class)
     ->name('banners.click');
+
+Route::get('/robots.txt', RobotsController::class)->name('robots');
 
 // Public site: every route below lives under a `{lang}` segment resolved
 // and validated by ResolvePublicLocale. This group is the layout's own

@@ -99,6 +99,41 @@ final class MetadataResolver
         );
     }
 
+    /**
+     * The interactive `/catalog` search page is neither one entity nor a
+     * fixed territory-and-type composite — its title reflects whichever of
+     * a selected object type and territory the visitor's own filters name,
+     * degrading to a plain portal-wide catalog title when neither is set.
+     * `$indexable` is not decided here: {@see IndexationPolicy} owns that
+     * decision, since it depends on the full active filter set, not just
+     * these two optional dimensions.
+     */
+    public function resolveCatalog(?ObjectType $objectType, ?Territory $territory, bool $indexable, string $locale, ?string $selfUrl = null): ResolvedMetadata
+    {
+        $typeName = $objectType instanceof ObjectType ? $this->fallbackName($objectType, $locale) : null;
+        $territoryName = $territory instanceof Territory ? $this->fallbackName($territory, $locale) : null;
+
+        $title = match (true) {
+            $typeName !== null && $territoryName !== null => "{$typeName} — {$territoryName}",
+            $typeName !== null => $typeName,
+            $territoryName !== null => trim((string) __('public.seo.catalog_in_territory', ['territory' => $territoryName], $locale)),
+            default => trim((string) __('public.seo.catalog_default_title', [], $locale)),
+        };
+
+        $description = trim((string) __('public.seo.catalog_default_description', [], $locale));
+        $ogImage = $this->defaultOgImage();
+
+        return new ResolvedMetadata(
+            title: $title,
+            description: $description,
+            canonicalUrl: $selfUrl,
+            indexable: $indexable,
+            ogTitle: $title,
+            ogDescription: $description,
+            ogImageUrl: $ogImage,
+        );
+    }
+
     private function resolveField(?string $explicit, SeoEntityType $type, SeoMetadataField $field, string $locale, string $name, ?string $territoryName): string
     {
         return $this->nonEmpty($explicit)
