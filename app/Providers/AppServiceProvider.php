@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Models\ApiToken;
 use App\Models\Banner;
 use App\Models\Country;
 use App\Models\Language;
@@ -24,6 +25,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Sanctum\Sanctum;
 use Override;
 use OwenIt\Auditing\Models\Audit;
 
@@ -64,6 +66,11 @@ class AppServiceProvider extends ServiceProvider
         // `Audit` is a vendor model this project does not own, so its policy
         // is bound the classic way rather than via a `#[UsePolicy]` attribute.
         Gate::policy(Audit::class, AuditPolicy::class);
+
+        // Swaps in this project's own personal-access-token model so every
+        // token Sanctum issues or resolves carries the revocation and rate-
+        // limit columns {@see ApiToken} adds on top of the vendor schema.
+        Sanctum::usePersonalAccessTokenModel(ApiToken::class);
 
         // Must run before anything resolves the `translator` singleton —
         // astrotomic's own Locales class (built by syncTranslatableLocales()

@@ -742,6 +742,59 @@ return [
         ],
     ],
 
+    'api_clients' => [
+        'title' => 'API clients',
+        'model_label' => 'API client',
+
+        'form' => [
+            'name' => 'Name',
+            'contact' => 'Contact',
+            'active' => 'Active',
+        ],
+
+        'columns' => [
+            'tokens' => 'Tokens',
+            'created_by' => 'Created by',
+            'created_at' => 'Created',
+        ],
+
+        'tokens' => [
+            'title' => 'Tokens',
+            'name' => 'Name',
+            'resources' => 'Resources',
+            'countries' => 'Countries',
+            'categories' => 'Categories',
+            'rate_limit' => 'Rate limit (req/min)',
+            'rate_limit_default' => 'Portal default',
+            'rate_limit_hint' => 'Leave empty to use the portal-wide default.',
+            'expires_at' => 'Expires',
+            'last_used_at' => 'Last used',
+            'never_used' => 'Never used',
+            'revoked' => 'Active',
+            'unrestricted' => 'Unrestricted',
+            'countries_hint' => 'Leave empty for no country restriction.',
+            'categories_hint' => 'Leave empty for no category restriction.',
+            'issue' => 'Issue token',
+            'issued' => 'Token issued',
+            'issued_body' => 'This value is shown once and cannot be recovered afterward: :token',
+            'edit_scope' => 'Edit scope',
+            'revoke' => 'Revoke',
+            'revoke_confirm' => 'The token stops working on its very next request. This cannot be undone.',
+            'applied' => 'Change applied.',
+            'resource' => [
+                'countries' => 'Countries',
+                'territories' => 'Territories',
+                'object_types' => 'Object types',
+                'amenities' => 'Amenities',
+                'objects' => 'Objects',
+                'object_reviews' => 'Object reviews',
+                'news' => 'News',
+                'promotions' => 'Promotions',
+                'articles' => 'Articles',
+            ],
+        ],
+    ],
+
     'settings' => [
         'title' => 'Portal settings',
         'save' => 'Save settings',

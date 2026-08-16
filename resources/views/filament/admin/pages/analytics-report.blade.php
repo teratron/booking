@@ -1,15 +1,15 @@
 <x-filament-panels::page>
     <div class="fi-section rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
         <div class="flex flex-wrap gap-4">
-            <label class="flex-1 min-w-[10rem]">
+            <label class="flex-1 min-w-40">
                 <span class="fi-fo-field-wrp-label text-sm font-medium">{{ __('panel.financial_records.filters.from') }}</span>
                 <input type="date" wire:model.live="periodFrom" class="fi-input block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-800" />
             </label>
-            <label class="flex-1 min-w-[10rem]">
+            <label class="flex-1 min-w-40">
                 <span class="fi-fo-field-wrp-label text-sm font-medium">{{ __('panel.financial_records.filters.until') }}</span>
                 <input type="date" wire:model.live="periodUntil" class="fi-input block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-800" />
             </label>
-            <label class="flex-1 min-w-[10rem]">
+            <label class="flex-1 min-w-40">
                 <span class="fi-fo-field-wrp-label text-sm font-medium">{{ __('panel.navigation.geography') }}</span>
                 <select wire:model.live="countryId" class="fi-select-input block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-800">
                     <option value="">—</option>
@@ -18,7 +18,7 @@
                     @endforeach
                 </select>
             </label>
-            <label class="flex-1 min-w-[10rem]">
+            <label class="flex-1 min-w-40">
                 <span class="fi-fo-field-wrp-label text-sm font-medium">{{ __('panel.analytics_report.filters.territory') }}</span>
                 <select wire:model.live="territoryId" class="fi-select-input block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-800">
                     <option value="">—</option>
@@ -27,7 +27,7 @@
                     @endforeach
                 </select>
             </label>
-            <label class="flex-1 min-w-[10rem]">
+            <label class="flex-1 min-w-40">
                 <span class="fi-fo-field-wrp-label text-sm font-medium">{{ __('panel.analytics_report.filters.category') }}</span>
                 <select wire:model.live="objectTypeId" class="fi-select-input block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-800">
                     <option value="">—</option>
@@ -36,7 +36,7 @@
                     @endforeach
                 </select>
             </label>
-            <label class="flex-1 min-w-[10rem]">
+            <label class="flex-1 min-w-40">
                 <span class="fi-fo-field-wrp-label text-sm font-medium">{{ __('panel.analytics_report.filters.language') }}</span>
                 <select wire:model.live="locale" class="fi-select-input block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-800">
                     <option value="">—</option>
@@ -45,7 +45,7 @@
                     @endforeach
                 </select>
             </label>
-            <label class="flex-1 min-w-[10rem]">
+            <label class="flex-1 min-w-40">
                 <span class="fi-fo-field-wrp-label text-sm font-medium">{{ __('panel.analytics_report.filters.banner') }}</span>
                 <select wire:model.live="bannerId" class="fi-select-input block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-800">
                     <option value="">—</option>
@@ -54,7 +54,7 @@
                     @endforeach
                 </select>
             </label>
-            <label class="flex-1 min-w-[10rem]">
+            <label class="flex-1 min-w-40">
                 <span class="fi-fo-field-wrp-label text-sm font-medium">{{ __('panel.analytics_report.filters.object') }}</span>
                 <input type="number" wire:model.live="objectId" class="fi-input block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-800" />
             </label>

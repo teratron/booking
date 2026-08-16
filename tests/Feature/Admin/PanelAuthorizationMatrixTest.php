@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Filament\Admin\Resources\ActionJournal\ActionJournalResource;
+use App\Filament\Admin\Resources\ApiClients\ApiClientResource;
 use App\Filament\Admin\Resources\ArticleCategories\ArticleCategoryResource;
 use App\Filament\Admin\Resources\Articles\ArticleResource;
 use App\Filament\Admin\Resources\ArticleTags\ArticleTagResource;
@@ -143,6 +144,11 @@ function seedProbeRowFor(string $resourceClass): void
             'event' => 'matrix_probe', 'auditable_type' => User::class, 'auditable_id' => 1,
             'old_values' => [], 'new_values' => [], 'url' => 'console',
             'ip_address' => '127.0.0.1', 'user_agent' => 'test',
+            'created_at' => now(), 'updated_at' => now(),
+        ]),
+        ApiClientResource::class => DB::table('api_clients')->insert([
+            'name' => 'Matrix Probe Client', 'is_active' => true,
+            'created_by' => User::factory()->create()->id,
             'created_at' => now(), 'updated_at' => now(),
         ]),
         LanguageResource::class => DB::table('languages')->insert([
@@ -367,10 +373,11 @@ it('reaches every global-registry resource only through an unrestricted grant, n
 
     // The registry drives which resources are exercised — a resource
     // declaring no scope axis in a later phase is picked up here without
-    // this file changing. These seventeen are today's, asserted so the
+    // this file changing. These eighteen are today's, asserted so the
     // fixture switch above cannot silently stop covering one of them.
     expect($axisLessResources->all())->toEqualCanonicalizing([
         ActionJournalResource::class,
+        ApiClientResource::class,
         ArticleCategoryResource::class,
         ArticleResource::class,
         ArticleTagResource::class,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use App\Services\Modules\ModuleContext;
 use App\Services\Modules\ModuleResolver;
 use Closure;
@@ -33,9 +34,14 @@ final class EnsureModuleEnabled
 
     public function handle(Request $request, Closure $next, string $moduleKey): Response
     {
+        // A resolved actor is not necessarily the portal's own `User` model
+        // — the public API guard resolves an `ApiClient` here instead, and
+        // that actor's own ID has nothing to do with `objects.owner_id`.
+        $actor = $request->user();
+
         $context = new ModuleContext(
             objectId: $this->routeParameterId($request, 'object'),
-            ownerId: $request->user()?->getAuthIdentifier(),
+            ownerId: $actor instanceof User ? $actor->getAuthIdentifier() : null,
         );
 
         if (! $this->resolver->isEnabled($moduleKey, $context)) {

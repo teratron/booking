@@ -44,6 +44,15 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // The public REST API's guard. `provider` is deliberately null:
+        // Sanctum resolves the tokenable model straight from the token row
+        // (`App\Models\ApiClient`, not the `users` provider), so naming a
+        // provider here would be misleading rather than merely unused.
+        'sanctum' => [
+            'driver' => 'sanctum',
+            'provider' => null,
+        ],
     ],
 
     /*
