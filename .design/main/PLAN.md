@@ -244,15 +244,13 @@ critical path out of Phase 2.
 
 ## Next Step
 
-`/magic.run main` — continue Phase 6 (Discovery, Reporting & Public API) at **11/16**.
-Tracks A (addressing), B (metadata, indexation, structured data, sitemaps), and C
-(portal-wide reporting) are complete; the phase's hard gate `T-6A01` is closed, so
-nothing in the remainder is blocked on it. What is left is the tail of Track D —
-`T-6D03` (read endpoints over `CatalogQueryService`, consuming the token scope
-`T-6D02` built) then `T-6D04` (rate limiting, consumption measurement, generated
-documentation), a strict chain — plus the three independent Track T validation tasks
-(`T-6T01`, `T-6T02`, `T-6T03`). `T-6T02` (API parity) is the one item that must wait on
-`T-6D03`, since it compares API output against the catalog's own ordering. Phase registry in
+`/magic.run main` — finish Phase 6 (Discovery, Reporting & Public API) at **15/16**.
+Tracks A, B, C, and D are all complete. The one remaining task in the entire phase is
+`T-6T02` (API parity invariant) — comparing the API's own result identity and order
+against the catalog page's rendering for a matched filter set, the check that would
+catch a "neutral ordering" regression. It was the one Track T item genuinely blocked on
+Track D, which is now closed, so nothing else in the phase is outstanding once it lands.
+Phase registry in
 [TASKS.md](TASKS.md). Phases 1 through 5 are complete and archived at
 [archives/tasks/phase-1.md](archives/tasks/phase-1.md),
 [archives/tasks/phase-2.md](archives/tasks/phase-2.md),

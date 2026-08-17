@@ -50,6 +50,8 @@ final readonly class CatalogSearchCriteria
         public array $attributeFilters = [],
         /** The home page's own "newly added objects" block filter — absent everywhere else. */
         public ?Carbon $createdAfter = null,
+        /** `available` | `unavailable` | `unspecified` — the public API's own `?availability=` filter, absent everywhere else. */
+        public ?string $availabilityStatus = null,
         public int $page = 1,
         public int $perPage = 24,
     ) {}

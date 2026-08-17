@@ -814,6 +814,7 @@ return [
             'journal' => 'Action journal',
             'analytics' => 'Analytics',
             'seo' => 'SEO',
+            'api' => 'API',
         ],
 
         'fields' => [

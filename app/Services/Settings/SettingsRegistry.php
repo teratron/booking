@@ -149,6 +149,11 @@ final class SettingsRegistry
             // been rolled up into stat_dailies — see AnalyticsCompactionJob.
             new SettingDefinition('analytics.raw_retention_days', 'analytics', 'int', 90),
 
+            // The public API's own per-token ceiling when a token's own
+            // `rate_limit_per_minute` is left unset at issuance — see
+            // ApiTokenService::issue().
+            new SettingDefinition('api.default_rate_limit_per_minute', 'api', 'int', 60),
+
             // The Open Graph image fallback for an entity with neither an
             // explicit override nor its own cover photo — see
             // MetadataResolver, which reaches this only after both are absent.

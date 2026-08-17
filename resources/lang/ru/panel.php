@@ -813,6 +813,7 @@ return [
             'journal' => 'Журнал действий',
             'analytics' => 'Аналитика',
             'seo' => 'SEO',
+            'api' => 'API',
         ],
 
         'fields' => [

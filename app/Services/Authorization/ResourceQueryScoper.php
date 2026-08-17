@@ -48,8 +48,38 @@ final class ResourceQueryScoper
         ?string $territoryColumn = null,
         ?string $categoryColumn = null,
     ): Builder {
-        $constraint = $this->authorizer->constraintFor($user, $permission);
+        return $this->applyConstraint(
+            $query,
+            $this->authorizer->constraintFor($user, $permission),
+            $countryColumn,
+            $territoryColumn,
+            $categoryColumn,
+        );
+    }
 
+    /**
+     * The narrowing half of {@see self::narrow()}, taking an already-resolved
+     * {@see ScopeConstraint} directly rather than deriving one from a
+     * `User`'s role grants — the public API's token scope is the other
+     * source this same narrowing applies to, and a bearer token has no
+     * `User` or permission string for {@see ScopeAuthorizer} to resolve
+     * against. Both callers share this one implementation of what a
+     * `ScopeConstraint` means against a query, so "which columns are
+     * reachable" can never drift between an administrator's grant and a
+     * token's own scope.
+     *
+     * @template TModel of \Illuminate\Database\Eloquent\Model
+     *
+     * @param  Builder<TModel>  $query
+     * @return Builder<TModel>
+     */
+    public function applyConstraint(
+        Builder $query,
+        ScopeConstraint $constraint,
+        ?string $countryColumn = null,
+        ?string $territoryColumn = null,
+        ?string $categoryColumn = null,
+    ): Builder {
         if ($constraint->isUnrestricted) {
             return $query;
         }

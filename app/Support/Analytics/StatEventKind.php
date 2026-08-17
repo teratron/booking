@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Support\Analytics;
 
+use App\Models\ApiToken;
+
 /**
  * The six coarse interaction categories `stat_events.kind`'s check
  * constraint allows. The specification's finer-grained list — card view,
@@ -21,4 +23,7 @@ enum StatEventKind: string
     case ContactClick = 'contact_click';
     case BannerImpression = 'banner_impression';
     case BannerClick = 'banner_click';
+
+    /** A served public API request — subject is the {@see ApiToken} that made it, `endpoint` names the route. */
+    case ApiRequest = 'api_request';
 }

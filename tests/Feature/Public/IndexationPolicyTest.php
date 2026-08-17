@@ -173,6 +173,6 @@ it('disallows the owner cabinet and back office in robots.txt', function (): voi
     $response = $this->get('/robots.txt');
 
     $response->assertOk()
-        ->assertSee('Disallow: /admin', false)
-        ->assertSee('Disallow: /cabinet', false);
+        ->assertSee('Disallow: /'.config('booking.panels.admin.path'), false)
+        ->assertSee('Disallow: /'.config('booking.panels.cabinet.path'), false);
 });

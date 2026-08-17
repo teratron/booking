@@ -10,6 +10,9 @@ use App\Models\PlacementTier;
 use App\Models\Price;
 use App\Models\Room;
 use App\Models\Territory;
+use App\Services\Api\ApiTokenService;
+use App\Services\Authorization\ResourceQueryScoper;
+use App\Services\Authorization\ScopeConstraint;
 use App\Services\Placement\PlacementOrderingService;
 use App\Support\Analytics\StatEventKind;
 use App\Support\Catalog\CatalogSearchCriteria;
@@ -103,18 +106,26 @@ final class CatalogQueryService
 
     public function __construct(
         private readonly PlacementOrderingService $ordering,
+        private readonly ResourceQueryScoper $scoper,
     ) {}
 
     /**
+     * $constraint narrows the result to what a caller's own authorization
+     * additionally restricts it to — the public API's token scope, resolved
+     * by {@see ApiTokenService::scopeConstraint()} — on top
+     * of whatever `$criteria` already filters by. Every public page calls
+     * this with `$constraint` left `null` (unrestricted): the portal's own
+     * pages carry no such restriction, only an issued token does.
+     *
      * @return LengthAwarePaginator<int, Object_>
      */
-    public function search(CatalogSearchCriteria $criteria): LengthAwarePaginator
+    public function search(CatalogSearchCriteria $criteria, ?ScopeConstraint $constraint = null): LengthAwarePaginator
     {
         return Cache::remember(
-            $this->cacheKey($criteria),
+            $this->cacheKey($criteria, $constraint),
             self::RESULT_CACHE_TTL_SECONDS,
-            function () use ($criteria): LengthAwarePaginator {
-                $query = $this->buildQuery($criteria);
+            function () use ($criteria, $constraint): LengthAwarePaginator {
+                $query = $this->buildQuery($criteria, $constraint);
 
                 $results = $query->paginate($criteria->perPage, ['*'], 'page', $criteria->page);
 
@@ -128,11 +139,15 @@ final class CatalogQueryService
     /**
      * @return Builder<Object_>
      */
-    private function buildQuery(CatalogSearchCriteria $criteria): Builder
+    private function buildQuery(CatalogSearchCriteria $criteria, ?ScopeConstraint $constraint = null): Builder
     {
         $query = Object_::query()->where('status', 'published')->with(self::CARD_RELATIONS);
 
         $scope = $this->applyFilters($query, $criteria);
+
+        if ($constraint instanceof ScopeConstraint) {
+            $this->scoper->applyConstraint($query, $constraint, 'objects.country_id', null, 'objects.object_type_id');
+        }
 
         $this->ordering->apply($query, $scope);
 
@@ -250,7 +265,7 @@ final class CatalogQueryService
      * the locale (translated name/label columns vary the rendered output
      * even when the row set does not).
      */
-    private function cacheKey(CatalogSearchCriteria $criteria): string
+    private function cacheKey(CatalogSearchCriteria $criteria, ?ScopeConstraint $constraint = null): string
     {
         return 'catalog:search:'.hash('sha256', json_encode([
             'territoryId' => $criteria->territory?->id,
@@ -266,6 +281,7 @@ final class CatalogQueryService
             'page' => $criteria->page,
             'perPage' => $criteria->perPage,
             'locale' => app()->getLocale(),
+            'constraint' => $constraint === null ? null : [$constraint->isUnrestricted, $constraint->countryIds, $constraint->categoryIds],
         ], JSON_THROW_ON_ERROR));
     }
 
@@ -368,6 +384,10 @@ final class CatalogQueryService
 
         if ($criteria->createdAfter instanceof Carbon) {
             $query->where('objects.created_at', '>=', $criteria->createdAfter);
+        }
+
+        if ($criteria->availabilityStatus !== null) {
+            $query->where('objects.availability_status', $criteria->availabilityStatus);
         }
 
         return $scope;

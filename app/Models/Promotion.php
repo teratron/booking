@@ -34,6 +34,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  *
  * @property-read ?string $title virtual, proxied through the active translation
  * @property-read ?string $summary virtual, proxied through the active translation
+ * @property-read ?string $body virtual, proxied through the active translation
  * @property-read ?string $slug virtual, proxied through the active translation
  * @property int $object_id
  * @property int $territory_id

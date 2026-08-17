@@ -37,6 +37,7 @@ final class EventCaptureService
      *     country_id?: int,
      *     locale?: string,
      *     source?: array{referrer_url?: ?string, campaign?: ?string},
+     *     endpoint?: string,
      * }  $context  the `source` key, when present, is resolved through
      *              {@see TrafficSourceRecorder} and written only on the visit's first
      *              event; every other key maps directly onto its `stat_events` column
@@ -53,12 +54,19 @@ final class EventCaptureService
             $now = now();
             $source = $this->resolveSource($context);
 
+            // API-request rows must never dedup: the visitor-window token
+            // exists to collapse an accidental double-render of the same
+            // page, and a token making several genuine requests inside the
+            // same fifteen-minute window is the ordinary case this kind
+            // measures, not a duplicate of itself.
+            $dedupToken = $eventKind === StatEventKind::ApiRequest ? null : $this->dedupToken($now);
+
             CaptureStatEventJob::dispatch(
                 kind: $eventKind->value,
                 subjectType: $subject->getMorphClass(),
                 subjectId: (int) $subject->getKey(),
                 occurredAt: $now->toDateTimeString(),
-                dedupToken: $this->dedupToken($now),
+                dedupToken: $dedupToken,
                 contactChannelTypeId: $context['contact_channel_type_id'] ?? null,
                 territoryId: $context['territory_id'] ?? null,
                 countryId: $context['country_id'] ?? null,
@@ -66,6 +74,7 @@ final class EventCaptureService
                 sourceChannel: $source?->channel->value,
                 sourceDomain: $source?->domain,
                 sourceCampaign: $source?->campaign,
+                endpoint: $context['endpoint'] ?? null,
             );
         } catch (Throwable $exception) {
             // Instrumentation must never take the caller down with it — a

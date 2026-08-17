@@ -15,6 +15,8 @@ use Override;
 /**
  * A facility or service an object may offer — pool, parking, Wi-Fi — grouped
  * under an `AmenityGroup` and filterable in the public catalog when marked so.
+ *
+ * @property-read ?string $name virtual, proxied through the active translation
  */
 final class Amenity extends Model implements TranslatableContract
 {

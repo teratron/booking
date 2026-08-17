@@ -49,15 +49,15 @@ final class AnalyticsRollupJob implements ShouldQueue
         DB::transaction(function () use ($date, $start, $end): void {
             DB::table('stat_dailies')->where('date', $date)->delete();
 
-            /** @var Collection<int, object{subject_type: string, subject_id: int, kind: string, contact_channel_type_id: ?int, territory_id: ?int, country_id: ?int, locale: ?string, aggregate_count: int}> $rows */
+            /** @var Collection<int, object{subject_type: string, subject_id: int, kind: string, contact_channel_type_id: ?int, territory_id: ?int, country_id: ?int, locale: ?string, endpoint: ?string, aggregate_count: int}> $rows */
             $rows = DB::table('stat_events')
                 ->selectRaw(
                     'subject_type, subject_id, kind, contact_channel_type_id, territory_id, '
-                    .'max(country_id) as country_id, locale, count(*) as aggregate_count'
+                    .'max(country_id) as country_id, locale, endpoint, count(*) as aggregate_count'
                 )
                 ->where('occurred_at', '>=', $start)
                 ->where('occurred_at', '<', $end)
-                ->groupBy('subject_type', 'subject_id', 'kind', 'contact_channel_type_id', 'territory_id', 'locale')
+                ->groupBy('subject_type', 'subject_id', 'kind', 'contact_channel_type_id', 'territory_id', 'locale', 'endpoint')
                 ->get();
 
             $now = now();
@@ -73,6 +73,7 @@ final class AnalyticsRollupJob implements ShouldQueue
                         'territory_id' => $row->territory_id,
                         'country_id' => $row->country_id,
                         'locale' => $row->locale,
+                        'endpoint' => $row->endpoint,
                         'count' => $row->aggregate_count,
                         'created_at' => $now,
                         'updated_at' => $now,

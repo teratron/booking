@@ -34,6 +34,7 @@ use Override;
  * @property ?string $source_channel one of {@see TrafficSourceChannel}'s values
  * @property ?string $source_domain
  * @property ?string $source_campaign
+ * @property ?string $endpoint the route name, for {@see StatEventKind::ApiRequest} rows
  */
 final class StatEvent extends Model
 {

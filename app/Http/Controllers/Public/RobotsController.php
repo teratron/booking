@@ -21,10 +21,15 @@ final class RobotsController extends Controller
 {
     public function __invoke(SettingsRepository $settings): Response
     {
+        // The staff panel's own path is deliberately non-guessable
+        // (`config/booking.php`'s own security rationale) — a hardcoded
+        // `/admin` here would both miss the real, reachable path and
+        // publish a wrong guess for it, defeating that obscurity layer
+        // instead of reinforcing it.
         $lines = [
             'User-agent: *',
-            'Disallow: /admin',
-            'Disallow: /cabinet',
+            'Disallow: /'.config('booking.panels.admin.path'),
+            'Disallow: /'.config('booking.panels.cabinet.path'),
         ];
 
         $extra = trim((string) $settings->get('seo.robots_extra'));

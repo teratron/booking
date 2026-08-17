@@ -46,6 +46,7 @@ final class CaptureStatEventJob implements ShouldQueue
         private readonly ?string $sourceChannel = null,
         private readonly ?string $sourceDomain = null,
         private readonly ?string $sourceCampaign = null,
+        private readonly ?string $endpoint = null,
     ) {}
 
     public function handle(): void
@@ -67,6 +68,7 @@ final class CaptureStatEventJob implements ShouldQueue
             'source_channel' => $this->sourceChannel,
             'source_domain' => $this->sourceDomain,
             'source_campaign' => $this->sourceCampaign,
+            'endpoint' => $this->endpoint,
         ]);
     }
 

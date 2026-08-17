@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Models\ApiClient;
 use App\Models\ApiToken;
 use App\Models\Banner;
 use App\Models\Country;
@@ -16,13 +17,17 @@ use App\Services\Authorization\CabinetAccessResolver;
 use App\Services\Authorization\ScopeAuthorizer;
 use App\Services\Localization\DatabaseOverlayLoader;
 use App\Services\Localization\LanguageRegistry;
+use App\Services\Settings\SettingsRepository;
 use Astrotomic\Translatable\Locales;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Translation\Loader;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
@@ -82,6 +87,33 @@ class AppServiceProvider extends ServiceProvider
         $this->syncTranslatableLocales();
         $this->invalidateBannerSelectionCacheOnWrite();
         $this->invalidatePublicShellCacheOnWrite();
+        $this->registerApiTokenRateLimiter();
+    }
+
+    /**
+     * The public API's own named limiter — a token's `rate_limit_per_minute`
+     * when set, else the portal-wide `api.default_rate_limit_per_minute`
+     * setting. Keyed by token id, never by IP: two consumers behind the same
+     * NAT or proxy must not share one budget, and a single consumer rotating
+     * IPs must not escape theirs.
+     */
+    private function registerApiTokenRateLimiter(): void
+    {
+        RateLimiter::for('api-token', function (Request $request): Limit {
+            // Nested inside the `auth:sanctum` group in routes/api_v1.php,
+            // so the resolved actor here is always the token's own
+            // ApiClient — the same reasoning TokenController's identical
+            // cast documents.
+            /** @var ApiClient $client */
+            $client = $request->user();
+            $token = $client->currentAccessToken();
+
+            $perMinute = $token instanceof ApiToken && $token->rate_limit_per_minute !== null
+                ? $token->rate_limit_per_minute
+                : (int) $this->app->make(SettingsRepository::class)->get('api.default_rate_limit_per_minute');
+
+            return Limit::perMinute($perMinute)->by($token->id);
+        });
     }
 
     /**

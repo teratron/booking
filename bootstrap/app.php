@@ -3,11 +3,14 @@
 declare(strict_types=1);
 
 use App\Http\Middleware\EnsureModuleEnabled;
+use App\Http\Middleware\RecordApiConsumption;
+use App\Http\Middleware\ResolveApiLocale;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Laravel\Sanctum\Http\Middleware\CheckAbilities;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -20,6 +23,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'module' => EnsureModuleEnabled::class,
+            'api.locale' => ResolveApiLocale::class,
+            'record.consumption' => RecordApiConsumption::class,
+            // Sanctum ships these classes but registers no route-middleware
+            // alias for them — every consumer is expected to alias its own.
+            'abilities' => CheckAbilities::class,
         ]);
 
         // The public API checks the module gate before token authentication

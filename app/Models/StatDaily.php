@@ -27,6 +27,7 @@ use Override;
  * @property ?int $country_id
  * @property ?string $locale
  * @property int $count
+ * @property ?string $endpoint the route name, for {@see StatEventKind::ApiRequest} rows
  */
 final class StatDaily extends Model
 {
