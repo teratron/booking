@@ -5,22 +5,22 @@
 
 **Workspace:** main
 **Updated:** 2026-08-19
-**Phase:** 6 — Discovery, Reporting & Public API — **Done (16/16)**
+**Phase:** 7 — Operations & Launch Readiness — **Todo (0/16)**
 **Status:** Active
 
 ## Current Position
 
-- **Task:** `T-6T02` closed — **Phase 6 is fully complete, 16/16.** Drove `CatalogSearch`'s own Livewire render cycle and `ObjectController::index()`'s own HTTP request through four filter permutations (unfiltered first page, territory-only, type-only, territory+type combined) against `DemoVolumeSeeder`'s 50,000+ objects, asserting the API's id order equals the catalog page's exactly and that two deliberately non-public records are absent from both surfaces independently. Found and fixed a real bug: `ObjectController::index()` never cast `?type=` to `int` before handing it to `CatalogSearchCriteria`'s strictly-typed constructor — every other numeric filter in that call already did. No spec, task, or phase remains open in Phase 6; the entire portal-wide reporting/SEO/public-API scope this phase covered is done. Next: `/magic.task main` to decompose Phase 7 (import/export, backups and rehearsed restore, production provisioning, load test) — not yet started, carries only its strategic goal and scope.
+- **Task:** **Phase 7 decomposed — 16 atomic tasks across four tracks plus validation**, written to `tasks/phase-7.md`. No task started. The phase is three-wide (`(A → B) ∥ C ∥ D → T`): Track A data-type registry and import pipeline (4), Track B export (2), Track C backups/integrity/restore (3), Track D production provisioning and observability (3), Track T validation and launch readiness (4). `T-7A01` (transferable data-type registry) is the hard gate — six of sixteen tasks read it — and is deliberately a declaration rather than machinery, because the specification names the same thirteen entity kinds twice (import targets, export targets) and two inventories built from one list drift a column apart silently. Tracks C and D are independent of it and of each other and may start concurrently. Two scoped-in additions beyond the phase's original scope table, both recorded in that file's own Planning Audit: **Horizon** (stack spec §5.4/§5.10 and the project package list require it, `docker-compose.yml`'s worker is annotated as awaiting it, and no later phase exists to catch it) folded into `T-7D03`; and the **coverage floor** (`composer test:coverage` at 78.9% vs its own 80% minimum, pre-existing content-lifecycle debt) closed by `T-7T04`. Next: `/magic.run main`, starting at `T-7A01`.
 - **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean. Both open questions that touched Phase 6 are now resolved: country-specific domains closed by the project owner (see Blocking Constraints); the rate-limit/data-licensing question resolved conservatively by `T-6D04`'s own default (60/min, admin-editable). `l1-seo.md` §2's TBD comment still records the domain question as open in prose and should be closed via `/magic.spec` when specs are next revised.
-- **Next Action:** `/magic.task main` — decompose Phase 7. [DR] Phase 6 fully done, no drift signal, no HALT condition — the standing pipeline order (`spec → task → run`) resolves the next step, not a question. (Override: `/magic.spec` if Phase 7's own scope needs design work first.)
+- **Next Action:** Execute T-7A01 Data-type registry — one declaration per transferable entity, shared by import and export via /magic.run main
 
 ## Progress
 
 ```
-Phase 6: [16/16] █████████ 100%
+Phase 7: [0/16] ░░░░░░░░ 0%
 Overall: [6/7] ███████░ 86%
-Plan:           [7 phases] Bootstrap/tentative; Phase 1-6 complete & archived, 7 scoped (not decomposed)
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [18/18] Phase 5 DONE · [16/16] Phase 6 DONE
+Plan:           [7 phases] Bootstrap/tentative; Phase 1-6 complete & archived, 7 decomposed (16 tasks, not started)
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [18/18] Phase 5 DONE · [16/16] Phase 6 DONE · [0/16] Phase 7 TODO
 ```
 
 ## Recent Decisions
@@ -87,8 +87,9 @@ Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 
 
 **Reading order for a fresh session:** this file (position, decisions,
 constraints) → `CLAUDE.md` (stack, conventions, engineering discipline) →
-`.design/main/PLAN.md` for cross-phase context and Phase 7's own scope (not
-yet decomposed into tasks). Phases 1–6's own task files are archived at
+`.design/main/tasks/phase-7.md` (the active phase: 16 tasks, track ordering, planning
+audit, standing constraints) → `.design/main/PLAN.md` for cross-phase context. Phases
+1–6's own task files are archived at
 `.design/main/archives/tasks/phase-{1,2,3,4,5,6}.md` for historical reference.
 
 **Do not carry forward** anything about Next.js, TypeScript, Drizzle, Better Auth,

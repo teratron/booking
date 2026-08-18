@@ -24,8 +24,8 @@ importers:
         specifier: ^3.2.0
         version: 3.2.0(vite@8.2.1(jiti@2.7.0))
       maplibre-gl:
-        specifier: ^6.4.0
-        version: 6.4.0
+        specifier: ^6.4.1
+        version: 6.4.1
       tailwindcss:
         specifier: ^4.3.3
         version: 4.3.3
@@ -739,8 +739,8 @@ packages:
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
-  maplibre-gl@6.4.0:
-    resolution: {integrity: sha512-pCgDUsaYFuZwIH37aV2qF4m03nZPlW79DlqC+cQ+48tpqiqW2SJyA7fEOcFrS5ilDK493f0X3LxiH17T5BqV7g==}
+  maplibre-gl@6.4.1:
+    resolution: {integrity: sha512-KzxQKtfBu/pSz1C+yW1hNS9eyj2h2lC7ufdAi6/SEt177n3oAfDfmUmslRfJdXY7ReAFBcnvwsqmiyoDhtA9GQ==}
     engines: {node: '>=16.14.0', npm: '>=8.1.0'}
 
   minimist@1.2.8:
@@ -1377,7 +1377,7 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  maplibre-gl@6.4.0:
+  maplibre-gl@6.4.1:
     dependencies:
       '@mapbox/point-geometry': 1.1.0
       '@mapbox/tiny-sdf': 2.2.0

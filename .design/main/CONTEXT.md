@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-08-17
+**Generated:** 2026-08-18
 
 ## Active Technologies
 
@@ -11,7 +11,8 @@
 ```plaintext
 .
 ├── .claude/
-│   └── rules/
+│   ├── rules/
+│   └── scheduled_tasks.lock
 ├── .design/
 │   ├── .version
 │   ├── INDEX.md

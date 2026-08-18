@@ -1,8 +1,8 @@
 # Master Task Index (Registry)
 
-**Version:** 1.3.0
+**Version:** 1.4.0
 **Generated:** 2026-08-05
-**Based on:** .design/main/PLAN.md v3.2.0
+**Based on:** .design/main/PLAN.md v3.3.0
 **Based on RULES:** .design/RULES.md v1.4.0
 **Execution Mode:** Parallel
 **Status:** Active
@@ -12,14 +12,12 @@
 Tactical registry of all phases and their statuses. Atomic checklists (`T-XXXX`) live in
 the per-phase files under `tasks/`.
 
-**Decomposition state.** Phases 1 through 5 are complete (21/21, 25/25, 23/23, 16/16,
-18/18) against the same `RFC`-status posture each was successfully decomposed and
-executed under — no Pre-flight gate has ever HALTed on any of them. Phase 6 is now
-decomposed into 16 atomic tasks across four tracks plus validation in
-[tasks/phase-6.md](archives/tasks/phase-6.md), against that same posture. Phase 7 still carries
-frontmatter, a strategic goal, and its scope only — no `T-XXXX` items yet; it is
-decomposed by the `/magic.task` invocation that activates it, against the specification
-set as it stands at that point.
+**Decomposition state.** Phases 1 through 6 are complete (21/21, 25/25, 23/23, 16/16,
+18/18, 16/16) against the same `RFC`-status posture each was successfully decomposed and
+executed under — no Pre-flight gate has ever HALTed on any of them. Phase 7, the last in
+the plan, is now decomposed into 16 atomic tasks across four tracks plus validation in
+[tasks/phase-7.md](tasks/phase-7.md), against that same posture and against the
+specification set as it stands on 2026-08-19.
 
 The superseded Next.js-era archives now live under `archives/tasks/v1-nextjs/`. They
 previously occupied the filenames `archives/tasks/phase-1.md` through `phase-6.md`,
@@ -36,7 +34,7 @@ archival would have overwritten them.
 | [Phase 4](archives/tasks/phase-4.md) | Owner cabinet — the second Filament panel, owner-scoped throughout | `Done (Archived)` (16/16) |
 | [Phase 5](archives/tasks/phase-5.md) | Public site — shell, home, catalog, object profile, territory pages, built from Figma | `Done (Archived)` (18/18) |
 | [Phase 6](archives/tasks/phase-6.md) | SEO, portal-wide reporting, public REST API | `Done (Archived)` (16/16) |
-| [Phase 7](tasks/phase-7.md) | Import/export, backups and rehearsed restore, production provisioning, load test | `Todo` |
+| [Phase 7](tasks/phase-7.md) | Import/export, backups and rehearsed restore, production provisioning and observability, load test | `Todo` (0/16) |
 
 ## Execution Notes
 
@@ -97,7 +95,32 @@ API applies visibility in the shared query layer — and two implementations wou
 with the drift exposing unmoderated content on whichever side was forgotten. Full
 rationale in [tasks/phase-6.md](archives/tasks/phase-6.md) §Track Ordering.
 
+**Phase 7 is three-wide**: `(A → B) ∥ C ∥ D → T`. Track A (data-type registry and the
+import pipeline), Track C (backups, integrity, restore) and Track D (production
+provisioning and observability) share no code and start together; Track B (export) is the
+only waiting track, and it waits on `T-7A01` alone rather than on the rest of Track A.
+
+`T-7A01` (the transferable data-type registry) is the phase's hard gate and its
+highest-cascade task — six of sixteen tasks read it — but it differs in kind from the
+gates before it: `T-2A02`, `T-5A03` and `T-6A01` were machinery, and this one is a
+declaration. The specification names the same thirteen entity kinds twice, once as import
+targets and once as export targets; building two inventories from one list produces a
+silent one-column drift, which is exactly the defect a round-trip test (`T-7T02`) exists
+to catch and a reviewer does not.
+
+Two cross-track contracts are scheduled rather than left to be discovered: `T-7C01`'s
+backup destination and `T-7D01`'s media bucket must resolve to **different** disks (a
+backup beside what it protects is not a backup, and `T-7D01` is the task most likely to
+collapse them while consolidating production configuration); and `T-7D03` must configure
+Pulse's recorders against the territory page's ≤30-query ceiling, which has zero headroom
+— otherwise the cost surfaces in `T-7T03` looking like a regression in already-completed
+public-site work. Full rationale in [tasks/phase-7.md](tasks/phase-7.md) §Track Ordering.
+
+`T-7T03` (load test) is the one task whose *ordering* is specified rather than derived:
+the load test runs before launch, not after. It sits last by dependency, which makes it
+the natural casualty of a compressed schedule — it is not optional.
+
 ## Meta Information
 
-- **Last Updated**: 2026-08-19 (T-6T02 done — Phase 6 complete, 16/16)
+- **Last Updated**: 2026-08-19 (Phase 7 decomposed — 16 tasks across four tracks plus validation)
 - **Maintainer**: Core Team

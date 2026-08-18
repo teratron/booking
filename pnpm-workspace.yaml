@@ -18,3 +18,4 @@ minimumReleaseAgeExclude:
   - '@fallow-cli/win32-x64-msvc@3.16.0 || 3.17.0'
   - fallow-type-aware@3.16.0 || 3.17.0
   - fallow@3.16.0 || 3.17.0
+  - maplibre-gl@6.4.1

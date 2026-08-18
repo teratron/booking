@@ -1,6 +1,6 @@
 # Implementation Plan
 
-**Version:** 3.2.0
+**Version:** 3.3.0
 **Generated:** 2026-08-05
 **Based on:** .design/main/INDEX.md v2.4.2
 **Based on RULES:** .design/RULES.md v1.4.0
@@ -165,14 +165,14 @@ placeholder grammar rather than the SEO specification's nested per-language slug
 and the object page's query budget (68) exceeds the ≤30 target — documented with a
 regression guard rather than silently loosened.
 
-## Phase 6 — Discovery, Reporting & Public API — **Active**
+## Phase 6 — Discovery, Reporting & Public API — **Done**
 
 *Findability and legibility: the addressing the public site deferred, the reporting the
 aggregate tier already supports, and a read-only contract for consumers outside it.*
 
-- [ ] **SEO** — URL grammar, metadata resolution, indexation policy, structured data, sitemaps, redirects ([l1-seo.md](specifications/l1-seo.md)) [L1]
-- [ ] **Analytics** §5.3, §5.4, §5.6 — portal-wide reporting, exports, traffic sources ([l1-analytics.md](specifications/l1-analytics.md)) [L1]
-- [ ] **Public API** — versioned read contract, issued tokens, scoping, rate limits, generated documentation ([l1-public-api.md](specifications/l1-public-api.md)) [L1]
+- [x] **SEO** — URL grammar, metadata resolution, indexation policy, structured data, sitemaps, redirects ([l1-seo.md](specifications/l1-seo.md)) [L1]
+- [x] **Analytics** §5.3, §5.4, §5.6 — portal-wide reporting, exports, traffic sources ([l1-analytics.md](specifications/l1-analytics.md)) [L1]
+- [x] **Public API** — versioned read contract, issued tokens, scoping, rate limits, generated documentation ([l1-public-api.md](specifications/l1-public-api.md)) [L1]
 
 Decomposed into 16 atomic tasks across four tracks plus validation in
 [archives/tasks/phase-6.md](archives/tasks/phase-6.md), which carries this phase's own planning audit.
@@ -180,12 +180,42 @@ The phase is genuinely three-wide — `(A → B) ∥ C ∥ D → T` — because 
 over the aggregate tier and the API layers over the catalog retrieval contract, and
 neither touches the SEO addressing chain that gates Track B.
 
-## Phase 7 — Operations & Launch Readiness
+## Phase 7 — Operations & Launch Readiness — **Active**
+
+*The last phase. Everything between a working portal and an operable one: moving data
+in and out, protecting it, provisioning the services it runs on, and measuring it under
+load before launch rather than after.*
 
 - [ ] **Back Office** §5.7 — import and export pipeline with column mapping and error report ([l1-back-office.md](specifications/l1-back-office.md)) [L1]
 - [ ] **Back Office** §5.6 — backups, retention, integrity verification, rehearsed restore ([l1-back-office.md](specifications/l1-back-office.md)) [L1]
-- [ ] **Third-Party Integrations** §5.2, §5.6–§5.8 — CDN, error tracking, production provisioning ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
-- [ ] **Technology Stack** §5.9 — load test against the stated budgets, Laravel Pulse in production ([l2-tech-stack.md](specifications/l2-tech-stack.md)) [L2]
+- [ ] **Third-Party Integrations** §5.1, §5.2, §5.4, §5.8 — object storage, CDN, SMTP, error tracking ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
+- [ ] **Technology Stack** §5.4, §5.9, §5.10 — queue and scheduler topology, production performance visibility, load test against the stated budgets ([l2-tech-stack.md](specifications/l2-tech-stack.md)) [L2]
+
+Decomposed into 16 atomic tasks across four tracks plus validation in
+[tasks/phase-7.md](tasks/phase-7.md), which carries this phase's own planning audit.
+The phase is three-wide — `(A → B) ∥ C ∥ D → T` — because data transfer, backup
+protection, and service provisioning share no code with each other, and only export
+waits, waiting entirely on `T-7A01`.
+
+`T-7A01` (the transferable data-type registry) is the phase's hard gate, and it is the
+cheapest gate in the plan relative to its blast radius: six of sixteen tasks read it,
+and it is a declaration rather than machinery. The specification names the same thirteen
+entity kinds twice — once for import, once for export — and two inventories built from
+one list will drift a column apart silently.
+
+Two cross-track contracts are scheduled rather than left to be discovered: the backup
+destination and the media bucket must resolve to different disks (`T-7C01` ∥ `T-7D01`),
+and Pulse's recorders must not cost the territory page a query, since its budget test
+sits at exactly its ≤30 ceiling with no headroom (`T-7D03`).
+
+Two items extend the phase's originally-scoped list, both recorded in
+[tasks/phase-7.md](tasks/phase-7.md) §Planning Audit rather than applied silently:
+**Horizon** (required by the stack specification's background-execution and deployment
+sections and by the project's package list, with no later phase to catch it) is folded
+into `T-7D03`; and the **coverage floor** — `composer test:coverage` at 78.9% against
+its own 80% minimum, pre-existing debt in two content-lifecycle services — is closed by
+`T-7T04`, because a launch-readiness phase whose own quality gate fails is not launch
+ready.
 
 ## Backlog
 
@@ -244,15 +274,17 @@ critical path out of Phase 2.
 
 ## Next Step
 
-`/magic.task main` — decompose Phase 7 (Import/export, backups and rehearsed restore,
-production provisioning, load test). Phase 6 (Discovery, Reporting & Public API) is now
-**complete, 16/16** — `T-6T02` (API parity invariant) closed the phase, proving the
-public API's result identity and order equal the catalog page's own rendering across
-four filter permutations against seeded volume, the check that would catch a "neutral
-ordering" regression. Phase 7 currently carries frontmatter and scope only; it is
-decomposed into atomic tasks by the `/magic.task` invocation that activates it, so the
-decomposition is derived from the specification set as it stands now, not as it stood
-when the phase was first scoped. Phase registry in [TASKS.md](TASKS.md). Phases 1
+`/magic.run main` — execute Phase 7, starting at `T-7A01` (the transferable data-type
+registry), which gates six of the phase's sixteen tasks. Tracks C (backups) and D
+(provisioning) are fully independent of it and of each other, so all three may start
+concurrently; only Track B (export) waits, and it waits on `T-7A01` alone.
+
+Phase 6 (Discovery, Reporting & Public API) is **complete, 16/16** — `T-6T02` (API
+parity invariant) closed it, proving the public API's result identity and order equal
+the catalog page's own rendering across four filter permutations against seeded volume,
+the check that would catch a "neutral ordering" regression. Phase 7 was decomposed on
+2026-08-19 against the specification set as it stands now, not as it stood when the
+phase was first scoped. Phase registry in [TASKS.md](TASKS.md). Phases 1
 through 6 are complete and archived at
 [archives/tasks/phase-1.md](archives/tasks/phase-1.md),
 [archives/tasks/phase-2.md](archives/tasks/phase-2.md),

@@ -2,8 +2,8 @@
 phase: 7
 name: "Operations & Launch Readiness"
 status: Todo
-subsystem: "app/Jobs, app/Filament/Admin, docker/, docs/"
-requires: ["phase-2", "phase-5", "phase-6"]
+subsystem: "app/Services/DataTransfer, app/Services/Backup, app/Filament/Admin, app/Jobs, docker/, docs/"
+requires: ["phase-2", "phase-3", "phase-5", "phase-6"]
 provides: []
 key_files:
   created: []
@@ -17,12 +17,370 @@ duration_minutes: ~
 **Phase:** 7
 **Status:** Todo
 **Strategic Goal:** Everything that stands between a working portal and an operable
-one — the import pipeline that content population depends on, backups with a rehearsed
-restore, production service provisioning, and a load test against the stated budgets.
+one — the import pipeline that content population depends on, export across every
+listed entity, backups with a rehearsed restore, production service provisioning and
+observability, and a load test run before launch rather than after.
 
 ## Atomic Checklist
 
-Not yet decomposed. See §Scope.
+### Track A — Data-Type Registry & Import Pipeline
+
+- [ ] [T-7A01] Data-type registry — one declaration per transferable entity, shared by import and export
+- [ ] [T-7A02] Import as a background job — upload, column mapping, validation, preview, confirm, report
+- [ ] [T-7A03] Duplicate detection on name, phone, website, address and coordinates
+- [ ] [T-7A04] Administrator-confirmed merge, leaving a permanent redirect behind
+
+### Track B — Export
+
+- [ ] [T-7B01] Export across every listed entity in XLSX, CSV and JSON, respecting active filters
+- [ ] [T-7B02] Financial and personal-data export permissions, and journalling of every export
+
+### Track C — Backups, Integrity & Restore
+
+- [ ] [T-7C01] Scheduled off-server backups — database daily, media separately, retained generations, integrity verification
+- [ ] [T-7C02] Backup administration — last backup date, manual run, log, technical report, failure notification
+- [ ] [T-7C03] Administrator-triggered restore behind re-authentication
+
+### Track D — Production Provisioning & Observability
+
+- [ ] [T-7D01] Production object storage and the CDN in front of both application and media
+- [ ] [T-7D02] Production SMTP and error tracking, including queue and scheduler failures
+- [ ] [T-7D03] Horizon for queues and the scheduler; Pulse for production visibility
+
+### Track T — Validation & Launch Readiness
+
+- [ ] [T-7T01] Rehearsed restore — a real artefact restored into an empty database, and the runbook that records it
+- [ ] [T-7T02] Import and export invariants — round trip, never an automatic merge, never an unpermitted column
+- [ ] [T-7T03] Load test against catalog and territory pages at seeded volume
+- [ ] [T-7T04] Coverage floor — backfill the two services holding `composer quality` below its own gate
+
+## Task Detail
+
+### Track A — Data-Type Registry & Import Pipeline
+
+**[T-7A01] Data-type registry — one declaration per transferable entity, shared by import and export**
+The specification lists the same thirteen entity kinds twice — once as import targets and
+once as export targets — and lists them in one breath: objects, owners, contacts, prices,
+services, geographic reference data, packages, payments, banners, news, promotions,
+statistics, and the action journal. Build **one** registry that declares, per kind: its
+model, its column set with per-column label and type, which columns are personal data,
+which are financial, the permission required to move it, and which formats it supports.
+Import and export are then two readers of one declaration rather than two parallel
+inventories that drift a column apart. The registry is code, not configuration: a column
+added to a model without a registry entry must fail an architecture test, not ship
+silently absent from every export.
+*Verify:* `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Unit/DataTransfer/TransferableRegistryTest.php`
+— asserts all thirteen declared kinds resolve to an existing model and that every declared
+column exists on that model's table; plus an `arch()` case asserting no exporter or
+importer class names a column the registry does not declare.
+
+**[T-7A02] Import as a background job — upload, column mapping, validation, preview, confirm, report**
+The pipeline in the order the specification states it: upload a file, choose the data
+type, map its columns onto the registry's, validate, list the errors, preview what would
+change, confirm, and produce a report. It runs as a queued job with a progress readout —
+a spreadsheet of objects with translations and coordinates will not finish inside a
+request, and an import that times out halfway is the failure mode this requirement exists
+to prevent. Validation is a separate pass from the write: nothing is written until the
+operator has seen the error list and confirmed the preview. The report survives the
+session — an operator who closes the tab must still be able to read what happened.
+*Verify:* `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Admin/ObjectImportPipelineTest.php`
+— drives a real XLSX fixture through every stage: a deliberately malformed row appears in
+the error list and is *absent from the database* after the validation pass, the preview
+reports the exact created/updated counts, and the post-confirm report is retrievable after
+the importing session ends.
+
+**[T-7A03] Duplicate detection on name, phone, website, address and coordinates**
+Five signals, all named by the specification, evaluated as candidates rather than as a
+single equality test — the same object arrives as "Hotel Astoria" and "Astoria Hotel" with
+one shared phone number, or with coordinates a hundred metres apart. Surface candidates in
+the preview with the matching signal named, so the operator sees *why* two rows were
+paired. Coordinate proximity uses the PostGIS distance already indexed for the catalog,
+not a bounding-box approximation. Detection never decides: it presents.
+*Verify:* `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Admin/ImportDuplicateDetectionTest.php`
+— one case per signal, each asserting the candidate is flagged with that signal named, plus
+a negative case proving two genuinely distinct objects in the same settlement are not
+paired, and a case asserting an import run with duplicates present writes **zero** merges
+of its own accord.
+
+**[T-7A04] Administrator-confirmed merge, leaving a permanent redirect behind**
+Every merge is an explicit administrator action on a named candidate pair, choosing which
+record survives. The merged-away object leaves a permanent redirect at its own public URL —
+the redirect table and its resolution middleware already exist, and this is another writer
+into it, in the same operation as the merge rather than as a later step. Media, placements,
+statistics and the action journal follow the surviving record; the merge itself is
+journalled with both identities.
+*Verify:* `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Admin/ObjectMergeTest.php`
+— asserts the merged-away object's URL serves 301 to the survivor, that the redirect row is
+written inside the merge's own transaction, that placements and media reattach to the
+survivor, and that the journal entry names both records.
+
+### Track B — Export
+
+**[T-7B01] Export across every listed entity in XLSX, CSV and JSON, respecting active filters**
+One export action driven by `T-7A01`'s registry, offered on every listed entity's table in
+all three formats. **Active filters are respected**: exporting a filtered table exports the
+filtered set, not the whole table — an operator who filters to one country and receives all
+three has been handed a data leak, not a convenience. Large exports queue rather than
+stream from the request. Two exporters already exist (financial records, action journal);
+they are converted to registry readers rather than left as a third implementation.
+*Verify:* `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Admin/EntityExportTest.php`
+— a case per format asserting a parseable artefact with the registry's declared header row,
+a case asserting a table filtered to one country exports only that country's rows, and a
+case asserting the two pre-existing exporters produce the same columns after conversion as
+before it.
+
+**[T-7B02] Financial and personal-data export permissions, and journalling of every export**
+Financial export and personal-data export each require their own permission, distinct from
+the general export permission — the specification separates them, and a role that may
+export the object catalog is not thereby a role that may export owner telephone numbers.
+Enforce it in the Policy, and narrow the *columns*, not merely the action: a permitted
+export of a table that happens to carry a personal-data column must omit that column rather
+than refuse the whole export. Every export is journalled with the actor, the entity kind,
+the row count and the filter set in force.
+*Verify:* `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Admin/ExportPermissionTest.php`
+— asserts a role holding only the general export permission receives an artefact with the
+personal-data columns absent (not a 403), that the financial permission is separately
+required, and that each export writes one journal entry naming actor, kind, count and
+filters.
+
+### Track C — Backups, Integrity & Restore
+
+**[T-7C01] Scheduled off-server backups — database daily, media separately, retained generations, integrity verification**
+Install and configure `spatie/laravel-backup`, which the project's own package list names
+and which is not yet installed. Database backups run daily; media backs up on its own
+schedule, because the two have different sizes and different restore urgency. Several
+generations are retained. Each artefact is integrity-verified after writing, not assumed
+sound. **The destination is a disk separate from the application server, and separate from
+the bucket holding the media it protects** — a backup living beside what it protects is not
+a backup. Locally that is a dedicated MinIO bucket; production is `T-7D01`'s concern and
+must not repoint this one at the media bucket.
+*Verify:* `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Operations/BackupScheduleTest.php`
+— asserts the scheduler registers the database and media backups on their stated cadences,
+that the configured destination disk is neither the application's local disk nor the media
+disk, that retention keeps the stated generation count and prunes beyond it, and that a
+deliberately corrupted artefact fails the integrity check rather than passing it.
+
+**[T-7C02] Backup administration — last backup date, manual run, log, technical report, failure notification**
+The screen the specification describes, in the staff panel: the date of the last successful
+backup, a button that runs one now, the backup log, and a downloadable technical report.
+A failed backup raises a notification through the notification model the platform already
+has — a new channel is not needed, an existing one is. Staleness is surfaced on the screen
+itself: "last backup 9 days ago" must read as a warning, not as a neutral date.
+*Verify:* `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Admin/BackupAdministrationTest.php`
+— asserts the page renders the last artefact's real timestamp, that the manual action
+dispatches the backup job, that a simulated failure raises exactly one notification to the
+administrator role, that the technical report downloads, and that an artefact older than
+the configured staleness threshold renders as a warning state.
+
+**[T-7C03] Administrator-triggered restore behind re-authentication**
+Restore is the most destructive action in the portal, and the specification gates it behind
+re-authentication — the operator confirms their password at the moment of the restore, not
+merely at sign-in hours earlier. Selecting an artefact, confirming, and re-authenticating
+are three distinct steps. The confirmation names what is about to be overwritten and the
+artefact's own timestamp. The restore itself runs as a job with its outcome journalled and
+notified, whether it succeeds or fails.
+*Verify:* `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Admin/BackupRestoreTest.php`
+— asserts the action is refused outright without a fresh re-authentication, that the
+confirmation text names the selected artefact's timestamp, that a non-administrator role
+cannot reach the action at all (Policy, not UI), and that both outcomes are journalled.
+
+### Track D — Production Provisioning & Observability
+
+**[T-7D01] Production object storage and the CDN in front of both application and media**
+Point the S3-compatible disk at the production provider and put the CDN in front of both
+the application and the media bucket. The interface does not change — the platform was
+already built against `s3`, and the provider is configuration — so the work is the
+configuration surface, the cache and TLS posture, and the documented switch, not new code.
+Media URLs must resolve through the CDN host, and the media disk stays distinct from
+`T-7C01`'s backup destination.
+*Verify:* `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Operations/StorageProvisioningTest.php`
+— asserts a media URL is generated against the configured CDN host when one is set and
+against the origin when it is not, that no credential appears in any committed file
+(scanned, not assumed), and that the backup and media disks resolve to different
+destinations. Plus `docs/` recording the provider switch as a runbook step.
+
+**[T-7D02] Production SMTP and error tracking, including queue and scheduler failures**
+SMTP through Laravel's mailer, provider per environment, Mailpit unchanged locally.
+Error tracking (Sentry, or self-hosted GlitchTip) wired to capture **queue and scheduler
+failures**, not only web requests — the backup, rollup, sweep and import jobs all run
+there, and an unreported failed job is precisely the blindness the backup-failure
+notification requirement exists to close. Personal data is scrubbed from event payloads
+before transmission.
+*Verify:* `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Operations/ErrorTrackingTest.php`
+— asserts a deliberately failed queued job produces a captured event through the configured
+transport (faked, not sent), that an event payload carrying an owner's telephone number is
+scrubbed before transmission, and that mail configuration resolves to Mailpit in the local
+environment and to the configured relay otherwise.
+
+**[T-7D03] Horizon for queues and the scheduler; Pulse for production visibility**
+Install Horizon — the project's package list names it, `docker-compose.yml`'s worker
+service is annotated as a placeholder awaiting it, and the deployment topology names it as
+the worker deployable. Queue names, worker balance and retry posture are declared rather
+than defaulted. Install Pulse for production performance visibility, behind the same
+authorization as the staff panel.
+**Guard the query budget.** `PublicPerformanceBudgetTest` holds the territory page at
+exactly 30 queries with zero headroom; a Pulse recorder that adds a per-request query fails
+it. Configure Pulse's recorders and sampling so the public request path is unaffected, and
+re-run that test as part of this task rather than discovering it in the next one.
+*Verify:* `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Operations/QueueTopologyTest.php`
+plus `docker compose exec app php -d memory_limit=1G vendor/bin/pest --group=slow tests/Feature/Public/PublicPerformanceBudgetTest.php`
+— the first asserts every dispatched job maps to a declared queue and that both dashboards
+refuse an unauthenticated and a non-staff request; the second must stay green at its
+existing ≤30-query ceiling with Pulse enabled.
+
+### Track T — Validation & Launch Readiness
+
+**[T-7T01] Rehearsed restore — a real artefact restored into an empty database, and the runbook that records it**
+The requirement is a *rehearsed* restore, not a documented one: working backups with an
+unrehearsed restore is the exact failure this exists to prevent. Take a real artefact
+produced by `T-7C01`, restore it into a genuinely empty database, and assert the restored
+state matches what was backed up — row counts across the principal tables, and a sampled
+record compared field by field. Write the procedure into `docs/` as it was actually
+performed, including how long it took and what had to be done by hand.
+*Verify:* `docker compose exec app php -d memory_limit=1G vendor/bin/pest --group=slow tests/Feature/Operations/RestoreRehearsalTest.php`
+— seeds, backs up, drops to empty, restores, and asserts parity on row counts plus a
+field-by-field comparison of one sampled object with its translations and media rows. The
+runbook section in `docs/` is part of the deliverable, not a follow-up.
+
+**[T-7T02] Import and export invariants — round trip, never an automatic merge, never an unpermitted column**
+The cross-track assertions Tracks A and B each half-own. Export an entity, re-import the
+artefact, and assert the result is identical rather than merely plausible — a round trip is
+the only test that catches a column the exporter writes and the importer silently ignores.
+Assert holistically, across every registered kind, that no import path merges without an
+administrator action and no export path emits a column the actor's permissions do not
+cover.
+*Verify:* `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Operations/DataTransferInvariantTest.php`
+— registry-driven, so a kind added later without a round-trip-safe mapping fails the test
+rather than shipping: for every declared kind, export → re-import → assert field parity;
+plus a sweep asserting zero automatic merges and zero unpermitted columns across all kinds.
+
+**[T-7T03] Load test against catalog and territory pages at seeded volume**
+Run before launch, not after. Drive concurrent load at the catalog and territory pages
+against `DemoVolumeSeeder`'s 50,000+ objects and report measured latency against the stated
+budgets: cache hit < 100 ms TTFB, cache miss < 400 ms, object page < 300 ms, search p95
+< 300 ms. **Measure and report; do not hard-assert wall-clock milliseconds** — the Windows
+bind mount is not a benchmark host, a constraint this project has confirmed twice. The
+query-count budget (≤ 30) is deterministic and *is* asserted. A search p95 over budget is
+the stated trigger to escalate to Typesense, so the report must state the figure plainly
+enough to make that call.
+*Verify:* `docker compose exec app php artisan bench:run --scenario=load --report=storage/app/benchmarks/phase-7-load.json`
+inside the container, producing a committed report with per-surface p50/p95 and query
+counts; plus `docker compose exec app php -d memory_limit=1G vendor/bin/pest --group=slow tests/Feature/Public/PublicPerformanceBudgetTest.php`
+green on its deterministic query-count assertions.
+
+**[T-7T04] Coverage floor — backfill the two services holding `composer quality` below its own gate**
+`composer test:coverage` sits at 78.9% against its own 80% floor, and has since before this
+phase began. The debt is two services carrying almost no tests — `PromotionLifecycleService`
+at 0% and `NewsItemLifecycleService` at 35.9%. It is not this phase's regression, but
+shipping a launch-readiness phase whose own quality gate fails is not launch-ready, and
+this is the last phase in the plan. Backfill both services' behaviour — publication,
+withdrawal, archival, and the scheduled transitions — as real behavioural tests, not
+coverage padding.
+*Verify:* `docker compose exec app composer test:coverage` — passes its configured 80%
+minimum, with `PromotionLifecycleService` and `NewsItemLifecycleService` each above it
+individually rather than the total dragged over the line by unrelated code.
+
+## Track Ordering
+
+**Phase 7 is three-wide: `(A → B) ∥ C ∥ D → T`.** Three concerns that genuinely do not
+touch each other — moving data in and out, protecting it, and provisioning the services it
+runs on — followed by a validation track that is cross-track by construction.
+
+`T-7A01` is the phase's hard gate. Both Track A's import and the whole of Track B read the
+registry it declares, and it is the phase's highest-cascade task: six of sixteen tasks
+consume it. It is deliberately the smallest kind of gate — a declaration, not machinery —
+because everything downstream of it is cheap to write and expensive to reconcile if two
+inventories exist. Within Track A the ordering is strict: `A01 → A02 → A03 → A04`.
+Duplicate detection has nothing to detect until rows are being read, and a merge has no
+candidate pair until detection produces one.
+
+**Track B waits only on `T-7A01`, not on the rest of Track A.** Export is a registry reader
+and does not depend on the import pipeline existing. `B01 → B02` internally: the permission
+narrowing operates on columns the export action must already emit.
+
+**Track C is fully independent** of A, B and D. It touches no route, no registry and no
+public page. Internally `C01 → (C02 ∥ C03)`: both the administration screen and the restore
+act on artefacts that must already exist and already be integrity-verified.
+
+**Track D is independent of A, B and C**, with one scheduled cross-track contract below.
+Internally its three tasks are genuinely parallel — storage, mail/errors, and queues/metrics
+share no code.
+
+Two cross-track contracts are scheduled rather than left to be discovered mid-run:
+
+1. **`T-7C01` and `T-7D01` must resolve to different destinations.** The backup disk and the
+   media disk are separate by requirement, and `T-7D01` is the task most likely to
+   "simplify" by pointing both at the single production bucket it is configuring. Whichever
+   lands first owns the disk names; the second consumes them.
+2. **`T-7D03` must not cost the territory page a query.** `PublicPerformanceBudgetTest` was
+   tuned to exactly 30 with no headroom, so Pulse's recorders are configured against that
+   ceiling inside `T-7D03` itself — not left for `T-7T03` to discover as a budget failure
+   that looks like a performance regression in already-completed public-site work.
+
+Track T runs last and consumes all three: `T-7T01` restores what Track C produced,
+`T-7T02` round-trips Tracks A and B against each other, `T-7T03` measures the public site
+under the configuration Track D provisions. `T-7T04` is independent of every other task in
+the phase and may run at any point — it is scheduled in Track T because it is a gate on the
+phase's completion, not because anything blocks it.
+
+## Planning Audit
+
+**Optimism bias.** `T-7B01` is the one to distrust. "Export every listed entity in three
+formats" reads as one action and is thirteen entity kinds across XLSX, CSV and JSON, each
+with a column set, a permission posture and a filter contract. `T-7A01` exists specifically
+to collapse it from thirteen bespoke exporters into thirteen declarations — but that only
+works if the registry is genuinely built first, which is why it is the phase's gate rather
+than a convenience extracted later.
+
+`T-7A02` is the second underestimation. The specification states seven pipeline stages in
+one sentence; each is a screen or a job step, validation is a distinct pass from the write,
+and the report must outlive the session that produced it. Filament's import action covers
+the upload-and-map portion and nothing after it.
+
+`T-7T01` is the third, and it is underestimated in a different way: it is the only task in
+the plan whose deliverable is partly a rehearsal rather than code. The value is in what the
+rehearsal *discovers* — the manual step nobody documented, the media that restores
+separately, the elapsed time. Budgeting it as "write a test" misses the point of the
+requirement.
+
+**Hidden dependencies.** The effective parallel degree is three at the start and drops to
+two once Track C's short chain finishes. The two scheduled contracts above are the genuine
+cross-track resource bottlenecks; both were written into §Track Ordering rather than left to
+surface as a disagreement between two finished implementations. One further dependency is
+worth naming: `T-7A04`'s merge redirect is a **fourth writer** into the redirect table
+already built, alongside slug edits, territory reparenting and archived content. It consumes
+that contract; it must not reimplement it.
+
+**Cascade risk.** `T-7A01` blocks six tasks — the largest blast radius in the phase, and the
+cheapest to get right, which is a good trade. `T-7C01` is second: `T-7C02`, `T-7C03` and
+`T-7T01` all act on artefacts it produces, and a slip there does not merely delay three
+tasks, it leaves the portal's single mandatory-in-first-release operational guarantee
+unmet. `T-7D03` carries the smallest task with a disproportionate risk: Pulse is a
+one-command install that can silently fail a zero-headroom performance test the phase does
+not otherwise touch.
+
+**Sequencing risk specific to this phase.** `T-7T03` is a *pre-launch* requirement by
+specification — the load test runs before launch, not after. It sits last in the plan by
+dependency, which makes it the natural casualty of a compressed schedule. It is not
+optional, and deferring it inverts the one ordering the specification states explicitly.
+
+**Plan stability.** All four specifications this phase reads remain `RFC`, the same posture
+under which every prior phase was planned and executed without a single Pre-flight HALT.
+No open question in the set touches this phase's tasks: the domain and URL model that could
+have reshaped `T-7A04`'s redirect was settled by the project owner on 2026-08-15, and the
+rate-limit question closed in the preceding phase. This phase's genuine uncertainty is
+environmental rather than editorial — which storage, mail and error-tracking providers the
+client actually procures — and every task in Track D is deliberately written as a
+configuration surface over an unchanged interface so that the answer costs a settings change
+rather than a rewrite.
+
+**Scope divergence recorded rather than applied silently.** Horizon is not named in this
+phase's own scope table, which lists CDN, object storage, SMTP and error tracking. It is
+required by the stack specification's background-execution and deployment sections and by
+the project's package list, `docker-compose.yml`'s worker service is annotated as a
+placeholder awaiting it, and this is the final phase in the plan — leaving it out orphans a
+stated requirement with no later phase to catch it. It is therefore folded into `T-7D03`
+alongside Pulse, which shares its production-observability purpose.
 
 ## Scope
 
@@ -33,9 +391,9 @@ Not yet decomposed. See §Scope.
 | Export across every listed entity, respecting active filters and permissions | l1-back-office.md §5.7 |
 | Backups — schedule, retention, integrity verification, failure notification | l1-back-office.md §5.6 |
 | Administrator-triggered restore behind re-authentication | l1-back-office.md §5.6 |
-| Production provisioning — CDN, object storage, SMTP, error tracking | l2-third-party-integrations.md §5.1, §5.2, §5.4, §5.8 |
+| Production provisioning — object storage, CDN, SMTP, error tracking | l2-third-party-integrations.md §5.1, §5.2, §5.4, §5.8 |
+| Queue and scheduler topology, production performance visibility | l2-tech-stack.md §5.4, §5.9, §5.10 |
 | Load test against catalog and territory pages | l2-tech-stack.md §5.9 |
-| Laravel Pulse in production | l2-tech-stack.md §5.9 |
 | Operations runbook and the documented restore procedure | l2-tech-stack.md §5.9 |
 
 ## Standing Constraints
@@ -44,13 +402,169 @@ Not yet decomposed. See §Scope.
   administrator; a merged object leaves a permanent redirect behind.
 - Import runs long and must not block a request — it is a background job with a
   progress report.
-- Backups write to a destination separate from the application server. A backup on the
-  machine it protects is not a backup.
+- **Nothing is written before the operator confirms the preview.** Validation is a
+  separate pass from the write.
+- Backups write to a destination separate from the application server, **and separate
+  from the media bucket they protect**. A backup on the machine it protects is not a
+  backup.
 - **The restore procedure is rehearsed, not merely documented.** Working backups with
   an unrehearsed restore is the failure mode this requirement exists to prevent.
-- Financial and personal-data export each require their own permission.
+- Restore is gated on re-authentication at the moment of the action, not on an
+  hours-old session.
+- Financial and personal-data export each require their own permission, and the
+  narrowing is applied to **columns**, not only to the action.
+- Export respects the filters in force. Exporting a filtered table must never return
+  the whole table.
+- Import and export read **one** data-type registry. Two inventories drift a column
+  apart, and the drift is silent.
 - The load test runs **before** launch, not after.
+- Credentials live in the environment, never in a committed file.
+- Wall-clock millisecond figures are measured and reported, never hard-asserted — the
+  bind-mounted host is not a benchmark machine. Query counts are deterministic and are
+  asserted.
 
-## Decomposition Trigger
+## Detailed Tracking
 
-Decomposed into atomic `T-7XXX` tasks by `/magic.task main` once Phase 6 completes.
+### [T-7A01] Data-type registry — one declaration per transferable entity, shared by import and export
+
+- **Spec:** l1-back-office.md §5.7
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Unit/DataTransfer/TransferableRegistryTest.php` — all thirteen declared kinds resolve to an existing model; every declared column exists on that model's table; an `arch()` case asserts no exporter or importer names an undeclared column.
+- **Handoff:** Gates `T-7A02`, `T-7A03`, `T-7A04`, `T-7B01`, `T-7B02`, `T-7T02`.
+- **Notes:** The two existing exporters (`FinancialRecordExporter`, `ActionJournalExporter`) and `StatDailyExporter` are the first consumers — convert them rather than leaving a third pattern. Personal-data and financial column flags live here, because `T-7B02` narrows on them.
+
+### [T-7A02] Import as a background job — upload, column mapping, validation, preview, confirm, report
+
+- **Spec:** l1-back-office.md §5.7
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Admin/ObjectImportPipelineTest.php` — a malformed row appears in the error list and is absent from the database after validation; the preview reports exact created/updated counts; the report is retrievable after the importing session ends.
+- **Handoff:** `T-7A03` attaches duplicate candidates to this pipeline's preview stage.
+- **Notes:** `imports` / `failed_import_rows` tables already exist from earlier scaffolding. Filament's import action covers upload and mapping; the validation pass, preview and durable report are this task's own work.
+
+### [T-7A03] Duplicate detection on name, phone, website, address and coordinates
+
+- **Spec:** l1-back-office.md §5.7
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Admin/ImportDuplicateDetectionTest.php` — one case per signal with the signal named in the candidate; a negative case for two genuinely distinct objects in one settlement; a case asserting an import run writes zero merges of its own accord.
+- **Handoff:** `T-7A04` acts on the candidate pairs this produces.
+- **Notes:** Coordinate proximity uses the existing PostGIS distance index, not a bounding box. Name matching should use `pg_trgm`, already an installed extension.
+
+### [T-7A04] Administrator-confirmed merge, leaving a permanent redirect behind
+
+- **Spec:** l1-back-office.md §5.7; l1-seo.md §5.5 (redirect contract)
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Admin/ObjectMergeTest.php` — merged-away URL serves 301 to the survivor; the redirect row is written inside the merge transaction; placements and media reattach; the journal entry names both records.
+- **Handoff:** Exercised holistically by `T-7T02`.
+- **Notes:** Fourth writer into the existing redirect table — consume that contract, do not reimplement it. Bulk actions require a confirmation naming the affected record count.
+
+### [T-7B01] Export across every listed entity in XLSX, CSV and JSON, respecting active filters
+
+- **Spec:** l1-back-office.md §5.7
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Admin/EntityExportTest.php` — one case per format producing a parseable artefact with the registry's header row; a country-filtered table exports only that country's rows; the two pre-existing exporters produce identical columns after conversion.
+- **Handoff:** `T-7B02` narrows this action's columns by permission; `T-7T02` round-trips it against import.
+- **Notes:** Large exports queue. The `exports` table already exists.
+
+### [T-7B02] Financial and personal-data export permissions, and journalling of every export
+
+- **Spec:** l1-back-office.md §5.7, §5.2
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Admin/ExportPermissionTest.php` — a general-export-only role receives an artefact with personal-data columns absent rather than a 403; the financial permission is separately required; each export writes one journal entry naming actor, kind, count and filters.
+- **Handoff:** Swept holistically by `T-7T02`.
+- **Notes:** Enforced in the Policy, never in the UI. Column-level narrowing, not action-level refusal.
+
+### [T-7C01] Scheduled off-server backups — database daily, media separately, retained generations, integrity verification
+
+- **Spec:** l1-back-office.md §5.6; l2-tech-stack.md §5.10
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Operations/BackupScheduleTest.php` — the scheduler registers both backups on their stated cadences; the destination disk is neither the application's local disk nor the media disk; retention keeps the stated generation count and prunes beyond it; a corrupted artefact fails the integrity check.
+- **Handoff:** Gates `T-7C02`, `T-7C03`, `T-7T01`. Shares the disk-naming contract with `T-7D01`.
+- **Notes:** `spatie/laravel-backup` is named in the project's package list and is not yet installed. Scheduled work belongs in jobs dispatched by the scheduler, never in a web request.
+
+### [T-7C02] Backup administration — last backup date, manual run, log, technical report, failure notification
+
+- **Spec:** l1-back-office.md §5.6
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Admin/BackupAdministrationTest.php` — the page renders the last artefact's real timestamp; the manual action dispatches the job; a simulated failure raises exactly one administrator notification; the technical report downloads; a stale artefact renders as a warning state.
+- **Handoff:** None within the phase.
+- **Notes:** Failure notification goes through the existing notification model, not a new channel. Every label through a translation key.
+
+### [T-7C03] Administrator-triggered restore behind re-authentication
+
+- **Spec:** l1-back-office.md §5.6
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Admin/BackupRestoreTest.php` — refused without fresh re-authentication; the confirmation names the artefact's timestamp; a non-administrator cannot reach the action at Policy level; both outcomes journalled.
+- **Handoff:** `T-7T01` rehearses this path against a real artefact.
+- **Notes:** Filament's native multi-factor support is already wired to the panel; re-authentication should build on it rather than introduce a parallel mechanism.
+
+### [T-7D01] Production object storage and the CDN in front of both application and media
+
+- **Spec:** l2-third-party-integrations.md §5.1, §5.2
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Operations/StorageProvisioningTest.php` — media URLs resolve through the configured CDN host when set and the origin when not; a scan asserts no credential in any committed file; backup and media disks resolve to different destinations. Runbook step recorded in `docs/`.
+- **Handoff:** Shares the disk-naming contract with `T-7C01`.
+- **Notes:** The interface does not change — the platform was already built against `s3`. This is configuration surface, cache/TLS posture and documentation, not new storage code.
+
+### [T-7D02] Production SMTP and error tracking, including queue and scheduler failures
+
+- **Spec:** l2-third-party-integrations.md §5.4, §5.8
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Operations/ErrorTrackingTest.php` — a failed queued job produces a captured event through a faked transport; a payload carrying an owner telephone number is scrubbed before transmission; mail resolves to Mailpit locally and the configured relay otherwise.
+- **Handoff:** None within the phase.
+- **Notes:** Queue and scheduler capture is the point — the backup, rollup, sweep and import jobs all run there. Administrator-editable templates stay in the portal's own notification model, not the provider's.
+
+### [T-7D03] Horizon for queues and the scheduler; Pulse for production visibility
+
+- **Spec:** l2-tech-stack.md §5.4, §5.9, §5.10
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Operations/QueueTopologyTest.php` (every dispatched job maps to a declared queue; both dashboards refuse unauthenticated and non-staff requests) **and** `docker compose exec app php -d memory_limit=1G vendor/bin/pest --group=slow tests/Feature/Public/PublicPerformanceBudgetTest.php` green at its existing ≤30-query ceiling with Pulse enabled.
+- **Handoff:** `T-7T03` measures under this configuration.
+- **Notes:** `docker-compose.yml`'s worker service is annotated as awaiting Horizon. The territory page has zero query headroom — configure Pulse's recorders against that ceiling inside this task, not after.
+
+### [T-7T01] Rehearsed restore — a real artefact restored into an empty database, and the runbook that records it
+
+- **Spec:** l1-back-office.md §5.6; l2-tech-stack.md §5.9
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app php -d memory_limit=1G vendor/bin/pest --group=slow tests/Feature/Operations/RestoreRehearsalTest.php` — seed, back up, drop to empty, restore, assert row-count parity across the principal tables plus a field-by-field comparison of one sampled object with its translations and media rows. The `docs/` runbook section is part of the deliverable.
+- **Handoff:** Phase completion gate.
+- **Notes:** The value is in what the rehearsal discovers — the undocumented manual step, the separately-restoring media, the elapsed time. Record what actually happened, not the intended procedure.
+
+### [T-7T02] Import and export invariants — round trip, never an automatic merge, never an unpermitted column
+
+- **Spec:** l1-back-office.md §5.7
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Operations/DataTransferInvariantTest.php` — registry-driven: for every declared kind, export → re-import → assert field parity; plus a sweep asserting zero automatic merges and zero unpermitted columns across all kinds.
+- **Handoff:** Phase completion gate.
+- **Notes:** Registry-driven so a kind added later without a round-trip-safe mapping fails rather than shipping silently — the same construction the indexation invariant used against the route registry.
+
+### [T-7T03] Load test against catalog and territory pages at seeded volume
+
+- **Spec:** l2-tech-stack.md §5.9
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app php artisan bench:run --scenario=load --report=storage/app/benchmarks/phase-7-load.json` inside the container, producing a committed report with per-surface p50/p95 and query counts; plus `docker compose exec app php -d memory_limit=1G vendor/bin/pest --group=slow tests/Feature/Public/PublicPerformanceBudgetTest.php` green on its deterministic query-count assertions.
+- **Handoff:** Phase completion gate. A search p95 over 300 ms is the stated escalation trigger to Typesense — report it plainly enough to make that call.
+- **Notes:** `RunBenchmarks` already exists as a console entry point. Measure and report wall-clock; assert only query counts. Run inside the container, never against the Windows bind mount.
+
+### [T-7T04] Coverage floor — backfill the two services holding `composer quality` below its own gate
+
+- **Spec:** l2-tech-stack.md §5.9
+- **Status:** Todo
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app composer test:coverage` — passes its configured 80% minimum, with `PromotionLifecycleService` and `NewsItemLifecycleService` each above it individually rather than the total dragged over by unrelated code.
+- **Handoff:** Phase completion gate.
+- **Notes:** Pre-existing debt from the commerce and content work, not a regression introduced here. Independent of every other task in the phase; may run at any point. Behavioural tests — publication, withdrawal, archival, scheduled transitions — not coverage padding.
