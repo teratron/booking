@@ -175,7 +175,7 @@ aggregate tier already supports, and a read-only contract for consumers outside 
 - [ ] **Public API** — versioned read contract, issued tokens, scoping, rate limits, generated documentation ([l1-public-api.md](specifications/l1-public-api.md)) [L1]
 
 Decomposed into 16 atomic tasks across four tracks plus validation in
-[tasks/phase-6.md](tasks/phase-6.md), which carries this phase's own planning audit.
+[archives/tasks/phase-6.md](archives/tasks/phase-6.md), which carries this phase's own planning audit.
 The phase is genuinely three-wide — `(A → B) ∥ C ∥ D → T` — because reporting layers
 over the aggregate tier and the API layers over the catalog retrieval contract, and
 neither touches the SEO addressing chain that gates Track B.
@@ -244,20 +244,19 @@ critical path out of Phase 2.
 
 ## Next Step
 
-`/magic.run main` — finish Phase 6 (Discovery, Reporting & Public API) at **15/16**.
-Tracks A, B, C, and D are all complete. The one remaining task in the entire phase is
-`T-6T02` (API parity invariant) — comparing the API's own result identity and order
-against the catalog page's rendering for a matched filter set, the check that would
-catch a "neutral ordering" regression. It was the one Track T item genuinely blocked on
-Track D, which is now closed, so nothing else in the phase is outstanding once it lands.
-Phase registry in
-[TASKS.md](TASKS.md). Phases 1 through 5 are complete and archived at
+`/magic.task main` — decompose Phase 7 (Import/export, backups and rehearsed restore,
+production provisioning, load test). Phase 6 (Discovery, Reporting & Public API) is now
+**complete, 16/16** — `T-6T02` (API parity invariant) closed the phase, proving the
+public API's result identity and order equal the catalog page's own rendering across
+four filter permutations against seeded volume, the check that would catch a "neutral
+ordering" regression. Phase 7 currently carries frontmatter and scope only; it is
+decomposed into atomic tasks by the `/magic.task` invocation that activates it, so the
+decomposition is derived from the specification set as it stands now, not as it stood
+when the phase was first scoped. Phase registry in [TASKS.md](TASKS.md). Phases 1
+through 6 are complete and archived at
 [archives/tasks/phase-1.md](archives/tasks/phase-1.md),
 [archives/tasks/phase-2.md](archives/tasks/phase-2.md),
 [archives/tasks/phase-3.md](archives/tasks/phase-3.md),
-[archives/tasks/phase-4.md](archives/tasks/phase-4.md), and
-[archives/tasks/phase-5.md](archives/tasks/phase-5.md) respectively.
-
-Phase 7 carries frontmatter and scope only. It is decomposed into atomic tasks by the
-`/magic.task` invocation that activates it, so the decomposition is derived from the
-specification set as it stands then rather than as it stands now.
+[archives/tasks/phase-4.md](archives/tasks/phase-4.md),
+[archives/tasks/phase-5.md](archives/tasks/phase-5.md), and
+[archives/tasks/phase-6.md](archives/tasks/phase-6.md) respectively.

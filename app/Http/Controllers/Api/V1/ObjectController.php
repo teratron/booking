@@ -59,7 +59,7 @@ final class ObjectController extends Controller implements DocumentsQueryParamet
 
         $criteria = new CatalogSearchCriteria(
             territory: $territory,
-            objectTypeId: $validated['type'] ?? null,
+            objectTypeId: isset($validated['type']) ? (int) $validated['type'] : null,
             amenityIds: $amenityIds,
             priceMin: isset($validated['price_min']) ? (float) $validated['price_min'] : null,
             priceMax: isset($validated['price_max']) ? (float) $validated['price_max'] : null,

@@ -175,6 +175,37 @@ it('returns objects in the same tier-first order CatalogQueryService itself prod
         ->and($expected)->toBe([$gold->id, $silver->id, $bronze->id]);
 });
 
+it('filters the collection by object type from the query string', function (): void {
+    apiReadEnableModule();
+    $fixture = apiReadFixture();
+
+    $restaurantTypeId = DB::table('object_types')->insertGetId([
+        'key' => 'restaurant', 'is_active' => true, 'attribute_schema' => json_encode([]),
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('object_type_translations')->insert([
+        'object_type_id' => $restaurantTypeId, 'locale' => 'en', 'name' => 'Restaurant', 'slug' => 'restaurant',
+        'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    $hotel = apiReadMakeObject($fixture, 'Filter Hotel');
+    $restaurant = apiReadMakeObject($fixture, 'Filter Restaurant', ['object_type_id' => $restaurantTypeId]);
+
+    $token = apiReadToken([ApiResource::Objects]);
+
+    // The query string always hands validate() a string, never an int —
+    // CatalogSearchCriteria::$objectTypeId is strictly `?int`, so a missing
+    // cast here 500s on the very first request that actually names a type,
+    // a path none of this file's other cases exercise.
+    $listedIds = $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/api/v1/objects?type={$restaurantTypeId}")
+        ->assertOk()
+        ->json('data.*.id');
+
+    expect($listedIds)->toBe([$restaurant->id])
+        ->and($listedIds)->not->toContain($hotel->id);
+});
+
 it('never returns a pending, rejected, archived, or hidden object from any endpoint', function (): void {
     apiReadEnableModule();
     $fixture = apiReadFixture();

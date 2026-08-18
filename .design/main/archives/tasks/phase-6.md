@@ -1,7 +1,7 @@
 ---
 phase: 6
 name: "Discovery, Reporting & Public API"
-status: In Progress
+status: Done
 subsystem: "app/Services/Seo, app/Services/Api, app/Http/Controllers/Api, app/Jobs, app/Filament/Admin"
 requires: ["phase-3", "phase-5"]
 provides: []
@@ -15,7 +15,7 @@ duration_minutes: ~
 # Stage 6 Tasks — Discovery, Reporting & Public API
 
 **Phase:** 6
-**Status:** In Progress
+**Status:** Done
 **Strategic Goal:** Make the portal findable and its performance legible — URL grammar,
 metadata, structured data, sitemaps and redirects; portal-wide reporting and exports;
 and a versioned read-only REST contract behind issued tokens.
@@ -50,7 +50,7 @@ and a versioned read-only REST contract behind issued tokens.
 ### Track T — Validation
 
 - [x] [T-6T01] Indexation invariant — nothing non-public is ever indexable
-- [ ] [T-6T02] API parity invariant — never a visibility or ordering the site would not give
+- [x] [T-6T02] API parity invariant — never a visibility or ordering the site would not give
 - [x] [T-6T03] Redirect permanence and slug stability
 
 ## Task Detail
@@ -532,6 +532,17 @@ is a policy change rather than a redesign.
 - **Notes:** A real, pre-existing bug surfaced during research for this task, not from the new test itself: `RobotsController` hardcoded `Disallow: /admin`, but `config('booking.panels.admin.path')` defaults to `portal-admin` — a deliberately non-guessable path per that config file's own documented security rationale (obscurity against credential-stuffing traffic). The hardcoded line neither matched the real, reachable path nor protected it, silently defeating the obscurity layer it was meant to reinforce. Fixed by reading both panels' paths from config instead of hardcoding either. `tests/Feature/Public/IndexationPolicyTest.php`'s own existing robots.txt assertion was updated to match (it previously asserted the same wrong literal string and would have kept passing forever without ever proving the real path was disallowed). Two of the four negative cases the task's own prose names — catalog filter-count indexability and territory-level `seo_indexable` exclusion — were already covered by `IndexationPolicyTest`/`SitemapGenerationTest` from earlier tasks and were not re-tested here to avoid duplicating passing coverage; this task's own two cases close the two gaps neither of those files reached: the sitemap-vs-moderation-state cross-check, and the route-registry disjointness sweep.
 - **Changes:** `App\Http\Controllers\Public\RobotsController` reads `config('booking.panels.{admin,cabinet}.path')` instead of two hardcoded strings.
 - **Evidence:** New `tests/Feature/Public/IndexationInvariantTest.php` (2 cases, listed above). `tests/Feature/Public/IndexationPolicyTest.php` updated and re-verified passing (7/7) after the robots.txt fix. Full architecture suite (8/8, `ContainmentTest` clean) re-verified. `php artisan migrate:fresh --seed` re-verified applying cleanly from empty (no schema change this task).
+
+### [T-6T02] API parity invariant — never a visibility or ordering the site would not give
+
+- **Spec:** l1-public-api.md §5.1
+- **Status:** Done
+- **Assignment:** Agent
+- **Verify:** `docker compose exec app php -d memory_limit=1G vendor/bin/pest tests/Feature/Api/ApiParityInvariantTest.php` — 1 case (22 assertions): seeds `DemoVolumeSeeder` (50,000+ objects) and drives both `CatalogSearch`'s own Livewire render cycle and `ObjectController::index()`'s own HTTP request through four filter permutations — unfiltered first page, territory-only, type-only, territory+type combined — asserting the API's returned id order equals the catalog page's exactly, and that two deliberately non-public records (pending moderation, hidden) are absent from both surfaces independently. Plus a fast regression case added to `ApiReadContractTest.php` covering the specific bug this task found. Full non-slow suite: 745 passed (up from 744), 0 failed, 3 skipped. `composer analyse` (PHPStan level 8), `pint --test`, `composer unused` (0 unused), `composer audit` (clean), and the full architecture suite (8/8, `ContainmentTest` clean) pass. `php artisan migrate:fresh --seed` applies cleanly from empty (no schema change this task).
+- **Handoff:** None — Phase 6 is now fully complete (16/16); nothing downstream depends on this task's own output.
+- **Notes:** One real, previously-undetected production bug found by the new test, not by design review: `ObjectController::index()` passed `$validated['type']` straight into `CatalogSearchCriteria`'s strictly-typed `?int $objectTypeId` constructor parameter without casting it — `Request::validate()` returns query-string values as strings regardless of the `integer` validation rule, and `declare(strict_types=1)` (every file in this codebase) refuses PHP's usual implicit string-to-int coercion, so any request naming an actual `?type=` value 500s outright. `territory`, `price_min`, `price_max`, and `rating_min` were already correctly cast in the same constructor call; `type` was the one field missed. No existing test exercised this path — `ApiReadContractTest`'s own tier-order and visibility cases never passed a `type` filter, only scope-derived country narrowing. Fixed with an explicit `(int)` cast, and — since a `slow`-tagged, seeded-volume test is not something `composer test`/`quality` ever runs — a second, fast regression case was added directly to `ApiReadContractTest.php` so the same bug cannot silently reappear without the slow suite ever running. The parity test itself needed one build-environment fix unrelated to the code under test: this machine's copy of the repository had a stale `public/build/manifest.json` missing the `resources/js/map.js` entry `vite.config.js` declares, 500ing any page that embeds the map (including `CatalogSearch`'s own view) — resolved with `pnpm install --no-frozen-lockfile` and `pnpm run build` inside the container, the exact workaround already documented for a cross-platform `node_modules` bind mount. Determinism at seeded volume required deliberate design, not just seeding: two independent query executions of "the same" filter (the shared result cache keys a `null` constraint and an `unrestricted` `ScopeConstraint` object differently, so the public page and the API never share a cached row) could legitimately return different orderings for any row that ties on every ordering column — the fix was giving every compared object its own globally unique `placement_tiers.rank` (starting past `PlacementTierSeeder`'s own four launch ranks, which collide on the table's `rank` unique index, and staying below `999`, the fallback `PlacementOrderingService::apply()` coalesces an untiered row to), so the top of every compared page is provably tie-free regardless of how the 50,000+ untiered background objects are physically ordered on disk. The two never-public control objects were given the two lowest ranks of the entire fixture and checked for absence on both surfaces independently, not only via their cross-surface equality — a visibility bug shared identically by both callers (a real risk precisely because they share one implementation) would otherwise still agree with itself and slip past a comparison-only assertion.
+- **Changes:** `app/Http/Controllers/Api/V1/ObjectController.php` — `objectTypeId` now cast `(int)` before constructing `CatalogSearchCriteria`, matching the pattern every other numeric filter in the same call already followed. New `tests/Feature/Api/ApiParityInvariantTest.php` (1 case, `slow`-tagged). New case in `tests/Feature/Api/ApiReadContractTest.php` (fast regression for the same bug).
+- **Evidence:** New `tests/Feature/Api/ApiParityInvariantTest.php` (1 case, 22 assertions, seeded at 50,000+ objects via `DemoVolumeSeeder`). `tests/Feature/Api/ApiReadContractTest.php` re-verified passing with its new case (7/7). Full non-slow suite: 745 passed, 0 failed, 3 skipped (up from 744 — 1 new in the fast suite; the seeded-volume case is `slow`-tagged and excluded from this count, matching `PlacementOrderingVolumeTest`'s own precedent). Full architecture suite (8/8, `ContainmentTest` clean), `composer unused` (0 unused), and `composer audit` (clean) independently re-verified. `php artisan migrate:fresh --seed` re-verified applying cleanly from empty.
 
 ### [T-6T03] Redirect permanence and slug stability
 

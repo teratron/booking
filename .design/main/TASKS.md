@@ -16,7 +16,7 @@ the per-phase files under `tasks/`.
 18/18) against the same `RFC`-status posture each was successfully decomposed and
 executed under — no Pre-flight gate has ever HALTed on any of them. Phase 6 is now
 decomposed into 16 atomic tasks across four tracks plus validation in
-[tasks/phase-6.md](tasks/phase-6.md), against that same posture. Phase 7 still carries
+[tasks/phase-6.md](archives/tasks/phase-6.md), against that same posture. Phase 7 still carries
 frontmatter, a strategic goal, and its scope only — no `T-XXXX` items yet; it is
 decomposed by the `/magic.task` invocation that activates it, against the specification
 set as it stands at that point.
@@ -35,7 +35,7 @@ archival would have overwritten them.
 | [Phase 3](archives/tasks/phase-3.md) | Commerce, advertising, analytics ingest, notifications, content pipeline | `Done (Archived)` (23/23) |
 | [Phase 4](archives/tasks/phase-4.md) | Owner cabinet — the second Filament panel, owner-scoped throughout | `Done (Archived)` (16/16) |
 | [Phase 5](archives/tasks/phase-5.md) | Public site — shell, home, catalog, object profile, territory pages, built from Figma | `Done (Archived)` (18/18) |
-| [Phase 6](tasks/phase-6.md) | SEO, portal-wide reporting, public REST API | `Active` (15/16) |
+| [Phase 6](archives/tasks/phase-6.md) | SEO, portal-wide reporting, public REST API | `Done (Archived)` (16/16) |
 | [Phase 7](tasks/phase-7.md) | Import/export, backups and rehearsed restore, production provisioning, load test | `Todo` |
 
 ## Execution Notes
@@ -95,9 +95,9 @@ One cross-track contract is scheduled rather than left to be discovered: `T-6B02
 for it in their own vocabulary — the indexation policy excludes non-public records, the
 API applies visibility in the shared query layer — and two implementations would drift,
 with the drift exposing unmoderated content on whichever side was forgotten. Full
-rationale in [tasks/phase-6.md](tasks/phase-6.md) §Track Ordering.
+rationale in [tasks/phase-6.md](archives/tasks/phase-6.md) §Track Ordering.
 
 ## Meta Information
 
-- **Last Updated**: 2026-08-17 (T-6D03, T-6D04, T-6T01, T-6T03 done — Track D complete, only T-6T02 remains, 15/16)
+- **Last Updated**: 2026-08-19 (T-6T02 done — Phase 6 complete, 16/16)
 - **Maintainer**: Core Team

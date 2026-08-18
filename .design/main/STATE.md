@@ -4,32 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-17 14:05
-**Phase:** 6 — Discovery, Reporting & Public API
+**Updated:** 2026-08-19
+**Phase:** 6 — Discovery, Reporting & Public API — **Done (16/16)**
 **Status:** Active
 
 ## Current Position
 
-- **Task:** `T-6D03`/`T-6D04`/`T-6T01`/`T-6T03` done together — 15/16, Track D fully complete. `T-6D03`: 13 read endpoints layered over `CatalogQueryService::search()` (gained an optional `?ScopeConstraint $constraint` param) and `ResourceQueryScoper::applyConstraint()` (extracted from `narrow()`, now shared between admin grants and token scope); first use of Laravel's `JsonResource` layer in this codebase. `T-6D04`: named rate limiter `api-token` keyed by token id, `StatEventKind::ApiRequest` (7th kind, new `endpoint` column on `stat_events`/`stat_dailies`), hand-rolled `ApiDocumentationGenerator` reading a new `DocumentsQueryParameters` interface (no doc-gen package exists in the spec'd stack). `T-6T01`/`T-6T03`: route-registry and sitemap-vs-moderation-state invariant sweeps; found and fixed a real bug — `robots.txt` hardcoded `Disallow: /admin`, not the panel's actual non-guessable configured path. Only `T-6T02` (API parity invariant) remains in the whole phase. Next: `T-6T02` — compare `ObjectController::index()`'s own output against the catalog page's rendering for the same filter set.
-- **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean. Of the two open questions that touched Phase 6, the consequential one (country-specific domains) is **closed** — see Blocking Constraints. The rate-limit/data-licensing question is resolved conservatively by `T-6D04`'s own default (60/min, admin-editable). `l1-seo.md` §2's TBD comment still records it as open and should be closed via `/magic.spec` when specs are next revised.
-- **Next Action:** Execute T-6T02 API parity invariant — never a visibility or ordering the site would not give via /magic.run main
+- **Task:** `T-6T02` closed — **Phase 6 is fully complete, 16/16.** Drove `CatalogSearch`'s own Livewire render cycle and `ObjectController::index()`'s own HTTP request through four filter permutations (unfiltered first page, territory-only, type-only, territory+type combined) against `DemoVolumeSeeder`'s 50,000+ objects, asserting the API's id order equals the catalog page's exactly and that two deliberately non-public records are absent from both surfaces independently. Found and fixed a real bug: `ObjectController::index()` never cast `?type=` to `int` before handing it to `CatalogSearchCriteria`'s strictly-typed constructor — every other numeric filter in that call already did. No spec, task, or phase remains open in Phase 6; the entire portal-wide reporting/SEO/public-API scope this phase covered is done. Next: `/magic.task main` to decompose Phase 7 (import/export, backups and rehearsed restore, production provisioning, load test) — not yet started, carries only its strategic goal and scope.
+- **Spec:** 23 specs, all `RFC`. 19 L1 are technology-neutral; the 3 L2 documents were rewritten for the pivot. TZ coverage 134/134, registry parity clean. Both open questions that touched Phase 6 are now resolved: country-specific domains closed by the project owner (see Blocking Constraints); the rate-limit/data-licensing question resolved conservatively by `T-6D04`'s own default (60/min, admin-editable). `l1-seo.md` §2's TBD comment still records the domain question as open in prose and should be closed via `/magic.spec` when specs are next revised.
+- **Next Action:** `/magic.task main` — decompose Phase 7. [DR] Phase 6 fully done, no drift signal, no HALT condition — the standing pipeline order (`spec → task → run`) resolves the next step, not a question. (Override: `/magic.spec` if Phase 7's own scope needs design work first.)
 
 ## Progress
 
 ```
-Phase 6: [15/16] ████████ 94%
-Overall: [5/7] ██████░░ 71%
-Plan:           [7 phases] Bootstrap/tentative; Phase 1-5 complete & archived, 6 active, 7 scoped
-Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [18/18] Phase 5 DONE · [15/16] Phase 6 ACTIVE
+Phase 6: [16/16] █████████ 100%
+Overall: [6/7] ███████░ 86%
+Plan:           [7 phases] Bootstrap/tentative; Phase 1-6 complete & archived, 7 scoped (not decomposed)
+Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 DONE · [16/16] Phase 4 DONE · [18/18] Phase 5 DONE · [16/16] Phase 6 DONE
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-16 **Decision: `T-6D01` (API module gate, versioned routing, disabled-capability 404) closed — Track D started** — reused the pre-existing `EnsureModuleEnabled` middleware wrapping new `routes/api_v1.php`, registered via `bootstrap/app.php`'s `withRouting(api:, apiPrefix: 'api/v1')`; no new gate mechanism needed. New auth-free `GET /api/v1/status` is the permanent "existing endpoint" ahead of `T-6D02`'s token model. `ModuleSeeder` gained the fifth module, `api`, disabled by default. Full non-slow suite: 725 passed (up from 721), 0 failed, 3 skipped.
-- 2026-08-16 **Decision: `T-6D02` (API client and token model — issuance, scoping, revocation, journalling) closed** — `ApiToken` (extends Sanctum's `PersonalAccessToken`, swapped in via `usePersonalAccessTokenModel()`) rejects a revoked token in `findToken()` itself, the single choke point every guard lookup goes through. Country/category scope storage (`api_token_scopes`) deliberately mirrors `role_scopes`' shape minus its territory axis and `none` sentinel; resources gate via Sanctum's own `abilities` column, not a third scope kind — "not a second authorization system" read literally. Two real bugs fixed: `EnsureModuleEnabled` fatally assumed any resolved actor was the portal's own `User`; Laravel's default middleware priority ran `auth:sanctum` ahead of the module gate, reversed from the spec's own request-flow order (see Blocking Constraints). Full non-slow suite: 729 passed (up from 725), 0 failed, 3 skipped.
-- 2026-08-17 **Decision: `T-6D03`, `T-6D04`, `T-6T01`, `T-6T03` closed together — Track D fully complete, only `T-6T02` remains in the phase** — `T-6D03`'s 13 read endpoints layer over `CatalogQueryService`/`ObjectCardPresenter`/`ObjectProfilePresenter` directly rather than re-deriving retrieval or shaping; `ResourceQueryScoper::applyConstraint()` extracted so admin grants and token scope share one narrowing implementation. `T-6D04` extended the six-kind analytics event model to a seventh (`api_request`, new `endpoint` column on both tiers) rather than repurposing an unrelated existing column, and hand-rolled `ApiDocumentationGenerator` since no doc-gen package exists in this project's spec'd stack. `T-6T01` found and fixed a real security-relevant bug: `robots.txt` disallowed the literal string `/admin`, not the staff panel's actual non-guessable configured path (`portal-admin` by default), silently failing to protect the address its own obscurity rationale depends on. Full non-slow suite: 744 passed (up from 729 before any of the four), 0 failed, 3 skipped.
+- 2026-08-17 **Decision: `T-6D03`, `T-6D04`, `T-6T01`, `T-6T03` closed together — Track D fully complete** — `T-6D03`'s 13 read endpoints layer over `CatalogQueryService`/`ObjectCardPresenter`/`ObjectProfilePresenter` directly rather than re-deriving retrieval or shaping; `ResourceQueryScoper::applyConstraint()` extracted so admin grants and token scope share one narrowing implementation. `T-6D04` extended the six-kind analytics event model to a seventh (`api_request`, new `endpoint` column on both tiers) rather than repurposing an unrelated existing column, and hand-rolled `ApiDocumentationGenerator` since no doc-gen package exists in this project's spec'd stack. `T-6T01` found and fixed a real security-relevant bug: `robots.txt` disallowed the literal string `/admin`, not the staff panel's actual non-guessable configured path. Full non-slow suite: 744 passed (up from 729 before any of the four), 0 failed, 3 skipped.
+- 2026-08-19 **Decision: `T-6T02` (API parity invariant) closed — Phase 6 complete** — a seeded-volume (`DemoVolumeSeeder`, 50,000+ objects), `slow`-tagged test drives both `CatalogSearch` and `ObjectController::index()` through their own real entry points across four filter permutations, comparing result identity and order directly rather than asserting against `CatalogQueryService` itself. Every compared object carries a globally unique `placement_tiers.rank` (started past the four seeded launch ranks, kept below the `999` untiered fallback) so the comparison is provably tie-free at volume — the shared result cache keys a `null` constraint (public page) and an `unrestricted ScopeConstraint` (API token) differently, so the two surfaces run genuinely independent query executions, not a shared cache hit. Found and fixed a real bug: `ObjectController::index()` never cast the `type` query parameter to `int`, 500ing on any request naming an actual object type — `Request::validate()` returns query-string values as strings regardless of the `integer` rule, and this codebase's `declare(strict_types=1)` refuses the implicit coercion `CatalogSearchCriteria`'s strictly-typed constructor needed. A fast regression case was added to `ApiReadContractTest.php` alongside the fix, since the seeded-volume test itself is `slow`-tagged and excluded from `composer test`/`quality`. Full non-slow suite: 745 passed (up from 744), 0 failed, 3 skipped.
 
 ## Blockers
 
@@ -88,10 +87,9 @@ Implementation: [21/21] Phase 1 DONE · [25/25] Phase 2 DONE · [23/23] Phase 3 
 
 **Reading order for a fresh session:** this file (position, decisions,
 constraints) → `CLAUDE.md` (stack, conventions, engineering discipline) →
-`.design/main/tasks/phase-6.md` (Phase 6, active — carries the task detail,
-track ordering, and planning audit) → `.design/main/PLAN.md` only for
-cross-phase context. Phases 1–5's own task files are archived at
-`.design/main/archives/tasks/phase-{1,2,3,4,5}.md` for historical reference.
+`.design/main/PLAN.md` for cross-phase context and Phase 7's own scope (not
+yet decomposed into tasks). Phases 1–6's own task files are archived at
+`.design/main/archives/tasks/phase-{1,2,3,4,5,6}.md` for historical reference.
 
 **Do not carry forward** anything about Next.js, TypeScript, Drizzle, Better Auth,
 react-admin, or Vercel — that stack is superseded and preserved only at tag `v0.1.34`.
