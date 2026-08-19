@@ -882,6 +882,73 @@ return [
         ],
     ],
 
+    'backup_administration' => [
+        'navigation_label' => 'Backups',
+        'title' => 'Backup Administration',
+        'none' => 'None yet',
+        'staleness_warning' => 'The last database backup is older than :hours hours.',
+
+        'fields' => [
+            'last_database_backup' => 'Last successful database backup',
+            'last_media_backup' => 'Last successful media backup',
+        ],
+
+        'actions' => [
+            'run_now' => 'Run backup now',
+            'download_report' => 'Download technical report',
+        ],
+
+        'notifications' => [
+            'queued' => 'Backup queued — it will run in the background.',
+        ],
+
+        'log' => [
+            'database_title' => 'Database backup log',
+            'media_title' => 'Media backup log',
+
+            'columns' => [
+                'date' => 'Date',
+                'size' => 'Size',
+            ],
+        ],
+    ],
+
+    'backup_restore' => [
+        'navigation_label' => 'Restore',
+        'title' => 'Restore Backup',
+        'none' => 'No database backups exist yet.',
+        'warning' => 'Restoring replaces the entire database with the selected backup. Every object, owner, placement, and record written after that backup was taken is permanently lost. This cannot be undone.',
+
+        'columns' => [
+            'date' => 'Date',
+            'size' => 'Size',
+        ],
+
+        'steps' => [
+            'select' => [
+                'title' => '1. Select a backup',
+            ],
+            'confirm' => [
+                'title' => '2. Confirm',
+                'description' => 'This restores the database to its exact state as of :timestamp. Everything written since then will be permanently lost.',
+                'confirmed' => 'Confirmed. Re-authenticate below to proceed.',
+            ],
+        ],
+
+        'actions' => [
+            'select' => 'Select',
+            'selected' => 'Selected',
+            'confirm' => 'I understand, continue',
+            'restore' => '3. Re-authenticate and restore',
+            'code_label' => 'Current authenticator code',
+            'code_invalid' => 'That code is not currently valid. Enter the current code from your authenticator app.',
+        ],
+
+        'notifications' => [
+            'queued' => 'Restore queued — it will run in the background.',
+        ],
+    ],
+
     'languages' => [
         'title' => 'Languages',
         'model_label' => 'language',

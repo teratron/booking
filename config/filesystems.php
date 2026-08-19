@@ -62,6 +62,23 @@ return [
             'report' => false,
         ],
 
+        // A dedicated bucket on the same S3-compatible endpoint — never the
+        // 's3' disk above. A backup living beside what it protects is not a
+        // backup: the media bucket and this one are only the same instance
+        // locally because MinIO hosts both; production points the two disks
+        // at genuinely separate buckets, potentially different providers.
+        'backups' => [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION'),
+            'bucket' => env('BACKUP_AWS_BUCKET'),
+            'endpoint' => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*

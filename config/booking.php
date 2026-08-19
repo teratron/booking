@@ -60,4 +60,34 @@ return [
         'required_for_roles' => ['chief_administrator'],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Backups
+    |--------------------------------------------------------------------------
+    |
+    | Database and media back up on separate schedules (see routes/console.php)
+    | to a destination disk distinct from both the application server and the
+    | media bucket they protect (see the `backups` disk in
+    | config/filesystems.php). The counts below are the "several generations
+    | retained" figures: the database dump's own pruning reads
+    | `database_generations_to_keep` through GenerationCountCleanupStrategy,
+    | configured as Spatie's own cleanup strategy in config/backup.php; the
+    | media mirror reads `media_generations_to_keep` directly.
+    |
+    */
+
+    'backups' => [
+        'database_generations_to_keep' => (int) env('BACKUP_DATABASE_GENERATIONS_TO_KEEP', 7),
+        'media_generations_to_keep' => (int) env('BACKUP_MEDIA_GENERATIONS_TO_KEEP', 5),
+
+        /*
+         * How old the last successful database backup may be before the
+         * administration screen renders it as a staleness warning rather
+         * than a neutral date. Deliberately looser than the daily schedule
+         * itself (see routes/console.php): one missed run should not read
+         * as an emergency the moment the next one is due.
+         */
+        'staleness_threshold_hours' => (int) env('BACKUP_STALENESS_THRESHOLD_HOURS', 48),
+    ],
+
 ];

@@ -6,8 +6,10 @@ use App\Jobs\AnalyticsCompactionJob;
 use App\Jobs\AnalyticsRollupJob;
 use App\Jobs\ArchiveJournalEntriesJob;
 use App\Jobs\AvailabilityConfirmationSweepJob;
+use App\Jobs\DatabaseBackupJob;
 use App\Jobs\DispatchRetryJob;
 use App\Jobs\GenerateSitemapsJob;
+use App\Jobs\MediaBackupJob;
 use App\Jobs\NewsItemWithdrawalJob;
 use App\Jobs\PlacementExpirySweepJob;
 use App\Jobs\PromotionArchivalJob;
@@ -79,3 +81,27 @@ Schedule::job(new NewsItemWithdrawalJob)->daily()->name('content:withdraw-news')
 // the coupling five separate event listeners would add. Hourly keeps that
 // staleness window small without regenerating on every request.
 Schedule::job(new GenerateSitemapsJob)->hourly()->name('seo:generate-sitemaps');
+
+// Database dump, off-server and off the media bucket (see the `backups`
+// disk's own docblock in config/filesystems.php), verified immediately
+// after writing. Daily, because the database is the artefact with the
+// shortest acceptable recovery point.
+Schedule::job(new DatabaseBackupJob)->daily()->name('backup:database');
+
+// Media is bulkier and changes on a slower rhythm than the catalog's own
+// writes, so it earns its own, lighter cadence rather than sharing the
+// database dump's daily one — see MediaBackupJob's own docblock for why
+// this is a plain file mirror rather than Spatie's local-path zipping.
+Schedule::job(new MediaBackupJob)->weekly()->name('backup:media');
+
+// Prunes database backup generations beyond the configured retention count
+// (App\Services\Backup\GenerationCountCleanupStrategy, configured as
+// Spatie's own cleanup strategy in config/backup.php). Runs after the daily
+// backup has had time to complete.
+Schedule::command('backup:clean')->dailyAt('02:00')->name('backup:cleanup');
+
+// Independent reachability/freshness/size/integrity check against whatever
+// is actually sitting on the destination disk — catches a destination that
+// silently stopped receiving artefacts, or received a corrupted one, rather
+// than relying solely on the producing job's own exit status.
+Schedule::command('backup:monitor')->dailyAt('03:00')->name('backup:monitor');

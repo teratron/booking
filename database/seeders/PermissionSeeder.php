@@ -47,6 +47,14 @@ final class PermissionSeeder extends Seeder
      * data-type registry flags as personal data is narrowed away unless this
      * permission is also held — never refused as a whole-export 403.
      *
+     * `backup_restore` is deliberately its own gate, separate from
+     * `settings_management`: every role able to see the backup
+     * administration screen (including `technical_support`) may view the
+     * backup log and trigger a fresh backup, but restoring one overwrites
+     * the running database outright, so only whichever role is granted this
+     * key specifically — `chief_administrator` alone at launch, via its own
+     * `*` grant — may reach the restore screen at all.
+     *
      * @return list<string>
      */
     public static function standaloneKeys(): array
@@ -61,6 +69,7 @@ final class PermissionSeeder extends Seeder
             'impersonate',
             'audit.view',
             'audit.export',
+            'backup_restore',
         ];
     }
 

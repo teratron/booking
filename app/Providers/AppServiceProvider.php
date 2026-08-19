@@ -12,6 +12,7 @@ use App\Models\Language;
 use App\Models\ObjectType;
 use App\Models\Territory;
 use App\Policies\AuditPolicy;
+use App\Policies\BackupPolicy;
 use App\Services\Advertising\BannerSelectionService;
 use App\Services\Authorization\CabinetAccessResolver;
 use App\Services\Authorization\ScopeAuthorizer;
@@ -33,6 +34,7 @@ use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
 use Override;
 use OwenIt\Auditing\Models\Audit;
+use Spatie\Backup\BackupDestination\Backup;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -71,6 +73,11 @@ class AppServiceProvider extends ServiceProvider
         // `Audit` is a vendor model this project does not own, so its policy
         // is bound the classic way rather than via a `#[UsePolicy]` attribute.
         Gate::policy(Audit::class, AuditPolicy::class);
+
+        // Same reasoning as `Audit` above: Spatie's own backup artefact type
+        // is not an `App\Models` class, so its restore ability is bound
+        // explicitly rather than discovered by naming convention.
+        Gate::policy(Backup::class, BackupPolicy::class);
 
         // Swaps in this project's own personal-access-token model so every
         // token Sanctum issues or resolves carries the revocation and rate-
