@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Admin\DownloadJsonExportController;
 use App\Http\Controllers\BannerClickController;
 use App\Http\Controllers\ExitImpersonationController;
 use App\Http\Controllers\Public\BlogController;
@@ -33,6 +34,16 @@ Route::get('/banners/{banner}/click', BannerClickController::class)
     ->name('banners.click');
 
 Route::get('/robots.txt', RobotsController::class)->name('robots');
+
+// A third download format alongside Filament's own CSV/XLSX export routes —
+// see App\Filament\Admin\Exports\JsonExportFormat for why this lives here
+// rather than as a Filament-shipped route.
+Route::middleware('web')
+    ->prefix(config('filament.system_route_prefix', 'filament'))
+    ->group(function (): void {
+        Route::get('/exports/{export}/download-json', DownloadJsonExportController::class)
+            ->name('exports.download-json');
+    });
 
 // Sitemaps are language-agnostic at the index level and read-only static
 // artefacts at every level — deliberately outside the `{lang}` group below,

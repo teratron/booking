@@ -1215,6 +1215,16 @@ return [
             ],
         ],
 
+        'export' => [
+            'actions' => [
+                'trigger' => 'Export',
+                'download_json' => 'Download JSON',
+            ],
+            'notifications' => [
+                'completed' => '{0}No rows were exported.|{1}:count row exported.|[2,*]:count rows exported.',
+            ],
+        ],
+
         'import' => [
             'title' => 'Import Data',
             'fields' => [

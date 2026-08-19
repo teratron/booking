@@ -22,7 +22,8 @@ class ListActionJournal extends ListRecords
             ExportAction::make()
                 ->label(__('panel.action_journal.actions.export'))
                 ->exporter(ActionJournalExporter::class)
-                ->authorize(fn (): bool => $this->actor()?->can('audit.export') ?? false),
+                ->authorize(fn (): bool => $this->actor()?->can('audit.export') ?? false)
+                ->options(fn (): array => ['filters' => $this->tableFilters ?? []]),
         ];
     }
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources\FinancialRecords\Exports;
 
-use App\Models\FinancialRecord;
+use App\Filament\Admin\Exports\Concerns\ReadsTransferableRegistry;
 use Filament\Actions\Exports\ExportColumn;
 use Filament\Actions\Exports\Exporter;
 use Filament\Actions\Exports\Models\Export;
@@ -12,15 +12,28 @@ use Filament\Actions\Exports\Models\Export;
 /**
  * Exports the ledger over whichever rows the active filter set (period,
  * package, status) currently resolves to — the same data the table renders.
+ *
+ * Column names, labels, and formatting stay exactly as they were before
+ * this class read the transferable data-type registry: `package.name` and
+ * `responsibleStaff.name` show a related record's own display name rather
+ * than the registry's raw `placement_package_id`/`responsible_staff_id`
+ * foreign keys, which {@see ReadsTransferableRegistry::appendMissingRegistryColumns()}'s
+ * substitution map accounts for so neither foreign key is also appended as
+ * a second, redundant column.
  */
 final class FinancialRecordExporter extends Exporter
 {
-    protected static ?string $model = FinancialRecord::class;
+    use ReadsTransferableRegistry;
+
+    public static function transferableKey(): string
+    {
+        return 'payments';
+    }
 
     /** @return list<ExportColumn> */
     public static function getColumns(): array
     {
-        return [
+        $columns = [
             ExportColumn::make('id'),
             ExportColumn::make('object_id')->label(__('panel.financial_records.form.object')),
             ExportColumn::make('banner_id')->label(__('panel.financial_records.form.banner')),
@@ -36,6 +49,11 @@ final class FinancialRecordExporter extends Exporter
             ExportColumn::make('document_number')->label(__('panel.financial_records.form.document_number')),
             ExportColumn::make('responsibleStaff.name')->label(__('panel.financial_records.form.responsible_staff')),
         ];
+
+        return self::appendMissingRegistryColumns($columns, [
+            'placement_package_id' => 'package.name',
+            'responsible_staff_id' => 'responsibleStaff.name',
+        ]);
     }
 
     public static function getCompletedNotificationBody(Export $export): string

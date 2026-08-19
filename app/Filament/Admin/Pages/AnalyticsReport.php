@@ -196,7 +196,8 @@ class AnalyticsReport extends Page implements HasTable
             ExportAction::make()
                 ->label(__('panel.analytics_report.actions.export'))
                 ->exporter(StatDailyExporter::class)
-                ->authorize(fn (): bool => $this->actor()?->can('analytics.export') ?? false),
+                ->authorize(fn (): bool => $this->actor()?->can('analytics.export') ?? false)
+                ->options(fn (): array => ['filters' => $this->filters()]),
         ];
     }
 

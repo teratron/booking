@@ -23,7 +23,8 @@ class ListFinancialRecords extends ListRecords
             ExportAction::make()
                 ->label(__('panel.financial_records.actions.export'))
                 ->exporter(FinancialRecordExporter::class)
-                ->authorize(fn (): bool => $this->actor()?->can('finance.export') ?? false),
+                ->authorize(fn (): bool => $this->actor()?->can('finance.export') ?? false)
+                ->options(fn (): array => ['filters' => $this->tableFilters ?? []]),
             CreateAction::make(),
         ];
     }

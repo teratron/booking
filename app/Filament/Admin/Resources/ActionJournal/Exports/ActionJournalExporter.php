@@ -4,26 +4,41 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources\ActionJournal\Exports;
 
+use App\Filament\Admin\Exports\Concerns\ReadsTransferableRegistry;
 use App\Services\Audit\AuditPresenter;
 use Filament\Actions\Exports\ExportColumn;
 use Filament\Actions\Exports\Exporter;
 use Filament\Actions\Exports\Models\Export;
 use Illuminate\Support\Str;
-use OwenIt\Auditing\Models\Audit;
 
 /**
  * Exports exactly the columns the journal itself renders — actor, action,
  * target, previous value, new value, timestamp, IP, device, outcome — over
  * whichever rows the active filter set on the table currently resolves to.
+ *
+ * Column names, labels, and formatting stay exactly as they were before
+ * this class read the transferable data-type registry: `user.name` shows
+ * the actor's own display name rather than the registry's raw `user_id`/
+ * `user_type` columns, which {@see ReadsTransferableRegistry::appendMissingRegistryColumns()}'s
+ * substitution map accounts for for `user_id` — `user_type` has no
+ * comparable display substitute and is picked up by that same call as a
+ * new column, an addition rather than a regression, once this exporter
+ * started reading the registry's full `action_journal` declaration
+ * (`id` is picked up the same way).
  */
 final class ActionJournalExporter extends Exporter
 {
-    protected static ?string $model = Audit::class;
+    use ReadsTransferableRegistry;
+
+    public static function transferableKey(): string
+    {
+        return 'action_journal';
+    }
 
     /** @return list<ExportColumn> */
     public static function getColumns(): array
     {
-        return [
+        $columns = [
             ExportColumn::make('created_at')->label(__('panel.action_journal.columns.occurred_at')),
             ExportColumn::make('user.name')->label(__('panel.action_journal.columns.actor')),
             ExportColumn::make('event')->label(__('panel.action_journal.columns.action')),
@@ -43,6 +58,10 @@ final class ActionJournalExporter extends Exporter
                 ->label(__('panel.action_journal.columns.outcome'))
                 ->formatStateUsing(fn (string $state): string => AuditPresenter::outcome($state)),
         ];
+
+        return self::appendMissingRegistryColumns($columns, [
+            'user_id' => 'user.name',
+        ]);
     }
 
     public static function getCompletedNotificationBody(Export $export): string
