@@ -61,6 +61,18 @@ final class Object_Policy extends ScopedPolicy
         return $this->authorizeAgainst($user, 'object.delete', $object);
     }
 
+    /**
+     * A merge permanently removes the merged-away record's own identity —
+     * the same class of action `object.delete` already gates, so a merge
+     * shares that grant rather than introducing a permission nothing else
+     * checks. The caller checks this ability against *both* records in a
+     * pair before merging either.
+     */
+    public function merge(User $user, Object_ $object): bool
+    {
+        return $this->authorizeAgainst($user, 'object.delete', $object);
+    }
+
     public function restore(User $user, Object_ $object): bool
     {
         return $this->authorizeAgainst($user, 'object.delete', $object);

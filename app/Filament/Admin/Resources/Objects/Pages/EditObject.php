@@ -6,6 +6,7 @@ namespace App\Filament\Admin\Resources\Objects\Pages;
 
 use App\Exceptions\AvailabilityRevertRefusedException;
 use App\Exceptions\BumpRefusedException;
+use App\Exceptions\ObjectMergeRefusedException;
 use App\Exceptions\PermanentDeletionRefusedException;
 use App\Filament\Admin\Resources\Objects\ObjectResource;
 use App\Models\Object_;
@@ -16,17 +17,22 @@ use App\Models\Territory;
 use App\Models\User;
 use App\Services\Objects\AvailabilityAdministrationService;
 use App\Services\Objects\ObjectLifecycleService;
+use App\Services\Objects\ObjectMergeService;
 use App\Services\Placement\BumpService;
 use App\Services\Seo\RedirectRegistrar;
 use App\Services\Settings\SettingsRepository;
 use Closure;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Schemas\Components\Utilities\Get;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Str;
@@ -156,6 +162,7 @@ class EditObject extends EditRecord
             $this->permanentlyDeleteAction(),
             $this->duplicateAction(),
             $this->transferOwnershipAction(),
+            $this->mergeAction(),
             $this->overrideAvailabilityAction(),
             $this->revertAvailabilityAction(),
             $this->bumpAction(),
@@ -417,6 +424,137 @@ class EditObject extends EditRecord
                 $this->refreshFormData(['owner_id']);
                 Notification::make()->title(__('panel.objects.lifecycle.applied'))->success()->send();
             });
+    }
+
+    /**
+     * Combines this record with another one an administrator picks
+     * explicitly — the duplicate two catalog entries a name/phone/website/
+     * address/coordinate match already flagged during import, now
+     * confirmed by a human. Both directions are offered (this record may
+     * either survive or be the one merged away) rather than assuming the
+     * record currently open in the editor is always the winner. The
+     * confirmation modal names both records by their real name, not just
+     * an id, and updates live as either selection changes — the "confirm a
+     * count" convention this panel already applies to bulk actions, applied
+     * here to a pair instead of a count, since a wrong-direction merge is
+     * exactly the mistake that convention exists to prevent.
+     */
+    private function mergeAction(): Action
+    {
+        return Action::make('merge')
+            ->label(__('panel.objects.lifecycle.merge'))
+            ->color('danger')
+            ->authorize(fn (Object_ $object): bool => (bool) auth()->user()?->can('merge', $object))
+            ->schema([
+                Select::make('other_object_id')
+                    ->label(__('panel.objects.merge.other_object'))
+                    ->searchable()
+                    ->getSearchResultsUsing(fn (string $search): array => Object_::query()
+                        ->withUnmoderated()
+                        ->whereKeyNot($this->currentObject()->id)
+                        ->whereHas('translations', fn (Builder $translations) => $translations->where('name', 'ilike', "%{$search}%"))
+                        ->limit(25)
+                        ->get()
+                        ->mapWithKeys(fn (Object_ $candidate): array => [$candidate->id => self::mergeCandidateLabel($candidate)])
+                        ->all())
+                    ->getOptionLabelUsing(function ($value): ?string {
+                        $candidate = Object_::query()->withUnmoderated()->find($value);
+
+                        return $candidate instanceof Object_ ? self::mergeCandidateLabel($candidate) : null;
+                    })
+                    ->live()
+                    ->required(),
+
+                Radio::make('keep')
+                    ->label(__('panel.objects.merge.survivor'))
+                    ->options(function (Get $get): array {
+                        $current = $this->currentObject();
+                        $other = Object_::query()->withUnmoderated()->find($get('other_object_id'));
+
+                        return [
+                            'current' => self::mergeCandidateLabel($current),
+                            'other' => $other instanceof Object_
+                                ? self::mergeCandidateLabel($other)
+                                : __('panel.objects.merge.other_pending'),
+                        ];
+                    })
+                    ->default('current')
+                    ->live()
+                    ->required(),
+
+                Placeholder::make('merge_summary')
+                    ->hiddenLabel()
+                    ->content(function (Get $get): string {
+                        $other = Object_::query()->withUnmoderated()->find($get('other_object_id'));
+
+                        if (! $other instanceof Object_) {
+                            return __('panel.objects.merge.other_pending');
+                        }
+
+                        $current = $this->currentObject();
+                        $survivor = $get('keep') === 'other' ? $other : $current;
+                        $mergedAway = $get('keep') === 'other' ? $current : $other;
+
+                        return __('panel.objects.merge.summary', [
+                            'survivor' => self::mergeCandidateLabel($survivor),
+                            'merged' => self::mergeCandidateLabel($mergedAway),
+                        ]);
+                    }),
+            ])
+            ->requiresConfirmation()
+            ->modalHeading(__('panel.objects.merge.confirm_heading'))
+            ->action(function (array $data): void {
+                $actor = Filament::auth()->user();
+                $current = $this->currentObject();
+                $other = Object_::query()->withUnmoderated()->find($data['other_object_id']);
+
+                if (! $actor instanceof User || ! $other instanceof Object_) {
+                    return;
+                }
+
+                if (! (bool) auth()->user()?->can('merge', $other)) {
+                    Notification::make()
+                        ->danger()
+                        ->title(__('panel.objects.form.out_of_scope'))
+                        ->send();
+
+                    return;
+                }
+
+                $survivor = $data['keep'] === 'other' ? $other : $current;
+                $mergedAway = $data['keep'] === 'other' ? $current : $other;
+
+                try {
+                    app(ObjectMergeService::class)->merge($survivor, $mergedAway, $actor);
+                } catch (ObjectMergeRefusedException $exception) {
+                    Notification::make()
+                        ->danger()
+                        ->title(__('panel.objects.merge.refused'))
+                        ->body($exception->getMessage())
+                        ->send();
+
+                    return;
+                }
+
+                Notification::make()->title(__('panel.objects.lifecycle.applied'))->success()->send();
+
+                $this->redirect(ObjectResource::getUrl('edit', ['record' => $survivor]));
+            });
+    }
+
+    /**
+     * Strict mode throws on an unloaded relation reached through the magic
+     * property accessor, and the translated `name` attribute goes through
+     * exactly that — the model instances this action resolves fresh via
+     * `Object_::query()->find()` (search results, option labels, the radio
+     * choice) never carry `translations` eager-loaded the way
+     * `ObjectResource::getEloquentQuery()` does for the page's own record.
+     */
+    private static function mergeCandidateLabel(Object_ $object): string
+    {
+        $object->loadMissing('translations');
+
+        return ($object->name ?? "#{$object->id}")." (#{$object->id})";
     }
 
     /** @return list<string> */

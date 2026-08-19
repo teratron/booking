@@ -41,12 +41,19 @@ final class PermissionSeeder extends Seeder
      * data an administrator may rename or restructure at any time, and a door
      * keyed to a role name silently opens or closes the moment they do.
      *
+     * `personal_data_access` mirrors `financial_access`: a role holding only
+     * a resource's general `.export` permission (e.g. `user.export`) may move
+     * that resource's non-personal columns, but a column the transferable
+     * data-type registry flags as personal data is narrowed away unless this
+     * permission is also held — never refused as a whole-export 403.
+     *
      * @return list<string>
      */
     public static function standaloneKeys(): array
     {
         return [
             'financial_access',
+            'personal_data_access',
             'user_management',
             'settings_management',
             'admin_panel_access',
