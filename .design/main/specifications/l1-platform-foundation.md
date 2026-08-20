@@ -1,7 +1,7 @@
 # Platform Foundation
 
-**Version:** 1.5.1
-**Status:** RFC
+**Version:** 1.5.2
+**Status:** Stable
 **Layer:** concept
 
 ## Overview
@@ -42,6 +42,7 @@ composition only**, not for scope, domain model, or business rules.
 - [l1-room-reservation.md](l1-room-reservation.md) - [MODIFIED] Optional, disabled-by-default booking module; the gated exception to the no-booking-at-launch invariant.
 - [l2-tech-stack.md](l2-tech-stack.md) - Implements these invariants in a concrete stack.
 - [l2-third-party-integrations.md](l2-third-party-integrations.md) - Implements the actor-role, moderation, and infrastructure invariants.
+- [l1-release-operations.md](l1-release-operations.md) - [ADDED] Delivery path that carries these invariants into production; consumes §5.4's client-stated delivery stages.
 
 ## 1. Motivation
 
@@ -382,3 +383,4 @@ trade is no longer close.
 | 1.4.1 | 2026-08-05 | Patch: translated the §5.4 delivery-stage list and quoted `[TZ]` excerpts from Russian to English per the project's language policy, and corrected the stage-3 note — the `[TZ]` §98 approval is waived and the deployment fork closed, so no gate precedes backend work. |
 | 1.5.0 | 2026-08-20 | Minor: added the accessibility-parity invariant to §3.1 Delivery — WCAG 2.2 AA for the portal's own interface, explicitly distinguished from `[TZ]` §78's unrelated object-amenity "accessible for people with disabilities" flag. Mechanism recorded in [l2-tech-stack.md](l2-tech-stack.md) §5.9. |
 | 1.5.1 | 2026-08-20 | Patch: named ARIA explicitly, within the existing accessibility-parity bullet, as the mechanism for custom-component semantics — clarification only, no new invariant (ARIA validity is covered by the same §5.9 verification, not a separate one). |
+| 1.5.2 | 2026-08-20 | Patch: linked the new release-operations specification, which serves §5.4's delivery stages. Navigation only — no invariant added, changed, or removed. |

@@ -1,7 +1,7 @@
 # Technology Stack
 
-**Version:** 2.4.0
-**Status:** RFC
+**Version:** 2.4.1
+**Status:** Stable
 **Layer:** implementation
 **Implements:** l1-platform-foundation.md
 
@@ -30,6 +30,7 @@ anchoring produced a wrong answer. §1 records why.
 - [l1-seo.md](l1-seo.md) - Rendering strategy.
 - [l1-feature-modules.md](l1-feature-modules.md) - Runtime gating enforced server-side.
 - [l1-platform-shell.md](l1-platform-shell.md) - The shared shell the accessibility audit covers once for every page (§5.9).
+- [l2-release-pipeline.md](l2-release-pipeline.md) - [ADDED] Sibling L2; invokes this stack's quality gate (§5.9) and delivers releases into the runtime topology of §5.10 under the environment split of §5.11.
 
 ## 1. Motivation
 
@@ -463,3 +464,4 @@ as part of its WCAG pass (§5.9) — there is nothing left for a second gate to 
 | 2.2.0 | 2026-08-20 | Minor: added §5.11 Environment Configuration — the dev/production divergence table across storage, assets, mail, bot-protection, map tiles, error tracking, and cookie transport; disambiguated from the §4 "configuration over code" invariant, which governs business data, not infrastructure bootstrapping. |
 | 2.3.0 | 2026-08-20 | Minor: added WCAG 2.2 AA verification to §5.9 — `axe-core` against the rendered DOM inside Pest browser tests (`pestphp/pest-plugin-browser`), folded into `composer quality` rather than a separate pipeline. Implements the new accessibility-parity invariant ([l1-platform-foundation.md](l1-platform-foundation.md) §3.1 v1.5.0). Records why the three externally-referenced Claude Skills, a standalone Node pipeline, and static JS linting were rejected. |
 | 2.4.0 | 2026-08-20 | Minor: clarified that ARIA validity is covered by §5.9's existing axe-core ruleset, not a separate gate; added the keyboard-interaction-testing gap axe-core cannot close (§6 item 10) and a pointer to the W3C ARIA Authoring Practices Guide for building custom widgets correctly. Records why the three externally-referenced "ARIA" resources were rejected — two are unrelated products name-colliding with "Aria," the third is a pattern library, not a verifier. |
+| 2.4.1 | 2026-08-20 | Patch: linked the new release-pipeline specification, which invokes this stack's quality gate and deploys into its §5.10 topology. Navigation only — §5.9, §5.10, and §5.11 are unchanged. |

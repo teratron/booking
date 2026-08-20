@@ -1,7 +1,7 @@
 # Home Page
 
 **Version:** 0.1.1
-**Status:** RFC
+**Status:** Stable
 **Layer:** concept
 
 ## Overview

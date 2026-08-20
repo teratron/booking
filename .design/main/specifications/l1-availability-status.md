@@ -1,7 +1,7 @@
 # Availability Status
 
 **Version:** 0.2.0
-**Status:** RFC
+**Status:** Stable
 **Layer:** concept
 
 ## Overview
