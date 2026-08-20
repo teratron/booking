@@ -1,6 +1,6 @@
 # Technology Stack
 
-**Version:** 2.1.0
+**Version:** 2.2.0
 **Status:** RFC
 **Layer:** implementation
 **Implements:** l1-platform-foundation.md
@@ -286,6 +286,41 @@ Backups are `spatie/laravel-backup` writing to a storage destination separate fr
 application server, satisfying `[TZ]` §97's off-server requirement and §131's
 administrator-triggered restore.
 
+### 5.11 Environment Configuration
+
+Development and production diverge in `.env` values and in how Vite serves built
+assets — never in code path, and never in the domain registries the "Configuration
+over code" invariant (§4) governs. That invariant is about business data —
+languages, tiers, object types — staying in PostgreSQL regardless of environment.
+Infrastructure bootstrapping is a different problem: which database and which
+credentials to use is necessarily resolved before the application can reach
+PostgreSQL at all. A setting that needs an `if (environment === 'production')`
+branch in application code is a defect either way — Laravel's own environment
+resolution and Vite's build mode cover this without one.
+
+| Concern | Development | Production |
+| --- | --- | --- |
+| `APP_ENV` / `APP_DEBUG` | `local` / `true` — stack traces aid debugging | `production` / `false` — the app fails closed, never rendering internals to a visitor |
+| Object storage | MinIO, local container | Cloudflare R2 / Backblaze B2 ([l2-third-party-integrations.md](l2-third-party-integrations.md) §5.1) |
+| Asset origin | Vite dev server, unbundled, HMR | `vite build` output behind the CDN (§5.10); the framework's asset-manifest directive resolves the versioned path, never a hard-coded one |
+| Mail | Mailpit, local catch-all | The configured SMTP provider ([l2-third-party-integrations.md](l2-third-party-integrations.md) §5.4) |
+| Bot-protection challenge | Turnstile's published always-pass test keys | Turnstile production keys ([l2-third-party-integrations.md](l2-third-party-integrations.md) §5.5) |
+| Map tile credential | Sandbox key, or self-hosted tiles | Production tile-provider key ([l2-third-party-integrations.md](l2-third-party-integrations.md) §5.3) |
+| Error tracking | Off, or a local instance | Active ([l2-third-party-integrations.md](l2-third-party-integrations.md) §5.8) |
+| Cookie transport | Plain HTTP on localhost | HTTPS-only, secure-cookie flag set — TLS terminates at the CDN edge ([l2-third-party-integrations.md](l2-third-party-integrations.md) §5.2) |
+
+Two mechanisms carry these values, kept deliberately separate:
+
+- **Laravel's `.env`** supplies every server-side value above — credentials,
+  feature toggles, service endpoints. It is never committed
+  ([l2-third-party-integrations.md](l2-third-party-integrations.md) §2); production
+  values are injected at the host or orchestrator, not shipped in an image.
+- **Vite's build-time environment** supplies the small subset of values a
+  client-side script legitimately needs — the map tile credential above is the one
+  case in this stack. Only those variables cross into shipped JavaScript; a
+  server-only secret placed there is a leak, not a configuration choice, since
+  built assets are public by construction.
+
 ## 6. Implementation Notes
 
 Sequenced by dependency.
@@ -303,6 +338,10 @@ Sequenced by dependency.
 6. **Public site** against the Figma design.
 7. Keep the booking module's tables migrated and its code gated but inert
    ([l1-feature-modules.md](l1-feature-modules.md) §6.3).
+8. **Provision production's own credentials before the first deploy** (§5.11): its
+   own storage bucket, database, and service keys, never copied from development —
+   a shared bucket or key between environments is the easy way to a production
+   incident traced back to a development mistake.
 
 ## 7. Drawbacks & Alternatives
 
@@ -353,3 +392,4 @@ are moot now; Filament covers what they were being asked to cover, natively.
 | 1.0.1 | 2026-08-05 | Clarification: active-language phrasing. |
 | 2.0.0 | 2026-08-05 | **Stack replacement.** Laravel 13 + Filament 5 + PostgreSQL/PostGIS + Redis, self-hosted monolith. Records why the v1.x reasoning was wrong (SEO conflated with client interactivity; conclusion anchored on an existing codebase). Resolves the deployment fork to self-hosted. Replaces the missing-capability ledger with a package set covering eleven specification sections, and states the remaining bespoke surface explicitly. |
 | 2.1.0 | 2026-08-05 | Minor: expanded §5.9 with architecture tests, dead-code and N+1 tooling, Laravel Pulse, the `composer quality` gate, and numeric performance budgets tied to `[TZ]` §18/§94 — including the requirement that benchmarks run against seeded realistic volume rather than fixtures. |
+| 2.2.0 | 2026-08-20 | Minor: added §5.11 Environment Configuration — the dev/production divergence table across storage, assets, mail, bot-protection, map tiles, error tracking, and cookie transport; disambiguated from the §4 "configuration over code" invariant, which governs business data, not infrastructure bootstrapping. |

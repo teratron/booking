@@ -64,7 +64,7 @@ Optional → Implementation); the registry itself is flat.
 | [l1-public-api.md](specifications/l1-public-api.md) | Integration. Outward-facing REST contract, issued tokens, scoping, rate limits, documentation | RFC | 1 | 0.1.1 |
 | [l1-room-reservation.md](specifications/l1-room-reservation.md) | Optional module — **disabled by default**. Booking: calendars, requests, prepaid checkout | RFC | 1 | 1.0.1 |
 | [l2-data-model.md](specifications/l2-data-model.md) | Implementation. Consolidated table inventory, conventions, index plan, deletion and archival rules, schema deliverables | RFC | 2 | 0.3.1 |
-| [l2-tech-stack.md](specifications/l2-tech-stack.md) | Implementation. Laravel 13 + Filament 5 + PostgreSQL/PostGIS + Redis; package set, bespoke surface, quality gates and performance budgets, self-hosted deployment | RFC | 2 | 2.1.0 |
+| [l2-tech-stack.md](specifications/l2-tech-stack.md) | Implementation. Laravel 13 + Filament 5 + PostgreSQL/PostGIS + Redis; package set, bespoke surface, quality gates and performance budgets, self-hosted deployment, dev/production environment configuration | RFC | 2 | 2.2.0 |
 | [l2-third-party-integrations.md](specifications/l2-third-party-integrations.md) | Implementation. External services: storage, CDN, map tiles, SMTP, CAPTCHA, error tracking, dormant payment | RFC | 2 | 2.0.0 |
 
 ## Rename Map (2026-08-05)
