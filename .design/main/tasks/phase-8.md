@@ -1,7 +1,7 @@
 ---
 phase: 8
 name: "Delivery Pipeline & Operator Documentation"
-status: Todo
+status: In Progress
 subsystem: ".github/workflows/, docker/app/, docs/release/, docs/operations/, tests/Architecture, tests/Feature/Operations"
 requires: ["phase-1", "phase-7"]
 provides: []
@@ -15,7 +15,7 @@ duration_minutes: ~
 # Stage 8 Tasks — Delivery Pipeline & Operator Documentation
 
 **Phase:** 8
-**Status:** Todo (0/20)
+**Status:** In Progress (9/20 — agent ceiling reached; the remaining 11 tasks require the project owner, see STATE.md)
 **Strategic Goal:** The portal's implementation is complete and it has never been
 released. This phase builds the path a change takes from an accepted branch to a
 serving production portal, the path back when a release turns out wrong, and the
