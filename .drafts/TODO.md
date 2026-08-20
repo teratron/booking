@@ -4,7 +4,8 @@
 
 ## Tasks
 
-- [ ] WCAG (Web Content Accessibility Guidelines), ARIA (Accessible Rich Internet Applications)
+- [ ] ARIA (Accessible Rich Internet Applications), skills: <https://github.com/lifan0127/ai-research-assistant>, <https://github.com/pnoch/aria-skills>, <https://github.com/dylantarre/design-system-skills/tree/main/skills/accessibility/aria-patterns>
+- [ ] WCAG (Web Content Accessibility Guidelines), skills: `npx skills add https://github.com/wshobson/agents --skill wcag-audit-patterns`, `npx skills add https://github.com/affaan-m/ecc --skill accessibility`, `npx skills add https://github.com/mastepanoski/claude-skills --skill wcag-accessibility-audit`
 - [ ] прекрутить и настроить CI/CD (по максимуму, что необходимо)
 - [ ] на стадии запуска продакшена прекрутить git flow систему и автоматезировать с помощью ИИ, добавить документацию как пользоваться и настроить git flow
 - [ ] документация + промпт по развёртыванию проекта на английском и русском языках в разных markdown-файлах
