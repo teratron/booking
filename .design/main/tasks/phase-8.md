@@ -65,7 +65,7 @@ and defers its proof to `T-8T03`, rather than claiming a verification it cannot 
 
 ### Track C — Irreversibility
 
-- [ ] [T-8C01] Destructive-migration scan gating the irreversibility declaration
+- [x] [T-8C01] Destructive-migration scan gating the irreversibility declaration
 
 ### Track D — Operator Documentation Set
 
@@ -215,7 +215,7 @@ than last despite being the least technically interesting work in the phase.
 **[T-8C01] Destructive-migration scan gating the irreversibility declaration**
 
 - **Spec:** [l2-release-pipeline.md](../specifications/l2-release-pipeline.md) §5.6; [l1-release-operations.md](../specifications/l1-release-operations.md) §3.4
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** `T-8A03` (shares `quality.yml`)
 - **Verify:** Against a fixture migration dropping a column, the scan exits non-zero and names the file and the operation; against the same fixture with an explicit irreversible declaration in the tag annotation, it exits zero; against the repository's existing migration set with no destructive operation in range, it exits zero. Runs as a step in both `quality.yml` (review time) and `release.yml` (release time).
@@ -225,6 +225,7 @@ than last despite being the least technically interesting work in the phase.
   The stricter alternative — requiring every migration to define its own reversal — was considered and rejected in the specification, because it is routinely satisfied by writing a reversal nobody has ever executed. That produces confidence in an untested path, which is worse than an honest declaration. Do not "improve" the scan into that rule.
 
   Declaring a release irreversible remains a human act ([l1-release-operations.md](../specifications/l1-release-operations.md) §5.5). The scan detects and refuses; it never declares.
+- **Changes:** `App\Services\Release\DestructiveMigrationScanner` (+ `DestructiveMigrationFinding` DTO) scans a migration file's `up()` body only — split on the first `public function down(` and everything after is discarded, since every `create_*_table` migration's own `down()` legitimately calls `Schema::dropIfExists()` and scanning the whole file flagged all of them (caught by running the real command against this repository's own history before trusting the fixture tests: 122 false-positive findings dropped to the 7 genuine ones once `down()` was excluded). Detects `Schema::drop(IfExists)`, `dropColumn`, `dropForeign`, `dropUnique`, `dropIndex`, `dropPrimary`, bare `->change()`, and raw-SQL `DROP TABLE`/`DROP COLUMN`. `declaresIrreversible()` matches an `^Irreversible:` line, case-insensitive, anywhere in the tag annotation. `App\Console\Commands\ScanDestructiveMigrations` (`release:scan-destructive-migrations {--since=} {--declaration=} {--advisory}`) resolves the baseline to the most recent `v*` tag before `HEAD` (empty-tree object if none — the first release under this scheme), diffs `database/migrations` since it, and exits non-zero unless `--advisory` or the declaration matches. Both git calls use string-form `Process::run()`, not this codebase's usual array form — confirmed live that `Process::fake()`'s glob matching cannot match an array command, since Symfony's `Process` renders each array argument as its own single-quoted token. Wired as an advisory step in `quality.yml` (no tag exists yet to carry a declaration) and a blocking `scan-migrations` job gating `build` in `release.yml` (reads the pushed tag's own `%(contents)` as the declaration). Real repository run after the `up()`/`down()` fix: 7 genuine findings (constraint drops and `->change()` calls on 4 files), correctly refusing without a declaration — left as-is, since fixing or declaring those is a release-time decision outside this task's scope.
 
 ### Track D — Operator Documentation Set
 

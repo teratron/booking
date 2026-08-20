@@ -46,8 +46,11 @@ jobs:
         with:
           # Full history, not the default shallow clone — fallow's PR-diff
           # commands (`audit`, `review`) need the base branch's commits to
-          # walk, which a fetch-depth: 1 checkout does not provide.
+          # walk, which a fetch-depth: 1 checkout does not provide. Tags are
+          # needed too: the destructive-migration scan below resolves its
+          # comparison baseline from the most recent released tag.
           fetch-depth: 0
+          fetch-tags: true
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -74,6 +77,13 @@ jobs:
         run: |
           cp .env.example .env
           php artisan key:generate --ansi
+
+      # Advisory here — no release tag exists yet at review time to carry an
+      # irreversibility declaration, so a finding is reported rather than
+      # blocking. The same scan runs again, blocking, when a release is
+      # actually tagged.
+      - name: Scan for destructive migrations (advisory)
+        run: php artisan release:scan-destructive-migrations --advisory
 
       # The service container's own init only creates the default POSTGRES_DB
       # (booking); the dedicated test database and its extensions — the same
