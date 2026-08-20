@@ -1,10 +1,10 @@
 # Implementation Plan
 
-**Version:** 3.4.0
+**Version:** 3.5.0
 **Generated:** 2026-08-05
-**Based on:** .design/main/INDEX.md v2.4.2
+**Based on:** .design/main/INDEX.md v2.6.0
 **Based on RULES:** .design/RULES.md v1.4.0
-**Status:** Complete (Bootstrap — tentative; all 7 phases done, specs still `RFC` — see Plan Status below)
+**Status:** Active — Phase 8 (delivery pipeline; the first phase planned against `Stable` specifications — see Plan Status below)
 
 ## Overview
 
@@ -13,12 +13,13 @@ serving visitors (browse objects, contact owners directly), object owners (self-
 cabinet), and portal staff (back office), across three countries and two launch
 languages.
 
-The plan is built from 23 specifications, all at `RFC`. No specification has reached
-`Stable`, and `[Bootstrap Plan]` marks that: every phase below is planned tentatively
-and is finalized as the specification set matures through its lifecycle. Phase 1 is the
-least exposed to that uncertainty — infrastructure, schema, registries, and
-authorization are stable under all but two of the open questions, both listed in
-§Open Questions Carried into Phase 1.
+Phases 1 through 7 were planned and executed against 23 specifications, all at `RFC` at
+the time — `[Bootstrap Plan]` marks that, and every one of those phases was tentative by
+construction. That posture ended on 2026-08-20: six specifications reached `Stable`, and
+**Phase 8 is the first phase in this plan built on `Stable` sources rather than
+provisional ones.** The registry now holds 25 specifications, 6 `Stable` and 19 `RFC`;
+the 19 are the set's real remaining design work rather than a status backlog, and none
+of them is a Phase 8 input.
 
 The previous plan — six phases delivered against a Next.js/TypeScript implementation of
 the superseded hotel-booking product — is archived at
@@ -217,6 +218,56 @@ its own 80% minimum, pre-existing debt in two content-lifecycle services — is 
 `T-7T04`, because a launch-readiness phase whose own quality gate fails is not launch
 ready.
 
+## Phase 8 — Delivery Pipeline & Operator Documentation — **Active**
+
+*The implementation is finished and the portal has never been released. This phase
+builds the path a change takes from an accepted branch to a serving production portal,
+the path back when a release turns out wrong, and the documentation that lets someone
+other than its author walk either one.*
+
+- [ ] **Release Operations** §3, §5.1–5.6 — promotion path, gate obligations by transition, release records, the two reversal paths, the operator documentation matrix, and the boundary between agent-decided and human-decided release actions ([l1-release-operations.md](specifications/l1-release-operations.md)) [L1]
+- [ ] **Release Pipeline** §5.2–5.10 — Git Flow branch contract, one new tag-triggered workflow beside the existing gate, an immutable image digest as the release artefact, pull-based deploy with health-assertion rollback, the destructive-migration scan, and the EN/RU/agent documentation tree with enforced parity ([l2-release-pipeline.md](specifications/l2-release-pipeline.md)) [L2]
+
+Decomposed into 20 atomic tasks across five tracks plus validation in
+[tasks/phase-8.md](tasks/phase-8.md), which carries this phase's own planning audit.
+The phase is **four-wide at the start and one-wide at the end** — `(A ∥ D ∥ E ∥ B01) →
+B02 → B03 → B04 → T03`. Calling it six-wide because it has six tracks would be false:
+Track B is a chain after its first task, and the acceptance task waits on everything.
+
+**This phase differs in kind from the seven before it, in two ways that shape every
+task in it.**
+
+First, it is the only phase whose central deliverable **cannot be proven by
+`composer quality`**. A deploy job, a rollback, a branch protection rule and an approval
+gate are observable only against a real repository, a real registry and a real host.
+Roughly half the tasks are verifiable in the working copy; the other half say so in
+their own `Verify` lines and defer behavioural proof to `T-8T03` rather than claiming a
+check they cannot perform.
+
+Second, it is the only phase with tasks an agent **must not** perform. Branch
+protection, the `production` environment's reviewer list, the automation identity, and
+the three secret tiers are operator work — not as a convenience boundary but as an
+invariant. [l2-release-pipeline.md](specifications/l2-release-pipeline.md) §5.10
+withholds exactly these permissions from automation so the identity that would benefit
+from approving a release cannot grant that approval. Track E carries them, every task in
+it marked `Assignment: User`.
+
+`T-8E02` (the `production` environment and its reviewers) is the phase's
+highest-cascade task — four tasks across two tracks stop without it — and its blocker is
+repository-administration authority, not engineering effort. `T-8B01` (the production
+image and the `.dockerignore` this repository does not yet have) is the highest-cascade
+agent task; the same four tasks address the artefact it emits, by digest. The asymmetry
+is worth stating plainly: this phase can have every agent task finished and still deliver
+nothing, because a release nobody may approve is not a release.
+
+Three dependencies are scheduled rather than left to be discovered:
+`.github/workflows/quality.yml` is edited by three tasks in three different tracks, so
+`T-8A03` is ordered ahead of `T-8C01` and `T-8T02`; `docs/README.md` would have been
+edited by five Track D tasks, so the index edit is collapsed into `T-8D05` alone; and
+`T-8T03` (the rehearsal) sits last by dependency, which makes it the natural casualty of
+a compressed schedule exactly as `T-7T03`'s load test did — and it is no more optional
+than that one was.
+
 ## Backlog
 
 Registered specifications not scheduled into an active phase.
@@ -272,32 +323,44 @@ code and one changes a test matrix.
 The remaining eighteen open questions land in Phase 3 and later and are not on the
 critical path out of Phase 2.
 
-## Plan Status: Complete
+## Plan Status: Phase 8 Active
 
-**All 7 phases are done — 135 of 135 tasks.** `T-7T01` through `T-7T04` closed Phase 7
-on 2026-08-20: a real rehearsed restore against a genuinely disposable database, the
-import/export invariant sweep, a real load test against 52,800 seeded objects (which
-found and fixed a real, previously invisible Redis cache-serialization bug), and the
-coverage backfill for the plan's two named services. A plan-wide L2 retrospective ran on
-close — Signal 🟢 Green — and is recorded in [RETROSPECTIVE.md](RETROSPECTIVE.md)
-Session 1, with five recommendations for what comes next.
+**Phases 1 through 7 are done — 135 of 135 tasks**, closed on 2026-08-20. A plan-wide L2
+retrospective ran on that close — Signal 🟢 Green — and is recorded in
+[RETROSPECTIVE.md](RETROSPECTIVE.md) Session 1.
 
-**Next step:** `/magic.spec` — Recommendation R1 of that retrospective. All 23
-specifications remain `RFC`; none was ever promoted to `Stable` across the plan's full
-execution, despite every implemented behaviour tracing to a real spec section. With the
-plan now complete and every spec backed by a tested implementation, this is the natural
-point to review the set and promote what qualifies. There is no Phase 8 — `/magic.task`
-and `/magic.run` have no further plan work queued.
+**Phase 8 opens the plan again, and it was not a phase this plan anticipated.** Its two
+specifications were authored on 2026-08-20 and are the only ones in the registry not
+derived from `[TZ]` — the client technical specification constrains the server and names
+the project's development stages, but is silent on how code reaches that server. The
+requirement originates with the project owner: a configured CI/CD pipeline, a branch
+model with automated dispatch, and deployment documentation written for a reader with no
+technical background, in both launch languages, in a form an automated agent can also
+consume. Both specifications reached `Stable` in the same pass, which makes Phase 8 the
+first phase here planned against settled sources rather than provisional ones.
 
-Two other retrospective findings carry their own follow-up, neither blocking this plan's
-completion: the suite-wide `composer test:coverage` floor (78.3% against its own 80%
-minimum — a long tail of ~20 pre-existing Phase 1–6 `Policy`/`Model` files, not this
-phase's own debt) is scoped as its own future cross-phase task; and whether
-`composer test:coverage` should read `--group=slow` coverage (several of Phase 7's own
-new backup/restore classes are only genuinely exercised there) is an open quality-tooling
-question for whoever next revises the composer scripts.
+The gap it closes is narrow and total: the repository already carries half a pipeline —
+a quality gate on every push and pull request, and a versioned commit hook — and nothing
+at all beyond "accepted". No deployment, no release definition, no branch contract, no
+protection rule, no rollback path, and no operator-audience or Russian-language
+documentation. A quality gate with no delivery path behind it verifies changes that then
+sit still.
 
-Phase registry in [TASKS.md](TASKS.md). All seven phases are archived at
+**Next step:** `/magic.run main` — Phase 8's 20 tasks are decomposed and ready in
+[tasks/phase-8.md](tasks/phase-8.md). Track E's three tasks are operator-performed and
+gate four others; they can be started immediately and in parallel with the agent tracks.
+
+Three items remain outside this phase deliberately, none of them blocking it. The
+suite-wide `composer test:coverage` floor (78.3% against its own 80% minimum — a long
+tail of ~20 pre-existing Phase 1–6 `Policy`/`Model` files) is scoped as its own future
+cross-phase task; whether `composer test:coverage` should read `--group=slow` coverage
+is an open quality-tooling question for whoever next revises the composer scripts; and
+the 19 specifications still at `RFC` carry the set's real remaining design work — 18 of
+them a live inline `TBD` — which `/magic.spec` addresses on its own schedule. None of
+the three is a Phase 8 input, and folding any of them in would make a delivery phase
+depend on work that has nothing to do with delivery.
+
+Phase registry in [TASKS.md](TASKS.md). The first seven phases are archived at
 [archives/tasks/phase-1.md](archives/tasks/phase-1.md),
 [archives/tasks/phase-2.md](archives/tasks/phase-2.md),
 [archives/tasks/phase-3.md](archives/tasks/phase-3.md),

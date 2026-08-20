@@ -1,26 +1,36 @@
 # Master Task Index (Registry)
 
-**Version:** 1.5.0
+**Version:** 1.6.0
 **Generated:** 2026-08-05
-**Based on:** .design/main/PLAN.md v3.3.0
+**Based on:** .design/main/PLAN.md v3.5.0
 **Based on RULES:** .design/RULES.md v1.4.0
 **Execution Mode:** Parallel
-**Status:** Complete — all 7 phases done
+**Status:** Active — Phase 8 (7 phases done, 1 active)
 
 ## Overview
 
 Tactical registry of all phases and their statuses. Atomic checklists (`T-XXXX`) live in
 the per-phase files under `tasks/`.
 
-**Decomposition state — plan complete.** All 7 phases are done (21/21, 25/25, 23/23,
-16/16, 18/18, 16/16, 16/16 — 135 tasks total) against the same `RFC`-status posture each
-was decomposed and executed under — no Pre-flight gate ever HALTed across the entire
-plan. Phase 7, the last in the plan, closed on 2026-08-20; its own planning audit and
-track rationale are preserved in its archived task file. A plan-wide L2 retrospective
-ran on phase close — see `RETROSPECTIVE.md` Session 1 for findings and recommendations,
-most notably: promote qualifying specs to `Stable` now that every one has a complete,
-tested implementation, and the suite-wide `composer test:coverage` floor (78.3%, ~20
-pre-existing Phase 1–6 files) remains open as its own, separately-scoped follow-up.
+**Decomposition state — Phase 8 active, Phases 1–7 done.** The first seven phases closed
+at 21/21, 25/25, 23/23, 16/16, 18/18, 16/16, 16/16 — 135 tasks — every one of them
+decomposed and executed under an `RFC`-status posture, and no Pre-flight gate ever HALTed
+across that entire run. Their planning audits and track rationale are preserved in their
+archived task files. A plan-wide L2 retrospective ran when Phase 7 closed on 2026-08-20;
+see `RETROSPECTIVE.md` Session 1.
+
+**Phase 8 is decomposed at 20 tasks across five tracks plus validation, and is the first
+phase in this plan built on `Stable` specifications** — both of its sources reached
+`Stable` in the 2026-08-20 stabilization pass, and both originate with the project owner
+rather than `[TZ]`, which is silent on how code reaches a server. It is also the first
+phase carrying tasks an agent must not perform: Track E's three items are
+repository-administration work, marked `Assignment: User`, and they gate four tasks in
+two other tracks.
+
+Two findings from the retrospective remain open outside Phase 8: the suite-wide
+`composer test:coverage` floor (78.3%, ~20 pre-existing Phase 1–6 files) as its own
+separately-scoped follow-up, and the 19 specifications still at `RFC`, which carry the
+set's real remaining design work and none of which is a Phase 8 input.
 
 The superseded Next.js-era archives now live under `archives/tasks/v1-nextjs/`. They
 previously occupied the filenames `archives/tasks/phase-1.md` through `phase-6.md`,
@@ -38,6 +48,7 @@ archival would have overwritten them.
 | [Phase 5](archives/tasks/phase-5.md) | Public site — shell, home, catalog, object profile, territory pages, built from Figma | `Done (Archived)` (18/18) |
 | [Phase 6](archives/tasks/phase-6.md) | SEO, portal-wide reporting, public REST API | `Done (Archived)` (16/16) |
 | [Phase 7](archives/tasks/phase-7.md) | Import/export, backups and rehearsed restore, production provisioning and observability, load test | `Done (Archived)` (16/16) |
+| [Phase 8](tasks/phase-8.md) | Delivery pipeline — branch contract, release artefact and deployment, irreversibility scan, EN/RU/agent operator documentation | `Todo` (0/20) |
 
 ## Execution Notes
 
@@ -123,7 +134,36 @@ public-site work. Full rationale in [tasks/phase-7.md](archives/tasks/phase-7.md
 the load test runs before launch, not after. It sits last by dependency, which makes it
 the natural casualty of a compressed schedule — it is not optional.
 
+**Phase 8 is four-wide at the start and one-wide at the end**: `(A ∥ D ∥ E ∥ B01) → B02
+→ B03 → B04 → T03`. It has six tracks and calling it six-wide would be false — Track B
+is a chain after its first task, and the acceptance task waits on everything.
+
+It breaks two patterns every earlier phase held. **Its central deliverable cannot be
+proven by `composer quality`** — a deploy job, a rollback, a branch protection rule and
+an approval gate are observable only against a real repository, registry and host, so
+roughly half its tasks defer behavioural proof to `T-8T03` in their own `Verify` lines
+rather than claiming a check they cannot perform. And **it is the first phase with tasks
+an agent must not perform**: Track E (automation identity, the `production` environment
+and its reviewers, the three secret tiers) is repository-administration work whose
+permissions `l2-release-pipeline.md` §5.10 deliberately withholds from automation, so
+that the identity which would benefit from approving a release cannot grant it.
+
+`T-8E02` (the `production` environment and its reviewers) is the phase's highest-cascade
+task — `T-8B02`, `T-8B03`, `T-8B04` and `T-8T03` all stop without it — and it is blocked
+by administration authority, not engineering effort. `T-8B01` (the production image stage
+and the `.dockerignore` this repository does not yet have) is the highest-cascade agent
+task; the same four tasks address the artefact it emits, by digest.
+
+Three dependencies are scheduled rather than left to be discovered:
+`.github/workflows/quality.yml` is edited by `T-8A03`, `T-8C01` and `T-8T02` across three
+tracks, so `T-8A03` is ordered first and the other two append to a settled layout;
+`docs/README.md` would have been edited by five Track D tasks, so the index edit is
+collapsed into `T-8D05` alone; and `T-8T03` (the rehearsal) sits last by dependency, the
+same position `T-7T03` occupied and with the same hazard — it is the natural casualty of
+a compressed schedule, and it is the specification's own acceptance criterion. Full
+rationale in [tasks/phase-8.md](tasks/phase-8.md) §Track Ordering.
+
 ## Meta Information
 
-- **Last Updated**: 2026-08-20 (Phase 7 complete, 16/16 — plan complete, all 7 phases done)
+- **Last Updated**: 2026-08-20 (Phase 8 planned, 0/20 — 7 phases done, 1 active)
 - **Maintainer**: Core Team

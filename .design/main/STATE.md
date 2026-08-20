@@ -4,29 +4,32 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-20 13:02
-**Phase:** 7 — Operations & Launch Readiness — **Done (16/16). Plan complete: 7/7 phases.**
+**Updated:** 2026-08-20 13:46
+**Phase:** 8 — Delivery Pipeline & Operator Documentation
 **Status:** Active
 
 ## Current Position
 
-- **Task:** **Phase 7 closed, 16/16 — the plan's last phase. All 135 tasks across all 7 phases are now Done.** Tracks A–D (import pipeline, export, backups/restore, production provisioning) closed first; Track T (validation) closed last: `T-7T01` rehearsed a real restore into a genuinely disposable fourth database (never `booking`/`booking_testing`); `T-7T02` proved the round-trip/zero-auto-merge/zero-unpermitted-column invariants across the registry; `T-7T03` ran a real load test against 52,800 seeded objects (report committed, `storage/app/benchmarks/phase-7-load.json`) and found a genuinely serious, previously invisible bug — `config('cache.serializable_classes')` defaulting to `false` was corrupting every real Redis cache hit in this codebase, invisible to the test suite's own array-driver tests; `T-7T04` backfilled its two named services to 100% coverage each, but the suite-wide 80% floor remains unmet (78.3%) — confirmed with the project owner to close on the task's own literal scope rather than open-endedly absorb ~20 files of pre-existing Phase 1–6 Policy/Model debt (recorded in full in `tasks/phase-7.md` `T-7T04` Notes and in `RETROSPECTIVE.md` Session 1). Full plan-wide L2 retrospective run: Signal 🟢 Green, 5 recommendations recorded. A recurring pattern across this whole phase: `Workflow` batches kept having their LAST agent's own final report be unreliable (session-limit cut-offs, or a stale mid-task status returned as if it were a completion report) while the underlying code on disk was, in every single case, independently verified genuinely complete and correct — the standing lesson is in Blocking Constraints below. Full non-slow suite at phase close: **838 passed (up from 818 — exactly 4+16), 0 failed, 3 skipped**, independently re-run twice after two separate transient `booking_testing` corruption incidents (both fully explained and resolved — see Blocking Constraints). Every track committed on landing: `2a90ade` (A), `6b41213` (B), `44d9a63` (C), `289210f` (D), Track T committed next.
+- **Task:** **Phase 8 planned, 0/20 — the plan is open again.** `/magic.task` on 2026-08-20 found two orphaned `Stable` specs (`l1-release-operations`, `l2-release-pipeline`, authored the same day) registered in `INDEX.md` but in no phase, and decomposed them into Phase 8 — delivery pipeline, 20 tasks over six tracks (`A` branch contract & gate scoping, `B` release artefact & deployment, `C` irreversibility scan, `D` EN/RU/agent operator documentation, `E` identity/environment/secrets, `T` validation). **Two things make this phase unlike the seven before it, and both are load-bearing for whoever executes it.** First, its central deliverable cannot be proven by `composer quality` — a deploy job, a rollback, a branch protection rule and an approval gate are observable only against a real repository, registry and host, so roughly half the tasks defer behavioural proof to `T-8T03` in their own `Verify` lines rather than claiming a check they cannot perform. Second, **Track E's three tasks are marked `Assignment: User` and an agent must not perform them** — `l2-release-pipeline.md` §5.10 deliberately withholds exactly those permissions from automation so the identity that would benefit from approving a release cannot grant it. `T-8E02` (the `production` environment and its reviewers) is the phase's highest-cascade task and blocks `T-8B02`/`T-8B03`/`T-8B04`/`T-8T03`; the blocker is administration authority, not engineering effort, so this phase can have every agent task finished and still deliver nothing. Two concrete repository findings landed in the plan during decomposition: there is **no `.dockerignore`**, and `docker/app/Dockerfile` is a development runtime that never copies source — a production `COPY . .` without an ignore file would ship `.env`, `.git/` and the whole `.design/`/`.magic/` scaffold into the release image, breaching both the secrets and the containment invariants in one layer. Both are folded into `T-8B01` rather than left to be discovered. Pre-flight note: `check-prerequisites` raised `DESIGN_DEBT_PENDING`, which was **not** honoured as a HALT — its own rationale presumes every other gate is clean, and two `ORPHANED_SPEC` warnings plus a `SYNC_GAP` (all three declaring `magic.task update` as their fix) contradicted that premise; recorded via `record-diagnostic` as `DESIGN_DEBT_FALSE_POSITIVE`.
+- **Previous:** **Phase 7 closed, 16/16 — 135 tasks across Phases 1–7 are Done.** Tracks A–D (import pipeline, export, backups/restore, production provisioning) closed first; Track T (validation) closed last: `T-7T01` rehearsed a real restore into a genuinely disposable fourth database (never `booking`/`booking_testing`); `T-7T02` proved the round-trip/zero-auto-merge/zero-unpermitted-column invariants across the registry; `T-7T03` ran a real load test against 52,800 seeded objects (report committed, `storage/app/benchmarks/phase-7-load.json`) and found a genuinely serious, previously invisible bug — `config('cache.serializable_classes')` defaulting to `false` was corrupting every real Redis cache hit in this codebase, invisible to the test suite's own array-driver tests; `T-7T04` backfilled its two named services to 100% coverage each, but the suite-wide 80% floor remains unmet (78.3%) — confirmed with the project owner to close on the task's own literal scope rather than open-endedly absorb ~20 files of pre-existing Phase 1–6 Policy/Model debt (recorded in full in `tasks/phase-7.md` `T-7T04` Notes and in `RETROSPECTIVE.md` Session 1). Full plan-wide L2 retrospective run: Signal 🟢 Green, 5 recommendations recorded. A recurring pattern across this whole phase: `Workflow` batches kept having their LAST agent's own final report be unreliable (session-limit cut-offs, or a stale mid-task status returned as if it were a completion report) while the underlying code on disk was, in every single case, independently verified genuinely complete and correct — the standing lesson is in Blocking Constraints below. Full non-slow suite at phase close: **838 passed (up from 818 — exactly 4+16), 0 failed, 3 skipped**, independently re-run twice after two separate transient `booking_testing` corruption incidents (both fully explained and resolved — see Blocking Constraints). Every track committed on landing: `2a90ade` (A), `6b41213` (B), `44d9a63` (C), `289210f` (D), Track T committed next.
 - **Spec:** **25 specs — 6 `Stable`, 19 `RFC`** after the 2026-08-20 stabilization pass (R1 of `RETROSPECTIVE.md` Session 1, now actioned). Promoted: `l1-platform-foundation`, `l1-home-page`, `l1-availability-status`, `l1-release-operations`, `l2-tech-stack`, `l2-release-pipeline`. **The 19 skips are the real remaining design work, not a status backlog** — 18 carry a live inline `TBD`, which `RULES.md` §2 forbids in a `Stable` spec, and `l1-localization` §7 still keeps per-country domains as a planned migration that the owner retired on 2026-08-15. Several TBDs ask questions the delivered implementation already answered without the answer being written back; others (`l1-room-reservation` commission model, `l1-public-api` consumer and rate limits) are genuinely open product decisions. Full per-file ledger in `INDEX.md` §Stabilization Ledger. New this day: the delivery-pipeline pair (`l1-release-operations` + `l2-release-pipeline`) — the first specs here not derived from `[TZ]`, closing the last zero-coverage domain and the three open `.drafts/TODO.md` items (CI/CD, Git Flow contract with agent dispatch, EN/RU/agent deployment docs). TZ coverage 134/134, registry parity clean (25 files, 25 rows, statuses matched both sides).
-- **Next Action:** Run /magic.task main to update the plan
+- **Next Action:** Execute T-8A01 Branch protection on `master` and `develop` — the contract made mechanical via /magic.run main
 
 ## Progress
 
 ```
-Overall: [7/7] ████████ 100%
-Plan:           [7 phases] All complete — Phase 1-7 done (135/135 tasks)
-Implementation: [21/21] Phase 1 · [25/25] Phase 2 · [23/23] Phase 3 · [16/16] Phase 4 · [18/18] Phase 5 · [16/16] Phase 6 · [16/16] Phase 7 — ALL DONE
+Phase 8: [0/20] ░░░░░░░░ 0%
+Overall: [7/8] ███████░ 88%
+Plan:           [8 phases] Phase 1-7 done (135/135 tasks) · Phase 8 planned, not started (0/20)
+Implementation: [21/21] Phase 1 · [25/25] Phase 2 · [23/23] Phase 3 · [16/16] Phase 4 · [18/18] Phase 5 · [16/16] Phase 6 · [16/16] Phase 7 · [0/20] Phase 8
+Phase 8 tracks:  A 0/4 · B 0/4 · C 0/1 · D 0/5 · E 0/3 (User) · T 0/3
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-20 **Decision: the delivery pipeline is specified as its own L1/L2 pair, not folded into `l2-tech-stack.md`** — `[TZ]` never asked for CI/CD, a branch model, or deployment documentation, so the requirement traces to the project owner and needed somewhere to live. Folding it into `l2-tech-stack.md` was rejected: that file is already a god node (degree 6, 470+ lines) and its §5.10/§5.11 describe the production *topology* and *environment values*, not the act of reaching them. Three design decisions are locked and worth not relitigating: (1) the release artefact is an immutable image **digest**, so "the previous release" cannot change under a re-pushed tag and rollback is a re-pin rather than a rebuild; (2) irreversibility is **detected mechanically** — a scan of the release's migration set for destructive operations fails the release unless the tag declares it — because discovering irreversibility mid-incident is the failure the whole reversal design exists to prevent; (3) automation is trusted with execution and reversal but never with acceptance, so the release-approving identity and the release-benefiting identity are never the same one. Spec Council found and closed three real gaps before dispatch: no concurrency contract (two tags could interleave a migration), no terminal state when the rollback is *also* unhealthy (automation would have looped while an infrastructure fault went unreported), and a term collision — "delivery" already means visitor-facing delivery in `l1-platform-foundation.md` §3.1.
+- 2026-08-20 **Decision: Phase 8 splits tasks by who may perform them, not only by what they touch** — the delivery specifications place acceptance, irreversibility declaration, and restore initiation outside what automation may decide, and withhold the matching GitHub permissions from the automation identity by design. Rather than plan those as ordinary tasks and discover the wall at execution time, Track E is carved out as an explicitly operator-performed track (`Assignment: User`), and `T-8E02` is scheduled *before* the deploy job exists — an environment added afterwards means the first deploy ran ungated, which is the one deploy where that matters most. The consequence is recorded rather than smoothed over: this phase can have every agent task finished and still deliver nothing. Related and deliberately **not** folded in: the suite-wide coverage floor (78.3%), the `--group=slow` coverage question, and the 19 `RFC` specs — none is a delivery input, and absorbing them would make a delivery phase depend on unrelated work.
 
 ## Blockers
 
@@ -87,13 +90,19 @@ Implementation: [21/21] Phase 1 · [25/25] Phase 2 · [23/23] Phase 3 · [16/16]
 
 **Reading order for a fresh session:** this file (position, decisions,
 constraints) → `CLAUDE.md` (stack, conventions, engineering discipline) →
-`RETROSPECTIVE.md` Session 1 (plan-wide findings and open recommendations, R1–R5) →
-`.design/main/PLAN.md` for cross-phase context. **The plan is complete — all 7 phases,
-135 tasks, Done.** Every phase's own task file is archived at
-`.design/main/archives/tasks/phase-{1..7}.md`; there is no active phase file. The
-recommended next command is `/magic.spec` (Recommendation R1 — promote qualifying specs
-to `Stable` now that every one has a complete, tested implementation behind it), not
-`/magic.task`/`/magic.run` — there is no Phase 8 to plan or execute.
+`.design/main/tasks/phase-8.md` (the active phase — read its §What Makes This Phase
+Different and §Track Ordering before touching any task) → `RETROSPECTIVE.md` Session 1
+(plan-wide findings, R1–R5) → `.design/main/PLAN.md` for cross-phase context.
+**Phases 1–7 are Done (135 tasks) and archived at
+`.design/main/archives/tasks/phase-{1..7}.md`; Phase 8 is active and not started
+(0/20).** The recommended next command is `/magic.run main`.
+
+Before dispatching any Phase 8 work: **Track E (`T-8E01`–`T-8E03`) is operator work and
+an agent must not perform it** — creating a GitHub App, a `production` environment with
+reviewers, or repository/environment secrets is precisely what the specification
+withholds from automation. An agent may draft those settings and read them back for
+verification. `T-8E02` gates four other tasks, so raise it with the project owner early
+rather than discovering the block at `T-8B02`.
 
 **Do not carry forward** anything about Next.js, TypeScript, Drizzle, Better Auth,
 react-admin, or Vercel — that stack is superseded and preserved only at tag `v0.1.34`.
