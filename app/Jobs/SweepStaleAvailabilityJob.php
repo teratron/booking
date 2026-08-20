@@ -31,6 +31,12 @@ final class SweepStaleAvailabilityJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    /** A daily lifecycle sweep — see config/horizon.php's own "default" supervisor. */
+    public function __construct()
+    {
+        $this->onQueue('default');
+    }
+
     public function handle(AvailabilityAdministrationService $availability, SettingsRepository $settings): void
     {
         if ($settings->get('availability.auto_reset_enabled') !== true) {

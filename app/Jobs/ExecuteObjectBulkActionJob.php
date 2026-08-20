@@ -36,7 +36,13 @@ final class ExecuteObjectBulkActionJob implements ShouldQueue
         private readonly array $objectIds,
         private readonly array $parameters,
         private readonly int $actorId,
-    ) {}
+    ) {
+        // Shares the "bulk" queue with Filament's own import/export jobs
+        // (see ReadsTransferableRegistry::getJobQueue() and
+        // ObjectImporter::getJobQueue()) — see config/horizon.php's own
+        // supervisor, sized for long-running, multi-row work.
+        $this->onQueue('bulk');
+    }
 
     public function handle(ObjectBulkActionService $service): void
     {

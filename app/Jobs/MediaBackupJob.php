@@ -30,6 +30,17 @@ final class MediaBackupJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    /**
+     * Shares {@see DatabaseBackupJob}'s "backups" queue — see
+     * config/horizon.php's own supervisor for why the two heaviest,
+     * slowest jobs in the codebase are isolated onto one dedicated,
+     * single-process queue.
+     */
+    public function __construct()
+    {
+        $this->onQueue('backups');
+    }
+
     public function handle(MediaBackupService $backups): void
     {
         $backups->run();

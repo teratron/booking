@@ -11,6 +11,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Laravel\Sanctum\Http\Middleware\CheckAbilities;
+use Sentry\Laravel\Integration as SentryIntegration;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -45,6 +46,17 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
+
+        // Routes every reported exception to the error tracker — web
+        // requests, queued jobs (Illuminate\Queue\Worker::runJob() reports
+        // through this same handler once a job's own retries are
+        // exhausted), and the scheduler (Illuminate\Console\Scheduling\
+        // ScheduleRunCommand reports the same way). One wire-up covers all
+        // three surfaces because Laravel's own worker and scheduler both
+        // report through the container's exception handler already; this
+        // is what makes a failed backup, rollup, sweep, or import job
+        // visible without a separate integration per surface.
+        SentryIntegration::handles($exceptions);
     })->create()
     // Interface catalogs live under resources/, alongside views and assets,
     // rather than at Laravel's default root-level lang/. Keeping every

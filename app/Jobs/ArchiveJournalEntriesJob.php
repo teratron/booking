@@ -34,6 +34,12 @@ final class ArchiveJournalEntriesJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    /** A daily lifecycle sweep — see config/horizon.php's own "default" supervisor. */
+    public function __construct()
+    {
+        $this->onQueue('default');
+    }
+
     public function handle(SettingsRepository $settings): void
     {
         $retentionDays = (int) $settings->get('journal.retention_days');

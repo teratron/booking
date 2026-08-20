@@ -37,6 +37,12 @@ final class NewsItemWithdrawalJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    /** A daily lifecycle sweep — see config/horizon.php's own "default" supervisor. */
+    public function __construct()
+    {
+        $this->onQueue('default');
+    }
+
     public function handle(AuditJournal $journal, ContentPublicationService $publication): void
     {
         NewsItem::query()

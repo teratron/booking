@@ -31,6 +31,12 @@ final class AnalyticsCompactionJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    /** Shares {@see AnalyticsRollupJob}'s "analytics" queue. */
+    public function __construct()
+    {
+        $this->onQueue('analytics');
+    }
+
     public function handle(SettingsRepository $settings): void
     {
         $retentionDays = (int) $settings->get('analytics.raw_retention_days');

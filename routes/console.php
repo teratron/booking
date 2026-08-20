@@ -105,3 +105,9 @@ Schedule::command('backup:clean')->dailyAt('02:00')->name('backup:cleanup');
 // silently stopped receiving artefacts, or received a corrupted one, rather
 // than relying solely on the producing job's own exit status.
 Schedule::command('backup:monitor')->dailyAt('03:00')->name('backup:monitor');
+
+// Records the point-in-time job/queue throughput sample Horizon's own
+// metrics graphs read — without this scheduled, the dashboard's metrics
+// tab stays permanently blank regardless of how much real queue activity
+// happens, since Horizon never takes a snapshot on its own.
+Schedule::command('horizon:snapshot')->everyFiveMinutes()->name('horizon:snapshot');

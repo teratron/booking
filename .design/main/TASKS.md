@@ -34,7 +34,7 @@ archival would have overwritten them.
 | [Phase 4](archives/tasks/phase-4.md) | Owner cabinet — the second Filament panel, owner-scoped throughout | `Done (Archived)` (16/16) |
 | [Phase 5](archives/tasks/phase-5.md) | Public site — shell, home, catalog, object profile, territory pages, built from Figma | `Done (Archived)` (18/18) |
 | [Phase 6](archives/tasks/phase-6.md) | SEO, portal-wide reporting, public REST API | `Done (Archived)` (16/16) |
-| [Phase 7](tasks/phase-7.md) | Import/export, backups and rehearsed restore, production provisioning and observability, load test | `Active` (9/16) |
+| [Phase 7](tasks/phase-7.md) | Import/export, backups and rehearsed restore, production provisioning and observability, load test | `Active` (12/16) |
 
 ## Execution Notes
 

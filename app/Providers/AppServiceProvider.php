@@ -11,6 +11,7 @@ use App\Models\Country;
 use App\Models\Language;
 use App\Models\ObjectType;
 use App\Models\Territory;
+use App\Models\User;
 use App\Policies\AuditPolicy;
 use App\Policies\BackupPolicy;
 use App\Services\Advertising\BannerSelectionService;
@@ -20,6 +21,7 @@ use App\Services\Localization\DatabaseOverlayLoader;
 use App\Services\Localization\LanguageRegistry;
 use App\Services\Settings\SettingsRepository;
 use Astrotomic\Translatable\Locales;
+use Filament\Facades\Filament;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Translation\Loader;
 use Illuminate\Database\Eloquent\Model;
@@ -95,6 +97,25 @@ class AppServiceProvider extends ServiceProvider
         $this->invalidateBannerSelectionCacheOnWrite();
         $this->invalidatePublicShellCacheOnWrite();
         $this->registerApiTokenRateLimiter();
+        $this->registerPulseAuthorization();
+    }
+
+    /**
+     * Gates the Pulse dashboard behind the identical door every other
+     * staff surface uses — {@see User::canAccessPanel()} — so
+     * production-performance visibility never becomes a second,
+     * independently maintained access rule that could drift from the
+     * staff panel's own permission gate. Horizon's own gate
+     * ({@see HorizonServiceProvider::gate()}) makes the
+     * identical call for the identical reason.
+     */
+    private function registerPulseAuthorization(): void
+    {
+        Gate::define('viewPulse', function (User $user): bool {
+            $panel = Filament::getPanel('admin');
+
+            return $user->canAccessPanel($panel);
+        });
     }
 
     /**

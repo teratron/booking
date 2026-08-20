@@ -42,7 +42,13 @@ final class DispatchNotificationJob implements ShouldQueue
     /** Total delivery attempts before the dispatch is given up on as failed. */
     public int $tries = 5;
 
-    public function __construct(private readonly int $dispatchId) {}
+    public function __construct(private readonly int $dispatchId)
+    {
+        // A recipient is actively waiting on this delivery — see
+        // config/horizon.php's own "notifications" supervisor, sized with
+        // the shortest wait threshold of any declared queue.
+        $this->onQueue('notifications');
+    }
 
     /** @return list<int> seconds to wait before each retry, in order */
     public function backoff(): array

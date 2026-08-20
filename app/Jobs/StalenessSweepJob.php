@@ -47,6 +47,12 @@ final class StalenessSweepJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    /** A daily lifecycle sweep — see config/horizon.php's own "default" supervisor. */
+    public function __construct()
+    {
+        $this->onQueue('default');
+    }
+
     public function handle(NotificationDispatchService $dispatcher, SettingsRepository $settings): void
     {
         $type = NotificationType::query()->where('key', 'information_out_of_date')->first();

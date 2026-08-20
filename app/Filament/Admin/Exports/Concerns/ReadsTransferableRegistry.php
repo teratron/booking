@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Filament\Admin\Exports\Concerns;
 
 use App\Filament\Admin\Exports\JsonExportFormat;
+use App\Filament\Admin\Imports\ObjectImporter;
+use App\Jobs\ExecuteObjectBulkActionJob;
 use App\Models\User;
 use App\Services\Audit\AuditJournal;
 use App\Services\DataTransfer\TransferableColumn;
@@ -43,6 +45,18 @@ trait ReadsTransferableRegistry
     public static function getModel(): string
     {
         return TransferableRegistry::get(static::transferableKey())->model;
+    }
+
+    /**
+     * Declared explicitly rather than left to the connection's implicit
+     * default — see config/horizon.php's own "bulk" supervisor, shared
+     * with {@see ObjectImporter} and
+     * {@see ExecuteObjectBulkActionJob}, all long-running,
+     * multi-row work.
+     */
+    public function getJobQueue(): string
+    {
+        return 'bulk';
     }
 
     /** @return list<ExportColumn> */

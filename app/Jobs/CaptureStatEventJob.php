@@ -47,7 +47,13 @@ final class CaptureStatEventJob implements ShouldQueue
         private readonly ?string $sourceDomain = null,
         private readonly ?string $sourceCampaign = null,
         private readonly ?string $endpoint = null,
-    ) {}
+    ) {
+        // Highest-volume job in the codebase (every public page interaction
+        // dispatches one) — see config/horizon.php's own "analytics"
+        // supervisor, sized for throughput over per-job latency, and
+        // silenced from Horizon's completed-jobs list for the same reason.
+        $this->onQueue('analytics');
+    }
 
     public function handle(): void
     {

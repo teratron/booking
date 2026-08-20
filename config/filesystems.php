@@ -55,7 +55,14 @@ return [
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
             'region' => env('AWS_DEFAULT_REGION'),
             'bucket' => env('AWS_BUCKET'),
-            'url' => env('AWS_URL'),
+            // A CDN in front of the media bucket (Cloudflare, production) —
+            // every media URL (spatie/laravel-medialibrary included, since it
+            // always resolves a file's URL through its owning disk) resolves
+            // through this host once set. Left unset, the driver falls back
+            // to AWS_URL if given, or otherwise builds the bucket's own
+            // origin URL from 'endpoint' — exactly today's local behaviour
+            // against MinIO, unchanged by this option existing.
+            'url' => env('MEDIA_CDN_URL', env('AWS_URL')),
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'throw' => false,

@@ -39,6 +39,12 @@ final class DispatchRetryJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    /** Shares {@see DispatchNotificationJob}'s "notifications" queue. */
+    public function __construct()
+    {
+        $this->onQueue('notifications');
+    }
+
     public function handle(SettingsRepository $settings): void
     {
         $maxRetries = (int) $settings->get('notifications.dispatch_max_retries');

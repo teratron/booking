@@ -25,13 +25,70 @@ services:
         condition: service_healthy
 
   worker:
-    # Queue and scheduled work as a deployment mode of the same image, never a
-    # second deployable. Horizon supersedes this command once installed.
+    # Queue supervision as a deployment mode of the same image, never a
+    # second deployable — Horizon supervises every queue declared in
+    # config/horizon.php (notifications, analytics, bulk, backups, default),
+    # replacing the single-queue queue:work command this service ran before
+    # Horizon was installed.
     build:
       context: .
       dockerfile: docker/app/Dockerfile
     restart: unless-stopped
-    command: php artisan queue:work --tries=3 --backoff=5
+    command: php artisan horizon
+    volumes:
+      - .:/var/www/html
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      REDIS_HOST: redis
+      AWS_ENDPOINT: http://minio:9000
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  scheduler:
+    # Laravel's scheduler has no daemon of its own — it is a set of
+    # declarations (routes/console.php) a *process* has to evaluate once a
+    # minute. schedule:work is that process: a long-running loop equivalent
+    # to a single crontab line running `schedule:run` every 60 seconds,
+    # without requiring a real crontab inside the container. Every
+    # Schedule::job()/Schedule::command() entry — the backup, rollup, sweep,
+    # sitemap, and cleanup jobs alike — only actually fires with this
+    # service running; Horizon supervises queues, not cron time.
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    restart: unless-stopped
+    command: php artisan schedule:work
+    volumes:
+      - .:/var/www/html
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      REDIS_HOST: redis
+      AWS_ENDPOINT: http://minio:9000
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  pulse:
+    # Drains the Redis stream config/pulse.php's "redis" ingest driver
+    # writes to (see that file's own docblock) into Pulse's storage tables,
+    # off the request/response cycle entirely — without this process, Pulse
+    # entries would accumulate in Redis and never reach the dashboard.
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    restart: unless-stopped
+    command: php artisan pulse:work
     volumes:
       - .:/var/www/html
     environment:

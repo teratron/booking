@@ -38,7 +38,12 @@ final class AnalyticsRollupJob implements ShouldQueue
      *                         omitted, since today's events are still arriving when this normally
      *                         runs
      */
-    public function __construct(private readonly ?string $date = null) {}
+    public function __construct(private readonly ?string $date = null)
+    {
+        // Shares CaptureStatEventJob's "analytics" queue — see
+        // config/horizon.php's own supervisor.
+        $this->onQueue('analytics');
+    }
 
     public function handle(): void
     {

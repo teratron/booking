@@ -47,7 +47,13 @@ final class DatabaseRestoreJob implements ShouldQueue
     public function __construct(
         private readonly string $backupPath,
         private readonly int $actorId,
-    ) {}
+    ) {
+        // Same "backups" queue as the jobs that produce what this one
+        // consumes — see config/horizon.php's own supervisor, deliberately
+        // single-process and single-try so a retried restore can never
+        // interleave with a fresh attempt against the same database.
+        $this->onQueue('backups');
+    }
 
     public function handle(DatabaseRestoreService $restores, AuditJournal $journal): void
     {

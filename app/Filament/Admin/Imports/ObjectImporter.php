@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Imports;
 
+use App\Jobs\ExecuteObjectBulkActionJob;
 use App\Models\Object_;
 use App\Services\DataTransfer\TransferableColumn;
 use App\Services\DataTransfer\TransferableRegistry;
@@ -107,6 +108,19 @@ final class ObjectImporter extends Importer
         if (blank($record->status)) {
             $record->status = 'draft';
         }
+    }
+
+    /**
+     * Declared explicitly rather than left to the connection's implicit
+     * default — see config/horizon.php's own "bulk" supervisor, shared with
+     * every exporter (see ReadsTransferableRegistry::getJobQueue()) and
+     * {@see ExecuteObjectBulkActionJob}, all long-running,
+     * multi-row work.
+     */
+    #[Override]
+    public function getJobQueue(): string
+    {
+        return 'bulk';
     }
 
     #[Override]

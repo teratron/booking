@@ -27,6 +27,16 @@ final class DatabaseBackupJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    /**
+     * Declared explicitly rather than left to the connection's implicit
+     * default — see config/horizon.php's own "backups" supervisor, sized
+     * for exactly this job's weight and destructive potential.
+     */
+    public function __construct()
+    {
+        $this->onQueue('backups');
+    }
+
     public function handle(DatabaseBackupService $backups): void
     {
         $backups->run();
