@@ -58,7 +58,7 @@ and defers its proof to `T-8T03`, rather than claiming a verification it cannot 
 
 ### Track B — Release Artefact & Deployment
 
-- [ ] [T-8B01] Production image stage and `.dockerignore`; `build` job publishing a digest
+- [x] [T-8B01] Production image stage and `.dockerignore`; `build` job publishing a digest
 - [ ] [T-8B02] `deploy` job behind the `production` environment gate
 - [ ] [T-8B03] `verify`, automatic rollback, and the escalation that refuses to retry
 - [ ] [T-8B04] `record` job — a GitHub Release per outcome, reversals included
@@ -167,7 +167,7 @@ than last despite being the least technically interesting work in the phase.
 **[T-8B01] Production image stage and `.dockerignore`; `build` job publishing a digest**
 
 - **Spec:** [l2-release-pipeline.md](../specifications/l2-release-pipeline.md) §5.3, §5.4; [l1-release-operations.md](../specifications/l1-release-operations.md) §3.6
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** `docker build --target production -f docker/app/Dockerfile .` succeeds; `docker run --rm <image> ls public/build/manifest.json` finds the built assets inside the image; `docker run --rm <image> sh -c 'ls .env .git .design .magic vendor/bin/pest 2>&1'` reports every one of them absent; the `build` job's run output carries the `sha256:` digest as a job output.
 - **Handoff:** **Hard gate for `T-8B02`, `T-8B03`, `T-8B04` and `T-8T03`** — all four address the artefact by the digest this task emits.
@@ -176,6 +176,7 @@ than last despite being the least technically interesting work in the phase.
   **There is no `.dockerignore` in this repository.** A production `COPY . .` without one ships `.env`, `.git/`, `vendor/`, `node_modules/`, and the entire `.design/` and `.magic/` scaffold into the release image — breaching both "secrets never travel with code" and "the pipeline owns no design artefacts" in a single layer. Creating it is part of this task, not a follow-up.
 
   One legitimate build-time secret: the client-side map tile credential, public by construction once shipped, supplied as a build argument scoped to the asset-build step. Recorded in the specification as a decision rather than a leak; keep it that way in the implementation.
+- **Changes:** Restructured `docker/app/Dockerfile` into `runtime` (shared PHP extensions) → `base` (dev: pcov, Composer, Node/pnpm/git — unchanged behaviour, now an explicit stage) and `vendor` + `assets` → `production` (no dev toolchain, `chown` scoped to `storage`/`bootstrap/cache`). `docker-compose.yml`'s four build services pinned to `target: base` so local dev keeps building the dev image now that `production` is a later stage in the same file. Created `.dockerignore` (secrets, `.git`, `.design`/`.magic`, `vendor`/`node_modules` rebuilt fresh, dev-only trees) — `docker/` itself stays included since `runtime`'s `COPY docker/app/entrypoint.sh` needs it and a parent-directory exclusion cannot be selectively un-excluded for one file. `pnpm-workspace.yaml`/`.npmrc` added to the `assets` stage's COPY — omitting them installs successfully most days and fails intermittently whenever a pinned dependency's latest release is recent enough to trip pnpm's own supply-chain minimum-release-age policy (confirmed live against `vite@8.2.2`). Created `.github/workflows/release.yml` with the `build` job: verifies the tag is reachable from `master` (no native trigger-level way to restrict a tag-push event to a branch), builds and pushes the `production` target to `ghcr.io/teratron/booking`, tags with both the version and `latest`, emits the digest as a job output. Verified directly: `docker build --target production` succeeds; `public/build/manifest.json` present; `.env`/`.git`/`.design`/`.magic`/`vendor/bin/pest` all absent; `composer`/`node`/`pnpm`/`git` all absent from `PATH`; image size 1.21GB; `php-fpm -t` passes; `pcov` correctly absent, all runtime extensions present. **Found and fixed while building the image**: `AppServiceProvider::boot()` crashed outright with no database configured at all (as opposed to "configured but table missing", the only case its existing guards anticipated) — this is the exact state `composer install`'s own `post-autoload-dump` hook boots the framework in, and independently confirmed to already be breaking the existing `quality.yml` CI workflow's "Install dependencies" step on every run before this fix (`gh run list` showed consecutive failures). Added `hasReachableTable()`, wrapping `Schema::hasTable()` in try/catch, used by both `overlayInterfaceCatalogFromDatabase()` and `syncTranslatableLocales()`. Regression test (`tests/Feature/AppServiceProviderBootTest.php`) confirmed failing before the fix and passing after.
 
 **[T-8B02] `deploy` job behind the `production` environment gate**
 

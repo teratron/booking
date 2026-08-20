@@ -1,0 +1,77 @@
+# Everything the production image must never receive. `docker/app/Dockerfile`'s
+# production stages run `COPY . .` — without this file that copies `.env`,
+# `.git/`, and the whole design/planning scaffold straight into the release
+# image, breaching both "secrets never travel with code" and "the pipeline
+# owns no design artefacts" in a single layer.
+
+# --- Secrets --------------------------------------------------------------
+.env
+.env.*
+!.env.example
+!.env.production.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.jks
+*.keystore
+
+# --- Version control --------------------------------------------------------
+.git
+.gitignore
+.gitattributes
+.githooks
+
+# --- Design-time and planning scaffolding ----------------------------------
+# Deleting these two directories must leave the image buildable unchanged —
+# they are excluded here, not merely unreferenced, so "unchanged" is
+# enforced rather than assumed.
+.design
+.magic
+
+# --- Dependencies rebuilt fresh inside the image ---------------------------
+# The vendor/asset build stages install from composer.lock/pnpm-lock.yaml;
+# copying the host's own vendor/node_modules would ship whatever platform
+# happened to install them (broken symlinks between the Windows host and the
+# Linux container included) instead of what the lockfiles actually pin.
+vendor
+node_modules
+.pnpm-store
+
+# --- Everything a runtime image has no use for -----------------------------
+# `docker/` stays included: `runtime`'s COPY docker/app/entrypoint.sh needs
+# it in the build context, and a parent-directory exclusion here cannot be
+# selectively un-excluded for just that one file.
+tests
+.github
+docs
+.claude
+.drafts
+.fallow
+.vscode
+.idea
+*.md
+!CHANGELOG.md
+coverage/
+/coverage.xml
+/clover.xml
+/junit.xml
+/coverage.cobertura.xml
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/testing/*
+storage/framework/views/*
+!storage/logs/.gitignore
+!storage/framework/cache/.gitignore
+!storage/framework/sessions/.gitignore
+!storage/framework/testing/.gitignore
+!storage/framework/views/.gitignore
+
+# Regenerated fresh by `composer install`'s own post-autoload-dump hook
+# (`artisan package:discover`) inside the vendor build stage — shipping the
+# host's own copy risks a dev-environment package list baked into the image.
+bootstrap/cache/*.php
+bootstrap/cache/phpstan
+!bootstrap/cache/.gitignore

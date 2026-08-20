@@ -5,6 +5,12 @@ services:
     build:
       context: .
       dockerfile: docker/app/Dockerfile
+      # Pinned explicitly: docker/app/Dockerfile now also defines a
+      # `production` stage (the release artefact `release.yml` builds), and
+      # an unpinned build resolves to whichever stage is declared last in
+      # the file. Without this, a bind-mounted dev container would silently
+      # come up on the production target — no Composer, no pnpm, no pcov.
+      target: base
     restart: unless-stopped
     volumes:
       - .:/var/www/html
@@ -33,6 +39,12 @@ services:
     build:
       context: .
       dockerfile: docker/app/Dockerfile
+      # Pinned explicitly: docker/app/Dockerfile now also defines a
+      # `production` stage (the release artefact `release.yml` builds), and
+      # an unpinned build resolves to whichever stage is declared last in
+      # the file. Without this, a bind-mounted dev container would silently
+      # come up on the production target — no Composer, no pnpm, no pcov.
+      target: base
     restart: unless-stopped
     command: php artisan horizon
     volumes:
@@ -62,6 +74,12 @@ services:
     build:
       context: .
       dockerfile: docker/app/Dockerfile
+      # Pinned explicitly: docker/app/Dockerfile now also defines a
+      # `production` stage (the release artefact `release.yml` builds), and
+      # an unpinned build resolves to whichever stage is declared last in
+      # the file. Without this, a bind-mounted dev container would silently
+      # come up on the production target — no Composer, no pnpm, no pcov.
+      target: base
     restart: unless-stopped
     command: php artisan schedule:work
     volumes:
@@ -87,6 +105,12 @@ services:
     build:
       context: .
       dockerfile: docker/app/Dockerfile
+      # Pinned explicitly: docker/app/Dockerfile now also defines a
+      # `production` stage (the release artefact `release.yml` builds), and
+      # an unpinned build resolves to whichever stage is declared last in
+      # the file. Without this, a bind-mounted dev container would silently
+      # come up on the production target — no Composer, no pnpm, no pcov.
+      target: base
     restart: unless-stopped
     command: php artisan pulse:work
     volumes:

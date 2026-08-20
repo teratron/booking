@@ -37,6 +37,7 @@ use Laravel\Sanctum\Sanctum;
 use Override;
 use OwenIt\Auditing\Models\Audit;
 use Spatie\Backup\BackupDestination\Backup;
+use Throwable;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -161,7 +162,7 @@ class AppServiceProvider extends ServiceProvider
      */
     private function syncTranslatableLocales(): void
     {
-        if (! Schema::hasTable('languages')) {
+        if (! $this->hasReachableTable('languages')) {
             return;
         }
 
@@ -185,11 +186,32 @@ class AppServiceProvider extends ServiceProvider
      */
     private function overlayInterfaceCatalogFromDatabase(): void
     {
-        if (! Schema::hasTable('interface_catalog_overrides')) {
+        if (! $this->hasReachableTable('interface_catalog_overrides')) {
             return;
         }
 
         $this->app->extend('translation.loader', fn (Loader $loader): DatabaseOverlayLoader => new DatabaseOverlayLoader($loader));
+    }
+
+    /**
+     * `Schema::hasTable()` alone assumes a database connection can be
+     * opened — true once migrations have run, false before a table exists,
+     * but it throws rather than returning false when no connection can be
+     * opened at all. That third state is not hypothetical: `composer
+     * install`'s own `post-autoload-dump` hook runs `artisan
+     * package:discover`, which boots this provider, before `.env` exists
+     * anywhere the framework has ever run from a fresh checkout — CI's own
+     * "Install dependencies" step included. Both call sites above need "not
+     * ready yet" to mean the same thing whether the cause is a missing
+     * table or a missing connection.
+     */
+    private function hasReachableTable(string $table): bool
+    {
+        try {
+            return Schema::hasTable($table);
+        } catch (Throwable) {
+            return false;
+        }
     }
 
     /**
