@@ -85,6 +85,14 @@ jobs:
       - name: Scan for destructive migrations (advisory)
         run: php artisan release:scan-destructive-migrations --advisory
 
+      # Unlike the migration scan above, this one genuinely blocks: every
+      # rendering of a changed procedure can always be added within the
+      # same pull request, so there is no "not ready to declare yet" case
+      # here the way there is for an undeployed migration.
+      - name: Check operator-documentation parity (pull request only)
+        if: github.event_name == 'pull_request'
+        run: php artisan docs:check-operations-parity
+
       # The service container's own init only creates the default POSTGRES_DB
       # (booking); the dedicated test database and its extensions — the same
       # ones docker/postgres/init/ provisions locally — are created here
