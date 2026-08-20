@@ -1,10 +1,10 @@
 # Implementation Plan
 
-**Version:** 3.3.0
+**Version:** 3.4.0
 **Generated:** 2026-08-05
 **Based on:** .design/main/INDEX.md v2.4.2
 **Based on RULES:** .design/RULES.md v1.4.0
-**Status:** Active (Bootstrap — tentative)
+**Status:** Complete (Bootstrap — tentative; all 7 phases done, specs still `RFC` — see Plan Status below)
 
 ## Overview
 
@@ -180,19 +180,19 @@ The phase is genuinely three-wide — `(A → B) ∥ C ∥ D → T` — because 
 over the aggregate tier and the API layers over the catalog retrieval contract, and
 neither touches the SEO addressing chain that gates Track B.
 
-## Phase 7 — Operations & Launch Readiness — **Active**
+## Phase 7 — Operations & Launch Readiness — **Done**
 
 *The last phase. Everything between a working portal and an operable one: moving data
 in and out, protecting it, provisioning the services it runs on, and measuring it under
 load before launch rather than after.*
 
-- [ ] **Back Office** §5.7 — import and export pipeline with column mapping and error report ([l1-back-office.md](specifications/l1-back-office.md)) [L1]
-- [ ] **Back Office** §5.6 — backups, retention, integrity verification, rehearsed restore ([l1-back-office.md](specifications/l1-back-office.md)) [L1]
-- [ ] **Third-Party Integrations** §5.1, §5.2, §5.4, §5.8 — object storage, CDN, SMTP, error tracking ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
-- [ ] **Technology Stack** §5.4, §5.9, §5.10 — queue and scheduler topology, production performance visibility, load test against the stated budgets ([l2-tech-stack.md](specifications/l2-tech-stack.md)) [L2]
+- [x] **Back Office** §5.7 — import and export pipeline with column mapping and error report ([l1-back-office.md](specifications/l1-back-office.md)) [L1]
+- [x] **Back Office** §5.6 — backups, retention, integrity verification, rehearsed restore ([l1-back-office.md](specifications/l1-back-office.md)) [L1]
+- [x] **Third-Party Integrations** §5.1, §5.2, §5.4, §5.8 — object storage, CDN, SMTP, error tracking ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
+- [x] **Technology Stack** §5.4, §5.9, §5.10 — queue and scheduler topology, production performance visibility, load test against the stated budgets ([l2-tech-stack.md](specifications/l2-tech-stack.md)) [L2]
 
 Decomposed into 16 atomic tasks across four tracks plus validation in
-[tasks/phase-7.md](tasks/phase-7.md), which carries this phase's own planning audit.
+[archives/tasks/phase-7.md](archives/tasks/phase-7.md), which carries this phase's own planning audit.
 The phase is three-wide — `(A → B) ∥ C ∥ D → T` — because data transfer, backup
 protection, and service provisioning share no code with each other, and only export
 waits, waiting entirely on `T-7A01`.
@@ -209,7 +209,7 @@ and Pulse's recorders must not cost the territory page a query, since its budget
 sits at exactly its ≤30 ceiling with no headroom (`T-7D03`).
 
 Two items extend the phase's originally-scoped list, both recorded in
-[tasks/phase-7.md](tasks/phase-7.md) §Planning Audit rather than applied silently:
+[archives/tasks/phase-7.md](archives/tasks/phase-7.md) §Planning Audit rather than applied silently:
 **Horizon** (required by the stack specification's background-execution and deployment
 sections and by the project's package list, with no later phase to catch it) is folded
 into `T-7D03`; and the **coverage floor** — `composer test:coverage` at 78.9% against
@@ -272,23 +272,36 @@ code and one changes a test matrix.
 The remaining eighteen open questions land in Phase 3 and later and are not on the
 critical path out of Phase 2.
 
-## Next Step
+## Plan Status: Complete
 
-`/magic.run main` — execute Phase 7, starting at `T-7A01` (the transferable data-type
-registry), which gates six of the phase's sixteen tasks. Tracks C (backups) and D
-(provisioning) are fully independent of it and of each other, so all three may start
-concurrently; only Track B (export) waits, and it waits on `T-7A01` alone.
+**All 7 phases are done — 135 of 135 tasks.** `T-7T01` through `T-7T04` closed Phase 7
+on 2026-08-20: a real rehearsed restore against a genuinely disposable database, the
+import/export invariant sweep, a real load test against 52,800 seeded objects (which
+found and fixed a real, previously invisible Redis cache-serialization bug), and the
+coverage backfill for the plan's two named services. A plan-wide L2 retrospective ran on
+close — Signal 🟢 Green — and is recorded in [RETROSPECTIVE.md](RETROSPECTIVE.md)
+Session 1, with five recommendations for what comes next.
 
-Phase 6 (Discovery, Reporting & Public API) is **complete, 16/16** — `T-6T02` (API
-parity invariant) closed it, proving the public API's result identity and order equal
-the catalog page's own rendering across four filter permutations against seeded volume,
-the check that would catch a "neutral ordering" regression. Phase 7 was decomposed on
-2026-08-19 against the specification set as it stands now, not as it stood when the
-phase was first scoped. Phase registry in [TASKS.md](TASKS.md). Phases 1
-through 6 are complete and archived at
+**Next step:** `/magic.spec` — Recommendation R1 of that retrospective. All 23
+specifications remain `RFC`; none was ever promoted to `Stable` across the plan's full
+execution, despite every implemented behaviour tracing to a real spec section. With the
+plan now complete and every spec backed by a tested implementation, this is the natural
+point to review the set and promote what qualifies. There is no Phase 8 — `/magic.task`
+and `/magic.run` have no further plan work queued.
+
+Two other retrospective findings carry their own follow-up, neither blocking this plan's
+completion: the suite-wide `composer test:coverage` floor (78.3% against its own 80%
+minimum — a long tail of ~20 pre-existing Phase 1–6 `Policy`/`Model` files, not this
+phase's own debt) is scoped as its own future cross-phase task; and whether
+`composer test:coverage` should read `--group=slow` coverage (several of Phase 7's own
+new backup/restore classes are only genuinely exercised there) is an open quality-tooling
+question for whoever next revises the composer scripts.
+
+Phase registry in [TASKS.md](TASKS.md). All seven phases are archived at
 [archives/tasks/phase-1.md](archives/tasks/phase-1.md),
 [archives/tasks/phase-2.md](archives/tasks/phase-2.md),
 [archives/tasks/phase-3.md](archives/tasks/phase-3.md),
 [archives/tasks/phase-4.md](archives/tasks/phase-4.md),
-[archives/tasks/phase-5.md](archives/tasks/phase-5.md), and
-[archives/tasks/phase-6.md](archives/tasks/phase-6.md) respectively.
+[archives/tasks/phase-5.md](archives/tasks/phase-5.md),
+[archives/tasks/phase-6.md](archives/tasks/phase-6.md), and
+[archives/tasks/phase-7.md](archives/tasks/phase-7.md) respectively.

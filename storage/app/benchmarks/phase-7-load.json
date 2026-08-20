@@ -1,0 +1,95 @@
+{
+    "generated_at": "2026-08-20T07:43:55+00:00",
+    "seeded": {
+        "objects": 52800,
+        "territories": 6270
+    },
+    "methodology": "Retrieval\/cache layer measured directly through the same services each public page calls (CatalogQueryService::search(), ObjectProfilePresenter::present()) \u2014 not a full HTTP round trip. Framework bootstrap cost on this host varies too widely (roughly 1s to over 100s, observed) to let a full-request measurement isolate query-layer signal. Wall-clock ms is measured and reported, never hard-asserted; the \u226430-query ceiling is asserted separately by PublicPerformanceBudgetTest.",
+    "surfaces": {
+        "catalog": {
+            "budget_ms": {
+                "miss": 400,
+                "hit": 100
+            },
+            "miss": {
+                "p50_ms": 37.19,
+                "p95_ms": 640.72,
+                "min_ms": 9.44,
+                "max_ms": 640.72,
+                "query_count_p50": 16,
+                "query_count_max": 16,
+                "samples": 15
+            },
+            "hit": {
+                "p50_ms": 0.9,
+                "p95_ms": 11.16,
+                "min_ms": 0.4,
+                "max_ms": 11.16,
+                "query_count_p50": 0,
+                "query_count_max": 0,
+                "samples": 15
+            }
+        },
+        "territory": {
+            "budget_ms": {
+                "miss": 400,
+                "hit": 100
+            },
+            "miss": {
+                "p50_ms": 247.93,
+                "p95_ms": 301.74,
+                "min_ms": 222.71,
+                "max_ms": 301.74,
+                "query_count_p50": 98,
+                "query_count_max": 124,
+                "samples": 15
+            },
+            "hit": {
+                "p50_ms": 7.01,
+                "p95_ms": 9.43,
+                "min_ms": 4.9,
+                "max_ms": 9.43,
+                "query_count_p50": 0,
+                "query_count_max": 0,
+                "samples": 15
+            }
+        },
+        "object": {
+            "budget_ms": {
+                "miss": 300,
+                "hit": null
+            },
+            "miss": {
+                "p50_ms": 137.98,
+                "p95_ms": 270.29,
+                "min_ms": 132.72,
+                "max_ms": 270.29,
+                "query_count_p50": 48,
+                "query_count_max": 48,
+                "samples": 15
+            },
+            "hit": {
+                "p50_ms": 2.59,
+                "p95_ms": 4.59,
+                "min_ms": 2.24,
+                "max_ms": 4.59,
+                "query_count_p50": 0,
+                "query_count_max": 0,
+                "samples": 15
+            }
+        },
+        "search": {
+            "budget_ms": {
+                "p95": 300
+            },
+            "escalate_to_typesense": true,
+            "p50_ms": 313.6,
+            "p95_ms": 393.44,
+            "min_ms": 39.02,
+            "max_ms": 394.59,
+            "query_count_p50": 15,
+            "query_count_max": 15,
+            "samples": 30
+        }
+    }
+}

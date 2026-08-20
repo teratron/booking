@@ -3,7 +3,8 @@
 Automated, scheduled, off-server backups for the database and for media,
 each on its own cadence, with integrity verification and generation-based
 retention. This document covers the backup side only — the rehearsed
-restore procedure lives in a separate document once one has been performed.
+restore procedure, including what that rehearsal discovered and how long it
+actually took, is recorded in [`restore-rehearsal.md`](restore-rehearsal.md).
 
 ## Destination
 

@@ -1,23 +1,26 @@
 # Master Task Index (Registry)
 
-**Version:** 1.4.0
+**Version:** 1.5.0
 **Generated:** 2026-08-05
 **Based on:** .design/main/PLAN.md v3.3.0
 **Based on RULES:** .design/RULES.md v1.4.0
 **Execution Mode:** Parallel
-**Status:** Active
+**Status:** Complete — all 7 phases done
 
 ## Overview
 
 Tactical registry of all phases and their statuses. Atomic checklists (`T-XXXX`) live in
 the per-phase files under `tasks/`.
 
-**Decomposition state.** Phases 1 through 6 are complete (21/21, 25/25, 23/23, 16/16,
-18/18, 16/16) against the same `RFC`-status posture each was successfully decomposed and
-executed under — no Pre-flight gate has ever HALTed on any of them. Phase 7, the last in
-the plan, is now decomposed into 16 atomic tasks across four tracks plus validation in
-[tasks/phase-7.md](tasks/phase-7.md), against that same posture and against the
-specification set as it stands on 2026-08-19.
+**Decomposition state — plan complete.** All 7 phases are done (21/21, 25/25, 23/23,
+16/16, 18/18, 16/16, 16/16 — 135 tasks total) against the same `RFC`-status posture each
+was decomposed and executed under — no Pre-flight gate ever HALTed across the entire
+plan. Phase 7, the last in the plan, closed on 2026-08-20; its own planning audit and
+track rationale are preserved in its archived task file. A plan-wide L2 retrospective
+ran on phase close — see `RETROSPECTIVE.md` Session 1 for findings and recommendations,
+most notably: promote qualifying specs to `Stable` now that every one has a complete,
+tested implementation, and the suite-wide `composer test:coverage` floor (78.3%, ~20
+pre-existing Phase 1–6 files) remains open as its own, separately-scoped follow-up.
 
 The superseded Next.js-era archives now live under `archives/tasks/v1-nextjs/`. They
 previously occupied the filenames `archives/tasks/phase-1.md` through `phase-6.md`,
@@ -34,7 +37,7 @@ archival would have overwritten them.
 | [Phase 4](archives/tasks/phase-4.md) | Owner cabinet — the second Filament panel, owner-scoped throughout | `Done (Archived)` (16/16) |
 | [Phase 5](archives/tasks/phase-5.md) | Public site — shell, home, catalog, object profile, territory pages, built from Figma | `Done (Archived)` (18/18) |
 | [Phase 6](archives/tasks/phase-6.md) | SEO, portal-wide reporting, public REST API | `Done (Archived)` (16/16) |
-| [Phase 7](tasks/phase-7.md) | Import/export, backups and rehearsed restore, production provisioning and observability, load test | `Active` (12/16) |
+| [Phase 7](archives/tasks/phase-7.md) | Import/export, backups and rehearsed restore, production provisioning and observability, load test | `Done (Archived)` (16/16) |
 
 ## Execution Notes
 
@@ -114,7 +117,7 @@ backup beside what it protects is not a backup, and `T-7D01` is the task most li
 collapse them while consolidating production configuration); and `T-7D03` must configure
 Pulse's recorders against the territory page's ≤30-query ceiling, which has zero headroom
 — otherwise the cost surfaces in `T-7T03` looking like a regression in already-completed
-public-site work. Full rationale in [tasks/phase-7.md](tasks/phase-7.md) §Track Ordering.
+public-site work. Full rationale in [tasks/phase-7.md](archives/tasks/phase-7.md) §Track Ordering.
 
 `T-7T03` (load test) is the one task whose *ordering* is specified rather than derived:
 the load test runs before launch, not after. It sits last by dependency, which makes it
@@ -122,5 +125,5 @@ the natural casualty of a compressed schedule — it is not optional.
 
 ## Meta Information
 
-- **Last Updated**: 2026-08-19 (Phase 7 decomposed — 16 tasks across four tracks plus validation)
+- **Last Updated**: 2026-08-20 (Phase 7 complete, 16/16 — plan complete, all 7 phases done)
 - **Maintainer**: Core Team

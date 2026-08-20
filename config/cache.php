@@ -131,8 +131,22 @@ return [
     | storage. By default, no PHP classes will be unserialized from your
     | cache to prevent gadget chain attacks if your APP_KEY is leaked.
     |
+    | This portal caches real objects, not just scalars, on the Redis store
+    | every public page reads — paginated Eloquent models from the catalog
+    | query, and plain value objects (the language/country switcher and
+    | navigation entries) from the shell chrome. With the framework default
+    | of `false`, the Redis store's own unserialize() call is passed
+    | `allowed_classes: false`, which converts every one of those objects
+    | into an unusable `__PHP_Incomplete_Class` the moment a cache HIT reads
+    | them back — confirmed directly: even a plain stdClass round-tripped
+    | through Cache::put()/Cache::get() came back incomplete. The array
+    | store the test suite runs against never serializes at all, so no test
+    | ever exercised this path; every real cache hit on Redis did. Allowing
+    | all classes here restores the behaviour every version of this
+    | application before this Laravel default existed already assumed.
+    |
     */
 
-    'serializable_classes' => false,
+    'serializable_classes' => true,
 
 ];

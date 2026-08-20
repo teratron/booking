@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-08-18
+**Generated:** 2026-08-20
 
 ## Active Technologies
 
@@ -65,15 +65,19 @@
 │   ├── app.php
 │   ├── audit.php
 │   ├── auth.php
+│   ├── backup.php
 │   ├── booking.php
 │   ├── cache.php
 │   ├── database.php
 │   ├── filesystems.php
+│   ├── horizon.php
 │   ├── logging.php
 │   ├── mail.php
 │   ├── notifications.php
 │   ├── permission.php
+│   ├── pulse.php
 │   ├── queue.php
+│   ├── sentry.php
 │   ├── services.php
 │   ├── session.php
 │   ├── sitemap.php
@@ -90,7 +94,12 @@
 ├── docker-compose.yml
 ├── docs/
 │   ├── README.md
-│   └── database-schema.md
+│   ├── backups.md
+│   ├── database-schema.md
+│   ├── mail-and-error-tracking.md
+│   ├── production-provisioning.md
+│   ├── queues-and-observability.md
+│   └── restore-rehearsal.md
 ├── package.json
 ├── phpstan.neon
 ├── phpunit.xml
