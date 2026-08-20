@@ -47,7 +47,7 @@ Optional → Implementation); the registry itself is flat.
 | [l1-feature-modules.md](specifications/l1-feature-modules.md) | Foundation. Administrator-toggleable capability modules; scoping ladder, dependencies, inertness, candidate modules | RFC | 1 | 0.2.1 |
 | [l1-localization.md](specifications/l1-localization.md) | Foundation. Countries, languages (launch: EN + RU), per-entity translation model, phased activation | RFC | 1 | 0.2.1 |
 | [l1-geography.md](specifications/l1-geography.md) | Foundation. Recursive territory hierarchy, per-country level vocabularies, landing pages | RFC | 1 | 0.1.1 |
-| [l1-platform-shell.md](specifications/l1-platform-shell.md) | Public. Header, data-driven navigation, language and country switchers, footer, 404, legal pages | RFC | 1 | 0.2.0 |
+| [l1-platform-shell.md](specifications/l1-platform-shell.md) | Public. Header, data-driven navigation, language and country switchers, footer, cookie notice, 404, legal pages | RFC | 1 | 0.3.0 |
 | [l1-home-page.md](specifications/l1-home-page.md) | Public. Front-page block inventory, data sources, curation, four-viewport behaviour | RFC | 1 | 0.1.1 |
 | [l1-object-catalog.md](specifications/l1-object-catalog.md) | Public. Object type registry, search, filters, tier-governed ordering, map | RFC | 1 | 1.1.1 |
 | [l1-object-profile.md](specifications/l1-object-profile.md) | Public. Object page; direct-contact conversion contract, rooms, prices, services, reviews | RFC | 1 | 1.1.1 |
@@ -79,4 +79,4 @@ optional module (see [l1-feature-modules.md](specifications/l1-feature-modules.m
 ## Meta Information
 
 - **Maintainer**: Core Team
-- **Last Updated**: 2026-08-05
+- **Last Updated**: 2026-08-20

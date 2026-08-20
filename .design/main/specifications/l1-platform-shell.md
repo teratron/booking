@@ -1,6 +1,6 @@
 # Platform Shell
 
-**Version:** 0.2.0
+**Version:** 0.3.0
 **Status:** RFC
 **Layer:** concept
 
@@ -26,6 +26,8 @@ sections rather than three, and the language switcher is joined by a country swi
 - [l1-object-onboarding.md](l1-object-onboarding.md) - Destination of the "add object" call to action.
 - [l1-seo.md](l1-seo.md) - Breadcrumbs and alternate-language links live in this shell.
 - [l1-advertising.md](l1-advertising.md) - Home page and header-adjacent banner slots.
+- [l1-object-profile.md](l1-object-profile.md) - The direct-contact conversion path the cookie notice must never block.
+- [l1-analytics.md](l1-analytics.md) - Source of the analytics dedup token the cookie notice discloses; §3.3's privacy-minimal design is why no opt-out is needed.
 
 ## 1. Motivation
 
@@ -48,6 +50,15 @@ every other page resolves the content the visitor expects.
      re-scopes the current page in place is not stated in [TZ]. Modeled below as
      navigation to the country landing page, which is unambiguous and always valid;
      in-place re-scoping fails for object pages, which belong to one country. -->
+- No third-party marketing, advertising, or tracking cookies exist in this
+  architecture — analytics is first-party and aggregate
+  ([l1-analytics.md](l1-analytics.md) §3.3), and advertising is server-targeted house
+  inventory, not third-party ad-tech ([l1-advertising.md](l1-advertising.md) §7).
+  §5.5's notice design follows from this: nothing optional exists to gate.
+- No Figma node covers the cookie consent notice (confirmed absent from the source
+  file outside the out-of-scope `1306:*` subtree). Its visual language derives from
+  tokens already extracted for the feedback overlay and footer legal links, not from
+  a dedicated frame.
 
 ## 3. Core Invariants (Layer 1 only)
 
@@ -71,6 +82,13 @@ every other page resolves the content the visitor expects.
 - **Static legal pages exist** — privacy policy and terms of use — linked persistently
   (`[TZ]` §4).
 - **The feedback overlay is a shared component** invokable from any page.
+- **A cookie notice discloses and confirms, without blocking the page.** It renders
+  as a dismissible overlay — never a full-page wall — because nothing it discloses is
+  optional (§5.5, §7) and the portal's core conversion path (contact click-through)
+  must stay reachable underneath it at all times
+  ([l1-object-profile.md](l1-object-profile.md) §5.3). It appears once per policy
+  version and persists the visitor's acknowledgment so it does not reappear on every
+  page.
 
 ## 5. Detailed Design
 
@@ -104,6 +122,7 @@ Footer
 └── "Add your object" call to action  -> l1-object-onboarding
 
 Overlays          Feedback popup (invokable from any page)
+                  Cookie consent notice (first visit, until acknowledged)     -> §5.5
 Standalone routes 404, privacy policy, terms of use, about, contacts
 ```
 
@@ -147,6 +166,48 @@ Georgian is still a useful answer.
 | Laptop | Full header, inline navigation | Menu bar with dropdown groups | Multi-column |
 | Desktop | Full header, inline navigation | Menu bar with dropdown groups | Multi-column |
 
+### 5.5 Cookie Consent Notice
+
+An acknowledgment notice, not an Accept/Reject selector — the portal's full
+cookie/storage footprint is first-party and essential (§2), so there is no optional
+category for a toggle to control:
+
+| Mechanism | Purpose | Category |
+| --- | --- | --- |
+| Session | Keeps an owner or staff member signed in | Essential |
+| CSRF token | Protects form submissions | Essential |
+| Active language and country | Backs both shell switchers (§5.3) | Essential |
+| Bot-protection challenge | Guards the specific public form it is placed on (registration, contact, reviews) | Essential |
+| Analytics dedup token | Coarse, rotating, non-identifying deduplication ([l1-analytics.md](l1-analytics.md) §3.3) | Essential — first-party, aggregate-only, already privacy-bounded |
+
+```mermaid
+graph TD
+    A[Visitor arrives] --> B{Acknowledgment on record for the current policy version?}
+    B -->|yes| C[Render page normally]
+    B -->|no, or recorded against a superseded version| D[Render notice]
+    D --> E[Visitor acknowledges]
+    E --> F[Record acknowledgment + current policy version]
+    F --> C
+```
+
+The notice:
+
+- Names what is stored and why, in one or two sentences, and links to the privacy
+  policy's cookie section rather than restating that content, matching this shell's
+  existing footer pattern (§5.1).
+- Renders in the visitor's active language ([l1-localization.md](l1-localization.md)
+  §3), like every other shell string.
+- Is present in all four viewport classes (§5.4), collapsing to a bottom sheet on
+  phone and a bar or corner card on larger viewports — the same responsive posture as
+  the feedback overlay it sits alongside.
+- Never blocks the page beneath it or the contact-click conversion path
+  ([l1-object-profile.md](l1-object-profile.md) §5.3, §3).
+- Re-appears when the recorded acknowledgment's policy version no longer matches the
+  current one, so a material change to what the portal stores re-discloses rather
+  than relying on a stale acknowledgment.
+- Dismisses only on the visitor's explicit action — never on scroll, timeout, or
+  navigation — so the acknowledgment is real, not incidental.
+
 ## 6. Implementation Notes
 
 1. Build the shell as a layout wrapping every public route, so all domain specs
@@ -159,6 +220,13 @@ Georgian is still a useful answer.
 4. Emit the language alternates once, in the shell, and reuse them for both the
    switcher and [l1-seo.md](l1-seo.md)'s alternate links — two independent
    implementations will disagree.
+5. The cookie notice's visual language has no Figma node to pull from (§2) — reuse
+   the button, overlay, and link tokens already extracted for the feedback popup and
+   the footer's legal links rather than inventing new ones.
+6. If a genuinely optional client-side mechanism is introduced later (a third-party
+   integration outside today's set), §5.5's acknowledgment-only model must be
+   revisited to add a real opt-out — do not pre-build a toggle for a category that
+   does not exist yet.
 
 ## 7. Drawbacks & Alternatives
 
@@ -175,6 +243,23 @@ no country of their own, such as the blog.
 right call if the countries launched sequentially; `[TZ]` §1.3 launches three at once,
 so the switcher is release-one functionality.
 
+**An Accept/Reject or multi-category selector**, the pattern on most
+consent-management platforms. Every mechanism this portal stores is first-party and
+essential (§5.5) — there is no optional processing for a Reject action or a category
+toggle to act on. A selector offering a choice the portal cannot honor would be a
+dark pattern, not extra compliance.
+
+**A dedicated cookie policy page, separate from the privacy policy.** The disclosed
+footprint is five first-party mechanisms, all essential — a paragraph inside the
+existing privacy policy page covers it without a second legal route, a second sitemap
+entry, and a second translation surface to maintain.
+
+**A blocking cookie wall that gates page content until acknowledged.** Common on
+EU-facing sites with real optional processing to gate. This portal has none (§5.5),
+and blocking access would tax the one interaction the whole product is built around —
+reaching the owner's contact channel ([l1-object-profile.md](l1-object-profile.md)
+§5.3) — for no compliance benefit.
+
 ## Canonical References
 
 | Alias | Path | Purpose |
@@ -189,3 +274,4 @@ so the switcher is release-one functionality.
 | --- | --- | --- |
 | 0.1.0 | 2026-07-30 | Initial draft derived from recurring header/footer/overlay frames. |
 | 0.2.0 | 2026-08-05 | Minor: widened navigation to the portal's full section list with data-driven grouping; added the country switcher, global header search, breadcrumbs, terms-of-use page, and the four-viewport responsive matrix. |
+| 0.3.0 | 2026-08-20 | Minor: added the cookie consent notice as a shared shell overlay (§5.5) — an acknowledgment-only model, not Accept/Reject, because the portal's full storage footprint is first-party and essential; no dedicated Figma node exists for it, so it reuses existing overlay and footer tokens. |
