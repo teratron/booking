@@ -1,6 +1,6 @@
 # Technology Stack
 
-**Version:** 2.2.0
+**Version:** 2.3.0
 **Status:** RFC
 **Layer:** implementation
 **Implements:** l1-platform-foundation.md
@@ -29,6 +29,7 @@ anchoring produced a wrong answer. §1 records why.
 - [l1-notifications.md](l1-notifications.md) - Scheduled jobs.
 - [l1-seo.md](l1-seo.md) - Rendering strategy.
 - [l1-feature-modules.md](l1-feature-modules.md) - Runtime gating enforced server-side.
+- [l1-platform-shell.md](l1-platform-shell.md) - The shared shell the accessibility audit covers once for every page (§5.9).
 
 ## 1. Motivation
 
@@ -79,6 +80,7 @@ stack.
 | L1 Invariant | Implementation |
 | --- | --- |
 | Responsive parity (4 viewports) | Blade + Tailwind, mobile-first, one template per page. Back office exempt from phone parity per `[TZ]` §132. |
+| Accessibility parity | `axe-core` evaluated against the rendered DOM inside Pest browser tests (§5.9) — audits Blade's actual output, not its source. |
 | Localization-completeness | `astrotomic/laravel-translatable` for entity text in separate tables; Laravel's `lang/` catalogs for interface strings. |
 | Public discoverability | Server-rendered Blade; `spatie/laravel-sitemap` for sitemaps; SEO fields on translation records. |
 | Geographic scoping | `staudenmeir/laravel-adjacency-list` — recursive CTE relations on Eloquent, no per-request tree walk. |
@@ -241,6 +243,7 @@ docker/                     # Postgres init SQL, local infrastructure
 | **Rector** | Dead-code rules and automated upgrades between framework majors. |
 | **Laravel Pulse** | Production performance visibility. |
 | **N+1 detector** | Development-time; fails the test run rather than warning. |
+| **axe-core**, via Pest's browser tests | Rendered-DOM WCAG 2.2 AA audit — not a linter pass; Blade's output is server-rendered, not statically visible. |
 
 Gates are wired as Composer scripts (`composer quality`) so local and CI invocation are
 identical, and they run continuously rather than at task boundaries. Conventions are
@@ -248,6 +251,16 @@ enforced by Pest `arch()` tests rather than by review — including the
 specification-containment rule, which is mechanically checkable: no `.design` path,
 task ID, or specification filename may appear anywhere under `app/`, `resources/`, or
 `database/`.
+
+**Accessibility is evaluated the same way, not linted separately.**
+`pestphp/pest-plugin-browser` drives a real browser against each page under test, and
+`axe-core`'s ruleset runs against the resulting DOM, asserting zero WCAG 2.2 AA
+violations. This targets *rendered* output deliberately: Blade emits server-rendered
+HTML, and Biome — this stack's JS/TS tool — has no visibility into `.blade.php`
+source, so a static linter would audit nothing. Coverage is the shared shell
+([l1-platform-shell.md](l1-platform-shell.md) §5.1, present on every page) plus one
+representative instance per page template, matching the existing browser-test
+philosophy of critical flows over exhaustive instance coverage.
 
 `[TZ]` §18 and §94 make performance a requirement rather than an aspiration, so the
 budgets are stated and measured:
@@ -342,6 +355,10 @@ Sequenced by dependency.
    own storage bucket, database, and service keys, never copied from development —
    a shared bucket or key between environments is the easy way to a production
    incident traced back to a development mistake.
+9. **For ad-hoc accessibility investigation during development** — not the CI gate,
+   §5.9 covers that — the environment's own `chrome-devtools-mcp:a11y-debugging`
+   tool audits a live page through Chrome DevTools at no added dependency. Reach for
+   it before reaching for a new one.
 
 ## 7. Drawbacks & Alternatives
 
@@ -371,6 +388,29 @@ Scout makes the swap a configuration change.
 **Payload CMS, react-admin** — both were considered while the stack was JavaScript. Both
 are moot now; Filament covers what they were being asked to cover, natively.
 
+**Three externally-referenced Claude Skills** (`wshobson/agents` →
+`wcag-audit-patterns`, `affaan-m/ecc` → `accessibility`, `mastepanoski/claude-skills`
+→ `wcag-accessibility-audit`) as the verification mechanism. Checked against their
+source repositories: the first two could not be confirmed to exist in their
+advertised catalogs; the third is real, but by its own documentation "functions
+within an active Claude session" — session-dependent, not something CI can invoke
+unattended. A Skill suits an ad-hoc deep-dive during development (§6 item 9); none of
+the three can *be* the continuous gate this decision needs, because a continuous gate
+must run without an agent session present.
+
+**A separate Node-side pipeline** (`pa11y-ci`, or a standalone Playwright + axe-core
+script) as its own CI job. Works, and fragments the quality gate in two — a second
+toolchain, a second local command to remember, a second report format. Pest's
+browser tests are already this project's mechanism for browser-driven checks (§5.9);
+running `axe-core` inside that same run keeps accessibility inside `composer
+quality` rather than beside it.
+
+**Biome or `eslint-plugin-jsx-a11y`** for static accessibility linting. Both are
+JSX/TSX-oriented and have no visibility into `.blade.php` templates — Biome already
+runs in this stack (`pnpm run lint`) but cannot see the markup that actually reaches
+a browser here. Rejected on the same "audit what's rendered, not what's written"
+ground as the Node pipeline above, not because the tools are weak.
+
 ## Canonical References
 
 | Alias | Path | Purpose |
@@ -393,3 +433,4 @@ are moot now; Filament covers what they were being asked to cover, natively.
 | 2.0.0 | 2026-08-05 | **Stack replacement.** Laravel 13 + Filament 5 + PostgreSQL/PostGIS + Redis, self-hosted monolith. Records why the v1.x reasoning was wrong (SEO conflated with client interactivity; conclusion anchored on an existing codebase). Resolves the deployment fork to self-hosted. Replaces the missing-capability ledger with a package set covering eleven specification sections, and states the remaining bespoke surface explicitly. |
 | 2.1.0 | 2026-08-05 | Minor: expanded §5.9 with architecture tests, dead-code and N+1 tooling, Laravel Pulse, the `composer quality` gate, and numeric performance budgets tied to `[TZ]` §18/§94 — including the requirement that benchmarks run against seeded realistic volume rather than fixtures. |
 | 2.2.0 | 2026-08-20 | Minor: added §5.11 Environment Configuration — the dev/production divergence table across storage, assets, mail, bot-protection, map tiles, error tracking, and cookie transport; disambiguated from the §4 "configuration over code" invariant, which governs business data, not infrastructure bootstrapping. |
+| 2.3.0 | 2026-08-20 | Minor: added WCAG 2.2 AA verification to §5.9 — `axe-core` against the rendered DOM inside Pest browser tests (`pestphp/pest-plugin-browser`), folded into `composer quality` rather than a separate pipeline. Implements the new accessibility-parity invariant ([l1-platform-foundation.md](l1-platform-foundation.md) §3.1 v1.5.0). Records why the three externally-referenced Claude Skills, a standalone Node pipeline, and static JS linting were rejected. |

@@ -1,6 +1,6 @@
 # Platform Foundation
 
-**Version:** 1.4.1
+**Version:** 1.5.0
 **Status:** RFC
 **Layer:** concept
 
@@ -94,6 +94,13 @@ specs from each carrying their own private theory of what the product is.
 - **Performance as a requirement, not a goal**: catalog and territory pages must
   remain fast at full data scale — caching, lazy loading, and image derivatives are
   in scope from the first release, not deferred optimizations (`[TZ]` §18, §94).
+- **Accessibility parity** [ADDED — v1.5.0]: every user-facing page is operable and
+  perceivable through assistive technology — screen reader, keyboard-only
+  navigation — to the same functional depth as its visual presentation, targeting
+  WCAG 2.2 Level AA. Distinct from `[TZ]` §78's object-level "accessible for people
+  with disabilities" amenity — a facility feature an owner declares about their
+  physical location — this invariant governs the portal's *own* interface.
+  Mechanism: [l2-tech-stack.md](l2-tech-stack.md) §5.9.
 
 ### 3.2 Reach
 
@@ -372,3 +379,4 @@ trade is no longer close.
 | 1.3.0 | 2026-08-05 | Minor: second full requirements pass over `[TZ]`. Added §5.4 client-stated delivery stages with the §98 approval gate and the content-population stage; linked the three specs written to close gaps found in that pass — l1-home-page.md (§4/§5), l1-public-api.md (§19), l2-data-model.md (§21/§98). |
 | 1.4.0 | 2026-08-05 | Minor: closed the deployment-target TBD in §2 — resolved to self-hosted following the approved stack change to Laravel 13 + Filament 5. This spec's invariants are otherwise unaffected by that change, being technology-neutral by construction. |
 | 1.4.1 | 2026-08-05 | Patch: translated the §5.4 delivery-stage list and quoted `[TZ]` excerpts from Russian to English per the project's language policy, and corrected the stage-3 note — the `[TZ]` §98 approval is waived and the deployment fork closed, so no gate precedes backend work. |
+| 1.5.0 | 2026-08-20 | Minor: added the accessibility-parity invariant to §3.1 Delivery — WCAG 2.2 AA for the portal's own interface, explicitly distinguished from `[TZ]` §78's unrelated object-amenity "accessible for people with disabilities" flag. Mechanism recorded in [l2-tech-stack.md](l2-tech-stack.md) §5.9. |

@@ -6,9 +6,9 @@
 
 - [ ] прекрутить и настроить CI/CD (по максимуму, только то, что необходимо)
 - [ ] на стадии запуска продакшена прекрутить Git Flow систему и автоматизировать с помощью ИИ диспетчеризацию между ветками, тестами и заливкой в мастер с последующим деплоем в продакшн, добавить документацию как пользоваться и настроить Git Flow на английском и русском языках в разных markdown-файлах
-- [ ] документация (`*.md`) + промпт (`*.prompt.md`) по развёртыванию проекта на английском и русском языках в разных markdown-файлах
+- [ ] документация (`*.md` для пользователей, подробная, для человека не понимающего ничего в IT) + промпт (`*.prompt.md` для ИИ) по развёртыванию проекта на английском и русском языках в разных markdown-файлах
 - [ ] ARIA (Accessible Rich Internet Applications), skills: <https://github.com/lifan0127/ai-research-assistant>, <https://github.com/pnoch/aria-skills>, <https://github.com/dylantarre/design-system-skills/tree/main/skills/accessibility/aria-patterns>
-- [ ] WCAG (Web Content Accessibility Guidelines), skills: `npx skills add https://github.com/wshobson/agents --skill wcag-audit-patterns`, `npx skills add https://github.com/affaan-m/ecc --skill accessibility`, `npx skills add https://github.com/mastepanoski/claude-skills --skill wcag-accessibility-audit`
+- [x] WCAG (Web Content Accessibility Guidelines), skills: `npx skills add https://github.com/wshobson/agents --skill wcag-audit-patterns`, `npx skills add https://github.com/affaan-m/ecc --skill accessibility`, `npx skills add https://github.com/mastepanoski/claude-skills --skill wcag-accessibility-audit`
 - [x] всплывающее уведомление подтверждения cookies
 - [x] настройки для продакшена: .env.production, vite.config.js и т.д. со своими нюансами отличными от dev-версии
 - [x] ~~Технологический стек (последние и стабильные версии): React или NextJS, TypeScript, PostgreSQL, PNPM, Vite, <https://github.com/facebook/astryx> на рассмотрение или Tailwind CSS + shadcn/ui, Fallow, Biome. По мере вёрстки и разбора механик и функционала, по проекту в figme, будут появляться новые элементы технологического стека, предлагай их на рассмотрение (возможно некоторые могут меняться).~~ **ОТМЕНЁН 2026-08-05** — реализация на этом стеке сохранена в теге `v0.1.34`. Актуальный стек ниже.
