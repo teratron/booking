@@ -1,6 +1,7 @@
 # Dotenv files (local secrets — never commit)
 .env*
 !.env.example
+!.env.production.example
 
 # IDE
 .vscode/

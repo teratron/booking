@@ -6,13 +6,14 @@ International tourism portal-directory for Moldova, Ukraine, and Georgia. **Not 
 
 - **Language**: PHP 8.5+, `declare(strict_types=1)` in every file.
 - **Framework**: Laravel 13+ — monolith. Blade + Livewire 4+ for the public site; no separate frontend application.
-- **Admin & owner cabinet**: Filament 5+ — two panels from one toolkit (`/admin` for staff, `/cabinet` for object owners).
+- **Admin & owner cabinet**: Filament 5+ — two panels from one toolkit. Both panel paths are runtime-configurable (`config/booking.php`, overridable via `ADMIN_PANEL_PATH` / `CABINET_PANEL_PATH`), never hardcoded — the staff panel deliberately does not sit at the conventional `/admin`, since a guessable staff address invites the credential-stuffing traffic its sign-in throttle then has to absorb. Default staff path is `portal-admin`; default owner-cabinet path is `cabinet`.
 - **Database**: PostgreSQL 18+ + PostGIS. Extensions: `postgis`, `pg_trgm`, `unaccent`.
 - **Cache / queue / session**: Redis 8+; queues via Laravel Horizon.
 - **Object storage**: S3-compatible (MinIO locally, Cloudflare R2 / Backblaze B2 in production).
 - **Frontend**: Blade + Livewire 4+ + Alpine.js + Tailwind CSS 4+, bundled by Vite.
 - **Maps**: MapLibre GL JS with a paid or self-hosted tile provider.
-- **Package manager**: Composer (PHP), pnpm (asset pipeline only).
+- **Error tracking**: Sentry (`sentry/sentry-laravel`), production.
+- **Package manager**: Composer (PHP), pnpm (asset pipeline via Vite, plus JS/TS lint and static analysis via Biome and Fallow).
 - **Quality**: Pest (tests), PHPStan level 8+ via Larastan, Laravel Pint (formatting), Rector (upgrades).
 
 Always install the latest stable release of every package; do not pin back a major version as a precaution.
@@ -33,7 +34,9 @@ Each maps to a specification requirement — do not hand-build what these alread
 | `staudenmeir/laravel-adjacency-list` | Recursive territory hierarchy (CTE) |
 | `laravel/sanctum` | API tokens |
 | `laravel/horizon` | Queue monitoring |
-| `laravel/scout` | Search abstraction (Postgres driver first, Typesense later) |
+| `laravel/pulse` | Production performance monitoring dashboard |
+| `sentry/sentry-laravel` | Error and exception tracking |
+| `laravel/scout` | Search abstraction (Postgres driver first, Typesense later) — **not yet installed**; the catalog runs on PostgreSQL full-text search directly until this is added |
 | `filament/filament`'s native multi-factor auth | Two-factor authentication — built on `pragmarx/google2fa`, which Filament already depends on directly; the separate `pragmarx/google2fa-laravel` wrapper (facade, config, middleware) was removed as dead weight once the panel was wired to the native implementation instead |
 | Filament import/export actions | XLSX / CSV import and export |
 
@@ -41,7 +44,13 @@ Each maps to a specification requirement — do not hand-build what these alread
 
 ```plaintext
 app/
-├── Models/                 # Eloquent models
+├── Models/                 # Eloquent models — relations, casts, and scopes only
+│   ├── Concerns/           # Shared traits
+│   └── Scopes/             # Global scopes (e.g. soft-delete, moderation visibility)
+├── Http/
+│   ├── Controllers/        # Thin controllers — public routes, versioned API, admin downloads
+│   └── Middleware/
+├── Providers/               # Service providers, including the Filament panel providers
 ├── Filament/
 │   ├── Admin/              # Staff panel: resources, pages, widgets
 │   └── Cabinet/            # Owner panel: resources scoped to the owner
@@ -49,12 +58,14 @@ app/
 ├── Services/               # Business logic — ranking, bumps, banner targeting, statistics
 ├── Policies/               # Authorization, including geo/category-scoped rules
 ├── Jobs/                   # Queued work: expiry sweeps, notifications, rollups
+├── Listeners/               # Event listeners
+├── Exceptions/               # Domain exceptions for refused/invalid actions
 ├── Console/Commands/       # Scheduled entry points
 └── Support/                # Cross-cutting helpers
 
 resources/
 ├── views/                  # Blade templates (public site)
-├── lang/                   # Interface translation catalogs
+├── lang/                   # Interface translation catalogs (en, ru)
 ├── css/  js/               # Tailwind + Alpine, bundled by Vite
 
 database/
@@ -63,7 +74,15 @@ database/
 └── seeders/                # Registries: languages, countries, territory levels,
                             # object types, amenities, tiers, roles, permissions
 
+tests/
+├── Architecture/           # Pest arch() + content-scan convention checks
+├── Feature/                # Grouped by surface: Admin, Api, Cabinet, Operations, Public
+├── Unit/
+└── Fixtures/                # Shared fixtures
+
 docker/                     # Local infrastructure (Postgres init SQL, etc.)
+docs/                       # Operational runbooks — see "Documentation" below
+.github/workflows/         # CI pipeline
 .design/                    # Specifications — read-only for implementation work
 ```
 
@@ -75,6 +94,8 @@ docker/                     # Local infrastructure (Postgres init SQL, etc.)
 - **Never hard-code the language or country count.** Both are runtime registries.
 - **Catalog ordering is placement-tier first.** A lower-tier object must never outrank a higher-tier one except by an explicit administrator pin. Do not "improve" this into relevance-first ordering.
 - **Soft delete by default** for objects, users, news, promotions, banners, articles. Filter in a global scope, not per query.
+- **A moderation or visibility global scope applies to public-facing and catalog queries only** — never to a query resolving what an authenticated, already-authorized owner or staff member can reach about their own record. Strip it explicitly there, or the cabinet and admin panels silently can't see a user's own pending work.
+- **Panel URL paths are configuration, never a literal string.** Read a panel's path from its config value in every redirect, link, robots rule, CSP directive, or sitemap entry — the staff panel in particular ships with a deliberately non-guessable default, so a hardcoded guess looks plausible while quietly missing the real, reachable path.
 - **Scheduled work belongs in Jobs**, dispatched by the scheduler — never executed during a web request.
 - Prefer Filament's own abstractions (resources, relation managers, actions, widgets) over custom pages. Reach for a custom page only when the resource model genuinely does not fit.
 
@@ -85,6 +106,7 @@ docker/                     # Local infrastructure (Postgres init SQL, etc.)
 - Register permissions as Filament resource policies, not as inline `visible()` closures.
 - Moderation uses record versions: the published record stays untouched while a pending revision exists, so a rejected edit can never damage a live page.
 - Bulk actions require a confirmation naming the affected record count.
+- **Never mark a page's lifecycle hooks with PHP's `#[\Override]` attribute** — `beforeCreate`, `afterCreate`, `beforeSave`, `afterSave`, `beforeDelete`, `afterDelete`, and their `CreateRecord`/`EditRecord` equivalents are discovered by name at runtime, not inherited, so the class fatals the moment it loads. Genuine overrides of real parent methods (`mutateFormDataBeforeFill`, `handleRecordCreation`, and similar) keep `#[\Override]` as normal.
 
 ## Design Source — Figma First
 
@@ -122,32 +144,38 @@ Declared as Composer scripts so the commands are identical locally and in CI:
 | `composer fix` | `pint` — format the codebase |
 | `composer lint` | `pint --test` — fail on any formatting drift |
 | `composer analyse` | `phpstan analyse` — Larastan, level 8 |
-| `composer test` | `pest` — unit, feature, architecture |
+| `composer test` | `pest`, excluding the `slow` group — unit, feature, architecture |
 | `composer test:arch` | Architecture tests only (fast convention check) |
-| `composer test:coverage` | Coverage with the configured minimum |
+| `composer test:coverage` | Coverage with the configured minimum, excluding the `slow` group |
+| `composer test:slow` | The realistic-volume tests excluded from `test`/`test:coverage` — run before a release, not on every gate pass |
 | `composer bench` | Performance benchmarks (§ below) |
 | `composer audit` | `composer audit` — known security advisories |
 | `composer unused` | Detect declared-but-unimported dependencies |
-| `composer quality` | All of the above, in order — the pre-commit gate |
+| `composer rector:dry` | Preview Rector-recommended upgrades — manual, periodic, not part of the gate |
+| `composer rector` | Apply them |
+| `composer quality` | `lint → analyse → test → test:coverage → audit → unused`, in that order — the pre-commit gate. (`fix`, `bench`, and `rector` are excluded: the first mutates the tree, the other two are manual checks.) |
 
 CI runs `composer quality` on every push. Set it up during scaffolding, not later.
 
+The JS/TS side runs its own gate, in parallel: `pnpm run fix` (Biome, format) / `pnpm run lint` (Biome, check), and `pnpm run analyse` (Fallow, static analysis) / `pnpm run audit` (Fallow, dependency audit) / `pnpm run review` (Fallow, review). `pnpm run quality` runs lint + analyse — run it alongside `composer quality`, not instead of it.
+
 ### Architecture Tests
 
-Conventions are enforced by Pest `arch()` tests, not by review discipline — a rule a machine cannot check is a rule that erodes. At minimum:
+Conventions are enforced by Pest tests in the Architecture suite — the `arch()` DSL for dependency-shape rules, and a plain content-scanning test where `arch()` has no primitive (the containment check below). Either way, a rule a machine cannot check is a rule that erodes. At minimum:
 
 - `declare(strict_types=1)` in every file.
 - No `dd`, `dump`, `var_dump`, `ray`, or `print_r` anywhere outside tests.
-- Models live only in `App\Models` and hold no business logic.
+- Models carry no dependency on `App\Services`, `App\Http`, `App\Jobs`, `App\Filament`, or `App\Livewire` — `App\Models` stays thin.
 - `App\Filament` and `App\Livewire` never use the `DB` facade directly — they go through `App\Services`.
 - Controllers, jobs, and services are `final` unless deliberately extended.
-- **No `.design` path, task ID, phase name, or specification filename appears anywhere in `app/`, `resources/`, or `database/`** — the containment rule below, made mechanical.
+- No `App\Policies` method accepts a caller-supplied boolean parameter — a policy's decision derives only from the acting user, the target, and the stored grant, never a flag the call site can pass to silently bypass the scope check ("Authorization is server-side, always" above, made mechanical).
+- **No `.design` path, task ID, phase name, or specification filename appears anywhere in `app/`, `resources/`, `database/`, or `tests/`** — the containment rule below, made mechanical.
 
 ### Testing
 
 - Pest for unit and feature tests; browser tests for the flows a broken selector would silently kill — contact-channel clicks, the availability toggle, moderation approve and reject.
 - Every bug fix starts with a failing test that reproduces it.
-- Seeders produce **realistic volume** for the tests that care about volume. The catalog ranking query behaves differently against 12 fixtures and against 50 000 objects; only the second tells you anything.
+- Seeders produce **realistic volume** for the tests that care about volume. The catalog ranking query behaves differently against 12 fixtures and against 50 000 objects; only the second tells you anything. These are the `slow`-group tests — run them explicitly (`composer test:slow`), since the default gate excludes them for speed.
 - `php artisan migrate:fresh --seed` must apply cleanly from empty, every time.
 
 ### Benchmarking & Performance Budgets
@@ -174,7 +202,7 @@ Written in **English**, for a developer who did not build this and may be mainta
 - **Docblocks on every public service method**: what it guarantees, what it throws, what it assumes — not a line-by-line narration of the body.
 - **Comment the *why*, never the *what*.** Non-obvious constraints, business rules with a surprising shape, and deliberate deviations get a sentence. Obvious code gets nothing — noise costs more than it explains.
 - **`README.md`**: setup from zero to a running local instance, architecture map, common tasks.
-- **`docs/`**: deployment, operations runbook, and the **backup and restore procedure** — `[TZ]` §97 and §131 require a documented, rehearsed restore, not just working backups.
+- **`docs/`**: operational runbooks for a developer taking this to production — the applied database schema, backup and restore procedure (including a rehearsed restore against a real artefact), storage/CDN provisioning, mail relay and error tracking, and queue/scheduler observability. `[TZ]` §97 and §131 require the restore specifically to be documented and rehearsed, not just working backups. Add a new runbook whenever a new operational concern goes live, and keep `docs/README.md`'s index in sync.
 - Filament labels, table columns, and form fields go through translation keys, never literal strings.
 
 ### Cleanliness
@@ -183,7 +211,30 @@ Written in **English**, for a developer who did not build this and may be mainta
 - No dead code, no unused dependencies. The previous implementation of this project accumulated eleven unused packages before anyone noticed — `composer unused` and Rector's dead-code rules exist to prevent the repeat.
 - A `TODO` carries plain-language context and an owner, never a task ID or a specification reference.
 - Migrations are never edited after being applied to a shared environment — add a new one.
+- **Write one explicit, literal `Schema::table('name', …)` or `Schema::create('name', …)` call per table**, even in a migration touching several — Larastan's schema-aware inference only recognizes the literal call; a table name resolved through a variable leaves every new column on it silently untyped everywhere it's used, with no warning from `composer analyse`.
 - Prefer deleting an abstraction to generalizing it further.
+
+## Release & Deployment
+
+Git Flow over a single self-hosted production line — no blue/green pair, no release train, no manual deploys. This is the path an accepted change takes to reach the portal, and reversing that path when a release turns out wrong.
+
+| Branch | Role |
+| --- | --- |
+| `feature/*` | Work in progress, branched from `develop`. Merged only by reviewed pull request, deleted on merge. |
+| `develop` | Integration line — every accepted change lands here first. Gated, never deployed directly. |
+| `release/x.y.z` | A frozen integration state, for stabilization only (a translation fix, a config correction) — not for new work. Merges to `master` **and** back to `develop`. |
+| `master` | Production. Protected: no direct pushes, linear history, tagged on every merge. |
+| `hotfix/x.y.z` | Urgent production fix, branched from `master`. Merges to `master` **and** back to `develop` — the merge-back is mandatory, not a courtesy. An unmerged hotfix is a bug scheduled to reappear. |
+
+- **`master` is the only production line.** A release ships only through the pipeline — triggered by pushing a version tag, built once, deployed, then health-checked before it counts as live. Editing the production host directly, applying a migration by hand, or deploying from a working copy is an incident to record and reverse, never a faster route.
+- **One release at a time.** Production deploys are serialized; a second release never starts while one is still in flight. A queued release waits rather than overlapping with one that's still migrating.
+- **Every release leaves a record.** What was deployed, the commit it was built from, who or what authorized it, and the outcome. A rollback is a release too, and is recorded the same way — an action whose actor can't be named later didn't happen accountably.
+- **Reversal is a redeploy, not a rebuild — and it has a floor.** Every release must be returnable to the previous released state without rebuilding it and without whoever shipped it being involved. A migration a rollback cannot undo must be declared irreversible **before** the release ships; that routes it to the administrator-gated backup restore instead of an ordinary rollback, and the decision is never made mid-incident.
+- **A rollback that doesn't restore health escalates — it never retries.** If the site is still unhealthy after redeploying the last known-good release, the release wasn't the fault. Stop, hold the site in maintenance mode, notify, and hand off to a person, instead of redeploying in a loop chasing a fix that isn't there.
+- **Automation may execute and reverse; only a person accepts and commits.** An agent may advance a reviewed, gated change into integration, cut a release candidate from a green integration state, trigger a rollback on a failed health check, and report or record outcomes — unattended. A person must grant the review itself, accept a candidate into production, declare a release irreversible, initiate a backup restore, or change what the quality gate checks and who may approve it.
+- **Never let one actor both accept a release and declare it irreversible.** That combination can produce a state nothing under its own control can undo — the whole point of separating the two decisions.
+- **Operator documentation covers three audiences, in both launch languages.** The client operator gets plain-language, no-technical-background procedures in English and Russian. An AI agent gets the same procedures rendered as machine-addressed `*.prompt.md` files — explicit preconditions, explicit expected outcomes, and an explicit condition for when it must stop and hand back to a person. Developers get the existing English technical runbooks. All three renderings describe the same steps; a change to one is incomplete until the others match — a stale rendering is worse than none, because someone trusts it.
+- **Secrets never travel in code or images.** No credential, token, or key is committed, baked into a build artefact, or written into a release record or pipeline log. Every secret reaches the running system from its own host, supplied at the moment it's needed.
 
 ## Completion Protocol (Mandatory Checklist)
 

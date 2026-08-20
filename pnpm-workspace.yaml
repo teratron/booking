@@ -19,3 +19,4 @@ minimumReleaseAgeExclude:
   - fallow-type-aware@3.16.0 || 3.17.0
   - fallow@3.16.0 || 3.17.0
   - maplibre-gl@6.4.1
+  - vite@8.2.2
