@@ -1,6 +1,6 @@
 # Technology Stack
 
-**Version:** 2.3.0
+**Version:** 2.4.0
 **Status:** RFC
 **Layer:** implementation
 **Implements:** l1-platform-foundation.md
@@ -262,6 +262,18 @@ source, so a static linter would audit nothing. Coverage is the shared shell
 representative instance per page template, matching the existing browser-test
 philosophy of critical flows over exhaustive instance coverage.
 
+**ARIA validity is part of this same ruleset, not a separate gate.**
+`aria-valid-attr`, `aria-required-attr`, `aria-allowed-attr`, `aria-roles`, and the
+rest of axe-core's WCAG 4.1.2 (Name, Role, Value) coverage already check every ARIA
+attribute the markup declares. What that check cannot see is keyboard *behaviour* —
+whether a custom widget's arrow-key, Escape, and focus-trap handling actually matches
+the role it declares, which is a runtime interaction, not a static attribute. Each
+custom interactive component this project builds — the header's switchers
+([l1-platform-shell.md](l1-platform-shell.md) §5.3), the mobile menu, the cookie
+notice ([l1-platform-shell.md](l1-platform-shell.md) §5.5) — gets a keyboard-
+interaction assertion inside the same browser test that already exercises it, rather
+than a second, ARIA-specific test suite.
+
 `[TZ]` §18 and §94 make performance a requirement rather than an aspiration, so the
 budgets are stated and measured:
 
@@ -359,6 +371,11 @@ Sequenced by dependency.
    §5.9 covers that — the environment's own `chrome-devtools-mcp:a11y-debugging`
    tool audits a live page through Chrome DevTools at no added dependency. Reach for
    it before reaching for a new one.
+10. **When building a custom interactive widget** (dropdown, modal, tabs, dialog),
+    consult the W3C ARIA Authoring Practices Guide for the component's role/state/
+    keyboard contract before writing markup — getting the pattern right the first
+    time is cheaper than finding it in §5.9's audit afterward, and the audit cannot
+    catch the keyboard half regardless (§5.9).
 
 ## 7. Drawbacks & Alternatives
 
@@ -411,6 +428,17 @@ runs in this stack (`pnpm run lint`) but cannot see the markup that actually rea
 a browser here. Rejected on the same "audit what's rendered, not what's written"
 ground as the Node pipeline above, not because the tools are weak.
 
+**The three externally-referenced "ARIA" resources** (`lifan0127/ai-research-assistant`,
+`pnoch/aria-skills`, `dylantarre/design-system-skills`'s aria-patterns skill). Checked
+against source: the first two are unrelated to web accessibility — both are name
+collisions with unrelated products also branded "Aria" (a Zotero research-assistant
+plugin; a separate AI-agent skill system), not W3C ARIA. The third is genuinely
+on-topic but is a pattern/reference library for *building* correct ARIA markup, not a
+verification tool — recorded as a development-time practice (§6 item 10) pointing at
+the W3C source it most likely derives from, not installed as a dependency. No separate
+ARIA gate was created because axe-core's existing ruleset already checks ARIA validity
+as part of its WCAG pass (§5.9) — there is nothing left for a second gate to check.
+
 ## Canonical References
 
 | Alias | Path | Purpose |
@@ -434,3 +462,4 @@ ground as the Node pipeline above, not because the tools are weak.
 | 2.1.0 | 2026-08-05 | Minor: expanded §5.9 with architecture tests, dead-code and N+1 tooling, Laravel Pulse, the `composer quality` gate, and numeric performance budgets tied to `[TZ]` §18/§94 — including the requirement that benchmarks run against seeded realistic volume rather than fixtures. |
 | 2.2.0 | 2026-08-20 | Minor: added §5.11 Environment Configuration — the dev/production divergence table across storage, assets, mail, bot-protection, map tiles, error tracking, and cookie transport; disambiguated from the §4 "configuration over code" invariant, which governs business data, not infrastructure bootstrapping. |
 | 2.3.0 | 2026-08-20 | Minor: added WCAG 2.2 AA verification to §5.9 — `axe-core` against the rendered DOM inside Pest browser tests (`pestphp/pest-plugin-browser`), folded into `composer quality` rather than a separate pipeline. Implements the new accessibility-parity invariant ([l1-platform-foundation.md](l1-platform-foundation.md) §3.1 v1.5.0). Records why the three externally-referenced Claude Skills, a standalone Node pipeline, and static JS linting were rejected. |
+| 2.4.0 | 2026-08-20 | Minor: clarified that ARIA validity is covered by §5.9's existing axe-core ruleset, not a separate gate; added the keyboard-interaction-testing gap axe-core cannot close (§6 item 10) and a pointer to the W3C ARIA Authoring Practices Guide for building custom widgets correctly. Records why the three externally-referenced "ARIA" resources were rejected — two are unrelated products name-colliding with "Aria," the third is a pattern library, not a verifier. |

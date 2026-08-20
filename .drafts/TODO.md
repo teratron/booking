@@ -7,7 +7,7 @@
 - [ ] прекрутить и настроить CI/CD (по максимуму, только то, что необходимо)
 - [ ] на стадии запуска продакшена прекрутить Git Flow систему и автоматизировать с помощью ИИ диспетчеризацию между ветками, тестами и заливкой в мастер с последующим деплоем в продакшн, добавить документацию как пользоваться и настроить Git Flow на английском и русском языках в разных markdown-файлах
 - [ ] документация (`*.md` для пользователей, подробная, для человека не понимающего ничего в IT) + промпт (`*.prompt.md` для ИИ) по развёртыванию проекта на английском и русском языках в разных markdown-файлах
-- [ ] ARIA (Accessible Rich Internet Applications), skills: <https://github.com/lifan0127/ai-research-assistant>, <https://github.com/pnoch/aria-skills>, <https://github.com/dylantarre/design-system-skills/tree/main/skills/accessibility/aria-patterns>
+- [x] ARIA (Accessible Rich Internet Applications), skills: <https://github.com/dylantarre/design-system-skills/tree/main/skills/accessibility/aria-patterns>
 - [x] WCAG (Web Content Accessibility Guidelines), skills: `npx skills add https://github.com/wshobson/agents --skill wcag-audit-patterns`, `npx skills add https://github.com/affaan-m/ecc --skill accessibility`, `npx skills add https://github.com/mastepanoski/claude-skills --skill wcag-accessibility-audit`
 - [x] всплывающее уведомление подтверждения cookies
 - [x] настройки для продакшена: .env.production, vite.config.js и т.д. со своими нюансами отличными от dev-версии
