@@ -52,9 +52,9 @@ and defers its proof to `T-8T03`, rather than claiming a verification it cannot 
 ### Track A — Branch Contract & Gate Scoping
 
 - [ ] [T-8A01] Branch protection on `master` and `develop` — the contract made mechanical
-- [ ] [T-8A02] Branch model documentation for developers — `docs/release/branching.md`
-- [ ] [T-8A03] Scope `quality.yml` triggers to the two protected branches
-- [ ] [T-8A04] Merge-back detector — a scheduled workflow, not a gate
+- [x] [T-8A02] Branch model documentation for developers — `docs/release/branching.md`
+- [x] [T-8A03] Scope `quality.yml` triggers to the two protected branches
+- [x] [T-8A04] Merge-back detector — a scheduled workflow, not a gate
 
 ### Track B — Release Artefact & Deployment
 
@@ -135,29 +135,32 @@ than last despite being the least technically interesting work in the phase.
 **[T-8A02] Branch model documentation for developers — `docs/release/branching.md`**
 
 - **Spec:** [l2-release-pipeline.md](../specifications/l2-release-pipeline.md) §5.2, §5.9
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** `docs/release/branching.md` exists and names all five lines (`feature/*`, `develop`, `release/x.y.z`, `master`, `hotfix/x.y.z`) with the rules each carries; `pnpm run lint` and the containment test in `T-8T01` both pass against it.
 - **Handoff:** Referenced by `T-8D05`'s index and by the operator deploy procedure in `T-8D01`.
 - **Notes:** Developer audience, English, per the project's English-first engineering baseline — this file is explicitly *not* part of the bilingual obligation, which covers operator procedures only ([l1-release-operations.md](../specifications/l1-release-operations.md) §3.8). Must explain the merge-back obligation and why `T-8A04` detects rather than blocks it.
+- **Changes:** Created `docs/release/branching.md` — names all five branch lines, their rules, and the merge-back detector's rationale (detector, not gate). `pnpm run lint` scope confirmed as `resources/js|css`, `vite.config.js`, `package.json` only (`biome.json`), so markdown is out of its scope and unaffected.
 
 **[T-8A03] Scope `quality.yml` triggers to the two protected branches**
 
 - **Spec:** [l2-release-pipeline.md](../specifications/l2-release-pipeline.md) §5.3
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** `.github/workflows/quality.yml`'s `on:` block restricts `pull_request` to `branches: [develop, master]` and `push` to the same two; a push to a `feature/*` branch produces no new run (`gh run list --workflow=quality.yml --branch=<feature-branch>` returns nothing for the pushed commit).
 - **Handoff:** **Hard predecessor of `T-8C01` and `T-8T02`**, both of which add steps to this same file.
 - **Notes:** The workflow today triggers on bare `push:` and `pull_request:` — every push to every branch runs the full gate against a real PostGIS service container, proving that in-progress work is in progress. This is a small change with one trap: the required status check configured in `T-8A01` must keep matching the job name (`quality`), or protection blocks every pull request waiting for a check that no longer runs.
+- **Changes:** Restricted both `push` and `pull_request` triggers to `branches: [develop, master]` in `.github/workflows/quality.yml`. The `jobs.quality` key is untouched, so the required status check name `T-8A01` will configure keeps matching. Behavioural proof (no run on a feature push) deferred to a real repository per this task's own verification shape.
 
 **[T-8A04] Merge-back detector — a scheduled workflow, not a gate**
 
 - **Spec:** [l2-release-pipeline.md](../specifications/l2-release-pipeline.md) §5.2; [l1-release-operations.md](../specifications/l1-release-operations.md) §3.3
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** With a commit on `master` deliberately absent from `develop`, a manual dispatch of the workflow (`gh workflow run merge-back.yml && gh run watch`) fails and its output names both the commit and the branch that should have carried it back; with `develop` up to date, the same dispatch passes.
 - **Handoff:** None.
 - **Notes:** A **detector, not a gate** — the specification is explicit that it must never be able to block a production fix, because blocking one to enforce bookkeeping is the wrong trade during an incident. Implement as a scheduled workflow plus `workflow_dispatch` (the dispatch is what makes the Verify line above executable). The rule it checks: `master` holds no commit that is not an ancestor of `develop`.
+- **Changes:** Created `.github/workflows/merge-back.yml` — `schedule` (daily) + `workflow_dispatch`, `permissions: contents: read`, no `pull_request`/`push` trigger by construction so it can never gate anything. Computes `git rev-list origin/develop..origin/master`; empty → pass, non-empty → fails naming each commit SHA and subject via `::error::` annotations. Behavioural proof against a real dispatch deferred to `T-8T03` per this task's own verification shape.
 
 ### Track B — Release Artefact & Deployment
 

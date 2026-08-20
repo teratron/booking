@@ -1,0 +1,55 @@
+# Detects, rather than blocks, a broken merge-back obligation
+# (docs/release/branching.md): `release/*` and `hotfix/*` both owe `develop`
+# a merge-back into `master`, and it is the kind of bookkeeping that is
+# honoured in the first month of a project and forgotten in the sixth.
+#
+# Deliberately a detector, not a gate — it never runs against a pull
+# request and can never block one. Blocking a production fix to enforce
+# bookkeeping is the wrong trade during an incident, which is precisely
+# when a hotfix exists.
+name: Merge-Back Detector
+
+on:
+  schedule:
+    # Once a day is enough for bookkeeping drift; a merge-back that is late
+    # by a few hours is not an incident.
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-merge-back:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # Full history is required — the ancestry check below walks every
+          # commit on master, and a shallow clone would report commits as
+          # missing that are simply outside the fetched depth.
+          fetch-depth: 0
+
+      - name: Check master is fully merged back into develop
+        run: |
+          git fetch origin develop master
+
+          # The rule this checks: master holds no commit that is not an
+          # ancestor of develop. `origin/develop..origin/master` lists
+          # exactly the commits reachable from master but not from develop.
+          missing="$(git rev-list origin/develop..origin/master)"
+
+          if [ -z "$missing" ]; then
+            echo "master is fully merged back into develop."
+            exit 0
+          fi
+
+          echo "::error::master carries commits that were never merged back into develop."
+          echo "$missing" | while read -r sha; do
+            subject="$(git log -1 --format='%s' "$sha")"
+            echo "::error::commit $sha ($subject) is not an ancestor of develop — open a pull request from master into develop to carry it back."
+          done
+
+          exit 1

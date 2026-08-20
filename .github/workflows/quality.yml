@@ -1,8 +1,15 @@
+# Scoped to the two protected branches (docs/release/branching.md): every
+# push to every feature branch used to run this full gate against a real
+# PostGIS service container, spending runner minutes proving that
+# in-progress work is in progress. `develop` and `master` are where the
+# result actually matters — a required status check on either.
 name: Quality
 
 on:
   push:
+    branches: [develop, master]
   pull_request:
+    branches: [develop, master]
 
 jobs:
   quality:
