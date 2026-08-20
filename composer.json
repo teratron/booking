@@ -118,7 +118,7 @@
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
-        "process-timeout": 1800,
+        "process-timeout": 3600,
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,
