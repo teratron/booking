@@ -109,10 +109,13 @@ jobs:
             $testPdo->exec("CREATE EXTENSION IF NOT EXISTS unaccent");
           '
 
+      # No `version:` input here — pnpm/action-setup reads the pinned
+      # version from package.json's own `packageManager` field. Setting
+      # both is a hard error (ERR_PNPM_BAD_PM_VERSION), and package.json
+      # is the single source of truth a local `pnpm install` also obeys
+      # via Corepack.
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: latest
 
       - name: Setup Node
         uses: actions/setup-node@v4
