@@ -17,18 +17,19 @@ graph LR
 
 ## `feature/{short-slug}`
 
-Work in progress. Branched from `develop`, merged only by reviewed pull request,
-deleted on merge. No protection rule of its own — its obligations are enforced at the
-merge target (`develop`'s required review and required `quality` check), not on the
-branch itself. Short-lived by convention: a `feature/*` branch that outlives the unit
-of work it names has usually absorbed a second, unrelated change.
+Work in progress. Branched from `develop`, merged by pull request once the `quality`
+check passes, deleted on merge. No protection rule of its own — its obligations are
+enforced at the merge target (`develop`), not on the branch itself. Short-lived by
+convention: a `feature/*` branch that outlives the unit of work it names has usually
+absorbed a second, unrelated change.
 
 ## `develop`
 
 Integration line. Every accepted change lands here first. Protected: pull requests
-only, at least one approving review, and the `quality` check required before merge.
-Never deployed directly — it is what the next release will contain, not a preview of
-production.
+only, the `quality` check required before merge, and a human review required
+*conditionally* — see [Ordinary Changes vs. Reviewed Changes](#ordinary-changes-vs-reviewed-changes)
+below. Never deployed directly — it is what the next release will contain, not a
+preview of production.
 
 ## `release/{x.y.z}`
 
@@ -42,8 +43,10 @@ never silently lost the next time `develop` is frozen.
 ## `master`
 
 Production. The only line ever deployed. Protected: pull requests only, the `quality`
-check required, linear history, no force pushes, no deletions. Tagged on every merge —
-the tag is what triggers `release.yml` (see [pipeline.md](pipeline.md)).
+check required, linear history, no force pushes, no deletions, and the same
+conditional review requirement `develop` carries. Tagged on every merge — the tag is
+what triggers `release.yml` (see [pipeline.md](pipeline.md)); reaching `master` is not
+itself a deploy, and pushing that tag is always a deliberate, separate act.
 
 ## `hotfix/{x.y.z}`
 
@@ -69,6 +72,24 @@ blocks a pull request. Blocking one to enforce bookkeeping is the wrong trade du
 an incident, which is precisely when a hotfix exists. A failing merge-back run is a
 signal to open a pull request from `master` into `develop`, not an obstacle to work
 around.
+
+## Ordinary Changes vs. Reviewed Changes
+
+Not every pull request into `develop` or `master` needs a human's approval to merge —
+the `quality` check passing is the gate for an ordinary change. What still always needs
+a person's review is enforced mechanically through `.github/CODEOWNERS`, not left to
+whoever is merging to remember: a pull request touching authentication, authorization
+(policies, the permission/role registry), financial records, or secrets and CI
+credential wiring always requests the project owner as a reviewer, and GitHub will not
+let that pull request merge without it — regardless of how small the rest of the
+change looks. Every path this covers is asserted against `.github/CODEOWNERS` by
+`tests/Architecture/SensitiveZoneCodeownersTest.php`, so the two cannot silently drift
+apart.
+
+A change carrying a database migration that a plain rollback could not undo is a
+separate case entirely, and is never merged on the strength of a passing gate alone,
+CODEOWNERS match or not — see [pipeline.md](pipeline.md) for the destructive-migration
+scan that catches it.
 
 ## Why No Protection on the Short-Lived Lines
 
