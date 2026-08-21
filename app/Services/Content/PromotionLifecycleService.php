@@ -67,7 +67,10 @@ final class PromotionLifecycleService
         // nullable `publish_at`) — every promotion always has one from
         // creation, so only "still in the future" needs correcting here.
         if ($promotion->starts_at->isFuture()) {
-            $promotion->starts_at = now();
+            // Carbon::now(), not the now() helper: the helper's declared
+            // return type is the broader CarbonInterface, which does not
+            // statically satisfy the model's concrete Carbon attribute type.
+            $promotion->starts_at = Carbon::now();
         }
 
         $promotion->save();

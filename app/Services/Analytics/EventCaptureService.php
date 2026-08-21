@@ -51,7 +51,11 @@ final class EventCaptureService
                 return;
             }
 
-            $now = now();
+            // Carbon::now(), not the now() helper: the helper's declared
+            // return type is the broader CarbonInterface, which does not
+            // statically satisfy dedupToken()'s concrete Carbon parameter
+            // even though both resolve to the same runtime instance.
+            $now = Carbon::now();
             $source = $this->resolveSource($context);
 
             // API-request rows must never dedup: the visitor-window token
