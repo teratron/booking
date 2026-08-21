@@ -17,6 +17,7 @@ use App\Http\Controllers\Public\NewsController;
 use App\Http\Controllers\Public\ObjectPageController;
 use App\Http\Controllers\Public\PromotionController;
 use App\Http\Controllers\Public\RobotsController;
+use App\Http\Controllers\Public\RootRedirectController;
 use App\Http\Controllers\Public\SitemapController;
 use App\Http\Controllers\Public\TerritoryPageController;
 use App\Http\Middleware\ResolvePublicLocale;
@@ -24,7 +25,9 @@ use App\Http\Middleware\ResolveRedirect;
 use App\Livewire\Public\CatalogSearch;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn () => view('welcome'));
+// The bare root carries no language segment, so it has no page of its
+// own — it negotiates one and forwards into the `{lang}` group below.
+Route::get('/', RootRedirectController::class)->name('public.root');
 
 Route::get('/support-mode/exit', ExitImpersonationController::class)
     ->middleware('auth')

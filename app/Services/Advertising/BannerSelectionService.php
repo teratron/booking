@@ -113,13 +113,9 @@ final class BannerSelectionService
      */
     private function rankedTiers(BannerSlot $slot, ?int $territoryId, ?int $languageId, ?int $categoryId): array
     {
-        $today = now()->toDateString();
-
         $candidates = Banner::query()
+            ->live()
             ->where('banner_slot_id', $slot->id)
-            ->where('is_active', true)
-            ->where('starts_at', '<=', $today)
-            ->where('ends_at', '>=', $today)
             ->with(['territories', 'categories', 'targetLanguages'])
             ->get();
 

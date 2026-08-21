@@ -287,3 +287,67 @@ it('returns only published, moderation-approved objects, never a draft or a pend
 
     expect($results->getCollection()->pluck('id')->all())->toBe([$live->id]);
 });
+
+/*
+| `object_promotions` carries no uniqueness constraint on `object_id`, so
+| the ordering contract's promotion term is joined through an aggregating
+| subquery rather than against the table directly. Without that, an object
+| holding two concurrently-active label grants is matched once per grant —
+| listed twice, and counted twice in the paginator's own total.
+*/
+
+function catalogQueryGrantPromotion(Object_ $object, string $startsAt, string $endsAt, int $weight = 0): void
+{
+    $labelId = DB::table('promotion_labels')->insertGetId([
+        'border_colour' => '#000000', 'text_colour' => '#ffffff', 'background_colour' => '#ff0000',
+        'position_on_card' => 'top-left', 'is_active' => true,
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    DB::table('object_promotions')->insert([
+        'object_id' => $object->id, 'promotion_label_id' => $labelId,
+        'starts_at' => $startsAt, 'ends_at' => $endsAt, 'weight' => $weight,
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+}
+
+it('lists an object once even while it holds two overlapping active promotion grants', function (): void {
+    $fixture = catalogQueryGeography();
+    $object = catalogQueryMakeObject($fixture, 'Doubly Labelled', $fixture['cityId']);
+
+    catalogQueryGrantPromotion($object, now()->subDay()->toDateString(), now()->addWeek()->toDateString(), 5);
+    catalogQueryGrantPromotion($object, now()->subDays(2)->toDateString(), now()->addDays(3)->toDateString(), 9);
+
+    $results = app(CatalogQueryService::class)->search(new CatalogSearchCriteria);
+
+    expect($results->getCollection()->pluck('id')->all())->toBe([$object->id])
+        ->and($results->total())->toBe(1);
+});
+
+it('breaks a within-tier tie by the strongest active label an object carries', function (): void {
+    $fixture = catalogQueryGeography();
+
+    $weaklyLabelled = catalogQueryMakeObject($fixture, 'Weakly Labelled', $fixture['cityId']);
+    $stronglyLabelled = catalogQueryMakeObject($fixture, 'Strongly Labelled', $fixture['cityId']);
+
+    catalogQueryGrantPromotion($weaklyLabelled, now()->subDay()->toDateString(), now()->addWeek()->toDateString(), 1);
+    // Two grants, so the aggregate — not the row order — decides the weight.
+    catalogQueryGrantPromotion($stronglyLabelled, now()->subDay()->toDateString(), now()->addWeek()->toDateString(), 2);
+    catalogQueryGrantPromotion($stronglyLabelled, now()->subDay()->toDateString(), now()->addDays(4)->toDateString(), 7);
+
+    $results = app(CatalogQueryService::class)->search(new CatalogSearchCriteria);
+
+    expect($results->getCollection()->pluck('id')->all())
+        ->toBe([$stronglyLabelled->id, $weaklyLabelled->id]);
+});
+
+it('ignores a promotion grant whose window has not opened yet', function (): void {
+    $fixture = catalogQueryGeography();
+    $object = catalogQueryMakeObject($fixture, 'Future Label', $fixture['cityId']);
+
+    catalogQueryGrantPromotion($object, now()->addWeek()->toDateString(), now()->addMonth()->toDateString(), 9);
+
+    $results = app(CatalogQueryService::class)->search(new CatalogSearchCriteria);
+
+    expect($results->total())->toBe(1);
+});

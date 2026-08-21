@@ -264,6 +264,14 @@ final class CatalogQueryService
      * Every criterion that can change the result set or its ordering, plus
      * the locale (translated name/label columns vary the rendered output
      * even when the row set does not).
+     *
+     * Every field {@see self::applyFilters()} reads must appear here, and
+     * every axis {@see ScopeConstraint} carries must appear in the
+     * constraint tuple — including axes no current call site narrows by.
+     * A key that mirrors only the axes one call site happens to use is a
+     * silent disclosure waiting for the first caller that passes the
+     * column: two constraints differing solely in an omitted axis hash
+     * identically, and the second actor is served the first one's rows.
      */
     private function cacheKey(CatalogSearchCriteria $criteria, ?ScopeConstraint $constraint = null): string
     {
@@ -278,10 +286,16 @@ final class CatalogQueryService
             'ratingMin' => $criteria->ratingMin,
             'attributeFilters' => $criteria->attributeFilters,
             'createdAfter' => $criteria->createdAfter?->toIso8601String(),
+            'availabilityStatus' => $criteria->availabilityStatus,
             'page' => $criteria->page,
             'perPage' => $criteria->perPage,
             'locale' => app()->getLocale(),
-            'constraint' => $constraint === null ? null : [$constraint->isUnrestricted, $constraint->countryIds, $constraint->categoryIds],
+            'constraint' => $constraint === null ? null : [
+                $constraint->isUnrestricted,
+                $constraint->countryIds,
+                $constraint->territoryIds,
+                $constraint->categoryIds,
+            ],
         ], JSON_THROW_ON_ERROR));
     }
 
@@ -419,13 +433,28 @@ final class CatalogQueryService
     }
 
     /**
+     * Substring, case-insensitive, and typo-tolerant by index rather than
+     * by pattern — `object_translations_name_trgm_index` (GIN,
+     * `gin_trgm_ops`) is what keeps a leading-wildcard ILIKE off a
+     * sequential scan.
+     *
+     * The visitor's term is escaped before it becomes a pattern. Binding
+     * alone stops SQL injection but not *pattern* injection: an unescaped
+     * `%` or `_` in the term is still a LIKE metacharacter, so `?q=%`
+     * silently degrades the search into "match every object" — a wrong
+     * result set, and the one query shape the trigram index cannot serve.
+     * Postgres reads `\` as LIKE's default escape character, so all three
+     * of `\`, `%`, and `_` are escaped with it.
+     *
      * @param  Builder<Object_>  $query
      */
     private function applyNameSearch(Builder $query, string $name): void
     {
+        $pattern = '%'.addcslashes($name, '\\%_').'%';
+
         $query->whereHas(
             'translations',
-            fn (Builder $translation): Builder => $translation->where('name', 'ilike', '%'.$name.'%'),
+            fn (Builder $translation): Builder => $translation->where('name', 'ilike', $pattern),
         );
     }
 

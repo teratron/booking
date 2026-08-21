@@ -61,10 +61,8 @@ final class PlacementOrderingService
             ->leftJoinSub($this->latestBumpSubquery($scope), 'bump', function ($join) use ($table): void {
                 $join->on('bump.object_id', '=', "{$table}.id");
             })
-            ->leftJoin('object_promotions as promo', function ($join) use ($table): void {
-                $join->on('promo.object_id', '=', "{$table}.id")
-                    ->where('promo.starts_at', '<=', now()->toDateString())
-                    ->where('promo.ends_at', '>=', now()->toDateString());
+            ->leftJoinSub($this->activePromotionWeightSubquery(), 'promo', function ($join) use ($table): void {
+                $join->on('promo.object_id', '=', "{$table}.id");
             })
             ->select("{$table}.*")
             ->orderByRaw('coalesce(pt.rank, 999) asc')
@@ -80,6 +78,35 @@ final class PlacementOrderingService
             ->orderBy("{$table}.created_at", 'desc');
 
         return $query;
+    }
+
+    /**
+     * One row per object: the strongest weight among the promotional label
+     * grants whose window covers today.
+     *
+     * Aggregated rather than joined directly, for the same reason the bump
+     * term is. `object_promotions` carries no uniqueness constraint on
+     * `object_id`, so a plain join against it matches once per active grant
+     * — and a listing query that matches an object twice lists it twice and
+     * counts it twice in its own pagination total. Collapsing to one row
+     * per object here makes the join 1:1 by construction, so the ordering
+     * contract cannot be broken by a write path that ever leaves two
+     * overlapping grants in place.
+     *
+     * `max()` is the semantically right collapse: weight breaks ties within
+     * a tier, and the strongest label an object currently carries is the one
+     * that should break them.
+     */
+    private function activePromotionWeightSubquery(): QueryBuilder
+    {
+        $today = now()->toDateString();
+
+        return DB::table('object_promotions')
+            ->select('object_id')
+            ->selectRaw('max(weight) as weight')
+            ->where('starts_at', '<=', $today)
+            ->where('ends_at', '>=', $today)
+            ->groupBy('object_id');
     }
 
     /**

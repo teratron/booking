@@ -7,6 +7,7 @@ namespace App\Livewire\Public;
 use App\Models\AmenityGroup;
 use App\Models\ObjectType;
 use App\Models\Territory;
+use App\Services\Catalog\AttributeFilterResolver;
 use App\Services\Catalog\CatalogQueryService;
 use App\Services\Seo\IndexationPolicy;
 use App\Services\Seo\MetadataResolver;
@@ -127,7 +128,7 @@ final class CatalogSearch extends Component
             priceMin: $this->priceMin,
             priceMax: $this->priceMax,
             ratingMin: $this->ratingMin,
-            attributeFilters: $this->activeAttributeFilters(),
+            attributeFilters: $this->activeAttributeFilters($selectedType),
             page: $this->getPage(),
         );
 
@@ -142,7 +143,7 @@ final class CatalogSearch extends Component
             q: $this->q !== '' ? $this->q : null,
         );
 
-        $indexable = app(IndexationPolicy::class)->catalogIndexable($this->activeIndexationFilters(), $this->q !== '');
+        $indexable = app(IndexationPolicy::class)->catalogIndexable($this->activeIndexationFilters($selectedType), $this->q !== '');
         $metadata = app(MetadataResolver::class)->resolveCatalog($selectedType, $criteria->territory, $indexable, app()->getLocale(), url()->full());
 
         return view('livewire.public.catalog-search', [
@@ -166,7 +167,7 @@ final class CatalogSearch extends Component
      *
      * @return array<string, scalar>
      */
-    private function activeIndexationFilters(): array
+    private function activeIndexationFilters(?ObjectType $type): array
     {
         $filters = [];
 
@@ -190,27 +191,27 @@ final class CatalogSearch extends Component
             $filters['amenity'] = implode(',', $this->amenities);
         }
 
-        if ($this->activeAttributeFilters() !== []) {
-            $filters['attribute'] = (string) json_encode($this->activeAttributeFilters());
+        $attributes = $this->activeAttributeFilters($type);
+
+        if ($attributes !== []) {
+            $filters['attribute'] = (string) json_encode($attributes);
         }
 
         return $filters;
     }
 
-    /** @return array<string, array{min?: float, max?: float}|scalar> */
-    private function activeAttributeFilters(): array
+    /**
+     * The visitor's raw `attrs` selection resolved against the selected
+     * type's own declared schema by {@see AttributeFilterResolver} —
+     * `attrs` round-trips through the URL, so its keys and values arrive
+     * entirely unconstrained and must be reconciled with what the type
+     * actually declares before they become query filters.
+     *
+     * @return array<string, array{min?: float, max?: float}|scalar>
+     */
+    private function activeAttributeFilters(?ObjectType $type): array
     {
-        $filters = [];
-
-        foreach ($this->attrs as $key => $value) {
-            if ($value === null || $value === '' || $value === []) {
-                continue;
-            }
-
-            $filters[$key] = $value;
-        }
-
-        return $filters;
+        return app(AttributeFilterResolver::class)->resolve($type, $this->attrs);
     }
 
     /** @return Collection<int, AmenityGroup> */

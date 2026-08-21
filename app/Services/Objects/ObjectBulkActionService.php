@@ -214,11 +214,19 @@ final class ObjectBulkActionService
 
     /**
      * Grants a promotional label to every selected object, replacing any
-     * currently-active grant rather than stacking duplicates — "currently
-     * active" meaning today falls within that grant's own start/end window.
-     * Border colour is a property of the label an administrator picks, not
-     * an independent per-object field, so assigning the label *is* the
-     * whole mutation.
+     * grant whose window overlaps the new one rather than stacking
+     * duplicates. Border colour is a property of the label an administrator
+     * picks, not an independent per-object field, so assigning the label
+     * *is* the whole mutation.
+     *
+     * Overlap is measured against the *incoming* window, not against today.
+     * Clearing only what is active today leaves a future-dated grant in
+     * place, so scheduling two overlapping future windows for the same
+     * object stacks both — and once that window opens, the catalog's
+     * ordering join matches an object twice and lists it twice. The
+     * invariant the rest of the system reads ("the one label an object
+     * currently carries") has to hold for every future day, not just for
+     * the day the grant was made.
      *
      * Parameters: `promotion_label_id` (int), `starts_at` (date string),
      * `ends_at` (date string).
@@ -236,14 +244,15 @@ final class ObjectBulkActionService
             throw new InvalidArgumentException('Assigning a promotional label in bulk requires promotion_label_id, starts_at, and ends_at.');
         }
 
-        $today = now()->toDateString();
-
-        DB::transaction(function () use ($objects, $promotionLabelId, $startsAt, $endsAt, $today, $actor): void {
+        DB::transaction(function () use ($objects, $promotionLabelId, $startsAt, $endsAt, $actor): void {
             foreach ($objects as $object) {
+                // Two date ranges overlap exactly when each starts on or
+                // before the other ends — the standard interval test, and
+                // the reason neither bound is compared against today.
                 DB::table('object_promotions')
                     ->where('object_id', $object->id)
-                    ->where('starts_at', '<=', $today)
-                    ->where('ends_at', '>=', $today)
+                    ->where('starts_at', '<=', $endsAt)
+                    ->where('ends_at', '>=', $startsAt)
                     ->delete();
 
                 DB::table('object_promotions')->insert([

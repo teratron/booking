@@ -9,6 +9,7 @@ use App\Policies\BannerPolicy;
 use Astrotomic\Translatable\Contracts\Translatable as TranslatableContract;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
@@ -54,6 +55,35 @@ final class Banner extends Model implements HasMedia, TranslatableContract
             'starts_at' => 'date',
             'ends_at' => 'date',
         ];
+    }
+
+    /**
+     * Rows an advertising read may act on: activated, and with today inside
+     * the campaign's own flight dates. This is the single definition of
+     * "this creative may be shown and counted right now" — shared by the
+     * selection query that decides what serves and by the click endpoint
+     * that decides what may still be counted.
+     *
+     * Both ends need it. `/banners/{id}/click` is a stable, guessable
+     * integer URL, so a campaign that stopped serving but kept answering
+     * its own click route would go on accruing billable clicks for an
+     * advertiser nobody could have seen. Two independent copies of this
+     * window comparison are exactly how the serve side and the count side
+     * drift apart.
+     *
+     * Bounds are inclusive: both columns cast to dates, so a campaign stays
+     * live for the whole of its final day.
+     *
+     * @param  Builder<Banner>  $query
+     * @return Builder<Banner>
+     */
+    public function scopeLive(Builder $query): Builder
+    {
+        $today = now()->toDateString();
+
+        return $query->where('is_active', true)
+            ->where('starts_at', '<=', $today)
+            ->where('ends_at', '>=', $today);
     }
 
     /**
