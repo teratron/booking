@@ -50,7 +50,7 @@ app/
 ├── Http/
 │   ├── Controllers/        # Thin controllers — public routes, versioned API, admin downloads
 │   └── Middleware/
-├── Providers/               # Service providers, including the Filament panel providers
+├── Providers/              # Service providers, including the Filament panel providers
 ├── Filament/
 │   ├── Admin/              # Staff panel: resources, pages, widgets
 │   └── Cabinet/            # Owner panel: resources scoped to the owner
@@ -58,8 +58,8 @@ app/
 ├── Services/               # Business logic — ranking, bumps, banner targeting, statistics
 ├── Policies/               # Authorization, including geo/category-scoped rules
 ├── Jobs/                   # Queued work: expiry sweeps, notifications, rollups
-├── Listeners/               # Event listeners
-├── Exceptions/               # Domain exceptions for refused/invalid actions
+├── Listeners/              # Event listeners
+├── Exceptions/             # Domain exceptions for refused/invalid actions
 ├── Console/Commands/       # Scheduled entry points
 └── Support/                # Cross-cutting helpers
 
@@ -78,11 +78,11 @@ tests/
 ├── Architecture/           # Pest arch() + content-scan convention checks
 ├── Feature/                # Grouped by surface: Admin, Api, Cabinet, Operations, Public
 ├── Unit/
-└── Fixtures/                # Shared fixtures
+└── Fixtures/               # Shared fixtures
 
 docker/                     # Local infrastructure (Postgres init SQL, etc.)
 docs/                       # Operational runbooks — see "Documentation" below
-.github/workflows/         # CI pipeline
+.github/workflows/          # CI pipeline
 .design/                    # Specifications — read-only for implementation work
 ```
 
