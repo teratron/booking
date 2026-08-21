@@ -7,8 +7,11 @@ use App\Services\DataTransfer\TransferableRegistry;
 use Filament\Actions\Exports\ExportColumn;
 use Filament\Actions\Exports\Exporter;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+
+uses(RefreshDatabase::class);
 
 /*
 |--------------------------------------------------------------------------
