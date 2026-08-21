@@ -155,7 +155,7 @@ it('lists only active object types, ordered by id, in the resource shape the con
     ]);
 });
 
-it('narrows the object type list to the category ids in the token scope, unlike the unrestricted default', function (): void {
+it('narrows the object type list to the category ids in the token scope', function (): void {
     acrEnableApiModule();
     acrPrimaryLanguage();
 
@@ -171,6 +171,22 @@ it('narrows the object type list to the category ids in the token scope, unlike 
 
     expect($scopedIds)->toBe([$inScopeId])
         ->and($scopedIds)->not->toContain($outOfScopeId);
+});
+
+// A separate test, deliberately not the same one as above: Sanctum's guard
+// caches the bearer token it resolves for the lifetime of the request, and
+// two sequential ->getJson() calls with different tokens inside one test
+// method share that cached resolution — the second call would silently see
+// the first token's scope. That collision cannot happen between separate
+// requests in production (each is its own process); splitting the test
+// avoids relying on internals to prove it, the same way a completely fresh
+// application boot per test already does.
+it('lists every active object type for an unrestricted token', function (): void {
+    acrEnableApiModule();
+    acrPrimaryLanguage();
+
+    $firstId = acrObjectType('restaurant', 'Restaurant');
+    $secondId = acrObjectType('museum', 'Museum');
 
     $unrestrictedToken = acrToken([ApiResource::ObjectTypes]);
 
@@ -179,7 +195,7 @@ it('narrows the object type list to the category ids in the token scope, unlike 
         ->assertOk()
         ->json('data.*.id');
 
-    expect($unrestrictedIds)->toBe([$inScopeId, $outOfScopeId]);
+    expect($unrestrictedIds)->toBe([$firstId, $secondId]);
 });
 
 // --- Amenities ----------------------------------------------------------

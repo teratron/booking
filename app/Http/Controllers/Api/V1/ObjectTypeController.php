@@ -18,7 +18,7 @@ final class ObjectTypeController extends Controller
 
     public function index(Request $request): AnonymousResourceCollection
     {
-        $query = ObjectType::query()->where('is_active', true)->orderBy('id');
+        $query = ObjectType::query()->with('translations')->where('is_active', true)->orderBy('id');
 
         // Category scope only — an object type is not itself owned by a
         // country, so the token's country axis does not narrow this list.

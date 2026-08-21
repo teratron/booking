@@ -319,7 +319,11 @@ it("formats the unread/read badge and toggles it in both directions through the 
         ->assertTableActionExists(
             'toggle_read',
             record: $notification,
-            checkActionUsing: fn ($action) => expect($action->getLabel())->toBe(__('panel.cabinet.notifications.actions.mark_read')),
+            // A plain boolean, not expect()->toBe() — assertTableActionExists
+            // passes this return value straight to Assert::assertTrue(),
+            // which fails on the Pest\Expectation instance expect() returns
+            // for chaining even when the comparison inside it holds.
+            checkActionUsing: fn ($action): bool => $action->getLabel() === __('panel.cabinet.notifications.actions.mark_read'),
         )
         ->callTableAction('toggle_read', $notification)
         ->assertHasNoTableActionErrors();
@@ -334,7 +338,7 @@ it("formats the unread/read badge and toggles it in both directions through the 
         ->assertTableActionExists(
             'toggle_read',
             record: $notification,
-            checkActionUsing: fn ($action) => expect($action->getLabel())->toBe(__('panel.cabinet.notifications.actions.mark_unread')),
+            checkActionUsing: fn ($action): bool => $action->getLabel() === __('panel.cabinet.notifications.actions.mark_unread'),
         )
         ->callTableAction('toggle_read', $notification)
         ->assertHasNoTableActionErrors();

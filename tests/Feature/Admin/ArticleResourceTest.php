@@ -232,10 +232,10 @@ it('lists articles with title, author, category, and status columns, showing a d
         ->assertTableColumnStateSet('title', 'Categorized Piece', $categorized)
         ->assertTableColumnStateSet('author.name', 'Elena Rusu', $categorized)
         ->assertTableColumnStateSet('category.name', $category->name, $categorized)
-        ->assertTableColumnStateSet('status', __('panel.articles.status.published'), $categorized)
+        ->assertTableColumnFormattedStateSet('status', __('panel.articles.status.published'), $categorized)
         ->assertTableColumnStateSet('title', 'Uncategorized Piece', $uncategorized)
         ->assertTableColumnStateSet('category.name', '—', $uncategorized)
-        ->assertTableColumnStateSet('status', __('panel.articles.status.draft'), $uncategorized);
+        ->assertTableColumnFormattedStateSet('status', __('panel.articles.status.draft'), $uncategorized);
 });
 
 // -----------------------------------------------------------------------
