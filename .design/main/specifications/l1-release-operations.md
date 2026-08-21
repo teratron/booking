@@ -1,6 +1,6 @@
 # Release Operations
 
-**Version:** 0.3.0
+**Version:** 0.4.0
 **Status:** Stable
 **Layer:** concept
 
@@ -377,6 +377,11 @@ back to §5.5's ordinary "requires a person" row — the moment it touches any o
 
 - Authentication, session, or second-factor handling (`app/Http/Middleware/Authenticate*`,
   `app/Http/Middleware/EnsureSecondFactorForPrivilegedRoles.php`, `config/auth.php`).
+  The first of those three is a path, not a file — the framework owns that middleware
+  and nothing occupies the path today. It is declared regardless, so that a published
+  copy arrives already owned instead of landing as an ordinary change on the day
+  somebody first needs to customize authentication. A zone may be declared empty; it
+  may not be declared late.
 - Authorization itself — every file under `app/Policies/`, `app/Services/Authorization/`,
   and `config/permission.php`, plus any migration or seeder touching the `roles`,
   `permissions`, `role_scopes`, or `personal_access_tokens` tables.
@@ -391,6 +396,16 @@ what counts as sensitive — it is checked the same way §3.1's gate parity alre
 answer regardless of who is asking. A change touching any listed path routes to a
 person exactly as if this section did not exist; nothing about the surrounding change
 being otherwise ordinary changes that.
+
+**Declaring a zone is not enforcing it, and the gap between the two is silent.** This
+boundary has two halves: a check that decides whether a change touches a declared zone,
+and a promotion path configured to consult that check before merging. Either half alone
+enforces nothing — a check nothing consults is documentation, and a promotion path
+consulting an incomplete check reports "clear" for a change it never examined. Both
+halves fail quietly rather than loudly, which is why neither may be assumed from the
+other's presence. [l2-release-pipeline.md](l2-release-pipeline.md) §5.11 carries both on
+this stack, and states which settings make the second half bite. A review that reads one
+half and infers the other has verified nothing.
 
 **Scope.** This section governs the ordinary bug-fix and small-change lifecycle the
 owner described when granting it — a work line opened from an existing report,
@@ -480,3 +495,4 @@ outage, and the person who needs the document is not the person who could write 
 | 0.1.0 | 2026-08-20 | Initial draft. Covers the first specification of this project's delivery path: promotion topology, gate obligations by transition, release records and the two reversal paths, the operator documentation matrix, and the boundary between agent-decided and human-decided release actions. Originates with the project owner rather than `[TZ]`, which is silent on delivery. |
 | 0.2.0 | 2026-08-21 | §5.5 gains a scoped development-phase exception (§5.5.1): before a project's first production release, the owner may explicitly authorize the agent to build a gate's own scaffolding directly — branch protection, the `production` environment and its reviewer list, the CI/CD workflows — never to decide anything the "Requires a person" column still lists, and never past the project's first real release through that gate. Reduces friction the original table forced onto pre-launch setup work without weakening §3.4's production-time boundary, which the exception explicitly cannot touch. Originates with the project owner, who observed the table blocked setup work no release had yet depended on. |
 | 0.3.0 | 2026-08-21 | §5.5 gains a standing (not one-time) autonomous-operation grant (§5.5.2): an ordinary bug fix may travel unattended from a work line through acceptance into production, without a human granting review, provided it touches none of a declared, mechanically-checked set of sensitive zones (auth, authorization, money, secrets) and carries no undeclared irreversible migration — either condition routes it back to a person. The deploy trigger itself, irreversibility declaration, and restore initiation stay exactly as human-gated as before; this grant only removes the review-grant step ahead of them, never the transitions after. §3.9 gains an interim clause naming the current reality this grant is made against: before §5.10 `[L2]`'s automation identity exists, the actions it covers still run under the owner's own credentials, by the owner's explicit and informed choice, not the project's target state. §5.2's transition table is reworded to state both transitions as either/or (person, or agent under §5.5.2) rather than person-only. Originates with the project owner, who described the intended end-to-end shape of ordinary operation and, when asked, drew the boundary at the deploy trigger, at irreversible changes, and at sensitive-zone changes. |
+| 0.4.0 | 2026-08-21 | §5.5.2's authentication zone is corrected: `app/Http/Middleware/Authenticate*` is a path with no file behind it — the framework owns that middleware — and is now declared as deliberately empty rather than as an existing file, so a published copy arrives already owned. §5.5.2 also gains the separation the first re-review of 0.3.0 found missing: declaring a zone is not enforcing it, the two halves (a check that decides whether a change touches a zone, and a promotion path configured to consult that check) both fail quietly rather than loudly, and neither may be inferred from the other's presence. The mechanism itself is delegated to [l2-release-pipeline.md](l2-release-pipeline.md) §5.11 rather than restated here, keeping one description of it rather than two that can drift. |

@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-08-20
+**Generated:** 2026-08-21
 
 ## Active Technologies
 
@@ -19,6 +19,7 @@
 │   ├── RULES.md
 │   ├── main/
 │   └── workspace.json
+├── .dockerignore
 ├── .drafts/
 │   ├── TODO.md
 │   └── booking.md
@@ -30,12 +31,12 @@
 ├── .githooks/
 │   └── pre-commit
 ├── .github/
+│   ├── CODEOWNERS
 │   └── workflows/
 ├── .gitignore
 ├── .magic/
 ├── .markdownlint.json
 ├── .npmrc
-├── AGENTS.md
 ├── CHANGELOG.md
 ├── CLAUDE.md
 ├── README.md
@@ -90,16 +91,20 @@
 │   └── seeders/
 ├── docker/
 │   ├── app/
+│   ├── deploy/
 │   ├── nginx/
 │   └── postgres/
+├── docker-compose.production.yml
 ├── docker-compose.yml
 ├── docs/
 │   ├── README.md
 │   ├── backups.md
 │   ├── database-schema.md
 │   ├── mail-and-error-tracking.md
+│   ├── operations/
 │   ├── production-provisioning.md
 │   ├── queues-and-observability.md
+│   ├── release/
 │   └── restore-rehearsal.md
 ├── package.json
 ├── phpstan.neon

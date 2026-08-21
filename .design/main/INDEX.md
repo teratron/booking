@@ -1,6 +1,6 @@
 # Workspace Specifications Registry
 
-**Version:** 2.6.0
+**Version:** 2.8.0
 **Status:** Active
 
 ## Overview
@@ -13,8 +13,12 @@ booking marketplace to a multi-country tourism information portal. See
 [l1-platform-foundation.md](specifications/l1-platform-foundation.md) §5.3 for the
 scope-delta ledger.
 
-**Status posture (stabilization pass, 2026-08-20):** 6 of 25 specifications are
-`Stable`; the remaining 19 stay `RFC`. The gate is §2 of the project constitution —
+**Status posture (stabilization pass, 2026-08-20):** that pass promoted 6 of 25
+specifications to `Stable`, leaving 19 at `RFC`. The delivery pair left that set
+briefly on 2026-08-21 — reverted to `RFC` by the constitution's amendment rule, then
+re-promoted the same day once the findings that held them there were closed — so the
+count is again **6 `Stable`, 19 `RFC`**. The Amendment Ledger below records the round
+trip. The gate for the 19 is §2 of the project constitution —
 `RFC → Stable` requires "no open questions", and 18 specifications still carry a live
 inline `TBD` marker. Those markers are the real remaining design work: several ask
 questions the implementation has already answered in practice without the answer ever
@@ -78,12 +82,12 @@ Delivery → Optional → Implementation); the registry itself is flat.
 | [l1-advertising.md](specifications/l1-advertising.md) | Commerce. Geo/language-targeted banners, slots, scheduling, promotional labels | RFC | 1 | 0.2.1 |
 | [l1-analytics.md](specifications/l1-analytics.md) | Commerce. Event model, aggregation, traffic sources, owner and operator reporting, privacy bounds | RFC | 1 | 0.2.1 |
 | [l1-public-api.md](specifications/l1-public-api.md) | Integration. Outward-facing REST contract, issued tokens, scoping, rate limits, documentation | RFC | 1 | 0.1.1 |
-| [l1-release-operations.md](specifications/l1-release-operations.md) | Delivery. Promotion path, gate obligations, release records, the two reversal paths, operator documentation set, agent-decided vs. human-decided release actions, scoped development-phase gate-construction exception | Stable | 1 | 0.2.0 |
+| [l1-release-operations.md](specifications/l1-release-operations.md) | Delivery. Promotion path, gate obligations, release records, the two reversal paths, operator documentation set, agent-decided vs. human-decided release actions, scoped development-phase gate-construction exception, standing autonomous-operation grant with its sensitive-zone circuit breaker | Stable | 1 | 0.4.0 |
 | [l1-room-reservation.md](specifications/l1-room-reservation.md) | Optional module — **disabled by default**. Booking: calendars, requests, prepaid checkout | RFC | 1 | 1.0.1 |
 | [l2-data-model.md](specifications/l2-data-model.md) | Implementation. Consolidated table inventory, conventions, index plan, deletion and archival rules, schema deliverables | RFC | 2 | 0.3.1 |
 | [l2-tech-stack.md](specifications/l2-tech-stack.md) | Implementation. Laravel 13 + Filament 5 + PostgreSQL/PostGIS + Redis; package set, bespoke surface, quality gates (incl. WCAG 2.2 AA + ARIA) and performance budgets, self-hosted deployment, dev/production environment configuration | Stable | 2 | 2.4.1 |
 | [l2-third-party-integrations.md](specifications/l2-third-party-integrations.md) | Implementation. External services: storage, CDN, map tiles, SMTP, CAPTCHA, error tracking, dormant payment | RFC | 2 | 2.0.0 |
-| [l2-release-pipeline.md](specifications/l2-release-pipeline.md) | Implementation. Git Flow branch contract, two GitHub Actions workflows, image digest as release artefact, pull-based deploy with health-assertion rollback, destructive-migration scan, EN/RU/agent documentation tree | Stable | 2 | 0.2.0 |
+| [l2-release-pipeline.md](specifications/l2-release-pipeline.md) | Implementation. Git Flow branch contract, two GitHub Actions workflows, image digest as release artefact, pull-based deploy with health-assertion rollback, destructive-migration scan, automation identity permissions, sensitive-zone enforcement, EN/RU/agent documentation tree | Stable | 2 | 0.4.0 |
 
 ## Rename Map (2026-08-05)
 
@@ -134,7 +138,86 @@ duplication rule says the decision belongs in those files, not restated here; bu
 referents are `RFC` and stale on exactly that point. Amending them resolves the
 phrasing here at the same time.
 
+## Amendment Ledger (2026-08-21)
+
+Both delivery specifications were amended to 0.3.0 outside the specification workflow:
+the file headers and their `Document History` rows were written, the registry entries
+here were not. This pass reconciled the registry to the files and, because §2 of the
+constitution makes a substantive minor bump a `Stable → RFC` transition, re-reviewed
+both rather than restoring the badge they carried.
+
+**Reconciled.** `l1-release-operations` and `l2-release-pipeline`, both 0.2.0 → 0.3.0
+in this registry. The amendment itself is the owner's standing autonomous-operation
+grant (L1 §5.5.2) and the matching extension of the automation identity's permissions
+to `master` (L2 §5.10), plus L1 §3.9's interim clause naming the credential reality
+the grant is made against.
+
+**Re-review verdict: held at `RFC`.** Three findings block re-promotion. None of them
+disputes the grant itself — the owner's decision stands as written; they concern the
+gap between what §5.5.2 declares mechanical and what is mechanically true today.
+
+- **L2 has no section for the mechanism that enforces §5.5.2.** The circuit breaker was
+  implemented as `.github/CODEOWNERS` plus an architecture test asserting coverage, and
+  documented for developers in `docs/release/branching.md` — after both specifications
+  reached 0.3.0. No implementation specification describes it, so the one component that
+  decides whether a change may merge unattended exists only in code. L2 is where that
+  belongs.
+- **The declared zone set and its enforced form diverge.** §5.5.2 names migrations and
+  seeders touching `personal_access_tokens`, and "the Filament resources built on"
+  the financial and placement services. Neither is matched by any `CODEOWNERS` pattern:
+  the migration globs cover `*permission*` and `*role*` only, and no pattern names
+  `app/Filament/` at all. Both are live money and credential surfaces that would merge
+  unattended under the grant.
+- **§5.5.2 names a path that does not exist.** `app/Http/Middleware/Authenticate*` has
+  no referent in this application — the framework owns that middleware and it was never
+  published into the tree. A declared zone with no file behind it cannot be checked.
+
+The coverage test itself is not the guard §5.5.2 describes: it proves that a
+hand-maintained list of fifteen representative paths is covered, not that the zone set
+the specification declares is. That is why the first two findings can be true while the
+suite is green.
+
+**Path to `Stable`.** The remediation is code and L2 prose together — a `CODEOWNERS`
+extension, a coverage check derived from the declared set rather than sampled beside
+it, and an L2 section describing the mechanism. Only the last is writable from this
+workflow; the rest is scheduled through the plan. Until then both specifications stay
+`RFC`, which is accurate rather than inconvenient: the grant they describe goes live at
+the first production release, and the gap should close before it does, not after.
+
+**Quarantine (C12).** `l1-release-operations` dropping to `RFC` cascades to every
+specification declaring it as parent — `l2-release-pipeline` alone, already `RFC` here
+on its own amendment. No further dependents exist.
+
+**Closed the same day — both re-promoted to `Stable` at 0.4.0.** All three findings
+were resolved, and a fourth surfaced while resolving them.
+
+- **Enforcement now covers what the policy declares.** The ownership file gained the
+  credential-token migrations and every admin surface over money, its patterns became
+  globs rather than one line per file, and it owns its own two halves. The coverage
+  check was inverted to walk the real tree per zone instead of checking a hand-written
+  path list — confirmed to genuinely fail by removing the money patterns and watching
+  it name 19 uncovered files that no list had contained.
+- **The empty zone is now declared as empty.** `app/Http/Middleware/Authenticate*` has
+  no file behind it because the framework owns that middleware; L1 §5.5.2 now says so
+  and explains why the path is declared regardless.
+- **The mechanism has an L2 section.** New `l2-release-pipeline.md` §5.11 carries the
+  ownership file, the tree-derived check, and the protection settings that make either
+  bite — plus a compliance row in §4, which had none for §5.5.2. L1 delegates to it
+  rather than restating it, so there is one description rather than two that can drift.
+- **Fourth finding, surfaced by the read-back the third one required.** `CODEOWNERS`
+  takes effect only where a branch requires a code owner's review. `develop` had that
+  enabled; `master` did not, and required one approving review on every change instead —
+  so the standing grant was not operative on `master` at all, while the sensitive-zone
+  boundary was absent from it entirely. Both branches are now configured identically
+  (`require_code_owner_reviews: true`, `required_approving_review_count: 0`), applied in
+  that order deliberately: the reverse order opens a window with neither guarantee. §5.2's
+  topology table, which still described the superseded configuration, was corrected to
+  match, and §5.11 records the ordering constraint so a future revision inherits it.
+
+The lesson is recorded in L1 §5.5.2 rather than only here: declaring a zone is not
+enforcing it, both halves fail quietly, and neither may be inferred from the other.
+
 ## Meta Information
 
 - **Maintainer**: Core Team
-- **Last Updated**: 2026-08-20 (added the delivery-pipeline pair — 25 specifications)
+- **Last Updated**: 2026-08-21 (delivery pair reconciled, remediated, and re-promoted to `Stable` at 0.4.0 — 25 specifications)

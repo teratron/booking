@@ -4,30 +4,48 @@
 # listed here merges once the quality gate passes; nothing listed here does,
 # regardless of how small the change looks.
 #
-# Kept in sync with a test under tests/Architecture — this file is the
-# mechanical form of that boundary, not a convention to remember by hand.
+# This file is the single source of that enforcement. The test under
+# tests/Architecture walks the real tree for files belonging to a sensitive
+# zone and fails when one of them is not matched here — so a new policy, a
+# new admin surface over money, or a new migration touching the credential
+# tables cannot arrive unowned and unnoticed. Patterns are written as globs
+# rather than as one line per file for the same reason: the next file in a
+# zone should be covered on the day it is written, not on the day someone
+# remembers this file exists.
 
-# Authentication and second-factor handling.
-/app/Http/Middleware/EnsureSecondFactorForPrivilegedRoles.php @teratron
+# Authentication and second-factor handling. Authenticate* is listed though
+# the framework owns that middleware today — a published copy must land
+# owned, not slip in as an ordinary change.
+/app/Http/Middleware/Authenticate* @teratron
+/app/Http/Middleware/EnsureSecondFactor* @teratron
 /config/auth.php @teratron
 
-# Authorization itself — policies, the scoping service behind them, and the
-# permission/role registry a policy's decision ultimately reads.
+# Authorization itself — policies, the scoping services behind them, and the
+# permission/role registry a policy's decision ultimately reads. Token tables
+# belong here too: how long a credential lives is an authorization question.
 /app/Policies/ @teratron
 /app/Services/Authorization/ @teratron
 /config/permission.php @teratron
-/database/seeders/PermissionSeeder.php @teratron
-/database/seeders/RoleSeeder.php @teratron
+/database/seeders/*Permission* @teratron
+/database/seeders/*Role* @teratron
 /database/migrations/*permission* @teratron
 /database/migrations/*role* @teratron
+/database/migrations/*personal_access_token* @teratron
 
-# Money — financial records and the placement/commerce services that write
-# them.
-/app/Models/FinancialRecord.php @teratron
+# Money — the financial ledger, the placement/commerce services that write to
+# it, and every admin surface built over either, wherever it is nested.
+/app/Models/FinancialRecord* @teratron
 /app/Services/Placement/ @teratron
+/app/Filament/**/FinancialRecord* @teratron
+/app/Filament/**/Placement* @teratron
 
 # Secrets and credential wiring.
 /.env.example @teratron
 /.env.production.example @teratron
 /config/services.php @teratron
 /.github/workflows/ @teratron
+
+# The gate's own two halves. A boundary that can rewrite or silence itself
+# under the grant it enforces is not a boundary.
+/.github/CODEOWNERS @teratron
+/tests/Architecture/SensitiveZoneCodeownersTest.php @teratron

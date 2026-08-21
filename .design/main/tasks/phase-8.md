@@ -15,7 +15,7 @@ duration_minutes: ~
 # Stage 8 Tasks — Delivery Pipeline & Operator Documentation
 
 **Phase:** 8
-**Status:** In Progress (17/20 — every agent-performable task is Done; only `T-8E01`, `T-8E03`, `T-8T03` remain, all owner-only, see STATE.md and [l1-release-operations.md](../specifications/l1-release-operations.md) §5.5.1)
+**Status:** In Progress (20/23 — Track F closed 2026-08-21 and both source specifications returned to `Stable` at v0.4.0 the same day, lifting the C12 quarantine this phase briefly carried. `T-8E01`, `T-8E03`, `T-8T03` are `Todo` again and remain owner-only for their own reasons, unrelated to spec status: no API path exists to create a GitHub App, the production credentials do not exist in this environment, and the rehearsal requires a human executor by the specification's own text — see STATE.md and [l1-release-operations.md](../specifications/l1-release-operations.md) §5.5.1)
 **Strategic Goal:** The portal's implementation is complete and it has never been
 released. This phase builds the path a change takes from an accepted branch to a
 serving production portal, the path back when a release turns out wrong, and the
@@ -81,6 +81,12 @@ and defers its proof to `T-8T03`, rather than claiming a verification it cannot 
 - [x] [T-8E02] `production` environment and its required reviewers
 - [ ] [T-8E03] Secrets across the three tiers, none of them in the repository
 
+### Track F — Sensitive-Zone Gate Integrity
+
+- [x] [T-8F01] Ownership file as the single enforcement source; coverage derived from the tree
+- [x] [T-8F02] Align `master` protection with the standing grant — code-owner review enforced
+- [x] [T-8F03] Read the enforced protection back and assert it matches the declared policy
+
 ### Track T — Validation & Acceptance
 
 - [x] [T-8T01] Pipeline containment and gate parity, asserted as tests
@@ -93,6 +99,11 @@ The phase is **four-wide at the start and one-wide at the end** — `(A ∥ D �
 → B02 → B03 → B04 → T03`. Stating it as six-wide because there are six tracks would be
 false: Track B is a chain after its first task, and Track T's acceptance task waits on
 everything.
+
+Track F, added later, was a chain of its own — `F01 → F02 → F03` — hanging off `T-8A01`
+rather than off the release chain. It ran while the rest of the phase was quarantined,
+which is what C12.1's stabilization exception exists for: the track that returns the
+specifications to `Stable` cannot itself be blocked by their not being `Stable`.
 
 **`T-8B01` is the phase's hard agent gate.** Every later Track B task addresses the
 artefact it produces by digest, and `T-8T03` deploys it. It is also more work than "add
@@ -368,6 +379,57 @@ than last despite being the least technically interesting work in the phase.
 - **Notes:** The compliance test for "operable without its author" is not that the document exists — it is that somebody who did not write it completed the operation from it. That is why the executor must not be the author, and why an agent cannot substitute for this even in principle: an agent reading its own generated procedure proves nothing about whether a person can follow it.
 
   This task mirrors the restore rehearsal the project already performed rather than trusted, and it carries the same scheduling hazard the load test did in the previous phase: it sits last by dependency, which makes it the natural casualty of a compressed schedule. It is not optional. A deploy path accepted without its rollback rehearsed is exactly the state the reversibility invariant forbids, and "we will rehearse it after launch" is how it stays that way.
+
+### Track F — Sensitive-Zone Gate Integrity
+
+Added 2026-08-21, after the re-review of both source specifications found the gate they
+declare mechanical to be narrower than the policy it enforces. The track exists to make
+the declared boundary and the enforced boundary the same thing; under C12.1 its tasks
+are exempt from the quarantine holding the rest of the phase, because they are what
+returns the specifications to `Stable`.
+
+**[T-8F01] Ownership file as the single enforcement source; coverage derived from the tree**
+
+- **Spec:** [l1-release-operations.md](../specifications/l1-release-operations.md) §5.5.2
+- **Status:** Done
+- **Assignment:** Agent
+- **Requires:** `T-8A01`
+- **Verify:** `composer test:arch` passes; removing an ownership pattern for a covered zone makes it fail, naming every uncovered file.
+- **Handoff:** Feeds `T-8F03`.
+- **Notes:** The first implementation proved a hand-written list of fifteen paths was covered by the ownership file. That is the same human memory the mechanism replaces, so a policy or admin surface added tomorrow was absent from both and the suite stayed green over a real hole. The rewrite inverts the direction: rules describe how to *find* files belonging to a zone in the real tree, and every file found must match some ownership pattern. The committed dotenv files are derived from the ignore file's own negation lines rather than repeated, so committing a new one puts it under the check automatically.
+- **Changes:** `.github/CODEOWNERS` — patterns widened from per-file lines to globs, and three gaps closed: the credential-token migrations, every admin surface over the financial and placement services wherever nested, and the gate's own two halves (the ownership file and this test), since a boundary that can rewrite or silence itself under the grant it enforces is not a boundary. `tests/Architecture/SensitiveZoneCodeownersTest.php` rewritten around discovery rules per zone, with a second test asserting no zone has stopped discovering files. Verified the inverse direction genuinely fails: with the money patterns removed the test named 19 uncovered files, none of which any hand-written list had contained.
+
+**[T-8F02] Align `master` protection with the standing grant — code-owner review enforced**
+
+- **Spec:** [l1-release-operations.md](../specifications/l1-release-operations.md) §5.5.2, §5.2; [l2-release-pipeline.md](../specifications/l2-release-pipeline.md) §5.10
+- **Status:** Done
+- **Assignment:** User (or Agent under §5.5.1, on the owner's explicit authorization — this is gate scaffolding, and no release has passed through it yet)
+- **Requires:** `T-8F01`
+- **Verify:** `gh api repos/{owner}/{repo}/branches/master/protection` reports `require_code_owner_reviews: true`, and the approving-review count matches whichever reading of §5.5.2 the owner confirms.
+- **Handoff:** Feeds `T-8F03`.
+- **Notes:** The ownership file forces nothing on its own — it takes effect only where the branch's protection requires a code owner's review. `develop` had that enabled; `master` did not. The owner was asked which reading was correct — keep `master` reviewed on every change (grant scoped to `develop` in practice), or make `master` match `develop`'s existing shape (ownership file becomes the real boundary on both) — and chose the second: `master` should equal `develop`.
+- **Changes:** Applied via two sequential `gh api PATCH repos/teratron/booking/branches/master/protection/required_pull_request_reviews` calls, in the order the risk requires. Step 1 set `require_code_owner_reviews: true` while leaving `required_approving_review_count: 1` untouched — read back and confirmed before proceeding, so the boundary was never observably absent. Step 2 then dropped `required_approving_review_count` to `0`. Confirmed by `T-8F03`'s read-back below: `master` now matches `develop` field-for-field.
+
+**[T-8F03] Read the enforced protection back and assert it matches the declared policy**
+
+- **Spec:** [l1-release-operations.md](../specifications/l1-release-operations.md) §3.1, §5.5.2
+- **Status:** Done
+- **Assignment:** Agent
+- **Requires:** `T-8F02`
+- **Verify:** A documented read-back for both protected branches — `require_code_owner_reviews`, the approving-review count, and the required status checks — compared against the policy each is supposed to implement, with any divergence named rather than summarized as "configured".
+- **Handoff:** Track acceptance; feeds `T-8T03`'s rehearsal.
+- **Notes:** This is the track's validation task, and it cannot be a Pest test: the thing being verified is a repository setting, not a file. It closes the gap the track was created by — nobody had read the enforced configuration back against the policy text, which is exactly how `master` came to carry a boundary the specification assumes and the repository does not have (until `T-8F02`). Worth repeating after any protection change, not only once.
+- **Changes:** Read-back, 2026-08-21, both branches:
+
+  | Field | `develop` | `master` | Matches policy? |
+  | --- | --- | --- | --- |
+  | `require_code_owner_reviews` | `true` | `true` | Yes — §5.5.2's sensitive-zone review is enforced on both lines the grant covers. |
+  | `required_approving_review_count` | `0` | `0` | Yes — an ordinary, gate-passing change needs no separate grant on either line, per §5.5.2. |
+  | `require_last_push_approval` | `false` | `false` | Consistent. |
+  | `enforce_admins` | `true` | `true` | No bypass for the owner's own account either — a stronger guarantee than the policy requires, not a gap. |
+  | Required status check | `quality` | `quality` | Same gate name on both, per the pipeline containment invariant (`T-8T01`). |
+
+  No divergence found. `master` and `develop` are now the same shape, and that shape is exactly what §5.5.2 and §5.10 describe: an ordinary change clears the gate and merges; a `CODEOWNERS`-matched path always waits for `@teratron`, regardless of which line it targets.
 
 ## Planning Audit
 
