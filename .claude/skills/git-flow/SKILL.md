@@ -202,16 +202,20 @@ Keep PR descriptions concise, actionable, and under 300 words.
 
 ```markdown
 ## What
+
 <one paragraph: high-level user-visible summary of changes>
 
 ## Why
+
 <problem description or requirement link, issue reference>
 
 ## How to verify
+
 1. <exact command or action step 1>
 2. <exact command or action step 2>
 
 ## Risk & rollback
+
 - Blast radius: <affected components or low/medium/high risk>
 - Rollback procedure: revert this PR commit (`git revert -m 1 <merge-commit-hash>`)
 ```
