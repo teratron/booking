@@ -1,0 +1,33 @@
+# Paths where a change always needs the owner's own review, even under the
+# standing autonomous-operation grant that otherwise lets an ordinary,
+# gate-passing change merge without a separate review step. Everything not
+# listed here merges once the quality gate passes; nothing listed here does,
+# regardless of how small the change looks.
+#
+# Kept in sync with a test under tests/Architecture — this file is the
+# mechanical form of that boundary, not a convention to remember by hand.
+
+# Authentication and second-factor handling.
+/app/Http/Middleware/EnsureSecondFactorForPrivilegedRoles.php @teratron
+/config/auth.php @teratron
+
+# Authorization itself — policies, the scoping service behind them, and the
+# permission/role registry a policy's decision ultimately reads.
+/app/Policies/ @teratron
+/app/Services/Authorization/ @teratron
+/config/permission.php @teratron
+/database/seeders/PermissionSeeder.php @teratron
+/database/seeders/RoleSeeder.php @teratron
+/database/migrations/*permission* @teratron
+/database/migrations/*role* @teratron
+
+# Money — financial records and the placement/commerce services that write
+# them.
+/app/Models/FinancialRecord.php @teratron
+/app/Services/Placement/ @teratron
+
+# Secrets and credential wiring.
+/.env.example @teratron
+/.env.production.example @teratron
+/config/services.php @teratron
+/.github/workflows/ @teratron

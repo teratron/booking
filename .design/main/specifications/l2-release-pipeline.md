@@ -1,6 +1,6 @@
 # Release Pipeline
 
-**Version:** 0.1.0
+**Version:** 0.3.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-release-operations.md
@@ -330,15 +330,35 @@ that its actions are attributable to it rather than to whoever created its crede
 | Granted | Withheld, deliberately |
 | --- | --- |
 | Read repository contents | Repository administration — it cannot change its own permissions |
-| Open, update, and merge pull requests into `develop` | Approving reviews on `master` |
-| Push tags | Membership in the `production` environment's reviewer list |
+| Open, update, and merge pull requests into `develop` **and `master`**, for a change [l1-release-operations.md](l1-release-operations.md) §5.5.2 covers | Approving its own review on any change §5.5.2 does not cover — a sensitive-zone change or an undeclared irreversible migration always waits for a person's grant |
+| Push tags **it did not request the merge of** — see below | Pushing the tag that starts a deploy; membership in the `production` environment's reviewer list |
 | Comment, label, and report | Any credential in the `production` tier of §5.8 |
 
 The withheld column is the point. Automation may advance a change that has passed its
-gate, cut a candidate, trigger a rollback, and report on all of it — the operations
-[l1-release-operations.md](l1-release-operations.md) §5.5 classifies as execution and
-reversal. It cannot grant the approval that lets a release into production, because an
-identity that can both request and grant its own promotion has no gate at all.
+gate, cut a candidate, and — since [l1-release-operations.md](l1-release-operations.md)
+§5.5.2 — accept an ordinary one into `master` itself; trigger a rollback; and report on
+all of it. It cannot grant the review that admits a sensitive-zone or irreversible
+change, because an identity that can both request and grant its own promotion has no
+gate at all — §5.5.2 excludes exactly that case rather than widening to cover it. And
+it cannot push the tag that starts a deploy, ever, regardless of which line of the two
+rows above authorized the change reaching `master`: reaching the production line is not
+deploying it ([l1-release-operations.md](l1-release-operations.md) §5.2), and the
+person who triggers a deploy is unconditional, not narrowed by anything this table
+grants.
+
+**Before this identity exists.** `T-8A01`'s branch protection and `T-8E02`'s
+`production` environment can both be built before the GitHub App above is ever
+installed — [l1-release-operations.md](l1-release-operations.md) §5.5.1's
+development-phase exception covers exactly this ordering. The same is true of §5.5.2's
+standing grant once it takes effect: every merge into `develop` or `master` it
+authorizes still runs under whichever credential actually calls the GitHub API, which
+is the owner's own authenticated session until this identity is installed — §3.9's
+interim clause names this explicitly rather than leaving it implied. GitHub attributes
+those API calls to whichever credential ran them; before the app exists, that is the
+owner's own authenticated session, not a separate automation identity. This is a known,
+accepted property of the pre-launch phase, not a gap in this section's own design —
+this table governs what the automation identity itself may hold once installed, not
+who was permitted to click the button before it existed.
 
 ## 6. Implementation Notes
 
@@ -417,3 +437,5 @@ deployment credentials in scope.
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1.0 | 2026-08-20 | Initial draft. Establishes the Git Flow branch contract over the existing `master`/`develop` pair, one new tag-triggered release workflow beside the existing quality gate, an immutable image digest as the release artefact, pull-based deployment with automatic health-assertion rollback, a mechanical destructive-migration scan gating the irreversibility declaration, GitHub Releases as the record, and a three-rendering documentation tree (English, Russian, agent) with enforced parity. Written as a delta against the repository's verified current state, recorded in §5.1. |
+| 0.2.0 | 2026-08-21 | §5.10 gains a note on the development-phase ordering: branch protection and the `production` environment can exist before the automation identity does, per [l1-release-operations.md](l1-release-operations.md) §5.5.1 — this section's own withheld-permissions design still governs the identity once installed, unaffected. Companion to that spec's own 0.2.0. |
+| 0.3.0 | 2026-08-21 | §5.10's granted/withheld table extends to `master`: the automation identity may merge an ordinary change (one carrying no sensitive-zone touch and no undeclared irreversible migration) into `master` itself, not only `develop` — matching [l1-release-operations.md](l1-release-operations.md) §5.5.2's new standing grant. Pushing the tag that starts a deploy stays withheld unconditionally, regardless of which line authorized the `master` change; reaching `master` is never deploying it. Companion to that spec's own 0.3.0. |

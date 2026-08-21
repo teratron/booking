@@ -86,7 +86,10 @@ final class ArticleLifecycleService
         $article->status = 'published';
 
         if ($article->publish_at === null || $article->publish_at->isFuture()) {
-            $article->publish_at = now();
+            // Carbon::now(), not the now() helper: the helper's declared
+            // return type is the broader CarbonInterface, which does not
+            // statically satisfy the model's concrete Carbon attribute type.
+            $article->publish_at = Carbon::now();
         }
 
         $article->save();

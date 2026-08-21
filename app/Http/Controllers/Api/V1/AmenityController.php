@@ -20,7 +20,7 @@ final class AmenityController extends Controller
     public function index(): AnonymousResourceCollection
     {
         return AmenityResource::collection(
-            Amenity::query()->where('is_active', true)->orderBy('id')->get(),
+            Amenity::query()->with(['translations', 'group.translations'])->where('is_active', true)->orderBy('id')->get(),
         );
     }
 }

@@ -19,6 +19,11 @@ jobs:
     # schema uses geography columns and Postgres-only partial indexes SQLite
     # cannot represent. Same image tag as the local docker-compose stack, so
     # a schema change that passes here behaves identically for a developer.
+    # Redis is required too, not optional: .env.example's CACHE_STORE,
+    # SESSION_DRIVER, and QUEUE_CONNECTION all default to redis, and several
+    # migrations (spatie/laravel-permission's among them) touch the cache
+    # store as they run — a plain `migrate:fresh` fails without it, not just
+    # the queue-backed parts of the suite.
     services:
       postgres:
         image: postgis/postgis:18-3.6-alpine
@@ -30,6 +35,15 @@ jobs:
           - 5432:5432
         options: >-
           --health-cmd="pg_isready -U booking -d booking"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
           --health-interval=5s
           --health-timeout=5s
           --health-retries=10
@@ -97,11 +111,19 @@ jobs:
       # (booking); the dedicated test database and its extensions — the same
       # ones docker/postgres/init/ provisions locally — are created here
       # instead, since GitHub's `services:` containers do not mount init
-      # scripts the way docker-compose does.
+      # scripts the way docker-compose does. Both databases need the
+      # extensions: booking_testing is what phpunit.xml points the Pest
+      # suite at, but booking (.env.example's own default) is what the
+      # standalone "migrate:fresh --seed" verification step below migrates
+      # against, and several migrations (the pg_trgm catalog indexes among
+      # them) fail without them there too.
       - name: Prepare test database
         run: |
           php -r '
             $pdo = new PDO("pgsql:host=127.0.0.1;port=5432;dbname=booking", "booking", "booking");
+            $pdo->exec("CREATE EXTENSION IF NOT EXISTS postgis");
+            $pdo->exec("CREATE EXTENSION IF NOT EXISTS pg_trgm");
+            $pdo->exec("CREATE EXTENSION IF NOT EXISTS unaccent");
             $pdo->exec("CREATE DATABASE booking_testing");
             $testPdo = new PDO("pgsql:host=127.0.0.1;port=5432;dbname=booking_testing", "booking", "booking");
             $testPdo->exec("CREATE EXTENSION IF NOT EXISTS postgis");
@@ -109,10 +131,13 @@ jobs:
             $testPdo->exec("CREATE EXTENSION IF NOT EXISTS unaccent");
           '
 
+      # No `version:` input here — pnpm/action-setup reads the pinned
+      # version from package.json's own `packageManager` field. Setting
+      # both is a hard error (ERR_PNPM_BAD_PM_VERSION), and package.json
+      # is the single source of truth a local `pnpm install` also obeys
+      # via Corepack.
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: latest
 
       - name: Setup Node
         uses: actions/setup-node@v4

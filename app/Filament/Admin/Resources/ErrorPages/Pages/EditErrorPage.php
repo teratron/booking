@@ -29,17 +29,34 @@ class EditErrorPage extends EditRecord
 
     private ?int $originalStatusCode = null;
 
+    /** @var list<string> */
+    private array $deletedTranslationLocales = [];
+
+    private int $deletedStatusCode = 0;
+
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make()->after(function (ErrorPage $record): void {
-                $resolver = app(ErrorPageResolver::class);
+            DeleteAction::make()
+                // Captured before the record (and its translation rows,
+                // which cascade-delete with it) is gone — reading
+                // $record->translations from `after()` instead queries a
+                // child table that no longer has any matching rows, and
+                // every language's cache entry survives the delete untouched.
+                ->before(function (ErrorPage $record): void {
+                    $this->deletedTranslationLocales = array_values($record->translations
+                        ->pluck('locale')
+                        ->map(static fn (mixed $locale): string => (string) $locale)
+                        ->all());
+                    $this->deletedStatusCode = (int) $record->status_code;
+                })
+                ->after(function (): void {
+                    $resolver = app(ErrorPageResolver::class);
 
-                /** @var ErrorPageTranslation $translation */
-                foreach ($record->translations as $translation) {
-                    $resolver->forgetCache((int) $record->status_code, (string) $translation->locale);
-                }
-            }),
+                    foreach ($this->deletedTranslationLocales as $locale) {
+                        $resolver->forgetCache($this->deletedStatusCode, $locale);
+                    }
+                }),
         ];
     }
 

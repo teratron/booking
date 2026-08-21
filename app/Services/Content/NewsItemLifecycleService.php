@@ -84,7 +84,10 @@ final class NewsItemLifecycleService
         $newsItem->moderation_status = 'approved';
 
         if ($newsItem->publish_at === null || $newsItem->publish_at->isFuture()) {
-            $newsItem->publish_at = now();
+            // Carbon::now(), not the now() helper: the helper's declared
+            // return type is the broader CarbonInterface, which does not
+            // statically satisfy the model's concrete Carbon attribute type.
+            $newsItem->publish_at = Carbon::now();
         }
 
         $newsItem->save();

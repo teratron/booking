@@ -96,6 +96,11 @@ it('refuses the screen to a user without the settings-management permission', fu
 it('dispatches the database backup job as a queued job when the manual action runs', function (): void {
     $actor = backupAdminActor();
     Queue::fake();
+    // Mounting the component renders the same media-generation history the
+    // full-page tests above do — unfaked here, that read hits the real
+    // destination disk (S3-compatible in every real environment; only
+    // reachable locally because MinIO happens to be running there too).
+    Storage::fake('backups');
 
     Livewire::actingAs($actor)->test(BackupAdministration::class)
         ->call('runBackupNow');

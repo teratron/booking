@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Policies\ApiTokenPolicy;
+use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
@@ -27,6 +29,7 @@ use Override;
  * @property ?int $rate_limit_per_minute
  * @property ?Carbon $last_used_at
  */
+#[UsePolicy(ApiTokenPolicy::class)]
 class ApiToken extends PersonalAccessToken
 {
     protected $table = 'personal_access_tokens';

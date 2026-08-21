@@ -15,7 +15,7 @@ duration_minutes: ~
 # Stage 8 Tasks — Delivery Pipeline & Operator Documentation
 
 **Phase:** 8
-**Status:** In Progress (9/20 — agent ceiling reached; the remaining 11 tasks require the project owner, see STATE.md)
+**Status:** In Progress (17/20 — every agent-performable task is Done; only `T-8E01`, `T-8E03`, `T-8T03` remain, all owner-only, see STATE.md and [l1-release-operations.md](../specifications/l1-release-operations.md) §5.5.1)
 **Strategic Goal:** The portal's implementation is complete and it has never been
 released. This phase builds the path a change takes from an accepted branch to a
 serving production portal, the path back when a release turns out wrong, and the
@@ -51,7 +51,7 @@ and defers its proof to `T-8T03`, rather than claiming a verification it cannot 
 
 ### Track A — Branch Contract & Gate Scoping
 
-- [ ] [T-8A01] Branch protection on `master` and `develop` — the contract made mechanical
+- [x] [T-8A01] Branch protection on `master` and `develop` — the contract made mechanical
 - [x] [T-8A02] Branch model documentation for developers — `docs/release/branching.md`
 - [x] [T-8A03] Scope `quality.yml` triggers to the two protected branches
 - [x] [T-8A04] Merge-back detector — a scheduled workflow, not a gate
@@ -59,9 +59,9 @@ and defers its proof to `T-8T03`, rather than claiming a verification it cannot 
 ### Track B — Release Artefact & Deployment
 
 - [x] [T-8B01] Production image stage and `.dockerignore`; `build` job publishing a digest
-- [ ] [T-8B02] `deploy` job behind the `production` environment gate
-- [ ] [T-8B03] `verify`, automatic rollback, and the escalation that refuses to retry
-- [ ] [T-8B04] `record` job — a GitHub Release per outcome, reversals included
+- [x] [T-8B02] `deploy` job behind the `production` environment gate
+- [x] [T-8B03] `verify`, automatic rollback, and the escalation that refuses to retry
+- [x] [T-8B04] `record` job — a GitHub Release per outcome, reversals included
 
 ### Track C — Irreversibility
 
@@ -72,18 +72,18 @@ and defers its proof to `T-8T03`, rather than claiming a verification it cannot 
 - [x] [T-8D01] `docs/operations/en/` — six procedures for a reader with no technical background
 - [x] [T-8D02] `docs/operations/ru/` — the same six procedures, same file names
 - [x] [T-8D03] `docs/operations/agent/` — the same procedures, machine-addressed
-- [ ] [T-8D04] `docs/release/pipeline.md` — the developer-audience account of the workflows
-- [ ] [T-8D05] `docs/README.md` index extended to the two new trees
+- [x] [T-8D04] `docs/release/pipeline.md` — the developer-audience account of the workflows
+- [x] [T-8D05] `docs/README.md` index extended to the two new trees
 
 ### Track E — Identity, Environment & Secrets (operator-performed)
 
 - [ ] [T-8E01] Automation identity — a GitHub App with an explicitly withheld permission set
-- [ ] [T-8E02] `production` environment and its required reviewers
+- [x] [T-8E02] `production` environment and its required reviewers
 - [ ] [T-8E03] Secrets across the three tiers, none of them in the repository
 
 ### Track T — Validation & Acceptance
 
-- [ ] [T-8T01] Pipeline containment and gate parity, asserted as tests
+- [x] [T-8T01] Pipeline containment and gate parity, asserted as tests
 - [x] [T-8T02] Documentation parity — the three trees hold the same procedure set
 - [ ] [T-8T03] Rehearse the whole path on a disposable host, from the operator document
 
@@ -126,11 +126,12 @@ than last despite being the least technically interesting work in the phase.
 **[T-8A01] Branch protection on `master` and `develop` — the contract made mechanical**
 
 - **Spec:** [l2-release-pipeline.md](../specifications/l2-release-pipeline.md) §5.2; [l1-release-operations.md](../specifications/l1-release-operations.md) §3.3
-- **Status:** Todo
-- **Assignment:** User
+- **Status:** Done
+- **Assignment:** User — performed by the agent under the project owner's explicit, recorded authorization ([l1-release-operations.md](../specifications/l1-release-operations.md) §5.5.1's development-phase exception, added the same day this task closed)
 - **Verify:** `gh api repos/teratron/booking/branches/master/protection` returns `required_pull_request_reviews`, `required_status_checks` naming the `quality` check, `required_linear_history.enabled: true`, `allow_force_pushes.enabled: false`, `allow_deletions.enabled: false`; the same call for `develop` returns pull-request-only with the `quality` check required.
 - **Handoff:** Unblocks nothing mechanically, but every later task in the phase assumes the topology it declares is enforced rather than conventional.
 - **Notes:** The two branches already exist and carry the topology by convention with no contract behind them — §5.1 records exactly that. This task is the cheapest item in the phase and the one that becomes expensive later: protection applied after history has accumulated cannot retroactively require what it did not require. `feature/*`, `release/x.y.z` and `hotfix/x.y.z` need no protection rules of their own; they are short-lived and their obligations are enforced at the merge target.
+- **Changes:** Applied via `gh api --method PUT` against both branches' `/protection` endpoint. `master`: 1 required approving review, `required_status_checks` naming `quality` (strict), linear history required, force-push and deletion both disabled, admins enforced. `develop`: same review and status-check requirements, without the linear-history/force-push/deletion hardening `master` alone needs. Verified live via the exact `gh api ... --jq` shape this task's own Verify line names — both return real data in place of the `404 Branch not protected` both endpoints returned before this task.
 
 **[T-8A02] Branch model documentation for developers — `docs/release/branching.md`**
 
@@ -181,34 +182,37 @@ than last despite being the least technically interesting work in the phase.
 **[T-8B02] `deploy` job behind the `production` environment gate**
 
 - **Spec:** [l2-release-pipeline.md](../specifications/l2-release-pipeline.md) §5.3, §5.5, §5.8
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** `T-8B01` (the digest) and `T-8E02` (the environment must exist first)
 - **Verify:** `.github/workflows/release.yml` declares `environment: production` on the `deploy` job and a `concurrency` group covering the whole production environment with `cancel-in-progress: false`; `gh workflow view release.yml` shows the tag trigger `v*` restricted to `master`. Behavioural proof of the deployment itself is deferred to `T-8T03` — it cannot be observed without a host.
 - **Handoff:** `T-8B03` extends the same workflow.
 - **Notes:** Step order is specified and each step's position has a reason: pin the digest (reversible — this is what makes rollback cheap), enter maintenance mode with a bypass secret, run migrations (the only irreversible step), restart the five services with `nginx` last, warm the configuration/route/event/view caches, leave maintenance mode. The scheduler and queue workers are **restarted, not reloaded** — both hold resolved application state from process start, and a worker running yesterday's code against today's schema fails without producing an error message.
+- **Changes:** Resolved a mechanism the specification names an invariant for ("the host pulls, no inbound access to it is ever required") but does not pin down concretely: `deploy` runs on a **self-hosted GitHub Actions runner installed on the production host itself** — the runner polls GitHub outbound for work, so there is never a separate "runner reaching into the host network" to secure. `runs-on: [self-hosted, production]`, gated by `environment: production`. Created `docker-compose.production.yml` — pull-only (no `build:` key anywhere, so the host can never silently rebuild a different image than the one the pipeline actually built and the reviewers actually approved), five release-artefact services (`app`/`worker`/`scheduler`/`pulse`/`nginx`) addressing the image by `${IMAGE_DIGEST}`, plus `postgres`/`redis` as infrastructure the release restart never touches. Two named volumes resolve gaps the spec's own prose left implicit: `public-assets` (shared between `app` and the unmodified official `nginx` image, which has no application code of its own and therefore no other way to serve `public/`'s static half) and `storage-data` (persists `storage/` — including the maintenance-mode flag file — across a release's container replacement; without it, `php artisan down`'s flag would live only in the outgoing container and vanish the instant it stops). Created `docker/deploy/deploy.sh`, executing the six-step sequence against a stable, explicit compose project name (`-p booking-production`, since a self-hosted runner's checkout path is not itself stable across runs); detects a first-ever deployment (no running `app` service) and skips the maintenance-mode toggle, since there is no live release yet to protect. Cache warming targets the `app` container specifically, not a one-off `migrate`-style container — `bootstrap/cache` is not a shared volume, so caching anywhere else would be discarded the moment that container exits. Verified: `docker compose -f docker-compose.production.yml config` and `sh -n deploy.sh` both pass; `release.yml`'s YAML parsed and confirmed to declare `environment: production` and the workflow-level `concurrency` group exactly as this task's Verify line names. Behavioural proof (a real deploy against a real host) deferred to `T-8T03`, per this task's own Verify line — self-hosted runner registration itself is host-provisioning work, not something this task can perform without a host to register one on.
 
   The concurrency group must cover the environment, not the tag: two tags pushed minutes apart must queue rather than interleave, and a queued release must **wait rather than be cancelled** — a cancelled release that had already migrated is precisely the half-applied state serialization exists to prevent.
 
 **[T-8B03] `verify`, automatic rollback, and the escalation that refuses to retry**
 
 - **Spec:** [l2-release-pipeline.md](../specifications/l2-release-pipeline.md) §5.3, §5.6; [l1-release-operations.md](../specifications/l1-release-operations.md) §5.6
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** `T-8B02`
 - **Verify:** The `verify` job polls the application's built-in health route (`/up`, already wired in `bootstrap/app.php`) until healthy or until a declared budget expires; a forced failure of that poll in a dispatch against a disposable target triggers `rollback` without human input, re-asserts health exactly once, and on a second failure ends the workflow with the application left in maintenance mode and a notification emitted — asserted end-to-end in `T-8T03`.
 - **Handoff:** `T-8B04` records whichever outcome this job reaches.
+- **Changes:** `docker/deploy/verify-health.sh` polls `http://localhost/up` (against the runner's own host, not the public domain — unaffected by DNS/CDN/firewall configuration that has nothing to do with release health) on a 10-attempt, 5-second-apart budget by default. `verify` job (`environment: production`, sharing `deploy`'s own approval for this workflow run rather than gating a second one — GitHub re-prompts per environment per run, not per job) records the digest as last-known-good on success (`docker/deploy/last-good-digest.sh`, state kept outside the runner's own ephemeral per-job checkout) or re-enters maintenance mode on failure. `rollback` job (`if: needs.verify.result == 'failure'`) reads that digest, redeploys it via `docker/deploy/rollback.sh` — restart only, deliberately no `migrate` step, since `T-8C01`'s scan already refused any release whose migrations were not safely reversible before it was ever built — then re-asserts health exactly once (a 5-second grace period, then a single check, not a budget loop) and leaves maintenance mode only on success. A second failure leaves the application in maintenance mode and fails the job with an explicit escalation message pointing at the two operator procedures that apply next; no second rollback is attempted. **Notification is GitHub's own job-failure notification to the environment's reviewers and repository watchers** — the in-app notification model other reversals use (`l1-notifications.md`) is not reachable here, since the application is unhealthy by definition at the moment this escalation fires. A real bug caught while testing the scripts themselves: `curl -s -o /dev/null -w '%{http_code}' "$URL" || echo "000"` under `set -e` doubled the printed code to `000000` on a connection failure (curl's own `-w` had already written `000` before its non-zero exit triggered the fallback too) — fixed to `|| true` inside the substitution, neutralizing only the exit code `set -e` reacts to, confirmed via a local dummy HTTP server for both the healthy and unhealthy paths.
 - **Notes:** The one-retry ceiling is the point of the task, not a detail. Health is re-asserted **once** after a rollback — an assertion, not a second deployment — and a second failure ends the workflow **without attempting a second rollback**. A second failed assertion means the fault is almost certainly the host, the database, or an external dependency rather than the image, and an automation that keeps redeploying is both useless against that and loud enough to mask it. The portal is left behind an honest closed door rather than serving intermittent errors, because that is the state an operator can reason about.
 
 **[T-8B04] `record` job — a GitHub Release per outcome, reversals included**
 
 - **Spec:** [l2-release-pipeline.md](../specifications/l2-release-pipeline.md) §5.7; [l1-release-operations.md](../specifications/l1-release-operations.md) §3.5
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** `T-8B03`
 - **Verify:** After a dispatch against a disposable target, `gh release view v<x.y.z>` shows a body assembled from that version's `CHANGELOG.md` section and annotated with the deployed image digest, the actor or automation identity, the timestamp, the irreversibility declaration, and the outcome; a rollback in the same run produces its own release record naming both the version reverted from and the version reverted to.
 - **Handoff:** None — the phase's record-keeping obligation ends here.
 - **Notes:** No second change log is introduced: the repository already maintains `CHANGELOG.md` in Keep a Changelog format with semantic versioning declared, and the record's body is assembled from the section for the version being released. The record is created at the production-line transition rather than after a successful deploy, so a **failed** deploy is recorded too — a release that leaves no trace is how a production state becomes unexplainable three weeks later.
+- **Changes:** `docker/deploy/record-release.sh` extracts the `CHANGELOG.md` section matching the release version via `awk` (heading shape `## [x.y.z]` — brackets and date both optional to the match), assembles a body naming the outcome (deployed / rolled back / escalated / deploy itself failed — four branches, one per realistic `deploy`/`verify`/`rollback` result combination), the digest, the actor, the timestamp, and the irreversibility declaration, then `gh release create --verify-tag` or `gh release edit` for the tag this run released. The reciprocal half — annotating the *prior* release as reinstated — takes the reverted-to digest as a job **output** from `rollback` (`needs.rollback.outputs.reverted_to_digest`), never reads it from a host-side file: `record` runs on an ordinary hosted runner (no production-host access needed, only the GitHub API and this repository's own `CHANGELOG.md`), sharing no filesystem with the self-hosted runner `rollback` executed on. `record` is gated `if: always() && needs.build.result != 'skipped'` — a release `scan-migrations` refused outright never reached the point of being a production candidate, so no record is created for it; every other combination, including a failed `build`, is recorded. Verified: all four outcome branches and the `CHANGELOG.md` extraction (present-version, missing-version) tested directly against a fixture changelog and a stubbed `gh`; every `gh` invocation's exact flag shape (`release view/create/edit/list --json/--jq`, `--verify-tag`) cross-checked against `gh --help` output for each subcommand.
 
 ### Track C — Irreversibility
 
@@ -268,22 +272,24 @@ than last despite being the least technically interesting work in the phase.
 **[T-8D04] `docs/release/pipeline.md` — the developer-audience account of the workflows**
 
 - **Spec:** [l2-release-pipeline.md](../specifications/l2-release-pipeline.md) §5.9
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** `T-8A04`, `T-8B04`, `T-8C01` (documents what they built)
 - **Verify:** `docs/release/pipeline.md` describes both workflows, what each job proves, how to change one, and what breaks if a given step is skipped; every workflow and job name it references exists in `.github/workflows/`.
 - **Handoff:** Indexed by `T-8D05`.
 - **Notes:** Extends the existing six technical runbooks rather than duplicating them. The existing set documents the *system* thoroughly and the *act of deploying it* not at all — this file and `T-8A02`'s closes that half of the gap for a developer audience, while Track D's operator trees close it for everyone else.
+- **Changes:** Table-per-step for `quality.yml`'s single job (what it proves / what breaks if skipped) and a subsection per `release.yml` job, plus a Mermaid diagram of the six-job chain and the secrets-by-tier table. Verified mechanically: every job name the document references (`quality`, `scan-migrations`, `build`, `deploy`, `verify`, `rollback`, `record`) cross-checked against the real job keys in both workflow files — all seven present, none invented. Caught and fixed a containment leak while writing it: an early draft cited the specification files by name in several "if skipped" explanations; restated in plain language, then swept `.github/workflows/` and `docker/deploy/*.sh` for the same pattern and found five more instances left over from earlier tasks this phase, fixed alongside.
 
 **[T-8D05] `docs/README.md` index extended to the two new trees**
 
 - **Spec:** [l2-release-pipeline.md](../specifications/l2-release-pipeline.md) §5.9
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** `T-8A02`, `T-8D01`, `T-8D02`, `T-8D03`, `T-8D04`
 - **Verify:** Every file under `docs/release/` and `docs/operations/` is reachable from `docs/README.md`, and every link in it resolves to a file that exists.
 - **Handoff:** None.
 - **Notes:** Scheduled as its own task precisely because every other Track D task would otherwise edit this one file — one writer, one merge. The project's documentation discipline requires this index to stay in sync whenever a new operational concern goes live, and eighteen new documents is the largest such change the project has made.
+- **Changes:** Restructured into three sections (System Runbooks, Release, Operations) — the Operations section is a 6-row × 3-column table (procedure × en/ru/agent) rather than 18 flat bullets, matching the same set-based parity reasoning `T-8T02`'s own check uses. Verified programmatically, not by eye: a `comm` diff between every real file under `docs/release/`+`docs/operations/` and every link this file resolves to `docs/release/`/`docs/operations/` came back empty in both directions — no unlinked file, no dangling link.
 
 ### Track E — Identity, Environment & Secrets (operator-performed)
 
@@ -304,11 +310,12 @@ than last despite being the least technically interesting work in the phase.
 **[T-8E02] `production` environment and its required reviewers**
 
 - **Spec:** [l2-release-pipeline.md](../specifications/l2-release-pipeline.md) §5.3, §5.8; [l1-release-operations.md](../specifications/l1-release-operations.md) §5.2
-- **Status:** Todo
-- **Assignment:** User
+- **Status:** Done
+- **Assignment:** User — performed by the agent under the same §5.5.1 development-phase exception as `T-8A01`
 - **Verify:** `gh api repos/teratron/booking/environments/production` returns the environment with a required-reviewers protection rule naming at least one human reviewer and **not** naming the automation identity from `T-8E01`.
 - **Handoff:** **Hard gate for `T-8B02`, `T-8B03`, `T-8B04` and `T-8T03`.**
 - **Notes:** The phase's highest-cascade task and the one no agent can unblock. It is scheduled before the deploy job exists rather than after, because an environment added afterwards means the first deploy ran ungated — and the first deploy is the one where that matters most. This reviewer list is the human acceptance point of the entire delivery path: it is where "a release is accepted" physically happens.
+- **Changes:** Created via `gh api --method PUT repos/teratron/booking/environments/production`. Required-reviewers protection rule names the project owner's own GitHub account (a real person, not any automation identity — `T-8E01` does not exist yet, so this is trivially satisfied). `deployment_branch_policy.protected_branches: true` restricts deployments to protected branches only, meaningful now that `T-8A01` protects both. Verified live via the exact `gh api` shape this task's own Verify line names.
 
 **[T-8E03] Secrets across the three tiers, none of them in the repository**
 
@@ -322,17 +329,20 @@ than last despite being the least technically interesting work in the phase.
 
   Values are held by whoever operates the host. This task records **which** credentials exist and what each is for; their contents never enter this repository, this plan, or any release record.
 
+  **`T-8B02` made one production-tier name concrete**: `MAINTENANCE_BYPASS_SECRET`, read by `docker/deploy/deploy.sh` from the `deploy` job's own environment and passed to `php artisan down --secret=`. Registry credentials need no separate secret at all — `T-8B01`'s `build` job already authenticates to `ghcr.io` with the built-in `GITHUB_TOKEN`. Repository-tier `MAP_TILE_KEY` was already named in `T-8B01`. The self-hosted-runner deployment model `T-8B02` chose also means "host access" is not a runner-side secret the way an SSH-based design would need — the runner already executes locally on the host under whatever account installed it.
+
 ### Track T — Validation & Acceptance
 
 **[T-8T01] Pipeline containment and gate parity, asserted as tests**
 
 - **Spec:** [l1-release-operations.md](../specifications/l1-release-operations.md) §3.1, §3.10; [l2-release-pipeline.md](../specifications/l2-release-pipeline.md) §4
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** `T-8A03`, `T-8B04`, `T-8C01`
 - **Verify:** `composer test:arch` passes with new assertions that (a) no file under `.github/workflows/`, no `composer.json` script, and no file under `docs/` references the design or planning directories, and (b) the gate the release path invokes is the same `composer quality` script a developer runs, by name.
 - **Handoff:** Feeds `T-8T03`'s acceptance.
 - **Notes:** The containment assertion is the mechanical form of a rule the project already enforces for product code, extended to the pipeline: delete the design and planning directories and every job must still run unchanged. This includes indirect coupling — a runtime added solely to execute design-time tooling is coupling even where nothing names it. The Node runtime in CI is legitimate, because Vite and Biome need it regardless of whether that tooling exists.
+- **Changes:** `tests/Architecture/PipelineContainmentTest.php`, two tests. First scans `.github/workflows/`, `docs/`, `composer.json`, and `docker/deploy/` (beyond the task's own literal minimum — clearly "the pipeline" in spirit, and where this exact session had already found and fixed five real leaks) for the same forbidden-pattern set `ContainmentTest.php` applies to product code. Second asserts `quality.yml` literally contains the string `composer quality` and that `composer.json`'s own `scripts.quality` key exists — the gate a developer runs and the gate CI runs are provably the same command, not merely similarly named. Confirmed the first test actually catches a violation (not just a vacuous pass): temporarily reintroduced one of the leaks this session had just fixed, watched the test fail on it, reverted, watched it pass again.
 
   Gate parity is the second half: a check that exists only in the pipeline cannot be reproduced by the person who has to fix it, and a check that exists only locally is a check nobody enforces. Where the two must differ, the difference must be in provisioning — the service container, the test database, the extensions — never in which assertions run.
 

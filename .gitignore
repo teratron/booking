@@ -108,6 +108,11 @@ auth.json
 /storage/app/private/backups/
 /storage/backups/
 /backups/
+
+# Pest/PHPUnit's --coverage-html output — a disposable local diagnostic
+# artefact regenerated on demand, never the coverage figure itself (that
+# comes from `composer test:coverage`'s --min gate in CI).
+/storage/coverage-html/
 *.sql
 *.sql.gz
 *.sql.bz2
