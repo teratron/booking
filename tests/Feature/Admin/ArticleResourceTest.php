@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use App\Exceptions\ArticleScheduleRefusedException;
-use App\Filament\Admin\Resources\ArticleTags\Pages\EditArticleTag;
-use App\Filament\Admin\Resources\ArticleTags\Pages\ListArticleTags;
 use App\Filament\Admin\Resources\Articles\ArticleResource;
 use App\Filament\Admin\Resources\Articles\Pages\CreateArticle;
 use App\Filament\Admin\Resources\Articles\Pages\EditArticle;
 use App\Filament\Admin\Resources\Articles\Pages\ListArticles;
+use App\Filament\Admin\Resources\ArticleTags\Pages\EditArticleTag;
+use App\Filament\Admin\Resources\ArticleTags\Pages\ListArticleTags;
 use App\Models\Article;
 use App\Models\ArticleCategory;
 use App\Models\ArticleTag;

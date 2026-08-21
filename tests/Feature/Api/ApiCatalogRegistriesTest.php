@@ -34,7 +34,7 @@ function acrEnableApiModule(): void
         'key' => 'api', 'default_state' => 'disabled', 'scopable_levels' => json_encode(['portal']),
         'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
     ]);
-    $module = App\Models\Module::query()->findOrFail($moduleId);
+    $module = Module::query()->findOrFail($moduleId);
     $actor = User::factory()->create();
 
     app(ModuleAdministrator::class)->setState($module, 'portal', null, true, $actor);
