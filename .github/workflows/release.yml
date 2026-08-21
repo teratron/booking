@@ -153,3 +153,94 @@ jobs:
         run: |
           chmod +x docker/deploy/deploy.sh
           ./docker/deploy/deploy.sh "${{ needs.build.outputs.digest }}"
+
+  # A measurement, not a judgement (l1-release-operations.md §5.2) — runs
+  # immediately after deploy, without waiting for a person. `environment:
+  # production` here shares the one approval `deploy` already obtained for
+  # this workflow run (GitHub re-prompts per *environment* per run, not per
+  # job) — needed for read access to the same maintenance-bypass secret,
+  # never to gate this job behind a second approval.
+  verify:
+    needs: [build, deploy]
+    runs-on: [self-hosted, production]
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Poll the health route
+        run: |
+          chmod +x docker/deploy/verify-health.sh
+          ./docker/deploy/verify-health.sh
+
+      # Success — this digest becomes what `rollback` would redeploy if a
+      # *future* release fails its own verify.
+      - name: Record this release as last known-good
+        if: success()
+        run: |
+          chmod +x docker/deploy/last-good-digest.sh
+          ./docker/deploy/last-good-digest.sh record "${{ needs.build.outputs.digest }}"
+
+      # Failure — protect visitors from the release that just failed its own
+      # health check while `rollback` (below) recovers automatically.
+      # `deploy` already left maintenance mode; this step re-enters it.
+      - name: Enter maintenance mode ahead of automatic rollback
+        if: failure()
+        env:
+          MAINTENANCE_BYPASS_SECRET: ${{ secrets.MAINTENANCE_BYPASS_SECRET }}
+        run: |
+          docker compose -p booking-production -f docker-compose.production.yml \
+            exec -T app php artisan down --secret="$MAINTENANCE_BYPASS_SECRET" --render="errors::503"
+
+  # Agent-decidable per l1-release-operations.md §5.5 — triggering rollback on
+  # a failed health assertion never waits for a person, unlike accepting the
+  # release that made it necessary in the first place.
+  rollback:
+    needs: [build, verify]
+    if: needs.verify.result == 'failure'
+    runs-on: [self-hosted, production]
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Read the last known-good digest
+        id: last_good
+        run: |
+          chmod +x docker/deploy/last-good-digest.sh
+          echo "digest=$(./docker/deploy/last-good-digest.sh read)" >> "$GITHUB_OUTPUT"
+
+      - name: Roll back
+        run: |
+          chmod +x docker/deploy/rollback.sh
+          ./docker/deploy/rollback.sh "${{ steps.last_good.outputs.digest }}"
+
+      # Exactly once — an assertion, not another deployment
+      # (l2-release-pipeline.md §5.6). A brief grace period first: the
+      # containers `rollback.sh` just restarted need a moment to actually
+      # start serving before the single check means anything.
+      - name: Re-assert health once
+        run: |
+          sleep 5
+          chmod +x docker/deploy/verify-health.sh
+          ./docker/deploy/verify-health.sh 1 0
+
+      - name: Leave maintenance mode — rollback restored health
+        if: success()
+        run: |
+          docker compose -p booking-production -f docker-compose.production.yml exec -T app php artisan up
+
+      # The rollback redeployed a digest that was healthy moments ago and is
+      # still unhealthy now — the fault is almost certainly the host, the
+      # database, or an external dependency, not the image. Stopping here
+      # rather than trying anything else is the point of this step, not a
+      # gap in it: the application stays in maintenance mode, and this job's
+      # own failure is what `record` (next) reads to write the escalation
+      # into the release record and point operators at the restore
+      # procedure.
+      - name: Escalate — rollback did not restore health
+        if: failure()
+        run: |
+          echo "::error::Rollback to ${{ steps.last_good.outputs.digest }} did not restore health. The application remains in maintenance mode — this requires human investigation. See docs/operations/en/read-a-failed-pipeline.md and docs/operations/en/restore.md."

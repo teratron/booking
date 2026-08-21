@@ -60,7 +60,7 @@ and defers its proof to `T-8T03`, rather than claiming a verification it cannot 
 
 - [x] [T-8B01] Production image stage and `.dockerignore`; `build` job publishing a digest
 - [x] [T-8B02] `deploy` job behind the `production` environment gate
-- [ ] [T-8B03] `verify`, automatic rollback, and the escalation that refuses to retry
+- [x] [T-8B03] `verify`, automatic rollback, and the escalation that refuses to retry
 - [ ] [T-8B04] `record` job — a GitHub Release per outcome, reversals included
 
 ### Track C — Irreversibility
@@ -195,11 +195,12 @@ than last despite being the least technically interesting work in the phase.
 **[T-8B03] `verify`, automatic rollback, and the escalation that refuses to retry**
 
 - **Spec:** [l2-release-pipeline.md](../specifications/l2-release-pipeline.md) §5.3, §5.6; [l1-release-operations.md](../specifications/l1-release-operations.md) §5.6
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** `T-8B02`
 - **Verify:** The `verify` job polls the application's built-in health route (`/up`, already wired in `bootstrap/app.php`) until healthy or until a declared budget expires; a forced failure of that poll in a dispatch against a disposable target triggers `rollback` without human input, re-asserts health exactly once, and on a second failure ends the workflow with the application left in maintenance mode and a notification emitted — asserted end-to-end in `T-8T03`.
 - **Handoff:** `T-8B04` records whichever outcome this job reaches.
+- **Changes:** `docker/deploy/verify-health.sh` polls `http://localhost/up` (against the runner's own host, not the public domain — unaffected by DNS/CDN/firewall configuration that has nothing to do with release health) on a 10-attempt, 5-second-apart budget by default. `verify` job (`environment: production`, sharing `deploy`'s own approval for this workflow run rather than gating a second one — GitHub re-prompts per environment per run, not per job) records the digest as last-known-good on success (`docker/deploy/last-good-digest.sh`, state kept outside the runner's own ephemeral per-job checkout) or re-enters maintenance mode on failure. `rollback` job (`if: needs.verify.result == 'failure'`) reads that digest, redeploys it via `docker/deploy/rollback.sh` — restart only, deliberately no `migrate` step, since `T-8C01`'s scan already refused any release whose migrations were not safely reversible before it was ever built — then re-asserts health exactly once (a 5-second grace period, then a single check, not a budget loop) and leaves maintenance mode only on success. A second failure leaves the application in maintenance mode and fails the job with an explicit escalation message pointing at the two operator procedures that apply next; no second rollback is attempted. **Notification is GitHub's own job-failure notification to the environment's reviewers and repository watchers** — the in-app notification model other reversals use (`l1-notifications.md`) is not reachable here, since the application is unhealthy by definition at the moment this escalation fires. A real bug caught while testing the scripts themselves: `curl -s -o /dev/null -w '%{http_code}' "$URL" || echo "000"` under `set -e` doubled the printed code to `000000` on a connection failure (curl's own `-w` had already written `000` before its non-zero exit triggered the fallback too) — fixed to `|| true` inside the substitution, neutralizing only the exit code `set -e` reacts to, confirmed via a local dummy HTTP server for both the healthy and unhealthy paths.
 - **Notes:** The one-retry ceiling is the point of the task, not a detail. Health is re-asserted **once** after a rollback — an assertion, not a second deployment — and a second failure ends the workflow **without attempting a second rollback**. A second failed assertion means the fault is almost certainly the host, the database, or an external dependency rather than the image, and an automation that keeps redeploying is both useless against that and loud enough to mask it. The portal is left behind an honest closed door rather than serving intermittent errors, because that is the state an operator can reason about.
 
 **[T-8B04] `record` job — a GitHub Release per outcome, reversals included**
