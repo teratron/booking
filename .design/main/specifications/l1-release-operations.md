@@ -1,6 +1,6 @@
 # Release Operations
 
-**Version:** 0.2.0
+**Version:** 0.3.0
 **Status:** Stable
 **Layer:** concept
 
@@ -180,6 +180,17 @@ role would be denied. Removing a review requirement so that automation can proce
 change to the review policy and is decided as one — never as a pipeline configuration
 detail.
 
+**Interim state, bounded and owner-authorized.** Before the automation identity
+[l2-release-pipeline.md](l2-release-pipeline.md) §5.10 describes has been installed,
+every action this specification permits an agent to take is still attributed to
+whichever credential actually ran it — today, the owner's own authenticated session,
+never a separate identity impersonating one. §5.5.2's standing autonomous-operation
+grant is made knowingly against this reality, not in ignorance of it: the owner decided
+the review-policy change §3.9's own rule above requires being decided explicitly, aware
+that until §5.10's identity exists, GitHub attributes the resulting merges, tags, and
+records to the owner's account. This clause lapses — and this paragraph is removed —
+the moment that identity exists and every action it governs runs under it instead.
+
 ### 3.10 The Pipeline Owns No Design Artefacts
 
 No pipeline job, build step, package manifest, or operational procedure may read from,
@@ -230,10 +241,10 @@ earlier gate already proved, and nothing later is trusted to have been checked.
 | Transition | Must be true |
 | --- | --- |
 | Local commit → work line | Formatting and lint pass for the changed files. Fast, mechanical, no environment required beyond the developer's own. |
-| Work line → integration | The full quality gate passes on the merged result, not on the branch in isolation. Human review has accepted the change. The schema applies cleanly from empty. |
+| Work line → integration | The full quality gate passes on the merged result, not on the branch in isolation. The schema applies cleanly from empty. Human review has accepted the change, **unless** §5.5.2's standing grant applies — the change set touches none of its declared sensitive zones and carries no undeclared irreversible migration — in which case the gate passing is what accepts it. |
 | Integration → release line | The integration state is green at the moment of the freeze, and the change set is enumerable — the release record's contents are known before, not after. |
-| Release line → production line | Acceptance is explicit and attributable (§3.5). Irreversible schema changes are declared here (§3.4) or not at all. |
-| Production line → deployed portal | The artefact deployed is the one that was accepted, not a rebuild of it. Deployment is followed by an automatic health assertion; a failed assertion triggers §5.3's reversal without waiting for a human. |
+| Release line → production line | Acceptance is explicit and attributable (§3.5), **by the same either/or as the row above**: a person's, or the agent's under §5.5.2 when its conditions hold. Irreversible schema changes are declared here (§3.4) or not at all — a change carrying one always exits §5.5.2's grant and waits for a person, since the declaration itself is never the agent's to make. |
+| Production line → deployed portal | The artefact deployed is the one that was accepted, not a rebuild of it. **Reaching this line is not deploying it** — nothing here starts a deploy on its own. Deployment begins only when a person triggers it (§5.5.2), then is followed by an automatic health assertion; a failed assertion triggers §5.3's reversal without waiting for a human. |
 
 The asymmetry in the last row is deliberate. Deciding to release is a human judgement.
 Deciding that a release is *broken right now* is a measurement, and measurements should
@@ -290,19 +301,22 @@ by the same automation that made them**.
 
 | Agent may decide | Requires a person |
 | --- | --- |
-| Advancing a change whose gate passed, into integration, once review is satisfied | Granting the review itself |
-| Cutting a release candidate from a green integration state | Accepting a candidate for production (§5.2) |
+| Advancing an ordinary change whose gate passed into integration, and from there into production, without a separate review grant (§5.5.2) | Granting the review itself, for any change §5.5.2 does not cover |
+| Cutting a release candidate from a green integration state, and accepting an ordinary one into production (§5.2, §5.5.2) | Accepting a candidate that touches a declared sensitive zone or carries an irreversible migration |
 | Triggering rollback on a failed health assertion (§5.2) | Initiating a restore — `[TZ]` §131's re-confirmation gate is a human gate by construction |
 | Reporting, recording, and notifying | Declaring a release irreversible (§3.4) |
-| Retrying a transition that failed for an infrastructure reason | Loosening or altering a gate the pipeline has already shipped a release through |
+| Retrying a transition that failed for an infrastructure reason | Loosening or altering a gate the pipeline has already shipped a release through, or triggering an actual deploy (§5.5.2) |
 | Building the gate's scaffolding before it has ever gated a release — branch protection rules, the `production` environment's existence and its reviewer list, the CI/CD workflows themselves — **under the owner's explicit, recorded, one-time authorization (§5.5.1)** | Naming who the human reviewer is, or standing in for that reviewer under any identity |
 
 The pattern: automation is trusted with **execution and with reversal**, and — before a
-gate has ever gated anything — with **building it**, and is not trusted with
-**acceptance, irreversibility, or loosening a gate that has already stood between
+gate has ever gated anything — with **building it**, and now, under the owner's
+explicit and recorded standing grant (§5.5.2), with **advancing an ordinary change all
+the way to production** — and is not trusted with **triggering the deploy that reaches
+a visitor, declaring irreversibility, or loosening a gate that has already stood between
 automation and a live release**. An agent that may both accept a release and declare it
 irreversible can produce a state nothing it controls can undo, which is precisely the
-state §3.4 exists to make impossible. Installing a rule that requires a named person's
+state §3.4 exists to make impossible — this is why §5.5.2's grant excludes exactly that
+case rather than widening to cover it. Installing a rule that requires a named person's
 approval is a different act from holding that approval power: the two stay
 distinguishable exactly as long as the reviewer named is a real person the owner chose,
 never the automation identity itself (§5.10 `[L2]`) and never the agent approving on its
@@ -327,6 +341,63 @@ beyond this one cell:
 - The authorization is the owner's own explicit act, given knowingly after the agent has
   stated what it would do and why the boundary normally exists — never inferred from
   silence, and never assumed by the agent on its own initiative.
+
+#### 5.5.2 Standing Autonomous Operation
+
+Where §5.5.1 is a narrow, one-time, pre-launch exception that lapses at first release,
+this is the owner's standing instruction for ordinary operation afterward: an
+incoming bug report may travel, unattended, from a work line the agent branches off
+integration, through a fix, the full quality gate, and acceptance into both the
+integration and production lines — the two transitions §5.2's table now marks
+either/or — without a person granting review at either point. The owner made this
+grant explicitly, aware of §3.9's interim-credential reality (above) and of exactly
+what it does not cover, which is enumerated below rather than left to be inferred from
+how far the grant reaches.
+
+**What the grant does not widen.** Three things stay exactly as strict as §5.5's table
+already made them, and this section touches none of them:
+
+- **The deploy trigger.** Reaching the production line is not deploying to it (§5.2).
+  The action that starts a deploy — pushing the release tag, or whatever mechanism a
+  later revision of [l2-release-pipeline.md](l2-release-pipeline.md) names — is a
+  person's explicit act every time, unconditionally, whether or not the release being
+  deployed used this grant to get there. An agent operating under this section
+  prepares a release candidate ready to deploy; it does not start the deploy.
+- **Irreversibility and restoration.** A change carrying a migration that a plain
+  rollback cannot undo exits this grant the moment that fact is known, regardless of
+  how ordinary the rest of the change is — §3.4's declaration is never the agent's to
+  make, and neither is initiating the restore path §5.3 names for exactly this case.
+- **The `production` environment's own reviewer gate**, where one exists (§5.10
+  `[L2]`), is untouched by this section. It is a second, independent confirmation on
+  top of the deploy trigger above, not a substitute for it — this grant neither relies
+  on it nor removes it.
+
+**The sensitive-zone circuit breaker.** A change is outside this grant — and falls
+back to §5.5's ordinary "requires a person" row — the moment it touches any of:
+
+- Authentication, session, or second-factor handling (`app/Http/Middleware/Authenticate*`,
+  `app/Http/Middleware/EnsureSecondFactorForPrivilegedRoles.php`, `config/auth.php`).
+- Authorization itself — every file under `app/Policies/`, `app/Services/Authorization/`,
+  and `config/permission.php`, plus any migration or seeder touching the `roles`,
+  `permissions`, `role_scopes`, or `personal_access_tokens` tables.
+- Money — `app/Models/FinancialRecord*`, anything under `app/Services/Placement/`, and
+  the Filament resources built on either.
+- Secrets and credential wiring — any `.env*` file, `config/services.php`, and every
+  `.github/workflows/*.yml` step that names a secret.
+
+This list is deliberately mechanical, not a matter of the agent's own judgement about
+what counts as sensitive — it is checked the same way §3.1's gate parity already is
+(a test, not a convention), so that "did this change touch a sensitive zone" has one
+answer regardless of who is asking. A change touching any listed path routes to a
+person exactly as if this section did not exist; nothing about the surrounding change
+being otherwise ordinary changes that.
+
+**Scope.** This section governs the ordinary bug-fix and small-change lifecycle the
+owner described when granting it — a work line opened from an existing report,
+through to a production-line acceptance. It does not authorize an agent to originate
+new specification-level scope on its own initiative (that remains `/magic.spec`'s own
+gate), and it does not relax §3.2's single-path invariant: an urgent-fix line still
+exists and still merges back, exactly as §5.1 already requires.
 
 ### 5.6 Failure Handling
 
@@ -408,3 +479,4 @@ outage, and the person who needs the document is not the person who could write 
 | --- | --- | --- |
 | 0.1.0 | 2026-08-20 | Initial draft. Covers the first specification of this project's delivery path: promotion topology, gate obligations by transition, release records and the two reversal paths, the operator documentation matrix, and the boundary between agent-decided and human-decided release actions. Originates with the project owner rather than `[TZ]`, which is silent on delivery. |
 | 0.2.0 | 2026-08-21 | §5.5 gains a scoped development-phase exception (§5.5.1): before a project's first production release, the owner may explicitly authorize the agent to build a gate's own scaffolding directly — branch protection, the `production` environment and its reviewer list, the CI/CD workflows — never to decide anything the "Requires a person" column still lists, and never past the project's first real release through that gate. Reduces friction the original table forced onto pre-launch setup work without weakening §3.4's production-time boundary, which the exception explicitly cannot touch. Originates with the project owner, who observed the table blocked setup work no release had yet depended on. |
+| 0.3.0 | 2026-08-21 | §5.5 gains a standing (not one-time) autonomous-operation grant (§5.5.2): an ordinary bug fix may travel unattended from a work line through acceptance into production, without a human granting review, provided it touches none of a declared, mechanically-checked set of sensitive zones (auth, authorization, money, secrets) and carries no undeclared irreversible migration — either condition routes it back to a person. The deploy trigger itself, irreversibility declaration, and restore initiation stay exactly as human-gated as before; this grant only removes the review-grant step ahead of them, never the transitions after. §3.9 gains an interim clause naming the current reality this grant is made against: before §5.10 `[L2]`'s automation identity exists, the actions it covers still run under the owner's own credentials, by the owner's explicit and informed choice, not the project's target state. §5.2's transition table is reworded to state both transitions as either/or (person, or agent under §5.5.2) rather than person-only. Originates with the project owner, who described the intended end-to-end shape of ordinary operation and, when asked, drew the boundary at the deploy trigger, at irreversible changes, and at sensitive-zone changes. |

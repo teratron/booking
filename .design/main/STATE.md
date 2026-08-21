@@ -4,7 +4,7 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-21 04:15
+**Updated:** 2026-08-21 12:37
 **Phase:** 8 — Delivery Pipeline & Operator Documentation
 **Status:** Active
 
@@ -14,7 +14,7 @@
 - **Previous:** **The owner reopened the human-only boundary for development-phase infrastructure — `T-8A01` and `T-8E02` done at 11/20**, unblocking the chain above. `l1-release-operations.md` gained §5.5.1 (v0.2.0): before this project's first production release, the owner may authorize the agent to build a gate's own scaffolding directly, never the "requires a person" decisions (accept, declare irreversible, restore), never past the first real release through that gate. Applied live via `gh api`: branch protection on `master`/`develop`, and the `production` environment with the owner's own account as required reviewer.
 - **Previous:** **Every agent-executable task in Phase 8 was Done at 9/20**, before the owner's authorization. `T-8A02`–`T-8A04`, `T-8B01`, `T-8C01`, `T-8D01`–`T-8D03`, `T-8T02` — five commits on `develop`. Found and fixed along the way: `AppServiceProvider::boot()` crashed with no database configured at all (already breaking real CI before the fix); the destructive-migration scanner's first pass flagged all 122 `Schema::create()` migrations because it scanned whole files instead of only `up()`.
 - **Spec:** **25 specs — 6 `Stable`, 19 `RFC`.** `l1-release-operations.md` and `l2-release-pipeline.md` both at v0.2.0 (§5.5.1 development-phase exception, re-stabilized same day). The 19 `RFC` skips are real remaining design work (18 carry a live `TBD`), not delivery-pipeline input — untouched this session.
-- **Next Action:** Raise the three remaining tasks with the project owner: create the GitHub App identity (`T-8E01`), provision and record the real production secrets across all three tiers (`T-8E03`), then rehearse a real release and rollback against a disposable host, executed by someone who did not write the procedure (`T-8T03`) — the specification's own acceptance criterion for the whole phase. Nothing else in Phase 8 needs `/magic.run` again until one of those three lands.
+- **Next Action:** Run /magic.task main to update the plan
 
 ## Progress
 
