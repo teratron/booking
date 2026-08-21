@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 use App\Filament\Cabinet\Pages\Settings;
 use App\Filament\Cabinet\Resources\Notifications\NotificationResource;
+use App\Filament\Cabinet\Resources\Notifications\Pages\ListNotifications;
+use App\Models\Notification;
 use App\Models\NotificationPreference;
 use App\Models\NotificationType;
 use App\Models\Object_;
 use App\Models\User;
 use App\Services\Notifications\NotificationDispatchService;
 use App\Services\Notifications\NotificationPreferenceService;
+use Filament\Actions\Exceptions\ActionNotResolvableException;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -250,4 +253,118 @@ it("lists only the owner's own notifications, with read/unread state toggled thr
     test()->actingAs($ownerA);
 
     expect(NotificationResource::getEloquentQuery()->pluck('id')->all())->toBe([$ownNotification->id]);
+});
+
+it("renders the inbox table newest-first and excludes another owner's rows entirely", function (): void {
+    $fixture = cabinetSettingsGeography();
+    $ownerA = cabinetSettingsOwner('settings_owner_table_order_a');
+    $ownerB = cabinetSettingsOwner('settings_owner_table_order_b');
+    $objectA = cabinetSettingsMakeObject($fixture, $ownerA->id);
+    cabinetSettingsMakeObject($fixture, $ownerB->id);
+    $typeIds = cabinetSettingsSeedNotificationTypes();
+
+    $olderId = DB::table('notifications')->insertGetId([
+        'recipient_id' => $ownerA->id, 'notification_type_id' => $typeIds['placement_expiring'],
+        'title' => 'Older notice', 'body' => 'First received.', 'locale' => 'en',
+        'created_at' => now()->subDay(), 'updated_at' => now()->subDay(),
+    ]);
+    $newerId = DB::table('notifications')->insertGetId([
+        'recipient_id' => $ownerA->id, 'notification_type_id' => $typeIds['placement_expiring'],
+        'title' => 'Newer notice', 'body' => 'Received just now.', 'locale' => 'en',
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $foreignId = DB::table('notifications')->insertGetId([
+        'recipient_id' => $ownerB->id, 'notification_type_id' => $typeIds['placement_expiring'],
+        'title' => "Owner B's own notice", 'body' => 'Not for owner A.', 'locale' => 'en',
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    $older = Notification::query()->findOrFail($olderId);
+    $newer = Notification::query()->findOrFail($newerId);
+    $foreign = Notification::query()->findOrFail($foreignId);
+
+    Filament::setCurrentPanel('cabinet');
+    Filament::setTenant($objectA, isQuiet: true);
+    test()->actingAs($ownerA);
+
+    Livewire::test(ListNotifications::class)
+        ->assertCanSeeTableRecords([$newer, $older], inOrder: true)
+        ->assertCanNotSeeTableRecords([$foreign]);
+});
+
+it("formats the unread/read badge and toggles it in both directions through the inbox's own action, using the real dispatch service", function (): void {
+    $fixture = cabinetSettingsGeography();
+    $owner = cabinetSettingsOwner('settings_owner_toggle_action');
+    $object = cabinetSettingsMakeObject($fixture, $owner->id);
+    $typeIds = cabinetSettingsSeedNotificationTypes();
+
+    $notificationId = DB::table('notifications')->insertGetId([
+        'recipient_id' => $owner->id, 'notification_type_id' => $typeIds['placement_expiring'],
+        'title' => 'Your placement is expiring', 'body' => 'Renew before it lapses.', 'locale' => 'en',
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $notification = Notification::query()->findOrFail($notificationId);
+
+    Filament::setCurrentPanel('cabinet');
+    Filament::setTenant($object, isQuiet: true);
+    test()->actingAs($owner);
+
+    // Unread state: the title column renders, the status badge reads
+    // "unread", and the row action is labelled to mark it read — the badge
+    // and the action label are both driven by the identical
+    // read_at === null check inside NotificationsTable's own closures.
+    Livewire::test(ListNotifications::class)
+        ->assertTableColumnFormattedStateSet('title', 'Your placement is expiring', $notification)
+        ->assertTableColumnFormattedStateSet('read_at', __('panel.cabinet.notifications.status.unread'), $notification)
+        ->assertTableActionExists(
+            'toggle_read',
+            record: $notification,
+            checkActionUsing: fn ($action) => expect($action->getLabel())->toBe(__('panel.cabinet.notifications.actions.mark_read')),
+        )
+        ->callTableAction('toggle_read', $notification)
+        ->assertHasNoTableActionErrors();
+
+    $notification->refresh();
+    expect($notification->read_at)->not->toBeNull();
+
+    // Read state: the same closures now resolve their other branch, wired
+    // to NotificationDispatchService::markAsUnread on the next call.
+    Livewire::test(ListNotifications::class)
+        ->assertTableColumnFormattedStateSet('read_at', __('panel.cabinet.notifications.status.read'), $notification)
+        ->assertTableActionExists(
+            'toggle_read',
+            record: $notification,
+            checkActionUsing: fn ($action) => expect($action->getLabel())->toBe(__('panel.cabinet.notifications.actions.mark_unread')),
+        )
+        ->callTableAction('toggle_read', $notification)
+        ->assertHasNoTableActionErrors();
+
+    expect($notification->fresh()->read_at)->toBeNull();
+});
+
+it("refuses to toggle another owner's notification through the inbox's own action, since it never resolves within the recipient-scoped table query", function (): void {
+    $fixture = cabinetSettingsGeography();
+    $ownerA = cabinetSettingsOwner('settings_owner_toggle_cross_a');
+    $ownerB = cabinetSettingsOwner('settings_owner_toggle_cross_b');
+    $objectA = cabinetSettingsMakeObject($fixture, $ownerA->id);
+    cabinetSettingsMakeObject($fixture, $ownerB->id);
+    $typeIds = cabinetSettingsSeedNotificationTypes();
+
+    $foreignId = DB::table('notifications')->insertGetId([
+        'recipient_id' => $ownerB->id, 'notification_type_id' => $typeIds['placement_expiring'],
+        'title' => "Owner B's notice", 'body' => 'Should stay untouched.', 'locale' => 'en',
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $foreignNotification = Notification::query()->findOrFail($foreignId);
+
+    Filament::setCurrentPanel('cabinet');
+    Filament::setTenant($objectA, isQuiet: true);
+    test()->actingAs($ownerA);
+
+    $attempt = fn () => Livewire::test(ListNotifications::class)
+        ->callTableAction('toggle_read', $foreignNotification);
+
+    expect($attempt)->toThrow(ActionNotResolvableException::class);
+
+    expect($foreignNotification->fresh()->read_at)->toBeNull();
 });
