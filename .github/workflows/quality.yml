@@ -111,11 +111,19 @@ jobs:
       # (booking); the dedicated test database and its extensions — the same
       # ones docker/postgres/init/ provisions locally — are created here
       # instead, since GitHub's `services:` containers do not mount init
-      # scripts the way docker-compose does.
+      # scripts the way docker-compose does. Both databases need the
+      # extensions: booking_testing is what phpunit.xml points the Pest
+      # suite at, but booking (.env.example's own default) is what the
+      # standalone "migrate:fresh --seed" verification step below migrates
+      # against, and several migrations (the pg_trgm catalog indexes among
+      # them) fail without them there too.
       - name: Prepare test database
         run: |
           php -r '
             $pdo = new PDO("pgsql:host=127.0.0.1;port=5432;dbname=booking", "booking", "booking");
+            $pdo->exec("CREATE EXTENSION IF NOT EXISTS postgis");
+            $pdo->exec("CREATE EXTENSION IF NOT EXISTS pg_trgm");
+            $pdo->exec("CREATE EXTENSION IF NOT EXISTS unaccent");
             $pdo->exec("CREATE DATABASE booking_testing");
             $testPdo = new PDO("pgsql:host=127.0.0.1;port=5432;dbname=booking_testing", "booking", "booking");
             $testPdo->exec("CREATE EXTENSION IF NOT EXISTS postgis");
