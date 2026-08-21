@@ -2,13 +2,13 @@
 set -eu
 
 # Redeploys the last release confirmed healthy — no migration, no data
-# touched, "fast, mechanical, and safe to trigger automatically" per
-# l1-release-operations.md §5.3. Not a smaller version of deploy.sh:
-# rolling back a release that changed the schema is precisely the case this
-# script must never be reached for — the destructive-migration scan
-# (App\Services\Release\DestructiveMigrationScanner) already refused any
-# such release before it was ever built, so every digest this script is
-# ever asked to redeploy is safe to redeploy without touching the database.
+# touched, fast, mechanical, and safe to trigger automatically. Not a
+# smaller version of deploy.sh: rolling back a release that changed the
+# schema is precisely the case this script must never be reached for — the
+# destructive-migration scan (App\Services\Release\DestructiveMigrationScanner)
+# already refused any such release before it was ever built, so every digest
+# this script is ever asked to redeploy is safe to redeploy without touching
+# the database.
 #
 # Usage: rollback.sh <image-digest>
 # <image-digest> is the last-known-good digest deploy-record.sh recorded

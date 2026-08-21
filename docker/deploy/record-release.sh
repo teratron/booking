@@ -1,12 +1,12 @@
 #!/bin/sh
 set -eu
 
-# Writes the release record — l1-release-operations.md §3.5: created at the
-# production-line transition, not only after a successful deploy, so a
-# failed deploy is recorded too. No second change log: the body is
-# assembled from the CHANGELOG.md section this project already maintains in
-# Keep a Changelog format (§5.7). Runs on `record`, `if: always()`, so it
-# executes regardless of which earlier job failed.
+# Writes the release record — created at the production-line transition, not
+# only after a successful deploy, so a failed deploy is recorded too. No
+# second change log: the body is assembled from the CHANGELOG.md section
+# this project already maintains in Keep a Changelog format. Runs on
+# `record`, `if: always()`, so it executes regardless of which earlier job
+# failed.
 #
 # Usage: record-release.sh <tag> <digest> <deploy-result> <verify-result> <rollback-result> <declaration> [reverted-to-digest]
 #   <tag>              the version tag this run released, e.g. v1.2.3

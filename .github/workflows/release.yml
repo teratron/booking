@@ -149,11 +149,10 @@ jobs:
 
   # Gated by the `production` environment's own required-reviewers rule —
   # this job does not start running until a human approves it there. Runs on
-  # a self-hosted runner installed on the production host itself, the
-  # mechanism that satisfies "the host pulls, no inbound access to it is
-  # ever required" (l2-release-pipeline.md §2): the runner polls GitHub
-  # outbound for work, exactly like any other pull-based agent would, so
-  # there is no separate network path into the host to secure.
+  # a self-hosted runner installed on the production host itself, so "the
+  # host pulls" and no inbound access to it is ever required: the runner
+  # polls GitHub outbound for work, exactly like any other pull-based agent
+  # would, so there is no separate network path into the host to secure.
   deploy:
     needs: build
     runs-on: [self-hosted, production]
@@ -171,8 +170,8 @@ jobs:
           chmod +x docker/deploy/deploy.sh
           ./docker/deploy/deploy.sh "$DIGEST"
 
-  # A measurement, not a judgement (l1-release-operations.md §5.2) — runs
-  # immediately after deploy, without waiting for a person. `environment:
+  # A measurement, not a judgement — runs immediately after deploy, without
+  # waiting for a person. `environment:
   # production` here shares the one approval `deploy` already obtained for
   # this workflow run (GitHub re-prompts per *environment* per run, not per
   # job) — needed for read access to the same maintenance-bypass secret,
@@ -212,9 +211,9 @@ jobs:
           docker compose -p booking-production -f docker-compose.production.yml \
             exec -T app php artisan down --secret="$MAINTENANCE_BYPASS_SECRET" --render="errors::503"
 
-  # Agent-decidable per l1-release-operations.md §5.5 — triggering rollback on
-  # a failed health assertion never waits for a person, unlike accepting the
-  # release that made it necessary in the first place.
+  # Automatic and unattended by design — triggering rollback on a failed
+  # health assertion never waits for a person, unlike accepting the release
+  # that made it necessary in the first place.
   rollback:
     needs: [build, verify]
     if: needs.verify.result == 'failure'
@@ -244,10 +243,10 @@ jobs:
           chmod +x docker/deploy/rollback.sh
           ./docker/deploy/rollback.sh "$DIGEST"
 
-      # Exactly once — an assertion, not another deployment
-      # (l2-release-pipeline.md §5.6). A brief grace period first: the
-      # containers `rollback.sh` just restarted need a moment to actually
-      # start serving before the single check means anything.
+      # Exactly once — an assertion, not another deployment. A brief grace
+      # period first: the containers `rollback.sh` just restarted need a
+      # moment to actually start serving before the single check means
+      # anything.
       - name: Re-assert health once
         run: |
           sleep 5
@@ -274,8 +273,8 @@ jobs:
         run: |
           echo "::error::Rollback to ${DIGEST} did not restore health. The application remains in maintenance mode — this requires human investigation. See docs/operations/en/read-a-failed-pipeline.md and docs/operations/en/restore.md."
 
-  # l1-release-operations.md §3.5: created at the production-line transition,
-  # not only after a success — `if: always()` runs this regardless of which
+  # Created at the production-line transition, not only after a success —
+  # `if: always()` runs this regardless of which
   # job above failed, as long as the release actually reached the point of
   # having something to record (`scan-migrations` refusing the release
   # outright is a rejected candidate, not a production event; nothing after

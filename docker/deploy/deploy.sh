@@ -3,13 +3,13 @@ set -eu
 
 # Applies one release to the production host. Runs on the self-hosted runner
 # installed on that host — see docs/release/pipeline.md for why a
-# self-hosted runner is the mechanism that lets the host "pull" (per
-# l2-release-pipeline.md's own constraint) with no inbound access to it ever
-# required: the runner polls GitHub outbound, exactly like a deploy script
-# polling for its own work would, so there is no separate "runner reaching
-# into the host network" to secure in the first place.
+# self-hosted runner is the mechanism that lets the host "pull" with no
+# inbound access to it ever required: the runner polls GitHub outbound,
+# exactly like a deploy script polling for its own work would, so there is
+# no separate "runner reaching into the host network" to secure in the
+# first place.
 #
-# Step order is specified, not incidental (l2-release-pipeline.md §5.5):
+# Step order is specified, not incidental:
 #   1. Pin the digest        — reversible; nothing has changed yet.
 #   2. Enter maintenance mode — before anything touches the live release.
 #   3. Run migrations         — the one irreversible step.
