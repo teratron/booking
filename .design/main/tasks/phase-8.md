@@ -73,7 +73,7 @@ and defers its proof to `T-8T03`, rather than claiming a verification it cannot 
 - [x] [T-8D02] `docs/operations/ru/` — the same six procedures, same file names
 - [x] [T-8D03] `docs/operations/agent/` — the same procedures, machine-addressed
 - [x] [T-8D04] `docs/release/pipeline.md` — the developer-audience account of the workflows
-- [ ] [T-8D05] `docs/README.md` index extended to the two new trees
+- [x] [T-8D05] `docs/README.md` index extended to the two new trees
 
 ### Track E — Identity, Environment & Secrets (operator-performed)
 
@@ -283,12 +283,13 @@ than last despite being the least technically interesting work in the phase.
 **[T-8D05] `docs/README.md` index extended to the two new trees**
 
 - **Spec:** [l2-release-pipeline.md](../specifications/l2-release-pipeline.md) §5.9
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** `T-8A02`, `T-8D01`, `T-8D02`, `T-8D03`, `T-8D04`
 - **Verify:** Every file under `docs/release/` and `docs/operations/` is reachable from `docs/README.md`, and every link in it resolves to a file that exists.
 - **Handoff:** None.
 - **Notes:** Scheduled as its own task precisely because every other Track D task would otherwise edit this one file — one writer, one merge. The project's documentation discipline requires this index to stay in sync whenever a new operational concern goes live, and eighteen new documents is the largest such change the project has made.
+- **Changes:** Restructured into three sections (System Runbooks, Release, Operations) — the Operations section is a 6-row × 3-column table (procedure × en/ru/agent) rather than 18 flat bullets, matching the same set-based parity reasoning `T-8T02`'s own check uses. Verified programmatically, not by eye: a `comm` diff between every real file under `docs/release/`+`docs/operations/` and every link this file resolves to `docs/release/`/`docs/operations/` came back empty in both directions — no unlinked file, no dangling link.
 
 ### Track E — Identity, Environment & Secrets (operator-performed)
 
