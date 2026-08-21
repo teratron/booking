@@ -4,46 +4,45 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-21 12:37
+**Updated:** 2026-08-21 16:22
 **Phase:** 8 — Delivery Pipeline & Operator Documentation
 **Status:** Active
 
 ## Current Position
 
-- **Task:** **Phase 8 at 17/20 — only the three genuinely human-only tasks remain.** Following the owner's development-phase authorization (§5.5.1), the agent carried the whole chain through to completion in one continuous run: `T-8B02`–`T-8B04` (`deploy`/`verify`/`rollback`/`record` jobs, self-hosted-runner-on-host deployment model, `docker-compose.production.yml`, `docker/deploy/*.sh`), `T-8D04`–`T-8D05` (developer pipeline docs, `docs/README.md` index), `T-8T01` (pipeline containment + gate parity tests). Every commit built, tested, and verified before moving to the next — see `docker/deploy/pipeline.md`'s own Mermaid diagram for the full six-job chain. **Two findings caught and fixed mid-session, not left for later**: (1) a HIGH-severity GitHub Actions script-injection vulnerability (automated security review) — every `${{ }}` expression that was interpolated directly into `run:` shell text now arrives via `env:` instead, across all six jobs; (2) a containment sweep after fixing the first spec-filename leak in `docs/release/pipeline.md` found five more across `release.yml` and three `docker/deploy/*.sh` scripts — all fixed, and `T-8T01`'s own new test now guards the whole pipeline against a repeat. **Remaining, all owner-only regardless of authorization**: `T-8E01` (GitHub offers no API/CLI path to create an App — a browser step is unavoidable by platform design), `T-8E03` (needs real production credentials that do not exist in this dev environment), `T-8T03` (the rehearsal's own specification requires a human executor — "an agent cannot substitute for this even in principle").
-- **Previous:** **The owner reopened the human-only boundary for development-phase infrastructure — `T-8A01` and `T-8E02` done at 11/20**, unblocking the chain above. `l1-release-operations.md` gained §5.5.1 (v0.2.0): before this project's first production release, the owner may authorize the agent to build a gate's own scaffolding directly, never the "requires a person" decisions (accept, declare irreversible, restore), never past the first real release through that gate. Applied live via `gh api`: branch protection on `master`/`develop`, and the `production` environment with the owner's own account as required reviewer.
-- **Previous:** **Every agent-executable task in Phase 8 was Done at 9/20**, before the owner's authorization. `T-8A02`–`T-8A04`, `T-8B01`, `T-8C01`, `T-8D01`–`T-8D03`, `T-8T02` — five commits on `develop`. Found and fixed along the way: `AppServiceProvider::boot()` crashed with no database configured at all (already breaking real CI before the fix); the destructive-migration scanner's first pass flagged all 122 `Schema::create()` migrations because it scanned whole files instead of only `up()`.
-- **Spec:** **25 specs — 6 `Stable`, 19 `RFC`.** `l1-release-operations.md` and `l2-release-pipeline.md` both at v0.2.0 (§5.5.1 development-phase exception, re-stabilized same day). The 19 `RFC` skips are real remaining design work (18 carry a live `TBD`), not delivery-pipeline input — untouched this session.
-- **Next Action:** Run /magic.task main to update the plan
+- **Task:** **Phase 8 at 20/23 — every agent-performable task is done; three owner-only tasks remain and nothing blocks them.** Track F closed and the C12 quarantine it ran under was lifted the same day when both specifications returned to `Stable` at v0.4.0. Owner chose "master = develop" for `T-8F02`: `require_code_owner_reviews` enabled first (read back to confirm before the boundary was ever observably absent), then `required_approving_review_count` dropped to 0 — same order the task's own Notes required. `T-8F03`'s read-back confirms `master` now matches `develop` field-for-field: ordinary changes clear the gate and merge unattended; any `.github/CODEOWNERS`-matched path always waits for `@teratron`, on either branch. Full detail and the comparison table: `tasks/phase-8.md` Track F.
+- **Previous:** Following the owner's development-phase authorization (§5.5.1), the agent completed every other agent-performable Phase 8 task — branch contract, deploy/verify/rollback/record pipeline, irreversibility scan, EN/RU/agent operator docs, pipeline containment tests — across three prior sessions on 2026-08-20/21. Two findings fixed mid-session: a HIGH-severity GitHub Actions script-injection (raw `${{ }}` in `run:` shell text, fixed via `env:` across all six jobs) and a spec-filename containment leak (5 instances across `release.yml`/`docker/deploy/*.sh`, now guarded by `T-8T01`'s own test). **Remaining, all owner-only regardless of authorization**: `T-8E01` (no API/CLI path to create a GitHub App), `T-8E03` (needs real production credentials absent from this dev environment), `T-8T03` (rehearsal requires a human executor by the spec's own text).
+- **Spec:** **25 specs — 6 `Stable`, 19 `RFC`.** The delivery pair made a full round trip on 2026-08-21: amended to v0.3.0 outside the workflow (`VERSION_DRIFT`), reconciled, reverted to `RFC` by §2's amendment rule, held there by a re-review that found three real gaps, then re-promoted to `Stable` at **v0.4.0** once all three closed. L1 §5.5.2 now declares its empty zone as empty and delegates the mechanism; new L2 §5.11 carries the mechanism itself plus the §4 compliance row it never had; §5.2's topology table was corrected to the enforced configuration. The other 19 `RFC` are unrelated, unchanged design work (18 carry a live `TBD`). Round trip recorded in `INDEX.md`'s Amendment Ledger.
+- **Next Action:** Nothing an agent can execute. `/magic.run main` (2026-08-21 16:22) confirmed this: `T-8E01`/`T-8E03` have fulfilled dependencies but `Assignment: User`, and neither has an agent-usable path — no CLI/API exists to create a GitHub App, and no real production secret values exist in this environment to load. `T-8T03`'s own dependencies aren't met yet either. Phase 8 closes only when the owner performs these three. (`update-state` has now overwritten this field four times in one session with the first-unchecked-box bug — verify manually after every `finalize`.)
 
 ## Progress
 
 ```
-Phase 8: [17/20] ███████░ 85%
+Phase 8: [20/23] ███████░ 87%
 Overall: [7/8] ███████░ 88%
-Plan:           [8 phases] Phase 1-7 done (135/135 tasks) · Phase 8 in progress (17/20 — owner-only remainder)
-Implementation: [21/21] Phase 1 · [25/25] Phase 2 · [23/23] Phase 3 · [16/16] Phase 4 · [18/18] Phase 5 · [16/16] Phase 6 · [16/16] Phase 7 · [17/20] Phase 8
-Phase 8 tracks:  A 4/4 · B 4/4 · C 1/1 · D 5/5 · E 1/3 (E01/E03 User) · T 2/3 (T03 User+Agent)
+Plan:           [8 phases] Phase 1-7 done (135/135 tasks) · Phase 8 in progress (20/23 — all agent work done, 3 owner-only remain)
+Implementation: [21/21] Phase 1 · [25/25] Phase 2 · [23/23] Phase 3 · [16/16] Phase 4 · [18/18] Phase 5 · [16/16] Phase 6 · [16/16] Phase 7 · [20/23] Phase 8
+Phase 8 tracks:  A 4/4 · B 4/4 · C 1/1 · D 5/5 · E 1/3 (E01/E03 User) · F 3/3 · T 2/3 (T03 User+Agent)
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
-- 2026-08-21 **Decision: the human-only boundary is scoped to production risk, not to infrastructure setup** — the project owner explicitly authorized the agent to build a release gate's own scaffolding (branch protection, the `production` environment, CI/CD workflows) directly, before this project's first production release, having heard the agent's own explanation of why the boundary exists and choosing to relax it anyway. Formalized in `l1-release-operations.md` §5.5.1 (v0.2.0) rather than left as a verbal exception, so a future session reads the same rule instead of re-litigating it. The boundary itself is unchanged for release-time decisions (acceptance, irreversibility, restore) — those stay human at every phase, including production. GitHub attributes agent-run `gh api` calls to the owner's own authenticated account; the owner was told this explicitly and said it does not concern them.
+- 2026-08-21 **Decision: a declared boundary and an enforced boundary are two separate obligations, and the specification now says so** — the re-review that held the delivery pair at `RFC` found the sensitive-zone boundary declared in three places and enforced in none of them completely: the coverage check sampled a hand-written list, the ownership file missed two live zones, and `master` did not consult the file at all. All three were green or silent. L1 §5.5.2 now carries the general lesson (both halves fail quietly, neither may be inferred from the other) and L2 §5.11 carries the mechanism plus the setting-order constraint that makes it safe to change. The rule for future boundaries of any kind: verifying one half and inferring the other proves nothing.
 
 ## Blockers
 
 <!-- Empty if none. Format: [severity] description -->
 
-(none)
+(none) — the delivery-pair design debt closed 2026-08-21; both specs are `Stable` at v0.4.0.
 
 ## Blocking Constraints
 
 <!-- Anti-patterns discovered through real failures. MANDATORY reading. -->
 <!-- Agent MUST explicitly acknowledge each constraint before working. -->
 
-- **Engine bug:** `executor.js update-state` corrupts STATE.md fields on nearly every invocation (top-level `**Status:**`, `## Progress`). Always re-open STATE.md after `update-state`/`finalize` and manually verify both.
+- **Engine bug:** `executor.js update-state` corrupts STATE.md fields on nearly every invocation (top-level `**Status:**`, `## Progress`). It also (a) overwrites `Next Action` with the first unchecked checklist box regardless of whether that task is blocked or owner-only, and (b) prunes the oldest Recent Decisions entry by deleting it, without performing the archival to `PLAN.md` that its own section header promises — one was recovered from git on 2026-08-21 and now lives in `PLAN.md`'s Decision Archive. Always re-open STATE.md after `update-state`/`finalize` and verify all four.
 - **Never interpolate a `${{ }}` expression directly into a GitHub Actions `run:` block's shell text** — the Actions template engine substitutes it into the raw script *before* the shell ever parses it, so an attacker-influenceable value (a pushed tag's name, a tag annotation, any PR-supplied text) can inject arbitrary shell commands into a job holding real secrets. Caught by automated security review on `release.yml`'s `record` job (`github.ref_name`, the irreversibility declaration) after it already shipped in three prior commits. Always route through `env:` and reference as a real shell variable (`$VAR`) instead — applies to every future workflow step, not only ones handling obviously-untrusted input.
 - **Public OSM tile servers are prohibited in production** (OSMF policy) — never `tile.openstreetmap.org`; use MapTiler, Stadia, or self-hosted.
 - **Host port conflicts**: Postgres native→5433, web 8300, Mailpit 8325 (Win TCP 7915–8114 reserved; check first). `postgres:18+` data lives under a major-version subdir, not `.../data`.
@@ -57,6 +56,7 @@ Phase 8 tracks:  A 4/4 · B 4/4 · C 1/1 · D 5/5 · E 1/3 (E01/E03 User) · T 2
 - **Git hooks are versioned at `.githooks/`** — `git config core.hooksPath .githooks` once per clone, or the pre-commit gate silently never fires.
 - **Tests run against real Postgres (`booking_testing`), not SQLite** — the schema has geography columns and partial indexes SQLite cannot represent. `phpunit.xml` + CI both point at it; local db via `docker/postgres/init/00-create-testing-database.sql` (volume recreate needed).
 - **Running two heavy Pest suites concurrently against the same test database causes genuine Postgres deadlocks and dropped-table errors** (`RefreshDatabase`'s per-test transaction wrap does not protect against a concurrent process's own `migrate:fresh`/heavy seeding) — always run test suites sequentially, never in parallel background jobs against the same `booking_testing` database.
+- **`CabinetOwnershipIsolationTest` (Phase 4, `e195a75`) failed 6/4 assertions in a full-suite run on 2026-08-21 but passes 4/4 clean in isolation** — same symptom class as the leaked-state pattern below, cause not yet isolated (unrelated to Track F: that session touched only `.github/CODEOWNERS` and an Architecture test, neither hitting the database). Re-check on the next full-suite run before assuming it is stably fixed or stably broken.
 - **A new test file's own suite passing in isolation is not sufficient evidence — always run the full non-slow suite before declaring a task Done.** A test file missing `uses(RefreshDatabase::class)` runs and passes perfectly fine by itself (confirmed live, `T-7C03`'s `BackupRestoreTest.php`), but every row it writes (roles, permissions, users, and especially a `$this->seed([LanguageSeeder::class, ...])` call) commits permanently to the shared `booking_testing` database instead of rolling back — silently corrupting the fixed-registry assumption (`languages.code` unique) every other `RefreshDatabase`-wrapped test in the suite relies on, breaking 549 unrelated tests on the next full run. Recovery: add the missing trait, then reset the connection explicitly — `docker compose exec -e DB_DATABASE=booking_testing app php artisan migrate:fresh --force` (plain `migrate:fresh` without the env override targets the dev `booking` database instead, per `phpunit.xml`'s own override, and does nothing for this).
 - **Spatie packages (permission, medialibrary) don't auto-run migrations** — publish explicitly, tag `Str::after(name,'laravel-')` + `-migrations`. **`astrotomic/laravel-translatable`** uses a `locale` string column matching `languages.code`, not a `language_id` FK. **`laravel-permission`'s cache**: `DatabaseSeeder`'s `WithoutModelEvents` suppresses the `saved` event it invalidates on — call `PermissionRegistrar::forgetCachedPermissions()` before `givePermissionTo()` in a seeder, or it reads stale/empty state.
 - **`Object` is a reserved PHP class name** — model is `Object_`, with `$translationModel`/`$translationForeignKey` set explicitly. **`shouldBeStrict()` breaks astrotomic's optional `$this->x ?: default()` properties** — declare them as real null properties (`Concerns\TranslatableDefaults`).
@@ -98,18 +98,19 @@ constraints) → `CLAUDE.md` (stack, conventions, engineering discipline) →
 Different and §Track Ordering before touching any task) → `RETROSPECTIVE.md` Session 1
 (plan-wide findings, R1–R5) → `.design/main/PLAN.md` for cross-phase context.
 **Phases 1–7 are Done (135 tasks) and archived at
-`.design/main/archives/tasks/phase-{1..7}.md`; Phase 8 is at 17/20 — every agent-
-performable task is Done.** `/magic.run main` finds nothing left to execute until the
-owner completes one of the three remaining tasks below.
+`.design/main/archives/tasks/phase-{1..7}.md`; Phase 8 is at 20/23 — every agent-
+performable task, including Track F, is Done.** `/magic.run main` finds nothing left to
+execute until either the owner completes one of the three C12-quarantined tasks below,
+or `/magic.spec main` closes the two Backlog design-debt items and un-quarantines them.
 
 **`T-8E01`, `T-8E03`, and `T-8T03` are the only tasks left, and all three need the
 project owner** — `T-8E01` because GitHub offers no API/CLI path to create an App at
 all (a browser step is unavoidable), `T-8E03` because the credentials it would hold do
 not exist yet in this development environment, `T-8T03` because its own specification
 requires a real rehearsal executed by someone who did not write the procedure — an
-agent cannot substitute for this even in principle. `T-8A01`, `T-8E02`, and the whole
-`T-8B02`–`T-8B04`/`T-8D04`–`T-8D05`/`T-8T01` chain they unblocked were performed by the
-agent under the owner's explicit, recorded authorization —
+agent cannot substitute for this even in principle. All Phase 8 agent work, including
+`T-8F02`'s live `master` branch-protection change, was performed under the owner's
+explicit, recorded authorization —
 [l1-release-operations.md](specifications/l1-release-operations.md) §5.5.1's
 development-phase exception, added 2026-08-21. That exception never reaches release
 acceptance, irreversibility declaration, or restore initiation, and lapses the moment a

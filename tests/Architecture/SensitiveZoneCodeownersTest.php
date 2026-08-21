@@ -2,74 +2,122 @@
 
 declare(strict_types=1);
 
+use Symfony\Component\Finder\Finder;
+
 /*
 |--------------------------------------------------------------------------
 | Sensitive-Zone CODEOWNERS Coverage
 |--------------------------------------------------------------------------
 |
 | The standing autonomous-operation grant lets an ordinary, gate-passing
-| change merge without a separate review step — except for a declared set
-| of sensitive paths (authentication, authorization, financial records,
-| secrets and CI wiring), where GitHub's own CODEOWNERS mechanism forces a
-| review regardless. This test is the mechanical proof that every path the
-| policy names is actually listed in .github/CODEOWNERS, so the boundary
-| cannot drift out of sync between what is decided and what GitHub actually
-| enforces.
+| change merge without a separate review step — except inside a declared set
+| of sensitive zones (authentication, authorization, money, secrets and CI
+| wiring), where GitHub's own CODEOWNERS mechanism forces the owner's review
+| regardless. .github/CODEOWNERS is the single source of that enforcement;
+| this test is the alarm that fires when the enforcement falls behind the
+| tree it is supposed to cover.
+|
+| The direction matters. Checking that a hand-written list of paths is
+| covered proves only that the list is covered, and the list is the same
+| human memory the mechanism exists to replace — a policy added tomorrow is
+| absent from both, so the suite stays green while the gate has a hole in
+| it. So the rules below describe how to *find* sensitive files in the real
+| tree, and every file they find must be matched by some CODEOWNERS pattern.
+| A new Policy, a new Filament resource over money, a new migration touching
+| the token tables: discovered on sight, and failing here until the owner
+| owns it.
+|
+| Architecture tests run outside the Laravel boot cycle (see tests/Pest.php),
+| so base_path() is unavailable — the project root is derived from this
+| file's own location, matching the other architecture tests' convention.
 |
 */
 
 /**
- * Every path this list names must exist in the real tree (so a rename does
- * not silently stop being covered) and must be matched by some line in
- * .github/CODEOWNERS.
+ * The sensitive zones as discovery rules over the tree, not as a list of
+ * paths. Each rule names a directory to walk and a predicate over the
+ * repository-relative path of everything inside it.
  *
- * @return list<string>
+ * @return list<array{zone: string, in: string, matches: Closure(string): bool}>
  */
-function sensitiveZoneCanonicalPaths(): array
+function sensitiveZoneDiscoveryRules(): array
 {
     return [
-        'app/Http/Middleware/EnsureSecondFactorForPrivilegedRoles.php',
-        'config/auth.php',
-        'app/Policies/ScopedPolicy.php',
-        'app/Services/Authorization/ResourceQueryScoper.php',
-        'config/permission.php',
-        'database/seeders/PermissionSeeder.php',
-        'database/seeders/RoleSeeder.php',
-        'database/migrations/2026_08_05_232008_create_permission_tables.php',
-        'database/migrations/2026_08_05_232203_create_role_scopes_table.php',
-        'app/Models/FinancialRecord.php',
-        'app/Services/Placement/BumpService.php',
-        '.env.example',
-        '.env.production.example',
-        'config/services.php',
-        '.github/workflows/quality.yml',
+        // Authentication, session, and second-factor handling. Authenticate*
+        // is matched on principle rather than presence: the framework owns
+        // that middleware today, and a published copy must not slip in
+        // unowned on the day someone needs to customize it.
+        ['zone' => 'authentication', 'in' => 'app/Http/Middleware', 'matches' => fn (string $path): bool => (bool) preg_match('#/(Authenticate|EnsureSecondFactor)[^/]*\.php$#', '/'.$path)],
+        ['zone' => 'authentication', 'in' => 'config', 'matches' => fn (string $path): bool => $path === 'config/auth.php'],
+
+        // Authorization itself: every policy, the scoping services behind
+        // them, the permission/role registry a policy's decision reads, and
+        // the migrations and seeders that populate it. Token tables belong
+        // here too — a credential's lifetime is an authorization question.
+        ['zone' => 'authorization', 'in' => 'app/Policies', 'matches' => fn (string $path): bool => str_ends_with($path, '.php')],
+        ['zone' => 'authorization', 'in' => 'app/Services/Authorization', 'matches' => fn (string $path): bool => str_ends_with($path, '.php')],
+        ['zone' => 'authorization', 'in' => 'config', 'matches' => fn (string $path): bool => $path === 'config/permission.php'],
+        ['zone' => 'authorization', 'in' => 'database/seeders', 'matches' => fn (string $path): bool => (bool) preg_match('#(Permission|Role)#', basename($path))],
+        ['zone' => 'authorization', 'in' => 'database/migrations', 'matches' => fn (string $path): bool => (bool) preg_match('#(permission|role|personal_access_token)#', basename($path))],
+
+        // Money: the financial ledger, the placement and commerce services
+        // that write to it, and every admin surface built over either —
+        // matched by path fragment, so an exporter or a page nested under a
+        // money resource is covered without naming each file.
+        ['zone' => 'money', 'in' => 'app/Models', 'matches' => fn (string $path): bool => str_starts_with(basename($path), 'FinancialRecord')],
+        ['zone' => 'money', 'in' => 'app/Services/Placement', 'matches' => fn (string $path): bool => str_ends_with($path, '.php')],
+        ['zone' => 'money', 'in' => 'app/Filament', 'matches' => fn (string $path): bool => str_contains($path, 'FinancialRecord') || str_contains($path, 'Placement')],
+
+        // Secrets and credential wiring. Every workflow counts, not only the
+        // steps that name a secret today: which step reads a secret is a
+        // property of the next edit, not of the current file.
+        ['zone' => 'secrets', 'in' => 'config', 'matches' => fn (string $path): bool => $path === 'config/services.php'],
+        ['zone' => 'secrets', 'in' => '.github/workflows', 'matches' => fn (string $path): bool => (bool) preg_match('#\.ya?ml$#', $path)],
     ];
 }
 
 /**
- * A CODEOWNERS pattern is gitignore-style; this project's own file only uses
- * the two shapes below, so the matcher only needs to understand those two —
- * widen it if a future pattern needs more.
+ * The committed dotenv files, derived from .gitignore rather than repeated
+ * here. The ignore rule is `.env*` plus an explicit negation per file that
+ * is allowed in — so the negations *are* the list, and committing a new one
+ * puts it under this test automatically.
+ *
+ * An uncommitted .env is deliberately out of scope: it cannot appear in a
+ * pull request, so it cannot merge under the grant this test guards.
+ *
+ * @return list<string>
  */
-function pathMatchesCodeownersPattern(string $relativePath, string $pattern): bool
+function committedDotenvFiles(string $root): array
 {
-    $pattern = ltrim($pattern, '/');
+    $files = [];
 
-    if (str_ends_with($pattern, '/')) {
-        return str_starts_with($relativePath, $pattern);
+    foreach (explode("\n", (string) file_get_contents($root.'/.gitignore')) as $line) {
+        $line = trim($line);
+
+        if (! str_starts_with($line, '!')) {
+            continue;
+        }
+
+        $candidate = ltrim(substr($line, 1), '/');
+
+        if (str_starts_with($candidate, '.env') && is_file($root.'/'.$candidate)) {
+            $files[] = $candidate;
+        }
     }
 
-    $regex = '#^'.str_replace('\*', '[^/]*', preg_quote($pattern, '#')).'$#';
-
-    return preg_match($regex, $relativePath) === 1;
+    return $files;
 }
 
-test('every declared sensitive path is listed in .github/CODEOWNERS', function (): void {
-    $root = dirname(__DIR__, 2);
-    $codeowners = (string) file_get_contents($root.'/.github/CODEOWNERS');
-
+/**
+ * The ownership patterns declared in .github/CODEOWNERS, in file order.
+ *
+ * @return list<string>
+ */
+function codeownersPatterns(string $root): array
+{
     $patterns = [];
-    foreach (explode("\n", $codeowners) as $line) {
+
+    foreach (explode("\n", (string) file_get_contents($root.'/.github/CODEOWNERS')) as $line) {
         $line = trim($line);
 
         if ($line === '' || str_starts_with($line, '#')) {
@@ -80,33 +128,109 @@ test('every declared sensitive path is listed in .github/CODEOWNERS', function (
         $patterns[] = $pattern;
     }
 
-    $uncovered = [];
+    return $patterns;
+}
 
-    foreach (sensitiveZoneCanonicalPaths() as $path) {
-        expect(file_exists($root.'/'.$path))->toBeTrue("Canonical sensitive path [{$path}] no longer exists — update this test's list.");
+/**
+ * Whether one gitignore-style CODEOWNERS pattern covers a repository-relative
+ * path. Supports the shapes GitHub honours and this file uses: a leading
+ * slash anchoring to the root, a trailing slash for a whole directory, `*`
+ * within one segment, and `**` across segments. Negation and character
+ * ranges are not supported by CODEOWNERS itself and are not handled here.
+ */
+function codeownersPatternCovers(string $pattern, string $relativePath): bool
+{
+    $pattern = ltrim($pattern, '/');
+    $matchesDirectoryOnly = str_ends_with($pattern, '/');
 
-        $covered = false;
-        foreach ($patterns as $pattern) {
-            if (pathMatchesCodeownersPattern($path, $pattern)) {
-                $covered = true;
+    $regex = preg_quote(rtrim($pattern, '/'), '#');
+    $regex = str_replace('\*\*/', '(?:[^/]+/)*', $regex);
+    $regex = str_replace('\*\*', '.*', $regex);
+    $regex = str_replace('\*', '[^/]*', $regex);
+    $regex = str_replace('\?', '[^/]', $regex);
 
-                break;
+    // A pattern naming a directory covers everything beneath it, which is
+    // why the tail is optional for a file pattern and required for one
+    // written with a trailing slash.
+    $tail = $matchesDirectoryOnly ? '/' : '(?:/|$)';
+
+    return preg_match('#^'.$regex.$tail.'#', $relativePath) === 1;
+}
+
+/**
+ * Every file the discovery rules find, keyed by zone.
+ *
+ * @return array<string, list<string>>
+ */
+function discoveredSensitiveFiles(string $root): array
+{
+    $discovered = [];
+
+    foreach (sensitiveZoneDiscoveryRules() as $rule) {
+        $directory = $root.'/'.$rule['in'];
+
+        expect(is_dir($directory))->toBeTrue("Sensitive zone [{$rule['zone']}] points at [{$rule['in']}], which no longer exists — a rename left this rule discovering nothing.");
+
+        foreach ((new Finder)->files()->in($directory) as $file) {
+            $relativePath = $rule['in'].'/'.str_replace('\\', '/', $file->getRelativePathname());
+
+            if (($rule['matches'])($relativePath)) {
+                $discovered[$rule['zone']][] = $relativePath;
             }
         }
+    }
 
-        if (! $covered) {
-            $uncovered[] = $path;
+    foreach (committedDotenvFiles($root) as $dotenv) {
+        $discovered['secrets'][] = $dotenv;
+    }
+
+    return $discovered;
+}
+
+test('every file discovered in a sensitive zone is covered by a CODEOWNERS pattern', function (): void {
+    $root = dirname(__DIR__, 2);
+    $patterns = codeownersPatterns($root);
+
+    $uncovered = [];
+
+    foreach (discoveredSensitiveFiles($root) as $zone => $paths) {
+        foreach ($paths as $path) {
+            $covered = false;
+
+            foreach ($patterns as $pattern) {
+                if (codeownersPatternCovers($pattern, $path)) {
+                    $covered = true;
+
+                    break;
+                }
+            }
+
+            if (! $covered) {
+                $uncovered[] = "{$zone}: {$path}";
+            }
         }
     }
+
+    sort($uncovered);
 
     expect($uncovered)->toBe([]);
 });
 
+test('every sensitive zone still discovers files', function (): void {
+    $root = dirname(__DIR__, 2);
+    $discovered = discoveredSensitiveFiles($root);
+
+    // A zone that finds nothing is the failure mode this rewrite exists to
+    // prevent: the rules would keep passing while covering an empty set.
+    foreach (['authentication', 'authorization', 'money', 'secrets'] as $zone) {
+        expect($discovered[$zone] ?? [])->not->toBeEmpty("Sensitive zone [{$zone}] discovered no files — its rules no longer match the tree.");
+    }
+});
+
 test('every CODEOWNERS entry names the project owner, never a blank or automation identity', function (): void {
     $root = dirname(__DIR__, 2);
-    $codeowners = (string) file_get_contents($root.'/.github/CODEOWNERS');
 
-    foreach (explode("\n", $codeowners) as $lineNumber => $line) {
+    foreach (explode("\n", (string) file_get_contents($root.'/.github/CODEOWNERS')) as $lineNumber => $line) {
         $line = trim($line);
 
         if ($line === '' || str_starts_with($line, '#')) {

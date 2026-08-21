@@ -1,6 +1,6 @@
 # Release Pipeline
 
-**Version:** 0.3.0
+**Version:** 0.4.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-release-operations.md
@@ -76,6 +76,7 @@ health route for the health assertion — it is adopted rather than rebuilt.
 | **3.7 Operable Without Its Author** | `docs/operations/` (§5.9) — one file per procedure, per language, written for a reader with no technical background. Each procedure carries an explicit "you are done when" statement, because a step with no observable success condition cannot be followed by someone who has never seen it succeed. |
 | **3.8 Documentation Parity** | The three renderings are checked, not trusted: an architecture-style test asserts that the English, Russian, and agent trees hold the same procedure set, and a workflow step fails a pull request that modifies an English procedure without touching its counterparts (§5.9). |
 | **3.9 Automation Is Accountable** | Automation acts as a GitHub App installation with an explicit, minimal permission set — never a personal access token, never a shared account. The app is deliberately **not** an approver on the `production` environment, so the human acceptance gate cannot be satisfied by the automation that would benefit from satisfying it (§5.10). |
+| **5.5.2 Standing Autonomous Operation** | The grant's sensitive-zone exemption is enforced by `.github/CODEOWNERS` (the single source of ownership patterns), an architecture test that derives its candidates by walking the real tree per zone rather than from a path list, and the `require_code_owner_reviews` protection setting that makes both branches consult it. The grant proper — an ordinary change merging unattended — is the `required_approving_review_count: 0` half of the same configuration (§5.11). |
 | **3.10 The Pipeline Owns No Design Artefacts** | No workflow, composer script, package manifest, or documented procedure references the design or planning directories, and no toolchain is present for their sake — the Node runtime in CI exists for Vite and Biome, which the product needs regardless. Deleting those directories leaves every job in this specification runnable unchanged. |
 
 ## 5. Detailed Design
@@ -101,9 +102,9 @@ rule, any rollback path, and any operator-audience or Russian-language documenta
 | Line | Branch | Rules |
 | --- | --- | --- |
 | Work | `feature/{short-slug}` | Branched from `develop`. Merged by pull request only. Deleted on merge. |
-| Integration | `develop` | Protected: pull requests only, quality gate required, at least one approving review. |
+| Integration | `develop` | Protected: pull requests only, quality gate required, code-owner review required, no approving-review count of its own (§5.11). |
 | Release | `release/{x.y.z}` | Branched from `develop` at freeze. Accepts only stabilization commits. Merged to `master` **and** back to `develop`. |
-| Production | `master` | Protected: pull requests only, quality gate required, linear history, no force push, no deletion. Tagged on every merge. |
+| Production | `master` | Protected: pull requests only, quality gate required, code-owner review required, linear history, no force push, no deletion. Tagged on every merge. Configured identically to `develop` on both review settings (§5.11) — the standing grant reaches this line too, so a boundary weaker here than on integration would be no boundary at all. |
 | Urgent fix | `hotfix/{x.y.z}` | Branched from `master`. Merged to `master` **and** back to `develop`. The merge-back is a required check, not a convention. |
 
 The merge-back obligation ([l1-release-operations.md](l1-release-operations.md) §3.3)
@@ -360,6 +361,75 @@ accepted property of the pre-launch phase, not a gap in this section's own desig
 this table governs what the automation identity itself may hold once installed, not
 who was permitted to click the button before it existed.
 
+### 5.11 Sensitive-Zone Enforcement
+
+[l1-release-operations.md](l1-release-operations.md) §5.5.2 lets an ordinary change
+merge without a person granting review, and exempts a declared set of sensitive zones
+from that grant. This section is how the exemption is enforced on this stack. It has
+two halves, and §5.5.2's own warning applies: neither may be inferred from the other.
+
+**The ownership file is the single source.** `.github/CODEOWNERS` maps each zone §5.5.2
+declares onto the paths that hold it, with the project owner as the named owner of every
+entry. Patterns are globs rather than one line per file, so the next file in a zone is
+covered on the day it is written rather than on the day somebody remembers the file
+exists. Three entries deserve their own note:
+
+- **Empty zones are still declared.** `app/Http/Middleware/Authenticate*` matches nothing
+  today; it is listed so a published copy of that middleware arrives owned.
+- **Money extends past the models and services** to every admin surface built over them,
+  matched wherever nested — an exporter or a form schema under a financial resource
+  writes the same records the service does.
+- **The boundary owns itself.** Both the ownership file and the test below name the owner
+  as their own code owner. A boundary that can rewrite or silence itself under the grant
+  it enforces is not a boundary.
+
+**The check derives its candidates from the tree, never from a list.** An architecture
+test walks the real directories per zone and asserts that every file it finds matches
+some pattern in the ownership file. The direction is the whole design: a test proving
+that a hand-written list of paths is covered proves only that the list is covered, and
+the list is the same human memory the mechanism exists to replace — so a policy or admin
+surface added tomorrow is absent from both, and the suite stays green over a real hole.
+Walking the tree instead means a new file in a declared zone fails the gate at the moment
+it is written. A companion assertion fails when any zone stops discovering files at all,
+which is how a renamed directory announces itself instead of silently emptying its own
+rule. The committed dotenv files are derived from the ignore file's negation lines rather
+than repeated, so committing a new one puts it under the check automatically.
+
+**The protection settings are what make the check bite.** An ownership file forces
+nothing on its own — it takes effect only where a branch's protection requires a code
+owner's review. Both protected branches are therefore configured identically:
+
+| Setting | Value | Why |
+| --- | --- | --- |
+| `require_code_owner_reviews` | `true` | The sensitive-zone exemption. Without it the ownership file is decorative. |
+| `required_approving_review_count` | `0` | §5.5.2's grant proper: an ordinary change clears the quality gate and merges unattended. A non-zero count here would require a person for *every* change and the grant would not be operative on that branch at all. |
+| Required status check | `composer quality` | §3.1's gate parity — the same command a developer runs. |
+| `enforce_admins` | `true` | The owner's own account is not exempt either. Stronger than this section strictly requires, and deliberately so: an exemption that exists only for the person who configured the boundary is the exemption most likely to be used without thinking. |
+
+If the named code owner is unavailable, a sensitive-zone change does not merge. That is
+the intended failure direction — this boundary fails closed, and an urgent fix that
+genuinely cannot wait takes §5.6's urgent-fix path under a person's judgement rather
+than by weakening the setting.
+
+**The order these two settings are changed in is a safety property, not a preference.**
+Enabling the code-owner requirement is always the first step and lowering the approving
+count always the second. Performed the other way round, the branch spends the interval
+between them with no approving-review requirement *and* no code-owner requirement — a
+window in which any change at all, sensitive or not, merges unattended. The window looks
+like an improvement while it is open, which is precisely why the order is written down
+here rather than left to whoever performs the change. Any future revision of these
+settings inherits the same constraint: never remove a guarantee before its replacement
+is in place and verified.
+
+**What this does not do.** It does not gate the deploy — reaching `master` is not
+deploying it ([l1-release-operations.md](l1-release-operations.md) §5.2), and the
+`production` environment's own reviewer gate (§5.10) is independent of everything here.
+It does not decide irreversibility. And it cannot be verified by reading the repository
+alone: the protection settings live in GitHub's own configuration, not in a file, so
+confirming this section holds means reading them back through the API and comparing them
+against the table above. That read-back is the only evidence that both halves are
+present — and it is worth repeating after any change to either, not only once.
+
 ## 6. Implementation Notes
 
 Order matters here more than usual, because several steps are cheap now and expensive
@@ -431,6 +501,7 @@ deployment credentials in scope.
 | `[COMPOSE]` | `docker-compose.yml` | The five services a release restarts and the infrastructure services it must not. |
 | `[CHANGELOG]` | `CHANGELOG.md` | Source of each release record's body; already Keep a Changelog with semantic versioning declared. |
 | `[DOCS]` | `docs/README.md` | The existing documentation index the new trees extend. |
+| `[OWNERS]` | `.github/CODEOWNERS` | The single source of sensitive-zone ownership patterns (§5.11); the protection settings that make it bite live in GitHub's configuration, not in any file here. |
 
 ## Document History
 
@@ -439,3 +510,4 @@ deployment credentials in scope.
 | 0.1.0 | 2026-08-20 | Initial draft. Establishes the Git Flow branch contract over the existing `master`/`develop` pair, one new tag-triggered release workflow beside the existing quality gate, an immutable image digest as the release artefact, pull-based deployment with automatic health-assertion rollback, a mechanical destructive-migration scan gating the irreversibility declaration, GitHub Releases as the record, and a three-rendering documentation tree (English, Russian, agent) with enforced parity. Written as a delta against the repository's verified current state, recorded in §5.1. |
 | 0.2.0 | 2026-08-21 | §5.10 gains a note on the development-phase ordering: branch protection and the `production` environment can exist before the automation identity does, per [l1-release-operations.md](l1-release-operations.md) §5.5.1 — this section's own withheld-permissions design still governs the identity once installed, unaffected. Companion to that spec's own 0.2.0. |
 | 0.3.0 | 2026-08-21 | §5.10's granted/withheld table extends to `master`: the automation identity may merge an ordinary change (one carrying no sensitive-zone touch and no undeclared irreversible migration) into `master` itself, not only `develop` — matching [l1-release-operations.md](l1-release-operations.md) §5.5.2's new standing grant. Pushing the tag that starts a deploy stays withheld unconditionally, regardless of which line authorized the `master` change; reaching `master` is never deploying it. Companion to that spec's own 0.3.0. |
+| 0.4.0 | 2026-08-21 | New §5.11 (Sensitive-Zone Enforcement) — the section the first re-review of 0.3.0 found missing entirely: `.github/CODEOWNERS` as the single source of ownership patterns, an architecture test deriving its candidates by walking the real tree per zone rather than from a hand-written path list, and the `require_code_owner_reviews` / `required_approving_review_count` protection settings that make the check actually block a merge. States the ordering constraint between those two settings as a safety property — enabling code-owner review always precedes lowering the approving count, since the reverse order opens a window with neither guarantee — and states what the mechanism deliberately does not gate. §5.2's branch topology table is corrected to match: both protected branches require code-owner review and carry no approving-review count of their own, where the table previously described `develop` as requiring one approving review and said nothing about code owners on either line. §4 gains a compliance row for [l1-release-operations.md](l1-release-operations.md) §5.5.2, which had none. |

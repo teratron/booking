@@ -1,10 +1,10 @@
 # Implementation Plan
 
-**Version:** 3.5.0
+**Version:** 3.7.0
 **Generated:** 2026-08-05
-**Based on:** .design/main/INDEX.md v2.6.0
+**Based on:** .design/main/INDEX.md v2.8.0
 **Based on RULES:** .design/RULES.md v1.4.0
-**Status:** Active — Phase 8 (delivery pipeline; the first phase planned against `Stable` specifications — see Plan Status below)
+**Status:** Active — Phase 8 (delivery pipeline; its sources made a same-day `RFC` round trip on 2026-08-21 and are `Stable` again at v0.4.0, quarantine lifted — see Plan Status below)
 
 ## Overview
 
@@ -228,7 +228,7 @@ other than its author walk either one.*
 - [ ] **Release Operations** §3, §5.1–5.6 — promotion path, gate obligations by transition, release records, the two reversal paths, the operator documentation matrix, and the boundary between agent-decided and human-decided release actions ([l1-release-operations.md](specifications/l1-release-operations.md)) [L1]
 - [ ] **Release Pipeline** §5.2–5.10 — Git Flow branch contract, one new tag-triggered workflow beside the existing gate, an immutable image digest as the release artefact, pull-based deploy with health-assertion rollback, the destructive-migration scan, and the EN/RU/agent documentation tree with enforced parity ([l2-release-pipeline.md](specifications/l2-release-pipeline.md)) [L2]
 
-Decomposed into 20 atomic tasks across five tracks plus validation in
+Decomposed into 23 atomic tasks across six tracks plus validation in
 [tasks/phase-8.md](tasks/phase-8.md), which carries this phase's own planning audit.
 The phase is **four-wide at the start and one-wide at the end** — `(A ∥ D ∥ E ∥ B01) →
 B02 → B03 → B04 → T03`. Calling it six-wide because it has six tracks would be false:
@@ -268,11 +268,48 @@ edited by five Track D tasks, so the index edit is collapsed into `T-8D05` alone
 a compressed schedule exactly as `T-7T03`'s load test did — and it is no more optional
 than that one was.
 
+**Track F was added on 2026-08-21 and changes what this phase is.** The two
+specifications above were amended outside the specification workflow; reconciling the
+registry triggered the constitution's re-review rule, and the re-review found the
+sensitive-zone boundary that the standing autonomous-operation grant depends on to be
+narrower in enforcement than in text. Two of the three findings were closed immediately:
+the ownership file now covers the credential-token migrations and every admin surface
+over money, and its coverage check derives candidates from the tree instead of from a
+hand-written list. The third is scheduled, because it is not a code change — the
+ownership file forces a review only where the branch requires a code owner's, which
+`develop` does and `master` does not. The specification describes a grant `master` does
+not currently implement, and the obvious way to make it implement one would remove the
+boundary entirely unless the two settings are changed in the right order.
+
+Everything else in the phase was quarantined under C12 while its sources sat at `RFC` —
+the three owner-only tasks blocked, Track F running, which is the correct shape: the
+track that returns the specifications to `Stable` is the one C12.1 exempts. All three
+Track F tasks closed on the same day, the specifications were re-promoted at v0.4.0, and
+the quarantine lifted. Track F also found what the original three findings had not: the
+ownership file was never consulted on `master` at all, because the branch did not require
+a code owner's review. Both protected branches now carry the same two settings, applied
+in the order that never leaves a gap between them.
+
 ## Backlog
 
 Registered specifications not scheduled into an active phase.
 
+*(The delivery pair's design debt was listed here on 2026-08-21 and closed the same day —
+both specifications are `Stable` at v0.4.0. The Amendment Ledger in [INDEX.md](INDEX.md)
+records the round trip and what each finding turned out to be.)*
+
 - [l1-room-reservation.md](specifications/l1-room-reservation.md) — **dormant module, deliberately deferred.** Its three tables (`reservations`, `room_availabilities`, `booking_settings`) and its `booking` / `payment` / `guest_accounts` registry rows ship **disabled** in Phase 1, and Phase 1's inertness test proves the module is absent rather than hidden. The capability itself is not in `[TZ]` §134's mandatory first release, and the previous implementation is explicitly not a migration source ([l2-data-model.md](specifications/l2-data-model.md) §2), so building the flow is scoped as its own future phase rather than smuggled into release one.
+
+## Decision Archive
+
+Locked decisions rotated out of `STATE.md`'s Recent Decisions window, which holds only
+the most recent few. The first entry was recovered from git after the state-update
+script pruned it without writing it here, which is the archival step its own header
+promises — see the note in `STATE.md`'s Blocking Constraints.
+
+- 2026-08-21 **Decision: the human-only boundary is scoped to production risk, not to infrastructure setup** — the project owner explicitly authorized the agent to build a release gate's own scaffolding (branch protection, the `production` environment, CI/CD workflows) directly, before this project's first production release, having heard the agent's own explanation of why the boundary exists and choosing to relax it anyway. Formalized in [l1-release-operations.md](specifications/l1-release-operations.md) §5.5.1 (v0.2.0) rather than left as a verbal exception, so a future session reads the same rule instead of re-litigating it. The boundary itself is unchanged for release-time decisions (acceptance, irreversibility, restore) — those stay human at every phase, including production. GitHub attributes agent-run `gh api` calls to the owner's own authenticated account; the owner was told this explicitly and said it does not concern them.
+
+- 2026-08-21 **Decision: the ownership file is the single source of sensitive-zone enforcement, and its test checks the tree against it rather than the reverse** — the owner chose this over generating the ownership file from a canonical list held in PHP, which would have added a generator that can itself drift. The consequence accepted with it: the ownership file stays hand-written, so the test must be the thing that notices when the tree outgrows it. That is why coverage is derived by walking the real directories per zone — a new policy, admin surface over money, or credential-table migration fails the gate on the day it is written, not on the day someone remembers the file exists.
 
 ## Planning Audit
 
@@ -336,8 +373,10 @@ the project's development stages, but is silent on how code reaches that server.
 requirement originates with the project owner: a configured CI/CD pipeline, a branch
 model with automated dispatch, and deployment documentation written for a reader with no
 technical background, in both launch languages, in a form an automated agent can also
-consume. Both specifications reached `Stable` in the same pass, which makes Phase 8 the
-first phase here planned against settled sources rather than provisional ones.
+consume. Both specifications reached `Stable` in the same pass, which made Phase 8 the
+first phase here planned against settled sources rather than provisional ones — a
+property it lost again on 2026-08-21, when an out-of-workflow amendment to both sent
+them back to `RFC` for re-review and the re-review held them there.
 
 The gap it closes is narrow and total: the repository already carries half a pipeline —
 a quality gate on every push and pull request, and a versioned commit hook — and nothing
@@ -346,17 +385,23 @@ protection rule, no rollback path, and no operator-audience or Russian-language
 documentation. A quality gate with no delivery path behind it verifies changes that then
 sit still.
 
-**Next step:** `/magic.run main` — Phase 8's 20 tasks are decomposed and ready in
-[tasks/phase-8.md](tasks/phase-8.md). Track E's three tasks are operator-performed and
-gate four others; they can be started immediately and in parallel with the agent tracks.
+**Next step:** `/magic.run main` — but it will find nothing an agent may execute. All
+20 agent-performable tasks in this phase are done, Track F included, and the three that
+remain are owner-only for reasons no authorization changes: GitHub exposes no API path
+to create an App, the production credentials this environment would need do not exist,
+and the rehearsal's own specification requires an executor who did not write the
+procedure. The phase closes when the owner performs those three. Nothing in the plan
+blocks them any longer — the C12 quarantine that briefly did was lifted when both
+specifications returned to `Stable` at v0.4.0.
 
 Three items remain outside this phase deliberately, none of them blocking it. The
 suite-wide `composer test:coverage` floor (78.3% against its own 80% minimum — a long
 tail of ~20 pre-existing Phase 1–6 `Policy`/`Model` files) is scoped as its own future
 cross-phase task; whether `composer test:coverage` should read `--group=slow` coverage
 is an open quality-tooling question for whoever next revises the composer scripts; and
-the 19 specifications still at `RFC` carry the set's real remaining design work — 18 of
-them a live inline `TBD` — which `/magic.spec` addresses on its own schedule. None of
+the 19 specifications that have been at `RFC` since the stabilization pass carry the
+set's real remaining design work — 18 of them a live inline `TBD` — which `/magic.spec`
+addresses on its own schedule. None of
 the three is a Phase 8 input, and folding any of them in would make a delivery phase
 depend on work that has nothing to do with delivery.
 

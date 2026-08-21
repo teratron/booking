@@ -1,11 +1,11 @@
 # Master Task Index (Registry)
 
-**Version:** 1.6.0
+**Version:** 1.8.0
 **Generated:** 2026-08-05
-**Based on:** .design/main/PLAN.md v3.5.0
+**Based on:** .design/main/PLAN.md v3.7.0
 **Based on RULES:** .design/RULES.md v1.4.0
 **Execution Mode:** Parallel
-**Status:** Active — Phase 8 (7 phases done, 1 active)
+**Status:** Active — Phase 8 (7 phases done, 1 active; C12 quarantine lifted 2026-08-21)
 
 ## Overview
 
@@ -29,8 +29,17 @@ two other tracks.
 
 Two findings from the retrospective remain open outside Phase 8: the suite-wide
 `composer test:coverage` floor (78.3%, ~20 pre-existing Phase 1–6 files) as its own
-separately-scoped follow-up, and the 19 specifications still at `RFC`, which carry the
+separately-scoped follow-up, and the specifications still at `RFC`, which carry the
 set's real remaining design work and none of which is a Phase 8 input.
+
+**Re-planned twice on 2026-08-21, and back where it started.** Both of Phase 8's
+specifications were amended outside the workflow; the re-review that followed the
+registry reconciliation held them at `RFC`, because the sensitive-zone boundary they
+declare mechanical was narrower in enforcement than in text. Track F was added to close
+that — three tasks — and ran under C12.1's stabilization exception while the rest of the
+phase sat quarantined. All three closed the same day, the specifications returned to
+`Stable` at v0.4.0, and the quarantine lifted: the three owner-only tasks are `Todo`
+again. The count moved from 20 tasks to 23, which is the one permanent change.
 
 The superseded Next.js-era archives now live under `archives/tasks/v1-nextjs/`. They
 previously occupied the filenames `archives/tasks/phase-1.md` through `phase-6.md`,
@@ -48,7 +57,7 @@ archival would have overwritten them.
 | [Phase 5](archives/tasks/phase-5.md) | Public site — shell, home, catalog, object profile, territory pages, built from Figma | `Done (Archived)` (18/18) |
 | [Phase 6](archives/tasks/phase-6.md) | SEO, portal-wide reporting, public REST API | `Done (Archived)` (16/16) |
 | [Phase 7](archives/tasks/phase-7.md) | Import/export, backups and rehearsed restore, production provisioning and observability, load test | `Done (Archived)` (16/16) |
-| [Phase 8](tasks/phase-8.md) | Delivery pipeline — branch contract, release artefact and deployment, irreversibility scan, EN/RU/agent operator documentation | `Todo` (0/20) |
+| [Phase 8](tasks/phase-8.md) | Delivery pipeline — branch contract, release artefact and deployment, irreversibility scan, EN/RU/agent operator documentation, sensitive-zone gate integrity | `In Progress` (20/23) |
 
 ## Execution Notes
 
