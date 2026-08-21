@@ -4,26 +4,26 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-21 03:05
+**Updated:** 2026-08-21 04:15
 **Phase:** 8 — Delivery Pipeline & Operator Documentation
 **Status:** Active
 
 ## Current Position
 
-- **Task:** **The owner reopened the human-only boundary for development-phase infrastructure — `T-8A01` and `T-8E02` are now Done too, 11/20.** `l1-release-operations.md` gained §5.5.1 (v0.2.0, re-stabilized): before this project's first production release, the owner may explicitly authorize the agent to build a gate's own scaffolding directly — branch protection, the `production` environment and its reviewer list, CI/CD workflows — never the "Requires a person" column (accepting a release, declaring irreversibility, initiating a restore), and never past the first real release through that gate. `l2-release-pipeline.md` §5.10 gained a matching note (v0.2.0). Applied live via `gh api`: `master`/`develop` branch protection (`T-8A01` — 1 required review, `quality` status check, `master` additionally linear-history/no-force-push/no-deletion), and the `production` environment with the owner's own GitHub account as its required reviewer, restricted to protected branches (`T-8E02`). Both verified against their own task Verify lines. **This unblocks `T-8B02`→`T-8B03`→`T-8B04`→(`T-8D04`, `T-8D05`, `T-8T01`)** — next action below. Still not agent-performable: `T-8E01` (GitHub App creation has no API/CLI path — a browser step is unavoidable by GitHub's own design, not policy) and `T-8E03` (needs real production credentials that do not exist in this dev environment). `T-8T03`'s rehearsal stays human-executed by its own specification — "an agent cannot substitute for this even in principle."
-- **Previous:** **Every agent-executable task in Phase 8 was Done at 9/20, before the owner's authorization above.** `T-8A02`–`T-8A04` (branch docs, gate scoping, merge-back detector), `T-8B01` (production Dockerfile stage, `.dockerignore`, `release.yml`'s `build` job), `T-8C01` (destructive-migration scan), `T-8D01`–`T-8D03` (18 operator documents, three renderings × six procedures), and `T-8T02` (the two parity mechanisms enforcing them) — committed across five commits on `develop` (`03c1c47`…`921f4ce`). **Found and fixed along the way, not originally scoped**: `AppServiceProvider::boot()` crashed with no database configured at all — the exact state `composer install`'s `post-autoload-dump` hook boots the framework in — independently confirmed to already be breaking `quality.yml`'s "Install dependencies" step on every real CI run before the fix (verified via `gh run list`). Also caught before it shipped: the destructive-migration scanner's first pass flagged all 122 `Schema::create()` migrations as destructive, because it scanned whole files instead of only `up()` — every migration's own `down()` legitimately calls `dropIfExists()` to reverse its `up()`. Fixed to scan `up()` only; the real scan against this repository's history now correctly finds 7 genuine findings across 4 files.
-- **Previous:** **Phase 8 planned, 0/20 — the plan is open again.** `/magic.task` on 2026-08-20 decomposed the two orphaned delivery specs into Phase 8 — 20 tasks over six tracks. Its central deliverable cannot be proven by `composer quality` alone (a deploy job, a rollback, a branch protection rule and an approval gate are observable only against a real repository, registry and host), and Track E originally carried `Assignment: User` with no exception — both since revised, see Task above. Two concrete repository findings landed in the plan during decomposition and were folded into `T-8B01` rather than left to be discovered: no `.dockerignore`, and a development-only `docker/app/Dockerfile` that never copies source. Full narrative archived; Phases 1–7 (135 tasks) archived at `.design/main/archives/tasks/phase-{1..7}.md`.
-- **Spec:** **25 specs — 6 `Stable`, 19 `RFC`** after the 2026-08-20 stabilization pass (R1 of `RETROSPECTIVE.md` Session 1, now actioned). Promoted: `l1-platform-foundation`, `l1-home-page`, `l1-availability-status`, `l1-release-operations`, `l2-tech-stack`, `l2-release-pipeline`. **The 19 skips are the real remaining design work, not a status backlog** — 18 carry a live inline `TBD`, which `RULES.md` §2 forbids in a `Stable` spec, and `l1-localization` §7 still keeps per-country domains as a planned migration that the owner retired on 2026-08-15. Several TBDs ask questions the delivered implementation already answered without the answer being written back; others (`l1-room-reservation` commission model, `l1-public-api` consumer and rate limits) are genuinely open product decisions. Full per-file ledger in `INDEX.md` §Stabilization Ledger. New this day: the delivery-pipeline pair (`l1-release-operations` + `l2-release-pipeline`) — the first specs here not derived from `[TZ]`, closing the last zero-coverage domain and the three open `.drafts/TODO.md` items (CI/CD, Git Flow contract with agent dispatch, EN/RU/agent deployment docs). TZ coverage 134/134, registry parity clean (25 files, 25 rows, statuses matched both sides).
-- **Next Action:** Execute T-8B02 `deploy` job behind the `production` environment gate via /magic.run main
+- **Task:** **Phase 8 at 17/20 — only the three genuinely human-only tasks remain.** Following the owner's development-phase authorization (§5.5.1), the agent carried the whole chain through to completion in one continuous run: `T-8B02`–`T-8B04` (`deploy`/`verify`/`rollback`/`record` jobs, self-hosted-runner-on-host deployment model, `docker-compose.production.yml`, `docker/deploy/*.sh`), `T-8D04`–`T-8D05` (developer pipeline docs, `docs/README.md` index), `T-8T01` (pipeline containment + gate parity tests). Every commit built, tested, and verified before moving to the next — see `docker/deploy/pipeline.md`'s own Mermaid diagram for the full six-job chain. **Two findings caught and fixed mid-session, not left for later**: (1) a HIGH-severity GitHub Actions script-injection vulnerability (automated security review) — every `${{ }}` expression that was interpolated directly into `run:` shell text now arrives via `env:` instead, across all six jobs; (2) a containment sweep after fixing the first spec-filename leak in `docs/release/pipeline.md` found five more across `release.yml` and three `docker/deploy/*.sh` scripts — all fixed, and `T-8T01`'s own new test now guards the whole pipeline against a repeat. **Remaining, all owner-only regardless of authorization**: `T-8E01` (GitHub offers no API/CLI path to create an App — a browser step is unavoidable by platform design), `T-8E03` (needs real production credentials that do not exist in this dev environment), `T-8T03` (the rehearsal's own specification requires a human executor — "an agent cannot substitute for this even in principle").
+- **Previous:** **The owner reopened the human-only boundary for development-phase infrastructure — `T-8A01` and `T-8E02` done at 11/20**, unblocking the chain above. `l1-release-operations.md` gained §5.5.1 (v0.2.0): before this project's first production release, the owner may authorize the agent to build a gate's own scaffolding directly, never the "requires a person" decisions (accept, declare irreversible, restore), never past the first real release through that gate. Applied live via `gh api`: branch protection on `master`/`develop`, and the `production` environment with the owner's own account as required reviewer.
+- **Previous:** **Every agent-executable task in Phase 8 was Done at 9/20**, before the owner's authorization. `T-8A02`–`T-8A04`, `T-8B01`, `T-8C01`, `T-8D01`–`T-8D03`, `T-8T02` — five commits on `develop`. Found and fixed along the way: `AppServiceProvider::boot()` crashed with no database configured at all (already breaking real CI before the fix); the destructive-migration scanner's first pass flagged all 122 `Schema::create()` migrations because it scanned whole files instead of only `up()`.
+- **Spec:** **25 specs — 6 `Stable`, 19 `RFC`.** `l1-release-operations.md` and `l2-release-pipeline.md` both at v0.2.0 (§5.5.1 development-phase exception, re-stabilized same day). The 19 `RFC` skips are real remaining design work (18 carry a live `TBD`), not delivery-pipeline input — untouched this session.
+- **Next Action:** Raise the three remaining tasks with the project owner: create the GitHub App identity (`T-8E01`), provision and record the real production secrets across all three tiers (`T-8E03`), then rehearse a real release and rollback against a disposable host, executed by someone who did not write the procedure (`T-8T03`) — the specification's own acceptance criterion for the whole phase. Nothing else in Phase 8 needs `/magic.run` again until one of those three lands.
 
 ## Progress
 
 ```
-Phase 8: [11/20] ████░░░░ 55%
+Phase 8: [17/20] ███████░ 85%
 Overall: [7/8] ███████░ 88%
-Plan:           [8 phases] Phase 1-7 done (135/135 tasks) · Phase 8 in progress (11/20)
-Implementation: [21/21] Phase 1 · [25/25] Phase 2 · [23/23] Phase 3 · [16/16] Phase 4 · [18/18] Phase 5 · [16/16] Phase 6 · [16/16] Phase 7 · [11/20] Phase 8
-Phase 8 tracks:  A 4/4 · B 1/4 · C 1/1 · D 3/5 (D04/D05 blocked on B04) · E 1/3 (E01/E03 User) · T 1/3
+Plan:           [8 phases] Phase 1-7 done (135/135 tasks) · Phase 8 in progress (17/20 — owner-only remainder)
+Implementation: [21/21] Phase 1 · [25/25] Phase 2 · [23/23] Phase 3 · [16/16] Phase 4 · [18/18] Phase 5 · [16/16] Phase 6 · [16/16] Phase 7 · [17/20] Phase 8
+Phase 8 tracks:  A 4/4 · B 4/4 · C 1/1 · D 5/5 · E 1/3 (E01/E03 User) · T 2/3 (T03 User+Agent)
 ```
 
 ## Recent Decisions
@@ -98,20 +98,22 @@ constraints) → `CLAUDE.md` (stack, conventions, engineering discipline) →
 Different and §Track Ordering before touching any task) → `RETROSPECTIVE.md` Session 1
 (plan-wide findings, R1–R5) → `.design/main/PLAN.md` for cross-phase context.
 **Phases 1–7 are Done (135 tasks) and archived at
-`.design/main/archives/tasks/phase-{1..7}.md`; Phase 8 is active at 11/20.** The
-recommended next command is `/magic.run main`, resuming with `T-8B02`.
+`.design/main/archives/tasks/phase-{1..7}.md`; Phase 8 is at 17/20 — every agent-
+performable task is Done.** `/magic.run main` finds nothing left to execute until the
+owner completes one of the three remaining tasks below.
 
-**`T-8E01` (GitHub App identity) and `T-8E03` (real production secrets) still need the
-project owner** — the first because GitHub offers no API/CLI path to create an App at
-all (a browser step is unavoidable), the second because the credentials it would hold
-do not exist yet in this development environment. `T-8A01` and `T-8E02` were performed
-by the agent under the owner's explicit, recorded authorization —
+**`T-8E01`, `T-8E03`, and `T-8T03` are the only tasks left, and all three need the
+project owner** — `T-8E01` because GitHub offers no API/CLI path to create an App at
+all (a browser step is unavoidable), `T-8E03` because the credentials it would hold do
+not exist yet in this development environment, `T-8T03` because its own specification
+requires a real rehearsal executed by someone who did not write the procedure — an
+agent cannot substitute for this even in principle. `T-8A01`, `T-8E02`, and the whole
+`T-8B02`–`T-8B04`/`T-8D04`–`T-8D05`/`T-8T01` chain they unblocked were performed by the
+agent under the owner's explicit, recorded authorization —
 [l1-release-operations.md](specifications/l1-release-operations.md) §5.5.1's
 development-phase exception, added 2026-08-21. That exception never reaches release
 acceptance, irreversibility declaration, or restore initiation, and lapses the moment a
-real release ships through the gate it configured. `T-8T03`'s rehearsal stays
-owner-executed regardless of phase — its own spec says an agent cannot substitute for it
-even in principle.
+real release ships through the gate it configured.
 
 **Do not carry forward** anything about Next.js, TypeScript, Drizzle, Better Auth,
 react-admin, or Vercel — that stack is superseded and preserved only at tag `v0.1.34`.

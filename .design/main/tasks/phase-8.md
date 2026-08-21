@@ -15,7 +15,7 @@ duration_minutes: ~
 # Stage 8 Tasks — Delivery Pipeline & Operator Documentation
 
 **Phase:** 8
-**Status:** In Progress (11/20 — `T-8A01` and `T-8E02` performed under the owner's explicit development-phase authorization, see STATE.md and [l1-release-operations.md](../specifications/l1-release-operations.md) §5.5.1)
+**Status:** In Progress (17/20 — every agent-performable task is Done; only `T-8E01`, `T-8E03`, `T-8T03` remain, all owner-only, see STATE.md and [l1-release-operations.md](../specifications/l1-release-operations.md) §5.5.1)
 **Strategic Goal:** The portal's implementation is complete and it has never been
 released. This phase builds the path a change takes from an accepted branch to a
 serving production portal, the path back when a release turns out wrong, and the
