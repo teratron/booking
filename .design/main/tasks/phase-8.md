@@ -83,7 +83,7 @@ and defers its proof to `T-8T03`, rather than claiming a verification it cannot 
 
 ### Track T — Validation & Acceptance
 
-- [ ] [T-8T01] Pipeline containment and gate parity, asserted as tests
+- [x] [T-8T01] Pipeline containment and gate parity, asserted as tests
 - [x] [T-8T02] Documentation parity — the three trees hold the same procedure set
 - [ ] [T-8T03] Rehearse the whole path on a disposable host, from the operator document
 
@@ -336,12 +336,13 @@ than last despite being the least technically interesting work in the phase.
 **[T-8T01] Pipeline containment and gate parity, asserted as tests**
 
 - **Spec:** [l1-release-operations.md](../specifications/l1-release-operations.md) §3.1, §3.10; [l2-release-pipeline.md](../specifications/l2-release-pipeline.md) §4
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** `T-8A03`, `T-8B04`, `T-8C01`
 - **Verify:** `composer test:arch` passes with new assertions that (a) no file under `.github/workflows/`, no `composer.json` script, and no file under `docs/` references the design or planning directories, and (b) the gate the release path invokes is the same `composer quality` script a developer runs, by name.
 - **Handoff:** Feeds `T-8T03`'s acceptance.
 - **Notes:** The containment assertion is the mechanical form of a rule the project already enforces for product code, extended to the pipeline: delete the design and planning directories and every job must still run unchanged. This includes indirect coupling — a runtime added solely to execute design-time tooling is coupling even where nothing names it. The Node runtime in CI is legitimate, because Vite and Biome need it regardless of whether that tooling exists.
+- **Changes:** `tests/Architecture/PipelineContainmentTest.php`, two tests. First scans `.github/workflows/`, `docs/`, `composer.json`, and `docker/deploy/` (beyond the task's own literal minimum — clearly "the pipeline" in spirit, and where this exact session had already found and fixed five real leaks) for the same forbidden-pattern set `ContainmentTest.php` applies to product code. Second asserts `quality.yml` literally contains the string `composer quality` and that `composer.json`'s own `scripts.quality` key exists — the gate a developer runs and the gate CI runs are provably the same command, not merely similarly named. Confirmed the first test actually catches a violation (not just a vacuous pass): temporarily reintroduced one of the leaks this session had just fixed, watched the test fail on it, reverted, watched it pass again.
 
   Gate parity is the second half: a check that exists only in the pipeline cannot be reproduced by the person who has to fix it, and a check that exists only locally is a check nobody enforces. Where the two must differ, the difference must be in provisioning — the service container, the test database, the extensions — never in which assertions run.
 
