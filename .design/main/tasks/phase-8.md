@@ -15,7 +15,7 @@ duration_minutes: ~
 # Stage 8 Tasks — Delivery Pipeline & Operator Documentation
 
 **Phase:** 8
-**Status:** In Progress (9/20 — agent ceiling reached; the remaining 11 tasks require the project owner, see STATE.md)
+**Status:** In Progress (11/20 — `T-8A01` and `T-8E02` performed under the owner's explicit development-phase authorization, see STATE.md and [l1-release-operations.md](../specifications/l1-release-operations.md) §5.5.1)
 **Strategic Goal:** The portal's implementation is complete and it has never been
 released. This phase builds the path a change takes from an accepted branch to a
 serving production portal, the path back when a release turns out wrong, and the
@@ -51,7 +51,7 @@ and defers its proof to `T-8T03`, rather than claiming a verification it cannot 
 
 ### Track A — Branch Contract & Gate Scoping
 
-- [ ] [T-8A01] Branch protection on `master` and `develop` — the contract made mechanical
+- [x] [T-8A01] Branch protection on `master` and `develop` — the contract made mechanical
 - [x] [T-8A02] Branch model documentation for developers — `docs/release/branching.md`
 - [x] [T-8A03] Scope `quality.yml` triggers to the two protected branches
 - [x] [T-8A04] Merge-back detector — a scheduled workflow, not a gate
@@ -78,7 +78,7 @@ and defers its proof to `T-8T03`, rather than claiming a verification it cannot 
 ### Track E — Identity, Environment & Secrets (operator-performed)
 
 - [ ] [T-8E01] Automation identity — a GitHub App with an explicitly withheld permission set
-- [ ] [T-8E02] `production` environment and its required reviewers
+- [x] [T-8E02] `production` environment and its required reviewers
 - [ ] [T-8E03] Secrets across the three tiers, none of them in the repository
 
 ### Track T — Validation & Acceptance
@@ -126,11 +126,12 @@ than last despite being the least technically interesting work in the phase.
 **[T-8A01] Branch protection on `master` and `develop` — the contract made mechanical**
 
 - **Spec:** [l2-release-pipeline.md](../specifications/l2-release-pipeline.md) §5.2; [l1-release-operations.md](../specifications/l1-release-operations.md) §3.3
-- **Status:** Todo
-- **Assignment:** User
+- **Status:** Done
+- **Assignment:** User — performed by the agent under the project owner's explicit, recorded authorization ([l1-release-operations.md](../specifications/l1-release-operations.md) §5.5.1's development-phase exception, added the same day this task closed)
 - **Verify:** `gh api repos/teratron/booking/branches/master/protection` returns `required_pull_request_reviews`, `required_status_checks` naming the `quality` check, `required_linear_history.enabled: true`, `allow_force_pushes.enabled: false`, `allow_deletions.enabled: false`; the same call for `develop` returns pull-request-only with the `quality` check required.
 - **Handoff:** Unblocks nothing mechanically, but every later task in the phase assumes the topology it declares is enforced rather than conventional.
 - **Notes:** The two branches already exist and carry the topology by convention with no contract behind them — §5.1 records exactly that. This task is the cheapest item in the phase and the one that becomes expensive later: protection applied after history has accumulated cannot retroactively require what it did not require. `feature/*`, `release/x.y.z` and `hotfix/x.y.z` need no protection rules of their own; they are short-lived and their obligations are enforced at the merge target.
+- **Changes:** Applied via `gh api --method PUT` against both branches' `/protection` endpoint. `master`: 1 required approving review, `required_status_checks` naming `quality` (strict), linear history required, force-push and deletion both disabled, admins enforced. `develop`: same review and status-check requirements, without the linear-history/force-push/deletion hardening `master` alone needs. Verified live via the exact `gh api ... --jq` shape this task's own Verify line names — both return real data in place of the `404 Branch not protected` both endpoints returned before this task.
 
 **[T-8A02] Branch model documentation for developers — `docs/release/branching.md`**
 
@@ -304,11 +305,12 @@ than last despite being the least technically interesting work in the phase.
 **[T-8E02] `production` environment and its required reviewers**
 
 - **Spec:** [l2-release-pipeline.md](../specifications/l2-release-pipeline.md) §5.3, §5.8; [l1-release-operations.md](../specifications/l1-release-operations.md) §5.2
-- **Status:** Todo
-- **Assignment:** User
+- **Status:** Done
+- **Assignment:** User — performed by the agent under the same §5.5.1 development-phase exception as `T-8A01`
 - **Verify:** `gh api repos/teratron/booking/environments/production` returns the environment with a required-reviewers protection rule naming at least one human reviewer and **not** naming the automation identity from `T-8E01`.
 - **Handoff:** **Hard gate for `T-8B02`, `T-8B03`, `T-8B04` and `T-8T03`.**
 - **Notes:** The phase's highest-cascade task and the one no agent can unblock. It is scheduled before the deploy job exists rather than after, because an environment added afterwards means the first deploy ran ungated — and the first deploy is the one where that matters most. This reviewer list is the human acceptance point of the entire delivery path: it is where "a release is accepted" physically happens.
+- **Changes:** Created via `gh api --method PUT repos/teratron/booking/environments/production`. Required-reviewers protection rule names the project owner's own GitHub account (a real person, not any automation identity — `T-8E01` does not exist yet, so this is trivially satisfied). `deployment_branch_policy.protected_branches: true` restricts deployments to protected branches only, meaningful now that `T-8A01` protects both. Verified live via the exact `gh api` shape this task's own Verify line names.
 
 **[T-8E03] Secrets across the three tiers, none of them in the repository**
 

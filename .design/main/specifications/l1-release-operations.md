@@ -1,6 +1,6 @@
 # Release Operations
 
-**Version:** 0.1.0
+**Version:** 0.2.0
 **Status:** Stable
 **Layer:** concept
 
@@ -294,12 +294,39 @@ by the same automation that made them**.
 | Cutting a release candidate from a green integration state | Accepting a candidate for production (§5.2) |
 | Triggering rollback on a failed health assertion (§5.2) | Initiating a restore — `[TZ]` §131's re-confirmation gate is a human gate by construction |
 | Reporting, recording, and notifying | Declaring a release irreversible (§3.4) |
-| Retrying a transition that failed for an infrastructure reason | Changing what the gate checks, or who may approve |
+| Retrying a transition that failed for an infrastructure reason | Loosening or altering a gate the pipeline has already shipped a release through |
+| Building the gate's scaffolding before it has ever gated a release — branch protection rules, the `production` environment's existence and its reviewer list, the CI/CD workflows themselves — **under the owner's explicit, recorded, one-time authorization (§5.5.1)** | Naming who the human reviewer is, or standing in for that reviewer under any identity |
 
-The pattern: automation is trusted with **execution and with reversal**, and is not
-trusted with **acceptance or with irreversibility**. An agent that may both accept a
-release and declare it irreversible can produce a state nothing it controls can undo,
-which is precisely the state §3.4 exists to make impossible.
+The pattern: automation is trusted with **execution and with reversal**, and — before a
+gate has ever gated anything — with **building it**, and is not trusted with
+**acceptance, irreversibility, or loosening a gate that has already stood between
+automation and a live release**. An agent that may both accept a release and declare it
+irreversible can produce a state nothing it controls can undo, which is precisely the
+state §3.4 exists to make impossible. Installing a rule that requires a named person's
+approval is a different act from holding that approval power: the two stay
+distinguishable exactly as long as the reviewer named is a real person the owner chose,
+never the automation identity itself (§5.10 `[L2]`) and never the agent approving on its
+own behalf.
+
+#### 5.5.1 Development-Phase Exception
+
+Before this project's first production release, the owner may explicitly authorize the
+agent to perform the gate-construction cell above directly — the `git`/GitHub-level
+actions a person would otherwise click through by hand, not the release decisions the
+gate exists to check. This is scoped narrowly and does not soften §5.5's own table
+beyond this one cell:
+
+- It never reaches the "Requires a person" column, at any project phase, before or after
+  first release.
+- It never authorizes the agent to name itself, or any other automation identity, as an
+  environment reviewer — §5.10 `[L2]`'s withheld-permissions design applies regardless of
+  who configured the environment.
+- It lapses the moment a real release has shipped through the gate being configured —
+  from that point on, altering the gate is a person's decision again, not the agent's,
+  even within the same conversation that granted the exception.
+- The authorization is the owner's own explicit act, given knowingly after the agent has
+  stated what it would do and why the boundary normally exists — never inferred from
+  silence, and never assumed by the agent on its own initiative.
 
 ### 5.6 Failure Handling
 
@@ -380,3 +407,4 @@ outage, and the person who needs the document is not the person who could write 
 | Version | Date | Change |
 | --- | --- | --- |
 | 0.1.0 | 2026-08-20 | Initial draft. Covers the first specification of this project's delivery path: promotion topology, gate obligations by transition, release records and the two reversal paths, the operator documentation matrix, and the boundary between agent-decided and human-decided release actions. Originates with the project owner rather than `[TZ]`, which is silent on delivery. |
+| 0.2.0 | 2026-08-21 | §5.5 gains a scoped development-phase exception (§5.5.1): before a project's first production release, the owner may explicitly authorize the agent to build a gate's own scaffolding directly — branch protection, the `production` environment and its reviewer list, the CI/CD workflows — never to decide anything the "Requires a person" column still lists, and never past the project's first real release through that gate. Reduces friction the original table forced onto pre-launch setup work without weakening §3.4's production-time boundary, which the exception explicitly cannot touch. Originates with the project owner, who observed the table blocked setup work no release had yet depended on. |
