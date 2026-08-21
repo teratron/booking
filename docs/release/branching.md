@@ -91,6 +91,50 @@ separate case entirely, and is never merged on the strength of a passing gate al
 CODEOWNERS match or not — see [pipeline.md](pipeline.md) for the destructive-migration
 scan that catches it.
 
+**A CODEOWNERS-matched pull request authored by the owner's own account blocks on
+itself.** Until a separate automation identity exists, both a developer and an agent
+push under the same GitHub account, so a pull request touching a sensitive path
+requests a review from the account that opened it — and GitHub will not let an author
+approve their own pull request, so it sits blocked with no way to satisfy it normally.
+The fix is a one-time, scoped bypass, not a standing setting: temporarily disable
+`enforce_admins` on the target branch, merge as the repository administrator, then
+re-enable it immediately.
+
+```bash
+gh api -X DELETE repos/teratron/booking/branches/develop/protection/enforce_admins
+# merge the pull request
+gh api -X POST repos/teratron/booking/branches/develop/protection/enforce_admins
+```
+
+This is unrelated to the ordinary-change flow above — it only comes up for a
+CODEOWNERS-matched change the owner authored personally, and it stops coming up once
+a separate automation identity exists to author the ordinary ones instead.
+
+## Landing a Small Change Without Waiting on It
+
+An ordinary change still goes through a pull request — `develop` accepts no direct
+push — but nothing about that requires sitting and watching `quality` run. The
+repository has `allow_auto_merge` enabled specifically so this sequence needs no
+babysitting, by a developer or an agent alike:
+
+```bash
+git checkout -b fix/short-slug develop
+# make the change, commit it
+git push -u origin fix/short-slug
+gh pr create --fill
+gh pr merge --auto --squash --delete-branch
+```
+
+The last command queues the merge and returns immediately; GitHub merges the pull
+request itself the moment `quality` passes (and, for a change `.github/CODEOWNERS`
+covers, once the owner's review is in) and deletes the branch. There is nothing to
+poll and nothing further to run — the same command works unattended.
+
+A few small, unrelated edits are better landed as one pull request than as several —
+each one is a full `quality` run, and a translation fix and a stray-file removal do
+not need separate CI minutes to prove they are both fine. Batch them when they are
+not urgent; open a pull request immediately when one of them is.
+
 ## Why No Protection on the Short-Lived Lines
 
 `feature/*`, `release/x.y.z`, and `hotfix/x.y.z` carry no branch protection rule of
