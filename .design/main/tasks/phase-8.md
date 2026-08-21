@@ -72,7 +72,7 @@ and defers its proof to `T-8T03`, rather than claiming a verification it cannot 
 - [x] [T-8D01] `docs/operations/en/` — six procedures for a reader with no technical background
 - [x] [T-8D02] `docs/operations/ru/` — the same six procedures, same file names
 - [x] [T-8D03] `docs/operations/agent/` — the same procedures, machine-addressed
-- [ ] [T-8D04] `docs/release/pipeline.md` — the developer-audience account of the workflows
+- [x] [T-8D04] `docs/release/pipeline.md` — the developer-audience account of the workflows
 - [ ] [T-8D05] `docs/README.md` index extended to the two new trees
 
 ### Track E — Identity, Environment & Secrets (operator-performed)
@@ -272,12 +272,13 @@ than last despite being the least technically interesting work in the phase.
 **[T-8D04] `docs/release/pipeline.md` — the developer-audience account of the workflows**
 
 - **Spec:** [l2-release-pipeline.md](../specifications/l2-release-pipeline.md) §5.9
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** `T-8A04`, `T-8B04`, `T-8C01` (documents what they built)
 - **Verify:** `docs/release/pipeline.md` describes both workflows, what each job proves, how to change one, and what breaks if a given step is skipped; every workflow and job name it references exists in `.github/workflows/`.
 - **Handoff:** Indexed by `T-8D05`.
 - **Notes:** Extends the existing six technical runbooks rather than duplicating them. The existing set documents the *system* thoroughly and the *act of deploying it* not at all — this file and `T-8A02`'s closes that half of the gap for a developer audience, while Track D's operator trees close it for everyone else.
+- **Changes:** Table-per-step for `quality.yml`'s single job (what it proves / what breaks if skipped) and a subsection per `release.yml` job, plus a Mermaid diagram of the six-job chain and the secrets-by-tier table. Verified mechanically: every job name the document references (`quality`, `scan-migrations`, `build`, `deploy`, `verify`, `rollback`, `record`) cross-checked against the real job keys in both workflow files — all seven present, none invented. Caught and fixed a containment leak while writing it: an early draft cited the specification files by name in several "if skipped" explanations; restated in plain language, then swept `.github/workflows/` and `docker/deploy/*.sh` for the same pattern and found five more instances left over from earlier tasks this phase, fixed alongside.
 
 **[T-8D05] `docs/README.md` index extended to the two new trees**
 

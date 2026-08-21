@@ -44,6 +44,7 @@ Phase 8 tracks:  A 4/4 · B 1/4 · C 1/1 · D 3/5 (D04/D05 blocked on B04) · E 
 <!-- Agent MUST explicitly acknowledge each constraint before working. -->
 
 - **Engine bug:** `executor.js update-state` corrupts STATE.md fields on nearly every invocation (top-level `**Status:**`, `## Progress`). Always re-open STATE.md after `update-state`/`finalize` and manually verify both.
+- **Never interpolate a `${{ }}` expression directly into a GitHub Actions `run:` block's shell text** — the Actions template engine substitutes it into the raw script *before* the shell ever parses it, so an attacker-influenceable value (a pushed tag's name, a tag annotation, any PR-supplied text) can inject arbitrary shell commands into a job holding real secrets. Caught by automated security review on `release.yml`'s `record` job (`github.ref_name`, the irreversibility declaration) after it already shipped in three prior commits. Always route through `env:` and reference as a real shell variable (`$VAR`) instead — applies to every future workflow step, not only ones handling obviously-untrusted input.
 - **Public OSM tile servers are prohibited in production** (OSMF policy) — never `tile.openstreetmap.org`; use MapTiler, Stadia, or self-hosted.
 - **Host port conflicts**: Postgres native→5433, web 8300, Mailpit 8325 (Win TCP 7915–8114 reserved; check first). `postgres:18+` data lives under a major-version subdir, not `.../data`.
 - **No PHP/Composer on the host** — toolchain runs through `docker compose exec app …`. Never assume bare `php`/`composer` in a shell command.
