@@ -1,0 +1,126 @@
+# Production topology. Pull-only — no `build:` key anywhere here, deliberately:
+# the release artefact is built once, in the release workflow's own `build` job,
+# and every environment after that addresses it by digest. A `build:` key on this
+# file would let the host silently rebuild a different image than the one that
+# was actually accepted through the pipeline.
+#
+# Five services share the release artefact — app, worker, scheduler, pulse, and
+# the nginx that fronts them — restarted together on every release, in that
+# order, nginx last (docker/deploy/deploy.sh owns the ordering). postgres and
+# redis are infrastructure: provisioned once, never restarted by a release.
+#
+# IMAGE_DIGEST is supplied by the deploy script from the release workflow's own
+# `build` job output — never resolved independently here, so this file can
+# never drift from what the pipeline actually built and accepted.
+
+services:
+  app:
+    image: ghcr.io/teratron/booking@${IMAGE_DIGEST}
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      # Shared with nginx below — the production image ships no bind mount, so
+      # nginx (an unmodified official image with no application code of its
+      # own) can only serve the static half of public/ through this volume.
+      # deploy.sh populates it from the newly pulled image before this
+      # container's own restart, since a named volume's prior content is not
+      # implicitly refreshed by pulling a new image tag.
+      - public-assets:/var/www/html/public
+      # Persists storage/ (logs, framework cache/sessions/views, the
+      # maintenance-mode flag) across a release's container replacement —
+      # without this, `php artisan down`'s own flag file would live only in
+      # the outgoing container and vanish the instant it stops, exiting
+      # maintenance mode before the new containers are even ready.
+      - storage-data:/var/www/html/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    image: ghcr.io/teratron/booking@${IMAGE_DIGEST}
+    restart: unless-stopped
+    command: php artisan horizon
+    env_file: .env
+    volumes:
+      - storage-data:/var/www/html/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  scheduler:
+    image: ghcr.io/teratron/booking@${IMAGE_DIGEST}
+    restart: unless-stopped
+    command: php artisan schedule:work
+    env_file: .env
+    volumes:
+      - storage-data:/var/www/html/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  pulse:
+    image: ghcr.io/teratron/booking@${IMAGE_DIGEST}
+    restart: unless-stopped
+    command: php artisan pulse:work
+    env_file: .env
+    volumes:
+      - storage-data:/var/www/html/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      # :ro — nginx never writes application files; only app's own release
+      # (via deploy.sh) refreshes this volume's content.
+      - public-assets:/var/www/html/public:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+
+  postgres:
+    image: postgis/postgis:18-3.6-alpine
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    volumes:
+      - postgres-data:/var/lib/postgresql
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  public-assets:
+  storage-data:
+  postgres-data:
+  redis-data:

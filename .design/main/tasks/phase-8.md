@@ -59,7 +59,7 @@ and defers its proof to `T-8T03`, rather than claiming a verification it cannot 
 ### Track B — Release Artefact & Deployment
 
 - [x] [T-8B01] Production image stage and `.dockerignore`; `build` job publishing a digest
-- [ ] [T-8B02] `deploy` job behind the `production` environment gate
+- [x] [T-8B02] `deploy` job behind the `production` environment gate
 - [ ] [T-8B03] `verify`, automatic rollback, and the escalation that refuses to retry
 - [ ] [T-8B04] `record` job — a GitHub Release per outcome, reversals included
 
@@ -182,12 +182,13 @@ than last despite being the least technically interesting work in the phase.
 **[T-8B02] `deploy` job behind the `production` environment gate**
 
 - **Spec:** [l2-release-pipeline.md](../specifications/l2-release-pipeline.md) §5.3, §5.5, §5.8
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** `T-8B01` (the digest) and `T-8E02` (the environment must exist first)
 - **Verify:** `.github/workflows/release.yml` declares `environment: production` on the `deploy` job and a `concurrency` group covering the whole production environment with `cancel-in-progress: false`; `gh workflow view release.yml` shows the tag trigger `v*` restricted to `master`. Behavioural proof of the deployment itself is deferred to `T-8T03` — it cannot be observed without a host.
 - **Handoff:** `T-8B03` extends the same workflow.
 - **Notes:** Step order is specified and each step's position has a reason: pin the digest (reversible — this is what makes rollback cheap), enter maintenance mode with a bypass secret, run migrations (the only irreversible step), restart the five services with `nginx` last, warm the configuration/route/event/view caches, leave maintenance mode. The scheduler and queue workers are **restarted, not reloaded** — both hold resolved application state from process start, and a worker running yesterday's code against today's schema fails without producing an error message.
+- **Changes:** Resolved a mechanism the specification names an invariant for ("the host pulls, no inbound access to it is ever required") but does not pin down concretely: `deploy` runs on a **self-hosted GitHub Actions runner installed on the production host itself** — the runner polls GitHub outbound for work, so there is never a separate "runner reaching into the host network" to secure. `runs-on: [self-hosted, production]`, gated by `environment: production`. Created `docker-compose.production.yml` — pull-only (no `build:` key anywhere, so the host can never silently rebuild a different image than the one the pipeline actually built and the reviewers actually approved), five release-artefact services (`app`/`worker`/`scheduler`/`pulse`/`nginx`) addressing the image by `${IMAGE_DIGEST}`, plus `postgres`/`redis` as infrastructure the release restart never touches. Two named volumes resolve gaps the spec's own prose left implicit: `public-assets` (shared between `app` and the unmodified official `nginx` image, which has no application code of its own and therefore no other way to serve `public/`'s static half) and `storage-data` (persists `storage/` — including the maintenance-mode flag file — across a release's container replacement; without it, `php artisan down`'s flag would live only in the outgoing container and vanish the instant it stops). Created `docker/deploy/deploy.sh`, executing the six-step sequence against a stable, explicit compose project name (`-p booking-production`, since a self-hosted runner's checkout path is not itself stable across runs); detects a first-ever deployment (no running `app` service) and skips the maintenance-mode toggle, since there is no live release yet to protect. Cache warming targets the `app` container specifically, not a one-off `migrate`-style container — `bootstrap/cache` is not a shared volume, so caching anywhere else would be discarded the moment that container exits. Verified: `docker compose -f docker-compose.production.yml config` and `sh -n deploy.sh` both pass; `release.yml`'s YAML parsed and confirmed to declare `environment: production` and the workflow-level `concurrency` group exactly as this task's Verify line names. Behavioural proof (a real deploy against a real host) deferred to `T-8T03`, per this task's own Verify line — self-hosted runner registration itself is host-provisioning work, not something this task can perform without a host to register one on.
 
   The concurrency group must cover the environment, not the tag: two tags pushed minutes apart must queue rather than interleave, and a queued release must **wait rather than be cancelled** — a cancelled release that had already migrated is precisely the half-applied state serialization exists to prevent.
 
@@ -323,6 +324,8 @@ than last despite being the least technically interesting work in the phase.
 - **Notes:** Three tiers with a boundary that is the whole mechanism: repository secrets reach the `build` job only; `production` environment secrets reach the `deploy` job only, and only after its reviewers approve; the host's own `.env` holds every application runtime credential and reaches the running containers only — never the runner, never the image. A build that cannot be produced without a production secret is a build that has leaked one.
 
   Values are held by whoever operates the host. This task records **which** credentials exist and what each is for; their contents never enter this repository, this plan, or any release record.
+
+  **`T-8B02` made one production-tier name concrete**: `MAINTENANCE_BYPASS_SECRET`, read by `docker/deploy/deploy.sh` from the `deploy` job's own environment and passed to `php artisan down --secret=`. Registry credentials need no separate secret at all — `T-8B01`'s `build` job already authenticates to `ghcr.io` with the built-in `GITHUB_TOKEN`. Repository-tier `MAP_TILE_KEY` was already named in `T-8B01`. The self-hosted-runner deployment model `T-8B02` chose also means "host access" is not a runner-side secret the way an SSH-based design would need — the runner already executes locally on the host under whatever account installed it.
 
 ### Track T — Validation & Acceptance
 
