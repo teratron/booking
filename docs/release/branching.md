@@ -122,13 +122,25 @@ git checkout -b fix/short-slug develop
 # make the change, commit it
 git push -u origin fix/short-slug
 gh pr create --fill
-gh pr merge --auto --squash --delete-branch
+gh pr merge --auto --merge --delete-branch
 ```
 
 The last command queues the merge and returns immediately; GitHub merges the pull
 request itself the moment `quality` passes (and, for a change `.github/CODEOWNERS`
 covers, once the owner's review is in) and deletes the branch. There is nothing to
 poll and nothing further to run — the same command works unattended.
+
+**`--merge`, not `--squash`, into `develop`** — a real merge commit (`--no-ff` in
+spirit: `develop`'s own history keeps the branch's commits and the point they joined,
+matching classic Git Flow) rather than flattening them into one. Squashing works
+too and was used for a few early pull requests, but it orphans the original commits
+the moment the branch is deleted — harmless (`git fetch --prune` clears the dangling
+remote-tracking refs a local clone is left holding), just a messier local graph than
+necessary when a plain merge commit costs nothing extra. `master` is the one place
+this flips: its branch protection requires linear history, which a merge commit
+cannot satisfy, so the eventual `release/{x.y.z}` → `master` pull request needs
+`--squash` or `--rebase` instead — GitHub enforces this itself and refuses the other
+choice there.
 
 A few small, unrelated edits are better landed as one pull request than as several —
 each one is a full `quality` run, and a translation fix and a stray-file removal do
