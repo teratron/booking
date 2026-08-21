@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Localization;
 
 use App\Models\Language;
+use Throwable;
 
 /**
  * Resolves the current primary language — the runtime fallback target every
@@ -32,11 +33,13 @@ final class LanguageRegistry
     }
 
     /**
-     * No `Schema::hasTable()` guard here, unlike the boot-time callers in
-     * `AppServiceProvider` — this only runs once a translation is actually
-     * being resolved mid-request, by which point the schema is guaranteed
-     * to exist; a request rendering translated output is not one running
-     * concurrently with the migration that creates the table.
+     * The same "not ready yet" case `AppServiceProvider::hasReachableTable()`
+     * guards its own boot-time callers against — a translation can be
+     * resolved before the first migration has ever run (`composer install`'s
+     * `package:discover` hook, or a test process whose earliest tests reach
+     * a translation lookup before any migration has executed), not only
+     * concurrently with one. Degrades to the static fallback locale rather
+     * than letting the query exception surface as an unrelated crash.
      */
     public function primaryLocale(): string
     {
@@ -44,7 +47,12 @@ final class LanguageRegistry
             return $this->primaryLocale;
         }
 
-        return $this->primaryLocale = Language::query()->where('is_primary', true)->value('code')
-            ?? config('app.fallback_locale');
+        try {
+            $primary = Language::query()->where('is_primary', true)->value('code');
+        } catch (Throwable) {
+            $primary = null;
+        }
+
+        return $this->primaryLocale = $primary ?? config('app.fallback_locale');
     }
 }

@@ -54,6 +54,11 @@ function backupAdminActor(array $permissions = ['admin_panel_access', 'settings_
 it("renders the last database backup's real timestamp, read from the destination disk", function (): void {
     $actor = backupAdminActor();
     $disk = Storage::fake('backups');
+    // The screen renders the last media generation alongside the database
+    // backup in the same response — unfaked, that read hits the real
+    // destination disk configured for media (S3-compatible in every real
+    // environment), not a missing file on this one.
+    Storage::fake('media');
     $backupName = (string) config('backup.backup.name');
 
     $timestamp = now()->subHours(2);
@@ -73,6 +78,10 @@ it('renders the staleness warning once the last database backup exceeds the conf
 
     $actor = backupAdminActor();
     $disk = Storage::fake('backups');
+    // Same reason as the timestamp test above: the screen renders the last
+    // media generation in the same response and would otherwise hit a real,
+    // unreachable destination disk.
+    Storage::fake('media');
     $backupName = (string) config('backup.backup.name');
 
     $old = now()->subHours(48);
