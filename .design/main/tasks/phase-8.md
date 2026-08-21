@@ -61,7 +61,7 @@ and defers its proof to `T-8T03`, rather than claiming a verification it cannot 
 - [x] [T-8B01] Production image stage and `.dockerignore`; `build` job publishing a digest
 - [x] [T-8B02] `deploy` job behind the `production` environment gate
 - [x] [T-8B03] `verify`, automatic rollback, and the escalation that refuses to retry
-- [ ] [T-8B04] `record` job — a GitHub Release per outcome, reversals included
+- [x] [T-8B04] `record` job — a GitHub Release per outcome, reversals included
 
 ### Track C — Irreversibility
 
@@ -206,12 +206,13 @@ than last despite being the least technically interesting work in the phase.
 **[T-8B04] `record` job — a GitHub Release per outcome, reversals included**
 
 - **Spec:** [l2-release-pipeline.md](../specifications/l2-release-pipeline.md) §5.7; [l1-release-operations.md](../specifications/l1-release-operations.md) §3.5
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Requires:** `T-8B03`
 - **Verify:** After a dispatch against a disposable target, `gh release view v<x.y.z>` shows a body assembled from that version's `CHANGELOG.md` section and annotated with the deployed image digest, the actor or automation identity, the timestamp, the irreversibility declaration, and the outcome; a rollback in the same run produces its own release record naming both the version reverted from and the version reverted to.
 - **Handoff:** None — the phase's record-keeping obligation ends here.
 - **Notes:** No second change log is introduced: the repository already maintains `CHANGELOG.md` in Keep a Changelog format with semantic versioning declared, and the record's body is assembled from the section for the version being released. The record is created at the production-line transition rather than after a successful deploy, so a **failed** deploy is recorded too — a release that leaves no trace is how a production state becomes unexplainable three weeks later.
+- **Changes:** `docker/deploy/record-release.sh` extracts the `CHANGELOG.md` section matching the release version via `awk` (heading shape `## [x.y.z]` — brackets and date both optional to the match), assembles a body naming the outcome (deployed / rolled back / escalated / deploy itself failed — four branches, one per realistic `deploy`/`verify`/`rollback` result combination), the digest, the actor, the timestamp, and the irreversibility declaration, then `gh release create --verify-tag` or `gh release edit` for the tag this run released. The reciprocal half — annotating the *prior* release as reinstated — takes the reverted-to digest as a job **output** from `rollback` (`needs.rollback.outputs.reverted_to_digest`), never reads it from a host-side file: `record` runs on an ordinary hosted runner (no production-host access needed, only the GitHub API and this repository's own `CHANGELOG.md`), sharing no filesystem with the self-hosted runner `rollback` executed on. `record` is gated `if: always() && needs.build.result != 'skipped'` — a release `scan-migrations` refused outright never reached the point of being a production candidate, so no record is created for it; every other combination, including a failed `build`, is recorded. Verified: all four outcome branches and the `CHANGELOG.md` extraction (present-version, missing-version) tested directly against a fixture changelog and a stubbed `gh`; every `gh` invocation's exact flag shape (`release view/create/edit/list --json/--jq`, `--verify-tag`) cross-checked against `gh --help` output for each subcommand.
 
 ### Track C — Irreversibility
 

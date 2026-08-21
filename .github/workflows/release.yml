@@ -35,6 +35,9 @@ jobs:
   scan-migrations:
     runs-on: ubuntu-latest
 
+    outputs:
+      declaration: ${{ steps.declaration.outputs.text }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -202,6 +205,12 @@ jobs:
     runs-on: [self-hosted, production]
     environment: production
 
+    # Exposed as a job output, not read back from the host's own state file
+    # by a later job — `record` (next) may run on an ordinary hosted runner
+    # with no filesystem in common with this one at all.
+    outputs:
+      reverted_to_digest: ${{ steps.last_good.outputs.digest }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -244,3 +253,35 @@ jobs:
         if: failure()
         run: |
           echo "::error::Rollback to ${{ steps.last_good.outputs.digest }} did not restore health. The application remains in maintenance mode — this requires human investigation. See docs/operations/en/read-a-failed-pipeline.md and docs/operations/en/restore.md."
+
+  # l1-release-operations.md §3.5: created at the production-line transition,
+  # not only after a success — `if: always()` runs this regardless of which
+  # job above failed, as long as the release actually reached the point of
+  # having something to record (`scan-migrations` refusing the release
+  # outright is a rejected candidate, not a production event; nothing after
+  # it ever ran, and this job does not manufacture a release record for it).
+  # An ordinary hosted runner is enough — this job never touches the
+  # production host, only the GitHub API and this repository's own
+  # CHANGELOG.md.
+  record:
+    needs: [scan-migrations, build, deploy, verify, rollback]
+    if: always() && needs.build.result != 'skipped'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Record the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          chmod +x docker/deploy/record-release.sh
+          ./docker/deploy/record-release.sh \
+            "${{ github.ref_name }}" \
+            "${{ needs.build.outputs.digest }}" \
+            "${{ needs.deploy.result }}" \
+            "${{ needs.verify.result }}" \
+            "${{ needs.rollback.result }}" \
+            "${{ needs.scan-migrations.outputs.declaration }}" \
+            "${{ needs.rollback.outputs.reverted_to_digest }}"
