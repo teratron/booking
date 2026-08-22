@@ -1,15 +1,15 @@
-# Scoped to the two protected branches (docs/release/branching.md): every
-# push to every feature branch used to run this full gate against a real
-# PostGIS service container, spending runner minutes proving that
-# in-progress work is in progress. `develop` and `master` are where the
-# result actually matters — a required status check on either.
+# Scoped to master (docs/release/branching.md — Git Flow is paused; see
+# CLAUDE.md). Not a required status check while the branch carries no
+# protection rule: it still runs on every push and reports, but nothing
+# currently blocks on it. Re-add `develop` to both lists when Git Flow
+# resumes.
 name: Quality
 
 on:
   push:
-    branches: [develop, master]
+    branches: [master]
   pull_request:
-    branches: [develop, master]
+    branches: [master]
 
 jobs:
   quality:

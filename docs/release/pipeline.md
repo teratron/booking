@@ -1,5 +1,12 @@
 # The Release Pipeline
 
+> **`quality.yml` is scoped to `master` only as of 2026-08-22** — Git Flow (and the
+> `develop` branch this document otherwise assumes) is paused; see
+> [branching.md](branching.md) and `CLAUDE.md` § Release & Deployment.
+> `merge-back.yml` no longer exists in the working tree — recover it from git tag
+> `gitflow-archive-2026-08-22` if Git Flow resumes. `release.yml` (tag-triggered,
+> below) is unaffected — it never depended on `develop`.
+
 Two GitHub Actions workflows carry every change from a pull request to the live
 portal: `quality.yml` (the gate every change passes before it merges) and
 `release.yml` (the path a tag takes to production). This document is the

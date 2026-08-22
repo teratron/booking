@@ -216,6 +216,23 @@ Written in **English**, for a developer who did not build this and may be mainta
 
 ## Release & Deployment
 
+> **Interim policy, in effect since 2026-08-22: Git Flow is paused.** One developer,
+> working across several machines, still pre-production — the branch-hop-and-wait
+> ceremony below (feature → develop → master, a full quality-gate run at each hop)
+> cost more in waiting than it returned in safety at this size. All work happens
+> directly on `master`. `develop` and the `feature/*`/`release/*`/`hotfix/*` branches
+> below do not currently exist; `master` carries no branch protection, so pushing to
+> it does not wait on review or a status check. `quality.yml` still runs on every
+> push to `master` and still reports — it just no longer blocks anything.
+>
+> Everything below is the target this project returns to — unedited, not deleted —
+> before the project is handed to the client, or as soon as a second developer joins,
+> whichever comes first. The exact working state this policy paused (full branch
+> protection on both `master` and `develop`, the merge-back detector, `.github/CODEOWNERS`
+> enforcing the sensitive-zone review boundary) is preserved at git tag
+> `gitflow-archive-2026-08-22`. `docs/release/branching.md` and `docs/release/pipeline.md`
+> carry the same note.
+
 Git Flow over a single self-hosted production line — no blue/green pair, no release train, no manual deploys. This is the path an accepted change takes to reach the portal, and reversing that path when a release turns out wrong.
 
 | Branch | Role |
