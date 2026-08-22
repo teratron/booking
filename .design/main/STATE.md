@@ -4,7 +4,7 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-22 12:59
+**Updated:** 2026-08-22 16:50
 **Phase:** 8 — Delivery Pipeline & Operator Documentation
 **Status:** Active
 
@@ -13,7 +13,7 @@
 - **Task:** **Phase 8 at 20/23 — every agent-performable task is done; three owner-only tasks remain and nothing blocks them.** Track F closed and the C12 quarantine it ran under was lifted the same day when both specifications returned to `Stable` at v0.4.0. Owner chose "master = develop" for `T-8F02`: `require_code_owner_reviews` enabled first (read back to confirm before the boundary was ever observably absent), then `required_approving_review_count` dropped to 0 — same order the task's own Notes required. `T-8F03`'s read-back confirms `master` now matches `develop` field-for-field: ordinary changes clear the gate and merge unattended; any `.github/CODEOWNERS`-matched path always waits for `@teratron`, on either branch. Full detail and the comparison table: `tasks/phase-8.md` Track F.
 - **Previous:** Following the owner's development-phase authorization (§5.5.1), the agent completed every other agent-performable Phase 8 task — branch contract, deploy/verify/rollback/record pipeline, irreversibility scan, EN/RU/agent operator docs, pipeline containment tests — across three prior sessions on 2026-08-20/21. Two findings fixed mid-session: a HIGH-severity GitHub Actions script-injection (raw `${{ }}` in `run:` shell text, fixed via `env:` across all six jobs) and a spec-filename containment leak (5 instances across `release.yml`/`docker/deploy/*.sh`, now guarded by `T-8T01`'s own test). **Remaining, all owner-only regardless of authorization**: `T-8E01` (no API/CLI path to create a GitHub App), `T-8E03` (needs real production credentials absent from this dev environment), `T-8T03` (rehearsal requires a human executor by the spec's own text).
 - **Spec:** **25 specs — 6 `Stable`, 19 `RFC`.** The delivery pair made a full round trip on 2026-08-21: amended to v0.3.0 outside the workflow (`VERSION_DRIFT`), reconciled, reverted to `RFC` by §2's amendment rule, held there by a re-review that found three real gaps, then re-promoted to `Stable` at **v0.4.0** once all three closed. L1 §5.5.2 now declares its empty zone as empty and delegates the mechanism; new L2 §5.11 carries the mechanism itself plus the §4 compliance row it never had; §5.2's topology table was corrected to the enforced configuration. The other 19 `RFC` are unrelated, unchanged design work (18 carry a live `TBD`). Round trip recorded in `INDEX.md`'s Amendment Ledger.
-- **Next Action:** Resolve blocker on T-8E01 (main) — see STATE.md ## Blockers, then run /magic.run main
+- **Next Action:** Run /magic.task main to update the plan
 
 ## Progress
 

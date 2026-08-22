@@ -199,7 +199,7 @@ services:
       MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:-booking-secret}
     ports:
       - "9000:9000"
-      - "9001:9001"
+      - "9101:9001"
     volumes:
       - minio-data:/data
 
