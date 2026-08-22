@@ -230,7 +230,7 @@ Written in **English**, for a developer who did not build this and may be mainta
 > whichever comes first. The exact working state this policy paused (full branch
 > protection on both `master` and `develop`, the merge-back detector, `.github/CODEOWNERS`
 > enforcing the sensitive-zone review boundary) is preserved at git tag
-> `gitflow-archive-2026-08-22`. `docs/release/branching.md` and `docs/release/pipeline.md`
+> `gitflow-archive-v0.2.76`. `docs/release/branching.md` and `docs/release/pipeline.md`
 > carry the same note.
 
 Git Flow over a single self-hosted production line — no blue/green pair, no release train, no manual deploys. This is the path an accepted change takes to reach the portal, and reversing that path when a release turns out wrong.

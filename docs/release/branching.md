@@ -6,7 +6,7 @@
 > is the target this project returns to before client handoff, or sooner if a second
 > developer joins. The exact working state — branch protection, the merge-back
 > detector, this file's own live scope — is preserved at git tag
-> `gitflow-archive-2026-08-22`. Current policy: `CLAUDE.md` § Release & Deployment.
+> `gitflow-archive-v0.2.76`. Current policy: `CLAUDE.md` § Release & Deployment.
 
 Git Flow over a single self-hosted production line. Five kinds of branch, each with
 its own rules, and one obligation — the urgent-fix merge-back — that is checked by a

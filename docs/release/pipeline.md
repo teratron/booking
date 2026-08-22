@@ -4,7 +4,7 @@
 > `develop` branch this document otherwise assumes) is paused; see
 > [branching.md](branching.md) and `CLAUDE.md` § Release & Deployment.
 > `merge-back.yml` no longer exists in the working tree — recover it from git tag
-> `gitflow-archive-2026-08-22` if Git Flow resumes. `release.yml` (tag-triggered,
+> `gitflow-archive-v0.2.76` if Git Flow resumes. `release.yml` (tag-triggered,
 > below) is unaffected — it never depended on `develop`.
 
 Two GitHub Actions workflows carry every change from a pull request to the live
