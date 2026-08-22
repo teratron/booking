@@ -74,8 +74,8 @@ narrowing that down, not applying a fix sight-unseen.
 
 ### Track B — API Guest-Redirect JSON Contract
 
-- [ ] [T-9B01] Exempt `api/*` from the guest-redirect-to-login fallback
-- [ ] [T-9B02] Validation — unauthenticated API requests return 401 JSON regardless of Accept header
+- [x] [T-9B01] Exempt `api/*` from the guest-redirect-to-login fallback
+- [x] [T-9B02] Validation — unauthenticated API requests return 401 JSON regardless of Accept header
 
 ### Track C — Canonical Host Consistency
 
@@ -135,17 +135,17 @@ narrowing that down, not applying a fix sight-unseen.
 **[T-9B01] Exempt `api/*` from the guest-redirect-to-login fallback**
 
 - **Spec:** [l1-public-api.md](../specifications/l1-public-api.md) (unauthenticated request → 401)
-- **Status:** Todo — `l1-public-api.md` promoted `RFC → Stable` (v0.2.0) 2026-08-22; unblocked.
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** `curl -H "Accept: */*" http://<host>/api/v1/objects` (no token, no explicit JSON Accept header) returns `401` with `{"message":"Unauthenticated."}`, not `500`.
 - **Handoff:** `T-9B02`.
-- **Notes:** Root cause confirmed live: `Illuminate\Auth\Middleware\Authenticate::redirectTo()` decides whether to attempt a redirect based on `$request->expectsJson()` (Accept-header-driven), which is a different check from this app's own `bootstrap/app.php` `shouldRenderJsonWhen(fn ($request) => $request->is('api/*'))` — so a request whose Accept header doesn't ask for JSON still triggers a `route('login')` call, and this app registers no route literally named `login` (Filament panels register `filament.admin.auth.login` / `filament.cabinet.auth.login` instead), producing an unhandled `RouteNotFoundException`. Fix in the same `withMiddleware()` closure in `bootstrap/app.php`, using the identical `$request->is('api/*')` predicate already sitting one block below it: `$middleware->redirectGuestsTo(fn ($request) => $request->is('api/*') ? null : route('filament.admin.auth.login'));` — returning `null` tells Laravel's guest handler never to attempt a redirect for that request, letting the already-correct `shouldRenderJsonWhen` render it as JSON. Confirm this doesn't change guest-redirect behaviour for the admin/cabinet panels, which have their own Filament-registered login redirects independent of this global fallback.
+- **Notes:** Added `$middleware->redirectGuestsTo(fn (Request $request): ?string => $request->is('api/*') ? null : route('filament.admin.auth.login'));` to `bootstrap/app.php`'s `withMiddleware()` closure, exactly as diagnosed. Confirmed live post-fix: `curl -H "Accept: */*" http://localhost:8300/api/v1/objects` → `401` `{"message":"Unauthenticated."}` (was `500`). Confirmed no regression to the panels' own guest redirects — `curl` against `/portal-admin` and `/cabinet` unauthenticated still 302 to each panel's own Filament-registered login route, untouched by this global fallback since Filament's panel auth resolves before this one is ever reached.
 
 **[T-9B02] Validation — unauthenticated API requests return 401 JSON regardless of Accept header**
 
 - **Goal:** Verify `T-9B01` against [l1-public-api.md](../specifications/l1-public-api.md) and F-2 in `.drafts/qa-sweep-report.md`.
 - **Method:** Feature test (`tests/Feature/Api/` — extend `ApiModuleGateTest.php` or add a sibling) asserting `$this->get('/api/v1/objects')` (no `Accept` header override, no token) returns `401`, and that the same assertion holds for `/api/v1/territories` and `/api/v1/token`. Confirm `composer test` still passes `tests/Feature/Api/ApiRateLimitTest.php` and `ApiModuleGateTest.php` unchanged (no regression to the module-gate 404 path, which must still fire ahead of this check when the `api` module is disabled).
-- **Status:** Todo — depends on `T-9B01`, unblocked.
+- **Status:** Done — added `it('returns 401 JSON for an unauthenticated request even without an explicit JSON Accept header, ...')` to `tests/Feature/Api/ApiReadContractTest.php`, using the plain `$this->get()` client (not `getJson()`, which already set the JSON Accept header and masked the bug) against all three named endpoints. Ran red beforehand (`git stash` on `bootstrap/app.php` reproduced the exact `Route [login] not defined.` from F-2), green after. Full `tests/Feature/Api` suite re-run: 27/27 pass, `ApiModuleGateTest`/`ApiRateLimitTest` unaffected. `AdminPanelShellTest`/`CabinetFoundationTest`/`PublicShellTest` (31 tests) re-run as a broader regression check on the global `redirectGuestsTo` change: all pass, panel redirects unaffected. — depends on `T-9B01`, unblocked.
 
 ### Track C — Canonical Host Consistency
 

@@ -41,6 +41,23 @@ return Application::configure(basePath: dirname(__DIR__))
             before: Authenticate::class,
             prepend: EnsureModuleEnabled::class,
         );
+
+        // Laravel's own guest-redirect fallback (Authenticate::redirectTo())
+        // only skips the redirect attempt when the request already asks for
+        // JSON (Accept-header-driven) — a different check from
+        // shouldRenderJsonWhen() below, which decides how a *thrown*
+        // exception renders. Left at its default, a token-less API request
+        // sent without an explicit JSON Accept header reaches route('login')
+        // — a name this app never registers, since the admin and cabinet
+        // panels each register their own Filament-prefixed login route
+        // instead — producing an unhandled RouteNotFoundException instead of
+        // the 401 an unauthenticated API caller should see. api/* never
+        // redirects a guest at all; every other guest keeps a real target.
+        $middleware->redirectGuestsTo(
+            fn (Request $request): ?string => $request->is('api/*')
+                ? null
+                : route('filament.admin.auth.login'),
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

@@ -143,6 +143,20 @@ it('rejects a request with no token', function (): void {
     $this->getJson('/api/v1/objects')->assertUnauthorized();
 });
 
+it('returns 401 JSON for an unauthenticated request even without an explicit JSON Accept header, never the guest-redirect fallback', function (): void {
+    apiReadEnableModule();
+
+    // Deliberately the plain test client (`get`), not `getJson` — `getJson`
+    // sets `Accept: application/json` itself, which already made the
+    // now-fixed guest-redirect fallback skip its (broken) redirect attempt
+    // and masked the bug the live QA sweep actually reproduced.
+    foreach (['/api/v1/objects', '/api/v1/territories', '/api/v1/token'] as $endpoint) {
+        $this->get($endpoint)
+            ->assertUnauthorized()
+            ->assertJson(['message' => 'Unauthenticated.']);
+    }
+});
+
 it('rejects a token whose scope does not carry the requested resource ability', function (): void {
     apiReadEnableModule();
     $token = apiReadToken([ApiResource::Countries]);
