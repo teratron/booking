@@ -241,6 +241,18 @@ it('resolves no module as enabled while no module is active in this configuratio
     expect(CabinetFoundationTestResource::moduleEnabled('booking'))->toBeFalse();
 });
 
+it('renders the account Settings page for an authenticated owner, the one cabinet route with no tenant segment', function (): void {
+    $fixture = cabinetFixtureGeography();
+    $owner = cabinetRoleUser('object_owner_settings_render', ['object.view', 'object.edit', 'cabinet_access']);
+    makeCabinetObject($fixture, $owner->id);
+
+    $response = $this->actingAs($owner)->get(route('filament.cabinet.auth.profile'));
+
+    $response->assertSuccessful()
+        ->assertSee($owner->name)
+        ->assertSee($owner->email);
+});
+
 it('resolves the navigation-visibility helpers to false with no tenant bound', function (): void {
     Filament::setCurrentPanel('cabinet');
     Filament::setTenant(null, isQuiet: true);

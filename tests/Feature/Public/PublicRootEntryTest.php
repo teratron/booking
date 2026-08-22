@@ -93,5 +93,6 @@ it('follows the registry when a different language is made primary', function ()
         'display_order' => 2, 'created_at' => now(), 'updated_at' => now(),
     ]);
 
-    $this->get('/')->assertRedirect(route('public.home', ['lang' => 'ru']));
+    $this->get('/', ['Accept-Language' => 'de-DE,de;q=0.9'])
+        ->assertRedirect(route('public.home', ['lang' => 'ru']));
 });

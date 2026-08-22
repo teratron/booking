@@ -1,11 +1,11 @@
 # Master Task Index (Registry)
 
-**Version:** 1.10.0
+**Version:** 1.12.0
 **Generated:** 2026-08-05
-**Based on:** .design/main/PLAN.md v3.9.0
+**Based on:** .design/main/PLAN.md v3.11.0
 **Based on RULES:** .design/RULES.md v1.4.0
 **Execution Mode:** Parallel
-**Status:** Active — Phase 8 (7 phases done, 1 active at 20/23; three remaining tasks `Blocked [!] (C12)` since 2026-08-22 — branch-model reconciliation, not regression; see Overview)
+**Status:** Active — Phase 8 (7 phases done, 1 active at 20/23; three remaining tasks `Blocked [!] (C12)` since 2026-08-22 — branch-model reconciliation, not regression; see Overview) · Phase 9 (post-launch QA remediation, 7/15; Tracks C/E/F closed 2026-08-22, 8 tasks across Tracks A/B/D `Blocked [!] (Spec RFC)`; independent of Phase 8; see Overview)
 
 ## Overview
 
@@ -68,6 +68,29 @@ previously occupied the filenames `archives/tasks/phase-1.md` through `phase-6.m
 which is exactly where this project's own completed phases are archived — the next
 archival would have overwritten them.
 
+**Phase 9 opened 2026-08-22, from a live functional sweep rather than from `[TZ]` or a
+new specification.** Every public, cabinet, admin, and API route was exercised against a
+running instance; six defects were found and reproduced, five confirmed as product bugs
+and one as a test-suite defect. `/magic.spec main` checked each against its governing
+specification first and found every one already correct — no amendment, and the phase
+below schedules implementation fixes only. Full findings: `.drafts/qa-sweep-report.md`.
+It runs independently of Phase 8 — six tracks, six non-overlapping file sets, no shared
+blocker with Phase 8 or with each other.
+
+**Re-planned same day, hours later: `/magic.run main`'s Pre-flight halted the phase
+before any task began.** Its Spec Stability Spot-Check found three of Phase 9's governing
+specifications — `l1-object-profile.md`, `l1-public-api.md`, `l1-platform-shell.md` — at
+`RFC` in `INDEX.md`, not `Stable`; the phase had been decomposed against them without that
+check applied at plan time, since the `/magic.spec main` session that preceded planning
+reviewed their *content* (confirming each already states the correct, settled behaviour)
+without checking their document-level status field. Eight tasks across Tracks A, B, and D
+are now `Blocked [!] (Spec RFC)`; Tracks C, E, and F carry no such dependency and remain
+this phase's executable set. This is not a C12 cascade — none of the three specs was ever
+`Stable` and then demoted mid-phase — so no `Done` task is affected and the fix is not a
+downward quarantine but an upward one: `/magic.spec main` reviewing and promoting the
+three specs via `@role:spec-critic`'s `RFC → Stable` gate, then `/magic.task main`
+re-evaluating to unblock. Full detail: [tasks/phase-9.md](tasks/phase-9.md) Status line.
+
 ## Active Phases
 
 | Phase | Description | Status |
@@ -80,6 +103,7 @@ archival would have overwritten them.
 | [Phase 6](archives/tasks/phase-6.md) | SEO, portal-wide reporting, public REST API | `Done (Archived)` (16/16) |
 | [Phase 7](archives/tasks/phase-7.md) | Import/export, backups and rehearsed restore, production provisioning and observability, load test | `Done (Archived)` (16/16) |
 | [Phase 8](tasks/phase-8.md) | Delivery pipeline — branch contract, release artefact and deployment, irreversibility scan, EN/RU/agent operator documentation, sensitive-zone gate integrity | `In Progress` (20/23, remaining 3 `Blocked [!] (C12)`) |
+| [Phase 9](tasks/phase-9.md) | Post-launch QA remediation — contact-channel forms, API guest-redirect contract, canonical-host consistency, hreflang alternates, a cabinet Settings crash, one test-suite fix | `In Progress` (7/15, Tracks C/E/F done; 8 `Blocked [!] (Spec RFC)` in A/B/D) |
 
 ## Execution Notes
 
@@ -194,7 +218,20 @@ same position `T-7T03` occupied and with the same hazard — it is the natural c
 a compressed schedule, and it is the specification's own acceptance criterion. Full
 rationale in [tasks/phase-8.md](tasks/phase-8.md) §Track Ordering.
 
+**Phase 9 is six-wide throughout, with no chain** — every phase before it had at least
+one file-level or logical dependency narrowing its effective parallel degree below its
+track count; Phase 9's six tracks (contact-channel forms, API guest redirect, canonical
+host, hreflang, the Settings crash, the test fix) touch six non-overlapping file sets and
+share no resource. `T-9G01` (full-suite regression gate) is the only task that waits on
+everything, the same acceptance-task shape Phase 8's own `T03` used. Track E carries the
+phase's one open question — `T-9E01` root-causes a crash inside Filament's own tenancy
+code before `T-9E02` fixes it, rather than prescribing a fix sight-unseen. That file
+independence is real but, as of 2026-08-22, three of the six tracks (A, B, D) cannot
+*start* regardless — their governing specs sit at `RFC` (Overview, above), a plan-time gap
+this file-independence rationale did not anticipate since it concerns disjoint resources,
+not spec status. Full rationale in [tasks/phase-9.md](tasks/phase-9.md).
+
 ## Meta Information
 
-- **Last Updated**: 2026-08-20 (Phase 8 planned, 0/20 — 7 phases done, 1 active)
+- **Last Updated**: 2026-08-22 (Phase 9 re-planned — 8/15 tasks `Blocked [!] (Spec RFC)` after `/magic.run main`'s Pre-flight halt; 7 phases done, Phase 8 at 20/23)
 - **Maintainer**: Core Team

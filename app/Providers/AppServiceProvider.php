@@ -32,6 +32,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
 use Override;
@@ -92,6 +93,7 @@ class AppServiceProvider extends ServiceProvider
         // below) depends on TranslatorContract, and once resolved a
         // Translator instance keeps whatever loader it was built with; a
         // later extend() of `translation.loader` would no longer reach it.
+        $this->pinGeneratedUrlsToConfiguredAppUrl();
         $this->overlayInterfaceCatalogFromDatabase();
         $this->resolveTranslationFallbackFromPrimaryLanguage();
         $this->syncTranslatableLocales();
@@ -117,6 +119,34 @@ class AppServiceProvider extends ServiceProvider
 
             return $user->canAccessPanel($panel);
         });
+    }
+
+    /**
+     * `route()`/`url()` otherwise resolve from the *incoming request's* Host
+     * header and detected scheme, not `config('app.url')` — harmless on a
+     * single-host dev box where the two coincide, but wrong the moment a
+     * request reaches the app through anything else with a different Host
+     * (a load balancer, a misconfigured client, a bare IP hit). Canonicals,
+     * Open Graph tags, JSON-LD, and API response URLs must always name the
+     * *configured* host, matching `sitemap.xml` (`spatie/laravel-sitemap`),
+     * which already reads `config('app.url')` directly for exactly this
+     * reason. `forceRootUrl()` alone is not sufficient: `UrlGenerator::
+     * formatRoot()` still rewrites the forced root's own scheme to whatever
+     * the *current request* resolves to (`formatScheme()`), so on a host
+     * that terminates TLS upstream of the app — this project's own
+     * production topology — every generated URL would still downgrade to
+     * `http://` without `forceScheme()` too. Deriving the scheme from
+     * `APP_URL` itself, rather than a hard-coded `'https'`, means this never
+     * drifts out of sync with the value it exists to enforce, and stays
+     * correct for local dev's own `http://` URL without an
+     * environment-conditional branch.
+     */
+    private function pinGeneratedUrlsToConfiguredAppUrl(): void
+    {
+        $appUrl = (string) config('app.url');
+
+        URL::forceRootUrl($appUrl);
+        URL::forceScheme((string) parse_url($appUrl, PHP_URL_SCHEME));
     }
 
     /**

@@ -23,7 +23,8 @@
 ├── .drafts/
 │   ├── TODO.md
 │   ├── booking.md
-│   └── production-clearance.md
+│   ├── production-clearance.md
+│   └── qa-sweep-report.md
 ├── .editorconfig
 ├── .env.example
 ├── .env.production.example

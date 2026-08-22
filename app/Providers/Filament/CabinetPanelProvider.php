@@ -41,8 +41,15 @@ class CabinetPanelProvider extends PanelProvider
             // change, current-password confirmation, rate limiting) rather
             // than a hand-built page — it opts out of ordinary page
             // discovery by design, so it is registered explicitly here,
-            // the same way any profile page must be.
-            ->profile(Settings::class, isSimple: false)
+            // the same way any profile page must be. isSimple: true (the
+            // Filament default) is required, not stylistic: the full
+            // layout's sidebar/topbar unconditionally builds tenant-scoped
+            // URLs (home link, tenant switcher, its menu items) with no
+            // null-tenant guard anywhere in that vendor chrome, and this is
+            // the one cabinet route with no {tenant} segment. The simple
+            // layout renders no tenant-aware chrome at all, so no such URL
+            // is ever attempted here.
+            ->profile(Settings::class, isSimple: true)
             // The tenant is the object being managed, not an
             // organization/team — an owner with several objects switches
             // between them here; the ownership relationship name

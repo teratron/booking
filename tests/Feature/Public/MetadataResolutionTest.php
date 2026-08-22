@@ -192,6 +192,18 @@ it('falls back to the page own resolved URL for canonical, and honours an explic
         ->assertSee('<link rel="canonical" href="https://example.com/custom-canonical">', false);
 });
 
+it('names the configured APP_URL host in the canonical link regardless of the request Host header', function (): void {
+    $registry = metaResolutionRegistry();
+    metaResolutionTerritory($registry['countryId'], 'Host Mismatch');
+
+    $appUrl = rtrim((string) config('app.url'), '/');
+
+    $this->get('http://a-completely-different-host.invalid/en/md/host-mismatch')
+        ->assertOk()
+        ->assertSee('<link rel="canonical" href="'.$appUrl.'/en/md/host-mismatch">', false)
+        ->assertDontSee('a-completely-different-host.invalid', false);
+});
+
 it('resolves the typed-catalog title and description from the object type template composed with the territory name', function (): void {
     $registry = metaResolutionRegistry();
     $territory = metaResolutionTerritory($registry['countryId'], 'Bukovel');

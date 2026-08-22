@@ -1,10 +1,10 @@
 # Implementation Plan
 
-**Version:** 3.9.0
+**Version:** 3.11.0
 **Generated:** 2026-08-05
 **Based on:** .design/main/INDEX.md v2.10.0
 **Based on RULES:** .design/RULES.md v1.4.0
-**Status:** Active — Phase 8 (delivery pipeline; 20/23, the three open tasks owner-only. Its two sources returned to `RFC` on 2026-08-22 to reconcile with the owner's single-line branch decision — not a defect, and not a reason to reopen Done work; see Plan Status below)
+**Status:** Active — Phase 8 (delivery pipeline; 20/23, the three open tasks owner-only. Its two sources returned to `RFC` on 2026-08-22 to reconcile with the owner's single-line branch decision — not a defect, and not a reason to reopen Done work; see Plan Status below) · Phase 9 (post-launch QA remediation; 7/15, opened 2026-08-22 from a live functional sweep, independent of Phase 8; Tracks C/E/F closed the same day, 8 tasks across Tracks A/B/D remain `Blocked [!] (Spec RFC)`; see Plan Status below)
 
 ## Overview
 
@@ -343,6 +343,85 @@ it, and that already happened in [INDEX.md](INDEX.md)'s Branch-Model Ledger. The
 quarantine lifts on whichever resumption condition [l1-release-operations.md](specifications/l1-release-operations.md)
 §3.3 names is met first — not on a task in this phase.
 
+## Phase 9 — Post-Launch QA Remediation — **Active**
+
+*A full-surface functional sweep against the running instance found five confirmed
+defects and one test-suite defect. This phase fixes them.*
+
+- **Object Profile** §5.2 — contact-channel type selection, missing from both the
+  administrator and owner editing forms ([l1-object-profile.md](specifications/l1-object-profile.md)) [L1]
+- **Public API** — unauthenticated requests must return 401, not 500
+  ([l1-public-api.md](specifications/l1-public-api.md)) [L1]
+- **SEO** — canonical-host consistency and hreflang alternates, both already-settled
+  requirements the implementation diverges from ([l1-seo.md](specifications/l1-seo.md)) [L1]
+
+Decomposed into 15 atomic tasks across six independent tracks plus a full-suite
+regression gate in [tasks/phase-9.md](tasks/phase-9.md), which carries this phase's own
+planning audit.
+
+**Every task in this phase fixes code against a specification that was already
+correct.** None of the six findings it schedules revealed a specification gap —
+`/magic.spec main`, run immediately before this plan, checked each one directly against
+its governing spec and found the spec already stated the right behaviour in every case
+(the contact-channel type field is explicit in [l1-object-profile.md](specifications/l1-object-profile.md)
+§5.2's data model; the 401 contract is explicit in [l1-public-api.md](specifications/l1-public-api.md);
+the canonical-host and hreflang requirements are explicit, named decisions in
+[l1-seo.md](specifications/l1-seo.md)). That is the reason this phase exists without a
+preceding spec amendment: there was nothing to amend.
+
+**Six tracks, six non-overlapping file sets — the widest phase in the plan.** Track A
+(contact-channel forms) touches two Filament schema files; Track B (API guest redirect)
+touches `bootstrap/app.php` alone; Track C (canonical host) touches
+`AppServiceProvider::boot()` alone; Track D (hreflang) touches the metadata value object,
+the resolver, and the public layout; Track E (a live crash on the cabinet's own Settings
+page) is scoped to Filament's tenancy/layout interaction and starts with a root-cause
+task rather than a prescribed fix, since the crash originates inside
+`vendor/filament/filament`, not this codebase; Track F is a one-file test correction.
+Every phase before this one had at least one file-level or logical dependency forcing a
+narrower effective parallel degree than its track count — this one does not.
+
+**Severity ordered the tracks, not spec novelty.** Track A is the highest-severity item
+in the phase: [l1-object-profile.md](specifications/l1-object-profile.md) itself names
+the contact click "the conversion event," and the bug means neither editing surface can
+save one. Track E is second: a live 500 on a page every owner eventually visits. B, C,
+D, and F are real but narrower, and were confirmed independent of A/E and of each other
+before being scheduled in parallel.
+
+**Track E carries a stated unknown.** `T-9E01` is a root-cause task, not a fix task —
+the crash traces into Filament's own `Panel::getTenantBillingUrl()`, called from its
+shared layout against a page this panel deliberately registers without a tenant. Whether
+the right fix is an app-level guard, a panel-configuration change, or an upstream
+version bump is `T-9E01`'s own output, consumed by `T-9E02`.
+
+**Blocked same day: three of six tracks reference `RFC`-status specs.** `/magic.run main`
+ran hours after this plan was written and halted at Pre-flight before any task began —
+its Spec Stability Spot-Check found `l1-object-profile.md` (Track A), `l1-public-api.md`
+(Track B), and `l1-platform-shell.md` (Track D, alongside the already-`Stable`
+`l1-seo.md`) all at `RFC` in [INDEX.md](INDEX.md), not `Stable`. This is a plan-time gap,
+not a drift: the `/magic.spec main` session above reviewed the *content* of each spec's
+relevant section and confirmed it already correct, but that review did not check — and
+this plan did not separately verify — the document-level status field each task's `Spec:`
+line points at. The distinction matters mechanically: `task.md`'s Pre-Planning
+Stabilization batch-promotes `Draft → Stable` on MVC completeness alone, but `RFC →
+Stable` is a heavier transition gated by `@role:spec-critic`'s five-lens review
+(`spec.md`), so this plan cannot self-resolve it the way a Draft gap would. Eight tasks
+(`T-9A01`–`03`, `T-9B01`–`02`, `T-9D01`–`03`) are `Blocked [!] (Spec RFC)`. Resolution:
+`/magic.spec main` reviews and promotes the three specs, then `/magic.task main`
+re-evaluates. Full detail: [tasks/phase-9.md](tasks/phase-9.md) Status line.
+
+**Tracks C, E, and F closed the same day** — the three tracks this block never reached.
+Track E (`T-9E01`–`03`) turned out wider than its own root-cause task assumed: the first
+patch (`tenantMenuItems`, aimed at the one reported crash) fixed that call and immediately
+surfaced a second unguarded tenant-scoped call in the same shared layout, then a third —
+proof the crash was never one bug but Filament's full panel layout's own standing
+assumption that a tenancy-enabled panel always has a current tenant, which
+`cabinet/settings` deliberately does not. Presented to the project owner as a real
+trade-off (patch each call site indefinitely vs. Filament's own `isSimple: true` default
+for exactly this kind of page, at the cost of that one page's sidebar chrome); the owner's
+answer was to fix it completely rather than patch around it. `T-9G01` (full regression
+gate) still waits on Tracks A/B/D closing — three of six tracks done does not satisfy a
+gate whose own precondition is all six.
+
 ## Backlog
 
 Registered specifications not scheduled into an active phase.
@@ -418,7 +497,7 @@ code and one changes a test matrix.
 The remaining eighteen open questions land in Phase 3 and later and are not on the
 critical path out of Phase 2.
 
-## Plan Status: Phase 8 Active
+## Plan Status: Phase 8 Active, Phase 9 Active
 
 **Phases 1 through 7 are done — 135 of 135 tasks**, closed on 2026-08-20. A plan-wide L2
 retrospective ran on that close — Signal 🟢 Green — and is recorded in
@@ -491,6 +570,27 @@ One item was opened rather than closed: the panel-address gap now in `## Backlog
 design work with a known blast radius — sited wrong, it quarantines
 [l2-tech-stack.md](specifications/l2-tech-stack.md) — which is why it is scheduled
 instead of absorbed.
+
+**Phase 9 opened 2026-08-22, alongside Phase 8, and was not anticipated by this plan
+either.** A full-surface QA sweep against a live instance of the running application —
+every public, cabinet, admin, and API route exercised, not inferred from reading code —
+found five reproduced defects and one test-suite defect, recorded in
+`.drafts/qa-sweep-report.md`. `/magic.spec main` checked each finding against its
+governing specification before any task was scheduled; every specification touched was
+already correct, so the dispatch produced zero spec amendments and one recommendation:
+route the findings to `/magic.task`. This phase is that routing. It runs independently of
+Phase 8 — no shared file, no shared track, no shared blocker — and either phase may close
+before the other.
+
+**Re-planned same day, hours later: `/magic.run main` halted at Pre-flight.** Its Spec
+Stability Spot-Check found three of the six tracks scheduled above (A, B, D) reference
+specifications at `RFC`, not `Stable` — a gap the `/magic.spec main` content review did
+not surface because it checked *what the specs say*, not their document-level status
+field, and this plan did not separately check either. Eight of fifteen tasks are now
+`Blocked [!] (Spec RFC)`. Tracks C, E, and F were unaffected and closed the same day —
+7/15 tasks done, Track E's own scope widening past its original one-crash estimate once
+its fix surfaced two further unguarded call sites in the same Filament layout chrome.
+Full detail in the Phase 9 section above and [tasks/phase-9.md](tasks/phase-9.md).
 
 Phase registry in [TASKS.md](TASKS.md). The first seven phases are archived at
 [archives/tasks/phase-1.md](archives/tasks/phase-1.md),
