@@ -1,10 +1,10 @@
 # Implementation Plan
 
-**Version:** 3.7.0
+**Version:** 3.8.0
 **Generated:** 2026-08-05
-**Based on:** .design/main/INDEX.md v2.8.0
+**Based on:** .design/main/INDEX.md v2.9.0
 **Based on RULES:** .design/RULES.md v1.4.0
-**Status:** Active — Phase 8 (delivery pipeline; its sources made a same-day `RFC` round trip on 2026-08-21 and are `Stable` again at v0.4.0, quarantine lifted — see Plan Status below)
+**Status:** Active — Phase 8 (delivery pipeline; 20/23, the three open tasks owner-only. Re-synchronized 2026-08-22 to registry v2.9.0 — no phase added, no task changed; see Plan Status below)
 
 ## Overview
 
@@ -17,9 +17,15 @@ Phases 1 through 7 were planned and executed against 23 specifications, all at `
 the time — `[Bootstrap Plan]` marks that, and every one of those phases was tentative by
 construction. That posture ended on 2026-08-20: six specifications reached `Stable`, and
 **Phase 8 is the first phase in this plan built on `Stable` sources rather than
-provisional ones.** The registry now holds 25 specifications, 6 `Stable` and 19 `RFC`;
-the 19 are the set's real remaining design work rather than a status backlog, and none
-of them is a Phase 8 input.
+provisional ones.** The registry now holds 25 specifications, **8 `Stable` and
+17 `RFC`**; the 17 are the set's real remaining design work rather than a status
+backlog, and none of them is a Phase 8 input.
+
+The two most recent promotions — `l1-localization` and `l1-seo`, 2026-08-22 — add no
+work to this plan. Both were implemented in Phases 5 and 6 while still at `RFC`, and the
+amendment that promoted them changed the record around a decision rather than the
+decision itself: `l1-seo` §5.1's URL grammar is byte-for-byte what those phases built
+against. What moved is Phase 0's status column, not any phase's scope.
 
 The previous plan — six phases delivered against a Next.js/TypeScript implementation of
 the superseded hotel-booking product — is archived at
@@ -66,19 +72,25 @@ still delivered, and `[TZ]` §134's mandatory scope governs what release one con
 ## Phase 0 — Requirements (Layer 1: Concept)
 
 *Abstract specifications — technology-agnostic contracts.*
-*All at `RFC`; `Stable` promotion is blocked by the open questions each carries.*
+*A checked box means the specification is `Stable`: reviewed, with no open question left
+in it. It says nothing about whether the capability is built — most of the unchecked
+ones below shipped in Phases 1–7 against an `RFC` source, which is exactly the drift
+this column exists to make visible.*
 
-- [ ] **Platform Foundation** ([l1-platform-foundation.md](specifications/l1-platform-foundation.md)) [L1]
+*8 of 24 are `Stable` as of 2026-08-22. For the other 16 the blocker is a live inline
+`TBD`; per-file reasons are in the Stabilization Ledger in [INDEX.md](INDEX.md).*
+
+- [x] **Platform Foundation** ([l1-platform-foundation.md](specifications/l1-platform-foundation.md)) [L1] — `Stable` v1.5.3
 - [ ] **Feature Modules** ([l1-feature-modules.md](specifications/l1-feature-modules.md)) [L1]
-- [ ] **Localization** ([l1-localization.md](specifications/l1-localization.md)) [L1]
+- [x] **Localization** ([l1-localization.md](specifications/l1-localization.md)) [L1] — `Stable` v0.3.0 (2026-08-22)
 - [ ] **Geography** ([l1-geography.md](specifications/l1-geography.md)) [L1]
 - [ ] **Platform Shell** ([l1-platform-shell.md](specifications/l1-platform-shell.md)) [L1]
-- [ ] **Home Page** ([l1-home-page.md](specifications/l1-home-page.md)) [L1]
+- [x] **Home Page** ([l1-home-page.md](specifications/l1-home-page.md)) [L1] — `Stable` v0.1.1
 - [ ] **Object Catalog** ([l1-object-catalog.md](specifications/l1-object-catalog.md)) [L1]
 - [ ] **Object Profile** ([l1-object-profile.md](specifications/l1-object-profile.md)) [L1]
-- [ ] **Availability Status** ([l1-availability-status.md](specifications/l1-availability-status.md)) [L1]
+- [x] **Availability Status** ([l1-availability-status.md](specifications/l1-availability-status.md)) [L1] — `Stable` v0.2.0
 - [ ] **Content Publishing** ([l1-content-publishing.md](specifications/l1-content-publishing.md)) [L1]
-- [ ] **SEO** ([l1-seo.md](specifications/l1-seo.md)) [L1]
+- [x] **SEO** ([l1-seo.md](specifications/l1-seo.md)) [L1] — `Stable` v0.2.0 (2026-08-22)
 - [ ] **Object Onboarding & Owner Cabinet** ([l1-object-onboarding.md](specifications/l1-object-onboarding.md)) [L1]
 - [ ] **Back Office** ([l1-back-office.md](specifications/l1-back-office.md)) [L1]
 - [ ] **Moderation & Governance** ([l1-moderation-governance.md](specifications/l1-moderation-governance.md)) [L1]
@@ -87,9 +99,18 @@ still delivered, and `[TZ]` §134's mandatory scope governs what release one con
 - [ ] **Advertising** ([l1-advertising.md](specifications/l1-advertising.md)) [L1]
 - [ ] **Analytics** ([l1-analytics.md](specifications/l1-analytics.md)) [L1]
 - [ ] **Public API** ([l1-public-api.md](specifications/l1-public-api.md)) [L1]
-- [ ] **Technology Stack** ([l2-tech-stack.md](specifications/l2-tech-stack.md)) [L2]
+- [x] **Release Operations** ([l1-release-operations.md](specifications/l1-release-operations.md)) [L1] — `Stable` v0.4.0
+- [x] **Technology Stack** ([l2-tech-stack.md](specifications/l2-tech-stack.md)) [L2] — `Stable` v2.4.1
 - [ ] **Data Model** ([l2-data-model.md](specifications/l2-data-model.md)) [L2]
 - [ ] **Third-Party Integrations** ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
+- [x] **Release Pipeline** ([l2-release-pipeline.md](specifications/l2-release-pipeline.md)) [L2] — `Stable` v0.4.0
+
+The two delivery specifications were added to this list on 2026-08-22. They were
+authored on 2026-08-20, after Phase 0 was written, and had been tracked only under
+Phase 8 — so the plan's own requirements column had been silently reporting on 22 of the
+24 scheduled specifications. The twenty-fifth,
+[l1-room-reservation.md](specifications/l1-room-reservation.md), is in `## Backlog` by
+design and is not counted here.
 
 ## Phase 1 — Foundation, Schema & Authorization `[Bootstrap]` — **Done**
 
@@ -298,6 +319,8 @@ Registered specifications not scheduled into an active phase.
 both specifications are `Stable` at v0.4.0. The Amendment Ledger in [INDEX.md](INDEX.md)
 records the round trip and what each finding turned out to be.)*
 
+- **Design debt, opened 2026-08-22: the panel addresses are configuration, and no specification says so.** [l1-platform-foundation.md](specifications/l1-platform-foundation.md) §5.1's site map lists the back office at `/admin/**` and the owner cabinet at `/cabinet/**` as literal paths. Both are runtime configuration in the delivered system, and the staff panel's default is deliberately *not* `/admin` — a guessable staff address attracts the credential-stuffing traffic the sign-in throttle then has to absorb. The requirement is real, enforced in code, and stated in **no** specification in this registry, so writing it into §5.1 would be a new requirement rather than a correction: minor bump, `Stable → RFC`, and a C12 cascade quarantining [l2-tech-stack.md](specifications/l2-tech-stack.md). Site it in [l1-back-office.md](specifications/l1-back-office.md) instead — already `RFC`, so it costs no cascade at all — and correct §5.1 to delegate. Surfaced by the URL-grammar pass; recorded rather than taken on inside it. Route: `/magic.spec main`.
+
 - [l1-room-reservation.md](specifications/l1-room-reservation.md) — **dormant module, deliberately deferred.** Its three tables (`reservations`, `room_availabilities`, `booking_settings`) and its `booking` / `payment` / `guest_accounts` registry rows ship **disabled** in Phase 1, and Phase 1's inertness test proves the module is absent rather than hidden. The capability itself is not in `[TZ]` §134's mandatory first release, and the previous implementation is explicitly not a migration source ([l2-data-model.md](specifications/l2-data-model.md) §2), so building the flow is scoped as its own future phase rather than smuggled into release one.
 
 ## Decision Archive
@@ -375,8 +398,10 @@ model with automated dispatch, and deployment documentation written for a reader
 technical background, in both launch languages, in a form an automated agent can also
 consume. Both specifications reached `Stable` in the same pass, which made Phase 8 the
 first phase here planned against settled sources rather than provisional ones — a
-property it lost again on 2026-08-21, when an out-of-workflow amendment to both sent
-them back to `RFC` for re-review and the re-review held them there.
+property it lost and regained inside a single day on 2026-08-21: an out-of-workflow
+amendment to both sent them back to `RFC` for re-review, the re-review held them there
+on three findings about the sensitive-zone boundary, Track F closed all three, and both
+returned to `Stable` at v0.4.0.
 
 The gap it closes is narrow and total: the repository already carries half a pipeline —
 a quality gate on every push and pull request, and a versioned commit hook — and nothing
@@ -399,11 +424,24 @@ suite-wide `composer test:coverage` floor (78.3% against its own 80% minimum —
 tail of ~20 pre-existing Phase 1–6 `Policy`/`Model` files) is scoped as its own future
 cross-phase task; whether `composer test:coverage` should read `--group=slow` coverage
 is an open quality-tooling question for whoever next revises the composer scripts; and
-the 19 specifications that have been at `RFC` since the stabilization pass carry the
-set's real remaining design work — 18 of them a live inline `TBD` — which `/magic.spec`
-addresses on its own schedule. None of
-the three is a Phase 8 input, and folding any of them in would make a delivery phase
-depend on work that has nothing to do with delivery.
+the **17** specifications still at `RFC` carry the set's real remaining design work —
+each of them a live inline `TBD` — which `/magic.spec` addresses on its own schedule.
+None of the three is a Phase 8 input, and folding any of them in would make a delivery
+phase depend on work that has nothing to do with delivery.
+
+**Re-synchronization, 2026-08-22.** The registry moved to v2.9.0 while this plan still
+declared v2.8.0, which is the `SYNC_GAP` this pass closed. Two specifications reached
+`Stable` — `l1-localization` and `l1-seo` — and **neither produced a task.** Both were
+built in Phases 5 and 6; the amendment that promoted them retired an alternative the
+record had kept alive five weeks after the project owner closed it, and left every rule
+in §5 untouched. A promotion that adds no work is the expected shape when a plan has
+already outrun its specifications, and saying so explicitly is cheaper than letting a
+future reader assume a phase was missed.
+
+One item was opened rather than closed: the panel-address gap now in `## Backlog`. It is
+design work with a known blast radius — sited wrong, it quarantines
+[l2-tech-stack.md](specifications/l2-tech-stack.md) — which is why it is scheduled
+instead of absorbed.
 
 Phase registry in [TASKS.md](TASKS.md). The first seven phases are archived at
 [archives/tasks/phase-1.md](archives/tasks/phase-1.md),

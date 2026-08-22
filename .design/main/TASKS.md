@@ -1,11 +1,11 @@
 # Master Task Index (Registry)
 
-**Version:** 1.8.0
+**Version:** 1.9.0
 **Generated:** 2026-08-05
-**Based on:** .design/main/PLAN.md v3.7.0
+**Based on:** .design/main/PLAN.md v3.8.0
 **Based on RULES:** .design/RULES.md v1.4.0
 **Execution Mode:** Parallel
-**Status:** Active — Phase 8 (7 phases done, 1 active; C12 quarantine lifted 2026-08-21)
+**Status:** Active — Phase 8 (7 phases done, 1 active at 20/23; C12 quarantine lifted 2026-08-21; re-synchronized to registry v2.9.0 on 2026-08-22 with no task change)
 
 ## Overview
 
@@ -29,8 +29,16 @@ two other tracks.
 
 Two findings from the retrospective remain open outside Phase 8: the suite-wide
 `composer test:coverage` floor (78.3%, ~20 pre-existing Phase 1–6 files) as its own
-separately-scoped follow-up, and the specifications still at `RFC`, which carry the
-set's real remaining design work and none of which is a Phase 8 input.
+separately-scoped follow-up, and the specifications still at `RFC` — **17 as of
+2026-08-22** — which carry the set's real remaining design work and none of which is a
+Phase 8 input.
+
+**Re-planned on 2026-08-22, and no task moved.** `l1-localization` and `l1-seo` reached
+`Stable`, closing the registry-to-plan `SYNC_GAP`; both had already been built in
+Phases 5 and 6, and the amendment that promoted them corrected the record around a
+decision without touching a single rule the implementation reads. The pass added one
+`## Backlog` entry — the panel addresses are runtime configuration and no specification
+says so — and no phase.
 
 **Re-planned twice on 2026-08-21, and back where it started.** Both of Phase 8's
 specifications were amended outside the workflow; the re-review that followed the

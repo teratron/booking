@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-08-21
+**Generated:** 2026-08-22
 
 ## Active Technologies
 
@@ -22,7 +22,8 @@
 ├── .dockerignore
 ├── .drafts/
 │   ├── TODO.md
-│   └── booking.md
+│   ├── booking.md
+│   └── production-clearance.md
 ├── .editorconfig
 ├── .env.example
 ├── .env.production.example
