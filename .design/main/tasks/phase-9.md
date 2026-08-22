@@ -22,7 +22,15 @@ duration_minutes: ~
 # Stage 9 Tasks — Post-Launch QA Remediation
 
 **Phase:** 9
-**Status:** In Progress (7/15 — Tracks C, E, and F closed 2026-08-22. 8 tasks across Tracks A, B, D remain `Blocked [!] (Spec RFC)`: `l1-object-profile.md`, `l1-public-api.md`, and `l1-platform-shell.md` are `RFC` in `INDEX.md`, not `Stable`; `/magic.run main`'s Pre-flight Spec Stability Spot-Check caught this before any task began, since Phase 9 had been scheduled against them without that check being applied at plan time. The `/magic.spec main` review that preceded this plan already confirmed each spec's referenced section states the correct, settled behaviour — what blocks here is the document's overall status field, not its content. Resolution: `/magic.spec main` reviews and promotes the three specs `RFC → Stable` via `@role:spec-critic`'s review gate; `/magic.task main` then re-evaluates and unblocks. `T-9G01` (full regression gate) also waits on this — its own precondition is all of Tracks A–F closed, not merely C/E/F. See STATE.md § Blockers.)
+**Status:** In Progress (7/15 — Tracks C, E, and F closed 2026-08-22. Tracks A, B, and D
+were briefly `Blocked [!] (Spec RFC)` — `l1-object-profile.md`, `l1-public-api.md`, and
+`l1-platform-shell.md` were `RFC`, caught by `/magic.run main`'s Pre-flight Spec
+Stability Spot-Check before any task in those tracks began. `/magic.spec main` promoted
+all three to `Stable` the same day: `l1-platform-shell`'s country-switcher `TBD`
+confirmed the already-shipped model; `l1-object-profile`'s review-authorship and
+`l1-public-api`'s consumer/rate-limit/licensing `TBD`s were genuine product decisions,
+put to the project owner directly. All eight tasks are unblocked; see each task's Notes
+for the resolution and `INDEX.md`/each spec's Document History for the full record.)
 **Strategic Goal:** Close five confirmed, live-reproduced functional defects a full-surface
 QA sweep found against the running instance (`.drafts/qa-sweep-report.md`), plus one
 test-suite defect the same sweep surfaced. Every defect was checked directly against its
@@ -60,14 +68,14 @@ narrowing that down, not applying a fix sight-unseen.
 
 ### Track A — Contact Channel Type Selection
 
-- [ ] [T-9A01] Admin object form — add the contact-channel type selector `Blocked [!] (Spec RFC)`
-- [ ] [T-9A02] Cabinet object form — add the contact-channel type selector `Blocked [!] (Spec RFC)`
-- [ ] [T-9A03] Validation — a contact channel saves cleanly through both forms `Blocked [!] (Spec RFC)`
+- [ ] [T-9A01] Admin object form — add the contact-channel type selector
+- [ ] [T-9A02] Cabinet object form — add the contact-channel type selector
+- [ ] [T-9A03] Validation — a contact channel saves cleanly through both forms
 
 ### Track B — API Guest-Redirect JSON Contract
 
-- [ ] [T-9B01] Exempt `api/*` from the guest-redirect-to-login fallback `Blocked [!] (Spec RFC)`
-- [ ] [T-9B02] Validation — unauthenticated API requests return 401 JSON regardless of Accept header `Blocked [!] (Spec RFC)`
+- [ ] [T-9B01] Exempt `api/*` from the guest-redirect-to-login fallback
+- [ ] [T-9B02] Validation — unauthenticated API requests return 401 JSON regardless of Accept header
 
 ### Track C — Canonical Host Consistency
 
@@ -76,9 +84,9 @@ narrowing that down, not applying a fix sight-unseen.
 
 ### Track D — hreflang Alternate Links
 
-- [ ] [T-9D01] Carry per-language alternate URLs on `ResolvedMetadata` `Blocked [!] (Spec RFC)`
-- [ ] [T-9D02] Emit hreflang alternate tags in the public layout `<head>` `Blocked [!] (Spec RFC)`
-- [ ] [T-9D03] Validation — hreflang tags present, correct, and reciprocal across active languages `Blocked [!] (Spec RFC)`
+- [ ] [T-9D01] Carry per-language alternate URLs on `ResolvedMetadata`
+- [ ] [T-9D02] Emit hreflang alternate tags in the public layout `<head>`
+- [ ] [T-9D03] Validation — hreflang tags present, correct, and reciprocal across active languages
 
 ### Track E — Cabinet Settings Crash
 
@@ -101,7 +109,7 @@ narrowing that down, not applying a fix sight-unseen.
 **[T-9A01] Admin object form — add the contact-channel type selector**
 
 - **Spec:** [l1-object-profile.md](../specifications/l1-object-profile.md) §5.2 (Contact Channel Model — `type -> ContactChannelType` is a required, non-optional field of the model); surface is [l1-back-office.md](../specifications/l1-back-office.md)
-- **Status:** `Blocked [!] (Spec RFC)` — `l1-object-profile.md` is `RFC` in `INDEX.md`, not `Stable`. Run `/magic.spec main` to review/promote, then `/magic.task main` to unblock.
+- **Status:** Todo — `l1-object-profile.md` promoted `RFC → Stable` (v1.2.0) 2026-08-22; unblocked.
 - **Assignment:** Agent
 - **Verify:** `Livewire::test(EditObject::class, ['record' => $objectId])->fillForm(['contactChannels' => [['contact_channel_type_id' => $typeId, 'raw_value' => '+37360000000', 'label' => 'Front desk']]])->call('save')->assertHasNoFormErrors()` succeeds and inserts a `contact_channels` row with a non-null `contact_channel_type_id`, where the prior schema (no type field) threw `QueryException: SQLSTATE[23502]`.
 - **Handoff:** `T-9A03` covers both A01 and A02 in one validation pass.
@@ -110,7 +118,7 @@ narrowing that down, not applying a fix sight-unseen.
 **[T-9A02] Cabinet object form — add the contact-channel type selector**
 
 - **Spec:** [l1-object-profile.md](../specifications/l1-object-profile.md) §5.2; surface is [l1-object-onboarding.md](../specifications/l1-object-onboarding.md)
-- **Status:** `Blocked [!] (Spec RFC)` — same governing spec as `T-9A01`, same blocker.
+- **Status:** Todo — same governing spec as `T-9A01`, now `Stable`; unblocked.
 - **Assignment:** Agent
 - **Verify:** Same shape as `T-9A01`'s Verify line, against `app/Filament/Cabinet/Resources/Objects/Schemas/ObjectForm.php`'s `contactsSection()`.
 - **Handoff:** `T-9A03`.
@@ -120,14 +128,14 @@ narrowing that down, not applying a fix sight-unseen.
 
 - **Goal:** Verify `T-9A01` and `T-9A02` against [l1-object-profile.md](../specifications/l1-object-profile.md) §5.2 and the live-reproduced failure in `.drafts/qa-sweep-report.md` F-1.
 - **Method:** Feature tests in `tests/Feature/Admin/ObjectResourceFormTest.php` and `tests/Feature/Cabinet/CabinetObjectEditingTest.php` asserting a contact channel with an explicit type saves without a `QueryException`, and that the resulting row's `derived_link` matches the selected type's `link_template` applied to the raw value. Also re-run the already-passing end-to-end proof this phase's own diagnosis relied on: a saved channel's public click route (`{lang}/objects/{object}/contact/{channel}/click`) still 302s to the correct deep link.
-- **Status:** `Blocked [!] (Spec RFC)` — depends on `T-9A01`/`T-9A02`, both blocked on the same spec.
+- **Status:** Todo — depends on `T-9A01`/`T-9A02`, both unblocked.
 
 ### Track B — API Guest-Redirect JSON Contract
 
 **[T-9B01] Exempt `api/*` from the guest-redirect-to-login fallback**
 
 - **Spec:** [l1-public-api.md](../specifications/l1-public-api.md) (unauthenticated request → 401)
-- **Status:** `Blocked [!] (Spec RFC)` — `l1-public-api.md` is `RFC` in `INDEX.md`, not `Stable`. Run `/magic.spec main` to review/promote, then `/magic.task main` to unblock.
+- **Status:** Todo — `l1-public-api.md` promoted `RFC → Stable` (v0.2.0) 2026-08-22; unblocked.
 - **Assignment:** Agent
 - **Verify:** `curl -H "Accept: */*" http://<host>/api/v1/objects` (no token, no explicit JSON Accept header) returns `401` with `{"message":"Unauthenticated."}`, not `500`.
 - **Handoff:** `T-9B02`.
@@ -137,7 +145,7 @@ narrowing that down, not applying a fix sight-unseen.
 
 - **Goal:** Verify `T-9B01` against [l1-public-api.md](../specifications/l1-public-api.md) and F-2 in `.drafts/qa-sweep-report.md`.
 - **Method:** Feature test (`tests/Feature/Api/` — extend `ApiModuleGateTest.php` or add a sibling) asserting `$this->get('/api/v1/objects')` (no `Accept` header override, no token) returns `401`, and that the same assertion holds for `/api/v1/territories` and `/api/v1/token`. Confirm `composer test` still passes `tests/Feature/Api/ApiRateLimitTest.php` and `ApiModuleGateTest.php` unchanged (no regression to the module-gate 404 path, which must still fire ahead of this check when the `api` module is disabled).
-- **Status:** `Blocked [!] (Spec RFC)` — depends on `T-9B01`, blocked on the same spec.
+- **Status:** Todo — depends on `T-9B01`, unblocked.
 
 ### Track C — Canonical Host Consistency
 
@@ -161,7 +169,7 @@ narrowing that down, not applying a fix sight-unseen.
 **[T-9D01] Carry per-language alternate URLs on `ResolvedMetadata`**
 
 - **Spec:** [l1-seo.md](../specifications/l1-seo.md) ("every page declares its alternates in all active languages, plus a default"); [l1-platform-shell.md](../specifications/l1-platform-shell.md) §4 ("emit the language alternates once, in the shell, and reuse them for both the switcher and l1-seo.md's alternate links")
-- **Status:** `Blocked [!] (Spec RFC)` — `l1-platform-shell.md` is `RFC` in `INDEX.md`, not `Stable` (`l1-seo.md` alone is `Stable`, but §4's shared-emission requirement spans both). Run `/magic.spec main` to review/promote, then `/magic.task main` to unblock.
+- **Status:** Todo — `l1-platform-shell.md` promoted `RFC → Stable` (v0.3.1) 2026-08-22, alongside the already-`Stable` `l1-seo.md`; unblocked.
 - **Assignment:** Agent
 - **Verify:** `app(\App\Services\Seo\MetadataResolver::class)->resolve($object, 'en')->alternates` returns an array keyed by every active language code (`en`, `ru`) to that page's URL in that language, computed via the same `App\Services\Shell\LocaleSwitchResolver::targetUrl()` call the language switcher already uses — not a second, independent URL-construction path.
 - **Handoff:** `T-9D02`.
@@ -170,7 +178,7 @@ narrowing that down, not applying a fix sight-unseen.
 **[T-9D02] Emit hreflang alternate tags in the public layout `<head>`**
 
 - **Spec:** [l1-seo.md](../specifications/l1-seo.md); [l1-platform-shell.md](../specifications/l1-platform-shell.md) §4
-- **Status:** `Blocked [!] (Spec RFC)` — depends on `T-9D01`, blocked on the same spec.
+- **Status:** Todo — depends on `T-9D01`, unblocked.
 - **Assignment:** Agent
 - **Verify:** Rendered HTML of the object page, catalog page, and home page each include `<link rel="alternate" hreflang="en" href="…">` and `hreflang="ru"`, plus one `hreflang="x-default"` pointing at the primary-language URL — grep the response body for `rel="alternate"` in a feature test rather than asserting manually.
 - **Handoff:** `T-9D03`.
@@ -180,7 +188,7 @@ narrowing that down, not applying a fix sight-unseen.
 
 - **Goal:** Verify `T-9D01` and `T-9D02` against [l1-seo.md](../specifications/l1-seo.md) and F-4 in `.drafts/qa-sweep-report.md`.
 - **Method:** Feature test fetching the EN and RU variants of the same object/catalog/territory page and asserting: (a) each declares hreflang alternates for every other active language, (b) the alternate URLs are reciprocal (EN page's `hreflang="ru"` URL, fetched, declares an `hreflang="en"` pointing back), (c) exactly one `x-default` per page. Extend `PublicShellTest.php` or add a sibling `PublicHreflangTest.php`.
-- **Status:** `Blocked [!] (Spec RFC)` — depends on `T-9D01`/`T-9D02`, both blocked on the same spec.
+- **Status:** Todo — depends on `T-9D01`/`T-9D02`, both unblocked.
 
 ### Track E — Cabinet Settings Crash
 
@@ -230,4 +238,4 @@ narrowing that down, not applying a fix sight-unseen.
 
 - **Goal:** Confirm none of the six fixes regressed anything the existing 171-file suite already covers, and that the phase's own new validation tasks (`T-9A03`, `T-9B02`, `T-9C02`, `T-9D03`, `T-9E03`, `T-9F01`) are all green together, not just individually.
 - **Method:** `docker compose exec app sh -c "php artisan config:clear --ansi && php -d memory_limit=1G vendor/bin/pest --exclude-group=slow"` — full pass, zero failures. Also `composer analyse` (PHPStan level 8) and `composer lint` (Pint), since Track D adds a new `ResolvedMetadata` property and Track C/B touch service-provider/bootstrap code that PHPStan resolves eagerly. Run test suites sequentially, never concurrently against `booking_testing`, per this project's own established constraint.
-- **Status:** Todo — dependency-blocked, not itself `Blocked [!] (Spec RFC)`: Tracks A and B carry that marker directly (see Overview), so this gate cannot start until they clear regardless of Track C/E/F's own progress.
+- **Status:** Todo — waits on Tracks A–F closing; all six are now unblocked (the three `Spec RFC` blockers on A/B/D lifted 2026-08-22).

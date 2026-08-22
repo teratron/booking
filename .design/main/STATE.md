@@ -4,27 +4,28 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-22 19:31
+**Updated:** 2026-08-22 19:36
 **Phase:** 9 — Post-Launch QA Remediation
 **Status:** Active
 
 ## Current Position
 
-- **Task:** **Phase 9 — Post-Launch QA Remediation, 7/15, Tracks C/E/F closed 2026-08-22.** A live functional sweep against a running instance found five confirmed product defects and one test-suite defect; `/magic.spec main` found every governing spec already correct (zero amendments); `/magic.run main` then halted at Pre-flight (Tracks A/B/D reference `RFC`-status specs, `Blocked [!] (Spec RFC)`, 8/15 tasks) before executing the 7 unblocked tasks in Tracks C, E, F. Track C: `AppServiceProvider::pinGeneratedUrlsToConfiguredAppUrl()` — `URL::forceRootUrl()` **and** `forceScheme()`, both derived from `config('app.url')` (root alone doesn't pin scheme when TLS terminates upstream). Track F: fixed `PublicRootEntryTest`'s false Accept-Language assumption. Track E widened past its own root-cause estimate — first patch fixed one crash, testing surfaced two more unguarded tenant-scoped calls in Filament's shared layout chrome; owner chose the complete fix (`->profile(Settings::class, isSimple: true)`, Filament's own default for a tenant-independent page) over patching each call site ("no crutches"). Full detail: `tasks/phase-9.md`; see ## Blockers.
+- **Task:** **Phase 9 — Post-Launch QA Remediation, 7/15, all 15 tasks now schedulable.** Tracks C, E, F closed 2026-08-22 (Track C: `AppServiceProvider::pinGeneratedUrlsToConfiguredAppUrl()`, root+scheme both from `config('app.url')`; Track F: fixed `PublicRootEntryTest`'s Accept-Language assumption; Track E widened past its root-cause estimate to `->profile(Settings::class, isSimple: true)`, "no crutches"). Tracks A/B/D briefly `Blocked [!] (Spec RFC)` — `/magic.spec main` closed each blocking spec's own live `TBD` the same day and promoted all three `RFC → Stable` (`l1-platform-shell` mechanically, `l1-object-profile`/`l1-public-api` via direct project-owner decisions) — then `/magic.task main` un-quarantined the eight affected tasks. Full detail: `tasks/phase-9.md`.
 - **Task (Phase 8, unchanged):** **Phase 8 at 20/23 — every agent-performable task is done; three owner-only tasks remain and nothing blocks them.** Track F closed and the C12 quarantine it ran under was lifted the same day when both specifications returned to `Stable` at v0.4.0. Owner chose "master = develop" for `T-8F02`: `require_code_owner_reviews` enabled first (read back to confirm before the boundary was ever observably absent), then `required_approving_review_count` dropped to 0 — same order the task's own Notes required. `T-8F03`'s read-back confirms `master` now matches `develop` field-for-field: ordinary changes clear the gate and merge unattended; any `.github/CODEOWNERS`-matched path always waits for `@teratron`, on either branch. Full detail and the comparison table: `tasks/phase-8.md` Track F.
 - **Previous:** Following the owner's development-phase authorization (§5.5.1), the agent completed every other agent-performable Phase 8 task — branch contract, deploy/verify/rollback/record pipeline, irreversibility scan, EN/RU/agent operator docs, pipeline containment tests — across three prior sessions on 2026-08-20/21. Two findings fixed mid-session: a HIGH-severity GitHub Actions script-injection (raw `${{ }}` in `run:` shell text, fixed via `env:` across all six jobs) and a spec-filename containment leak (5 instances across `release.yml`/`docker/deploy/*.sh`, now guarded by `T-8T01`'s own test). **Remaining, all owner-only regardless of authorization**: `T-8E01` (no API/CLI path to create a GitHub App), `T-8E03` (needs real production credentials absent from this dev environment), `T-8T03` (rehearsal requires a human executor by the spec's own text).
 - **Spec:** **25 specs — 9 `Stable`, 16 `RFC`.** Same day as Phase 9's remediation: `l1-platform-shell`, `l1-object-profile`, `l1-public-api` promoted `RFC → Stable`, each closing a live §2 `TBD` that was blocking Phase 9 Tracks A/B/D. `l1-platform-shell`'s country-switcher TBD confirmed the already-shipped model. `l1-object-profile`'s review-authorship TBD and `l1-public-api`'s consumer/rate-limit/licensing TBD were genuine product decisions — put to the project owner directly rather than inferred: reviews stay administrator-configurable (registered vs. guest), the API's conservative shape is locked in as settled, not provisional. Full detail: each spec's Document History. The delivery pair's own earlier 2026-08-21 round trip (amended outside the workflow, reconciled, re-promoted to `Stable` at v0.4.0) is unrelated and unaffected — see `INDEX.md`'s Amendment Ledger.
-- **Next Action:** Run /magic.task main to update the plan
+- **Next Action:** Run /magic.run main to execute Tracks A, B, D (8 tasks, now unblocked), then T-9G01's full regression gate to close Phase 9. Phase 8's own next action is unchanged and separate: resolve the owner-only blocker on T-8E01 — see ## Blockers.
 
 ## Progress
 
 ```
-Phase 9: [6/15] ███░░░░░ 40%
-Overall: [7/9] ██████░░ 78%
-Plan:           [9 phases] Phase 1-7 done (135/135 tasks) · Phase 8 in progress (20/23 — all agent work done, 3 owner-only remain) · Phase 9 in progress (7/15 — Tracks C/E/F done, A/B/D blocked)
+Phase 8: [20/23] ███████░ 87%
+Phase 9: [7/15]  ███░░░░░ 47%
+Overall: [7/9] ██████░░ 78% (2 phases active)
+Plan:           [9 phases] Phase 1-7 done (135/135 tasks) · Phase 8 in progress (20/23 — all agent work done, 3 owner-only remain) · Phase 9 in progress (7/15 — Tracks C/E/F done, A/B/D unblocked)
 Implementation: [21/21] Phase 1 · [25/25] Phase 2 · [23/23] Phase 3 · [16/16] Phase 4 · [18/18] Phase 5 · [16/16] Phase 6 · [16/16] Phase 7 · [20/23] Phase 8 · [7/15] Phase 9
 Phase 8 tracks:  A 4/4 · B 4/4 · C 1/1 · D 5/5 · E 1/3 (E01/E03 User) · F 3/3 · T 2/3 (T03 User+Agent)
-Phase 9 tracks:  A 0/3 (Blocked, Spec RFC) · B 0/2 (Blocked, Spec RFC) · C 2/2 done · D 0/3 (Blocked, Spec RFC) · E 3/3 done · F 1/1 done · G 0/1 (waits on A/B/D)
+Phase 9 tracks:  A 0/3 · B 0/2 · C 2/2 done · D 0/3 · E 3/3 done · F 1/1 done · G 0/1 (waits on A/B/D)
 ```
 
 ## Recent Decisions
@@ -38,8 +39,6 @@ Phase 9 tracks:  A 0/3 (Blocked, Spec RFC) · B 0/2 (Blocked, Spec RFC) · C 2/2
 <!-- Empty if none. Format: [severity] description -->
 
 [info] `T-8E01`, `T-8E03`, `T-8T03` carry `Blocked [!] (C12)` since 2026-08-22, alongside their pre-existing owner-only blockers — `l1-release-operations`/`l2-release-pipeline` are `RFC` again (branch-model reconciliation, not the 2026-08-21 sensitive-zone finding, which stays closed). Clears at [l1-release-operations.md](specifications/l1-release-operations.md) §3.3's resumption condition, not by any task. See INDEX.md Branch-Model Ledger.
-
-[info] `T-9A01`–`03`, `T-9B01`–`02`, `T-9D01`–`03` (8 tasks) carry `Blocked [!] (Spec RFC)` since 2026-08-22 — `l1-object-profile.md`, `l1-public-api.md`, `l1-platform-shell.md` are `RFC`, not `Stable`, in INDEX.md. Not a C12 cascade (none was ever `Stable` then demoted); a plan-time gap where task scheduling didn't check document-level spec status. Clears when `/magic.spec main` promotes the three via `@role:spec-critic`'s review, then `/magic.task main` re-evaluates. Tracks C/E/F unaffected. See PLAN.md Phase 9 section.
 
 ## Blocking Constraints
 

@@ -1,10 +1,10 @@
 # Implementation Plan
 
-**Version:** 3.11.0
+**Version:** 3.12.0
 **Generated:** 2026-08-05
-**Based on:** .design/main/INDEX.md v2.10.0
+**Based on:** .design/main/INDEX.md v2.11.0
 **Based on RULES:** .design/RULES.md v1.4.0
-**Status:** Active — Phase 8 (delivery pipeline; 20/23, the three open tasks owner-only. Its two sources returned to `RFC` on 2026-08-22 to reconcile with the owner's single-line branch decision — not a defect, and not a reason to reopen Done work; see Plan Status below) · Phase 9 (post-launch QA remediation; 7/15, opened 2026-08-22 from a live functional sweep, independent of Phase 8; Tracks C/E/F closed the same day, 8 tasks across Tracks A/B/D remain `Blocked [!] (Spec RFC)`; see Plan Status below)
+**Status:** Active — Phase 8 (delivery pipeline; 20/23, the three open tasks owner-only. Its two sources returned to `RFC` on 2026-08-22 to reconcile with the owner's single-line branch decision — not a defect, and not a reason to reopen Done work; see Plan Status below) · Phase 9 (post-launch QA remediation; 7/15, opened 2026-08-22 from a live functional sweep, independent of Phase 8; Tracks C/E/F closed the same day, Tracks A/B/D briefly `Blocked [!] (Spec RFC)` then unblocked the same day via `/magic.spec main`; see Plan Status below)
 
 ## Overview
 
@@ -393,21 +393,21 @@ shared layout against a page this panel deliberately registers without a tenant.
 the right fix is an app-level guard, a panel-configuration change, or an upstream
 version bump is `T-9E01`'s own output, consumed by `T-9E02`.
 
-**Blocked same day: three of six tracks reference `RFC`-status specs.** `/magic.run main`
-ran hours after this plan was written and halted at Pre-flight before any task began —
-its Spec Stability Spot-Check found `l1-object-profile.md` (Track A), `l1-public-api.md`
-(Track B), and `l1-platform-shell.md` (Track D, alongside the already-`Stable`
-`l1-seo.md`) all at `RFC` in [INDEX.md](INDEX.md), not `Stable`. This is a plan-time gap,
-not a drift: the `/magic.spec main` session above reviewed the *content* of each spec's
-relevant section and confirmed it already correct, but that review did not check — and
-this plan did not separately verify — the document-level status field each task's `Spec:`
-line points at. The distinction matters mechanically: `task.md`'s Pre-Planning
-Stabilization batch-promotes `Draft → Stable` on MVC completeness alone, but `RFC →
-Stable` is a heavier transition gated by `@role:spec-critic`'s five-lens review
-(`spec.md`), so this plan cannot self-resolve it the way a Draft gap would. Eight tasks
-(`T-9A01`–`03`, `T-9B01`–`02`, `T-9D01`–`03`) are `Blocked [!] (Spec RFC)`. Resolution:
-`/magic.spec main` reviews and promotes the three specs, then `/magic.task main`
-re-evaluates. Full detail: [tasks/phase-9.md](tasks/phase-9.md) Status line.
+**Blocked same day, unblocked the same day: three of six tracks referenced `RFC`-status
+specs.** `/magic.run main` ran hours after this plan was written and halted at
+Pre-flight before any task began — its Spec Stability Spot-Check found
+`l1-object-profile.md` (Track A), `l1-public-api.md` (Track B), and
+`l1-platform-shell.md` (Track D, alongside the already-`Stable` `l1-seo.md`) all at
+`RFC` in [INDEX.md](INDEX.md), not `Stable`. This was a plan-time gap, not a drift: the
+`/magic.spec main` session above reviewed the *content* of each spec's relevant section
+and confirmed it already correct, but that review did not check the document-level
+status field each task's `Spec:` line points at. `/magic.spec main` then closed each
+spec's own live `TBD` — `l1-platform-shell`'s country-switcher question confirmed the
+already-shipped model; `l1-object-profile`'s review-authorship and `l1-public-api`'s
+consumer/rate-limit/licensing questions were genuine product decisions, put to the
+project owner directly rather than inferred — and promoted all three `RFC → Stable`.
+Eight tasks (`T-9A01`–`03`, `T-9B01`–`02`, `T-9D01`–`03`) are unblocked. Full detail:
+[tasks/phase-9.md](tasks/phase-9.md) Status line and each spec's Document History.
 
 **Tracks C, E, and F closed the same day** — the three tracks this block never reached.
 Track E (`T-9E01`–`03`) turned out wider than its own root-cause task assumed: the first
@@ -582,15 +582,20 @@ route the findings to `/magic.task`. This phase is that routing. It runs indepen
 Phase 8 — no shared file, no shared track, no shared blocker — and either phase may close
 before the other.
 
-**Re-planned same day, hours later: `/magic.run main` halted at Pre-flight.** Its Spec
-Stability Spot-Check found three of the six tracks scheduled above (A, B, D) reference
-specifications at `RFC`, not `Stable` — a gap the `/magic.spec main` content review did
-not surface because it checked *what the specs say*, not their document-level status
-field, and this plan did not separately check either. Eight of fifteen tasks are now
-`Blocked [!] (Spec RFC)`. Tracks C, E, and F were unaffected and closed the same day —
-7/15 tasks done, Track E's own scope widening past its original one-crash estimate once
-its fix surfaced two further unguarded call sites in the same Filament layout chrome.
-Full detail in the Phase 9 section above and [tasks/phase-9.md](tasks/phase-9.md).
+**Re-planned twice more the same day: `/magic.run main` halted at Pre-flight, then
+`/magic.spec main` and `/magic.task main` unblocked it.** The Spot-Check found three of
+the six tracks scheduled above (A, B, D) reference specifications at `RFC`, not
+`Stable` — a gap the `/magic.spec main` content review did not surface because it
+checked *what the specs say*, not their document-level status field, and this plan did
+not separately check either. Tracks C, E, and F were unaffected and closed the same day
+— 7/15 tasks done, Track E's own scope widening past its original one-crash estimate
+once its fix surfaced two further unguarded call sites in the same Filament layout
+chrome. A follow-up `/magic.spec main` pass then closed each blocking spec's own live
+`TBD` and promoted all three to `Stable`: `l1-platform-shell`'s was a technical
+modeling question with an already-shipped answer, while `l1-object-profile`'s and
+`l1-public-api`'s were genuine product decisions put to the project owner directly.
+This `/magic.task main` pass un-quarantines the eight affected tasks. Full detail in
+the Phase 9 section above and [tasks/phase-9.md](tasks/phase-9.md).
 
 Phase registry in [TASKS.md](TASKS.md). The first seven phases are archived at
 [archives/tasks/phase-1.md](archives/tasks/phase-1.md),
