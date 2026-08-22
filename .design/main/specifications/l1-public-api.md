@@ -1,7 +1,7 @@
 # Public API
 
-**Version:** 0.1.1
-**Status:** RFC
+**Version:** 0.2.0
+**Status:** Stable
 **Layer:** concept
 
 ## Overview
@@ -50,11 +50,15 @@ pages be one consumer of it, costs little now and avoids that outcome.
   implementation detail of the back office with a different contract, different
   authorization, and no stability guarantee
   ([l2-third-party-integrations.md](l2-third-party-integrations.md) §5.3).
-- <!-- TBD: [TZ] gives no named API consumer, no rate-limit figures, and no data-
-     licensing position on whether third parties may republish object content
-     supplied by owners. All three are business decisions. The design below is
-     deliberately conservative — read-only, tokened, rate-limited, revocable — so
-     that opening it further is a policy change rather than a redesign. -->
+- **The conservative shape below is the settled decision, not a placeholder.**
+  `[TZ]` names no API consumer, no rate-limit figures, and no data-licensing
+  position on republishing owner-supplied object content; the project owner's
+  decision is to lock in the design already described here — no named consumer at
+  launch, per-token rate limits administrator-configurable with no fixed figure
+  mandated by this spec (§3.3, §5.5), and no republishing rights granted to any
+  consumer — rather than leave the question open. Widening any of the three (naming
+  a consumer, raising limits, granting republishing rights) is a future policy
+  decision revisited on its own, not a gap in this spec.
 
 ## 3. Core Invariants (Layer 1 only)
 
@@ -238,3 +242,4 @@ portal's ordering for the same reason the website does.
 | --- | --- | --- |
 | 0.1.0 | 2026-08-05 | Initial draft. Closes the `[TZ]` §19 coverage gap found during the second requirements pass. |
 | 0.1.1 | 2026-08-05 | Patch: translated the quoted `[TZ]` §19 excerpt from Russian to English per the project's language policy; no meaning changed. |
+| 0.2.0 | 2026-08-22 | Minor: closed §2's inline TBD — the project owner's decision locks in the already-described conservative shape (no named consumer, administrator-configurable per-token rate limits, no republishing rights) as the settled design rather than an open question; widening any of the three is a future policy decision, not a spec gap. `Status: RFC → Stable`. |

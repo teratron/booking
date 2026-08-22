@@ -1,7 +1,7 @@
 # Object Profile
 
-**Version:** 1.1.1
-**Status:** RFC
+**Version:** 1.2.0
+**Status:** Stable
 **Layer:** concept
 
 ## Overview
@@ -58,10 +58,17 @@ capture it.
   inventory and no availability badge.
 - `[TZ]` §87 makes the review module conditional ("if the review module is
   enabled"). Reviews are specified here as an optional, portal-configurable module.
-- <!-- TBD: whether a review author must be a registered visitor or may post as a
-     named guest is unresolved — [TZ] §87 stores "user or author name",
-     which permits both. This interacts with the deferred guest-account module
-     ([TZ] §64) and with spam exposure; recorded rather than assumed. -->
+- **Review authorship is itself a portal setting, not a fixed policy.** `[TZ]` §87
+  stores "user or author name", which permits both a registered visitor and a named
+  guest with no account; the project owner's decision is that this stays an
+  administrator-configurable choice rather than one baked into the spec — a portal
+  setting selects whether a review requires a registered visitor or accepts a named
+  guest, defaulting to permitting a guest author, matching the reviews table's own
+  schema (`author_id` nullable, `author_name` carries the guest-supplied name), which
+  needed no migration to support either mode. The setting's storage key and its
+  enforcement point belong to whichever phase builds the review-submission flow —
+  no public submission surface exists in this codebase yet; only owner-reply,
+  owner-report, and administrator moderation act on an existing review (§3.4, §5.4).
 
 ## 3. Core Invariants (Layer 1 only)
 
@@ -282,4 +289,5 @@ tooling.
 | 0.2.0 | 2026-07-30 | Resolved review-authorship via l2-third-party-integrations.md. |
 | 1.0.0 | 2026-08-05 | Major: renamed to `l1-object-profile.md`; replaced the reservation conversion path with the direct-contact contract (§3.1, §5.2, §5.3); generalized to type-varying composition; added period-aware prices, the no-occupancy-calendar constraint, owner review replies, and the media model. |
 | 1.1.0 | 2026-08-05 | Minor: scoped the no-occupancy-calendar constraint to the default configuration and added the contact-is-never-displaced invariant, so an activated booking module composes additively rather than replacing the page's conversion path. |
+| 1.2.0 | 2026-08-22 | Minor: closed §2's inline TBD on review authorship — the project owner's decision is that it stays an administrator-configurable portal setting (registered visitor vs. named guest), not a fixed policy; the schema already supports either mode with no migration. `Status: RFC → Stable`. |
 | 1.1.1 | 2026-08-05 | Patch: translated quoted `[TZ]` excerpts from Russian to English per the project's language policy; no meaning changed. |

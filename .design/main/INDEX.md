@@ -1,6 +1,6 @@
 # Workspace Specifications Registry
 
-**Version:** 2.10.0
+**Version:** 2.11.0
 **Status:** Active
 
 ## Overview
@@ -12,6 +12,11 @@ specification (`.drafts/booking.md`), which redefined the product from a hotel
 booking marketplace to a multi-country tourism information portal. See
 [l1-platform-foundation.md](specifications/l1-platform-foundation.md) §5.3 for the
 scope-delta ledger.
+
+**Status posture (Phase 9 remediation pass, 2026-08-22):** the count is **9 `Stable`,
+16 `RFC`** — `l1-platform-shell`, `l1-object-profile`, and `l1-public-api` promoted the
+same day, each closing a live `TBD` blocking Phase 9's Tracks A/B/D (see the note
+above the `TBD` list below). Earlier the same day, before this pass:
 
 **Status posture (branch-model pass, 2026-08-22):** the count is **6 `Stable`,
 19 `RFC`** — the delivery pair returned to `RFC` on the same day it had reached 8/17,
@@ -73,10 +78,10 @@ Delivery → Optional → Implementation); the registry itself is flat.
 | [l1-feature-modules.md](specifications/l1-feature-modules.md) | Foundation. Administrator-toggleable capability modules; scoping ladder, dependencies, inertness, candidate modules | RFC | 1 | 0.2.1 |
 | [l1-localization.md](specifications/l1-localization.md) | Foundation. Countries, languages (launch: EN + RU), per-entity translation model, phased activation | Stable | 1 | 0.3.0 |
 | [l1-geography.md](specifications/l1-geography.md) | Foundation. Recursive territory hierarchy, per-country level vocabularies, landing pages | RFC | 1 | 0.1.1 |
-| [l1-platform-shell.md](specifications/l1-platform-shell.md) | Public. Header, data-driven navigation, language and country switchers, footer, cookie notice, 404, legal pages | RFC | 1 | 0.3.0 |
+| [l1-platform-shell.md](specifications/l1-platform-shell.md) | Public. Header, data-driven navigation, language and country switchers, footer, cookie notice, 404, legal pages | Stable | 1 | 0.3.1 |
 | [l1-home-page.md](specifications/l1-home-page.md) | Public. Front-page block inventory, data sources, curation, four-viewport behaviour | Stable | 1 | 0.1.1 |
 | [l1-object-catalog.md](specifications/l1-object-catalog.md) | Public. Object type registry, search, filters, tier-governed ordering, map | RFC | 1 | 1.1.1 |
-| [l1-object-profile.md](specifications/l1-object-profile.md) | Public. Object page; direct-contact conversion contract, rooms, prices, services, reviews | RFC | 1 | 1.1.1 |
+| [l1-object-profile.md](specifications/l1-object-profile.md) | Public. Object page; direct-contact conversion contract, rooms, prices, services, reviews | Stable | 1 | 1.2.0 |
 | [l1-availability-status.md](specifications/l1-availability-status.md) | Public. Owner-asserted "vacancies available" flag, staleness management | Stable | 1 | 0.2.0 |
 | [l1-content-publishing.md](specifications/l1-content-publishing.md) | Public. Articles, news, and promotions; shared publication pipeline | RFC | 1 | 1.0.0 |
 | [l1-seo.md](specifications/l1-seo.md) | Public. URL grammar, metadata, indexation policy, structured data, sitemaps, redirects | Stable | 1 | 0.2.0 |
@@ -87,7 +92,7 @@ Delivery → Optional → Implementation); the registry itself is flat.
 | [l1-placement-monetization.md](specifications/l1-placement-monetization.md) | Commerce. Four placement tiers, packages, bump mechanics, expiry, financial ledger | RFC | 1 | 0.1.1 |
 | [l1-advertising.md](specifications/l1-advertising.md) | Commerce. Geo/language-targeted banners, slots, scheduling, promotional labels | RFC | 1 | 0.2.1 |
 | [l1-analytics.md](specifications/l1-analytics.md) | Commerce. Event model, aggregation, traffic sources, owner and operator reporting, privacy bounds | RFC | 1 | 0.2.1 |
-| [l1-public-api.md](specifications/l1-public-api.md) | Integration. Outward-facing REST contract, issued tokens, scoping, rate limits, documentation | RFC | 1 | 0.1.1 |
+| [l1-public-api.md](specifications/l1-public-api.md) | Integration. Outward-facing REST contract, issued tokens, scoping, rate limits, documentation | Stable | 1 | 0.2.0 |
 | [l1-release-operations.md](specifications/l1-release-operations.md) | Delivery. Promotion path, gate obligations, release records, the two reversal paths, operator documentation set, agent-decided vs. human-decided release actions, scoped development-phase gate-construction exception, standing autonomous-operation grant with its sensitive-zone circuit breaker, interim single-line branch state | RFC | 1 | 0.5.1 |
 | [l1-room-reservation.md](specifications/l1-room-reservation.md) | Optional module — **disabled by default**. Booking: calendars, requests, prepaid checkout | RFC | 1 | 1.0.1 |
 | [l2-data-model.md](specifications/l2-data-model.md) | Implementation. Consolidated table inventory, conventions, index plan, deletion and archival rules, schema deliverables | RFC | 2 | 0.3.1 |
@@ -116,16 +121,28 @@ what let both L2 promotions satisfy the rule that an implementation spec needs a
 hard-dependency cycle, layer constraint satisfied, Overview plus substantive design
 sections present, Canonical References filled.
 
-**Skipped — live `TBD` marker (18, now 17).** The constitution's §2 gate is "no open
+**Skipped — live `TBD` marker (18, now 14).** The constitution's §2 gate is "no open
 questions", and each of these still carries one inline: `l1-advertising` (2),
 `l1-analytics`, `l1-back-office`, `l1-content-publishing`, `l1-feature-modules`,
 `l1-geography`, `l1-moderation-governance`, `l1-notifications`, `l1-object-catalog`,
-`l1-object-onboarding`, `l1-object-profile`, `l1-placement-monetization`,
-`l1-platform-shell`, `l1-public-api`, `l1-room-reservation`, ~~`l1-seo`~~,
+`l1-object-onboarding`, ~~`l1-object-profile`~~, `l1-placement-monetization`,
+~~`l1-platform-shell`~~, ~~`l1-public-api`~~, `l1-room-reservation`, ~~`l1-seo`~~,
 `l2-data-model`, `l2-third-party-integrations`.
 
 `l1-seo` left this list on 2026-08-22 — its `TBD` was the domain question, closed by
-the URL-Grammar Ledger below.
+the URL-Grammar Ledger below. `l1-platform-shell` left it the same day: its TBD
+(country-switcher navigate-vs-rescope, §2) had a single valid answer given the
+constraint that an object page belongs to exactly one country — recorded as the
+confirmed model rather than an open question. See its own Document History (v0.3.1).
+
+`l1-object-profile` and `l1-public-api` left the same day, both via a direct project
+owner decision rather than an inference from existing code. `l1-object-profile` §2's
+review-authorship TBD is resolved as "administrator-configurable portal setting, not
+a fixed policy" — the schema already supports either mode, and no public review-
+submission surface exists yet to enforce it against. `l1-public-api` §2's TBD (named
+consumer, rate-limit figures, republishing rights) is resolved by locking in the
+spec's own already-described conservative shape as the settled decision rather than
+an open question. See each spec's Document History (v1.2.0, v0.2.0).
 
 These are not uniform. Some ask questions the delivered implementation has already
 answered in practice — the answer was simply never written back into the specification,
@@ -348,4 +365,4 @@ this workflow's.
 ## Meta Information
 
 - **Maintainer**: Core Team
-- **Last Updated**: 2026-08-22 (branch model reconciled to the owner's single-line development posture, then corrected same-day to attribute the pause to its actual recorded decision rather than to newly found drift; delivery pair back to `RFC` at 0.5.1 — 25 specifications, 6 `Stable`)
+- **Last Updated**: 2026-08-22 (Phase 9 remediation pass — `l1-platform-shell`, `l1-object-profile`, `l1-public-api` promoted RFC → Stable, closing their live TBDs; 25 specifications, 9 `Stable`. Earlier the same day: branch model reconciled to the owner's single-line development posture, then corrected same-day to attribute the pause to its actual recorded decision rather than to newly found drift; delivery pair back to `RFC` at 0.5.1)

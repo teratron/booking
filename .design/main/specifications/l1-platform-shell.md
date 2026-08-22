@@ -1,7 +1,7 @@
 # Platform Shell
 
-**Version:** 0.3.0
-**Status:** RFC
+**Version:** 0.3.1
+**Status:** Stable
 **Layer:** concept
 
 ## Overview
@@ -46,10 +46,12 @@ every other page resolves the content the visitor expects.
   (`[TZ]` §20).
 - The country switcher changes the browsing scope; it does **not** change the
   language ([l1-localization.md](l1-localization.md) §3).
-- <!-- TBD: whether selecting a country navigates to that country's landing page or
-     re-scopes the current page in place is not stated in [TZ]. Modeled below as
-     navigation to the country landing page, which is unambiguous and always valid;
-     in-place re-scoping fails for object pages, which belong to one country. -->
+- Selecting a country navigates to that country's landing page rather than
+  re-scoping the current page in place — `[TZ]` does not state this directly, but
+  in-place re-scoping cannot work for a page that belongs to exactly one country
+  (an object page, for instance), so navigation is the only model valid on every
+  page the switcher appears on. §5.3 models this behaviour; the shipped switcher
+  component implements it unchanged.
 - No third-party marketing, advertising, or tracking cookies exist in this
   architecture — analytics is first-party and aggregate
   ([l1-analytics.md](l1-analytics.md) §3.3), and advertising is server-targeted house
@@ -275,3 +277,4 @@ reaching the owner's contact channel ([l1-object-profile.md](l1-object-profile.m
 | 0.1.0 | 2026-07-30 | Initial draft derived from recurring header/footer/overlay frames. |
 | 0.2.0 | 2026-08-05 | Minor: widened navigation to the portal's full section list with data-driven grouping; added the country switcher, global header search, breadcrumbs, terms-of-use page, and the four-viewport responsive matrix. |
 | 0.3.0 | 2026-08-20 | Minor: added the cookie consent notice as a shared shell overlay (§5.5) — an acknowledgment-only model, not Accept/Reject, because the portal's full storage footprint is first-party and essential; no dedicated Figma node exists for it, so it reuses existing overlay and footer tokens. |
+| 0.3.1 | 2026-08-22 | Patch: closed §2's inline TBD on country-switcher behaviour — confirmed navigation to the country landing page (not in-place re-scoping) as the settled model, matching the already-shipped switcher component; no behavioural change. `Status: RFC → Stable`. |
