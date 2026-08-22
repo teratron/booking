@@ -13,10 +13,11 @@ use App\Support\Catalog\CatalogSearchCriteria;
  * actually declares — shaped the way that attribute is actually stored —
  * ever reach {@see CatalogQueryService}.
  *
- * {@see CatalogSearchCriteria} states that facet resolution is the calling
- * page's job, not the DTO's. This is that resolution for the `attributes`
- * bag, extracted from the catalog page so the public API can reuse the one
- * implementation when it grows its own attribute filters.
+ * {@see CatalogSearchCriteria} states that facet
+ * resolution is the calling page's job, not the DTO's. This is that
+ * resolution for the `attributes` bag, extracted from the catalog page so
+ * the public API can reuse the one implementation when it grows its own
+ * attribute filters.
  *
  * Three things go wrong without it, and every one of them is reachable
  * from a hand-edited query string:
@@ -41,7 +42,13 @@ final class AttributeFilterResolver
      * The subset of $raw that $type declares, coerced to the comparison
      * shape each declared type is stored in.
      *
-     * @param  array<string, mixed>  $raw
+     * $raw's keys are declared as `array-key`, not `string`: it arrives
+     * straight from a Livewire `#[Url]` property bound to a query string,
+     * and PHP's own array-key coercion turns a segment like `attrs[0]=x`
+     * into an integer key regardless of what the rest of the request looks
+     * like — the `is_string()` guard below is real, not defensive noise.
+     *
+     * @param  array<array-key, mixed>  $raw
      * @return array<string, array{min?: float, max?: float}|scalar>
      */
     public function resolve(?ObjectType $type, array $raw): array
@@ -80,12 +87,10 @@ final class AttributeFilterResolver
     {
         $declared = [];
 
-        /** @var mixed $attribute */
-        foreach ($type->attribute_schema ?? [] as $attribute) {
-            if (! is_array($attribute)) {
-                continue;
-            }
+        /** @var list<array<string, mixed>> $schema */
+        $schema = $type->attribute_schema ?? [];
 
+        foreach ($schema as $attribute) {
             $key = $attribute['key'] ?? null;
             $declaredType = $attribute['type'] ?? null;
 
@@ -101,9 +106,9 @@ final class AttributeFilterResolver
      * One filter value, or null when this attribute cannot be filtered the
      * way the request asked.
      *
-     * @return array{min?: float, max?: float}|scalar|null
+     * @return array{min?: float, max?: float}|float|string|null
      */
-    private function coerce(string $declaredType, mixed $value): array|string|int|float|bool|null
+    private function coerce(string $declaredType, mixed $value): array|float|string|null
     {
         if ($value === null || $value === '' || $value === []) {
             return null;
