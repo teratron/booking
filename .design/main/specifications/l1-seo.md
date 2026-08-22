@@ -1,7 +1,7 @@
 # SEO
 
-**Version:** 0.1.2
-**Status:** RFC
+**Version:** 0.2.0
+**Status:** Stable
 **Layer:** concept
 
 ## Overview
@@ -40,10 +40,10 @@ Left ungoverned, that produces enormous volumes of near-duplicate URLs — the s
 most common way a catalog site damages its own search performance. Most of §3 exists
 to prevent that.
 
-## 2. Constraints & Assumptions
+## 2. Constraints & Assumptions [MODIFIED — v0.2.0]
 
-- Three countries, one domain, and two active languages at launch — English and
-  Russian, growing to five ([l1-localization.md](l1-localization.md) §5.6, §7).
+- Three countries and two active languages at launch — English and Russian, growing
+  to five ([l1-localization.md](l1-localization.md) §5.6).
   Sitemaps, alternate links, and slug uniqueness are all built per active language,
   so the growth adds volume without changing any rule in this spec.
 - SEO fields are per entity **and** per language (`[TZ]` §92).
@@ -51,10 +51,12 @@ to prevent that.
   categories, objects, news, promotions, articles (`[TZ]` §92).
 - Territory and object volumes are large enough that sitemaps must be indexed and
   paginated rather than monolithic.
-- <!-- TBD: whether country-specific domains replace the single-domain launch model
-     is deferred in l1-localization.md §7. The URL grammar in §5.1 is chosen to keep
-     that migration mechanical, but the decision affects hreflang and canonical
-     strategy and should be settled before large-scale indexing begins. -->
+- **One origin serves all three countries**, with the language as the leading path
+  segment (§5.1). Per-country domains were evaluated and retired on 2026-08-15
+  ([l1-localization.md](l1-localization.md) §7); they are no longer a deferred
+  migration. Every rule in §3.1 and §3.3 therefore resolves within a single origin —
+  a canonical URL and its alternates are always same-origin, which is what keeps
+  the alternate set consistent as languages are activated.
 
 ## 3. Core Invariants (Layer 1 only)
 
@@ -215,7 +217,7 @@ maintainable — at portal scale nobody discovers a duplicate slug by browsing.
 5. Create the redirect entry in the same operation as the slug change. A redirect
    added later is added after the traffic has already been lost.
 
-## 7. Drawbacks & Alternatives
+## 7. Drawbacks & Alternatives [MODIFIED — v0.2.0]
 
 **Indexing all filter combinations to maximize coverage.** The intuitive growth play
 and the standard way catalog sites damage themselves: thousands of near-identical
@@ -230,8 +232,13 @@ first-class product operation.
 
 **Language subdomains or country domains instead of path prefixes.** Stronger local
 signal and heavier operationally — three certificates, three deployments, three
-back-office contexts. Deferred with the migration path kept open
-([l1-localization.md](l1-localization.md) §7).
+back-office contexts. **Retired on 2026-08-15**, not deferred: the portal serves all
+three countries from one origin, and the migration path this section previously kept
+open was closed by the project owner ([l1-localization.md](l1-localization.md) §7).
+The path grammar in §5.1 is unchanged by that closure — it was already the
+single-origin form — so the decision costs no rework here; what it removes is the
+standing assumption that the alternate and canonical rules must stay portable to a
+multi-origin layout.
 
 **Deferring SEO to after launch.** The most expensive option available. URL grammar,
 slug stability, and indexation policy are all decisions that become permanent the
@@ -251,3 +258,4 @@ moment pages are indexed; retrofitting them means mass redirects and a ranking r
 | 0.1.0 | 2026-08-05 | Initial draft derived from the client technical specification. |
 | 0.1.1 | 2026-08-05 | Clarification only: restated language references as "active languages" (two at launch, five eventually) following l1-localization.md v0.2.0; no rule changed. |
 | 0.1.2 | 2026-08-05 | Patch: translated quoted `[TZ]` excerpts and the §1 sample search query from Russian to English per the project's language policy; no rule changed. |
+| 0.2.0 | 2026-08-22 | Minor: closed §2's open question on country-specific domains — the project owner retired them on 2026-08-15 in favour of a single origin with the language as the leading path segment. §2 now states the settled constraint and its consequence for the canonical/alternate rules; §7 records the option as retired rather than deferred. §5.1's grammar is unchanged: it was already the single-origin form. |

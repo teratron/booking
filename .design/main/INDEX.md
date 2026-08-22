@@ -1,6 +1,6 @@
 # Workspace Specifications Registry
 
-**Version:** 2.8.0
+**Version:** 2.9.0
 **Status:** Active
 
 ## Overview
@@ -13,19 +13,19 @@ booking marketplace to a multi-country tourism information portal. See
 [l1-platform-foundation.md](specifications/l1-platform-foundation.md) §5.3 for the
 scope-delta ledger.
 
-**Status posture (stabilization pass, 2026-08-20):** that pass promoted 6 of 25
-specifications to `Stable`, leaving 19 at `RFC`. The delivery pair left that set
-briefly on 2026-08-21 — reverted to `RFC` by the constitution's amendment rule, then
-re-promoted the same day once the findings that held them there were closed — so the
-count is again **6 `Stable`, 19 `RFC`**. The Amendment Ledger below records the round
-trip. The gate for the 19 is §2 of the project constitution —
-`RFC → Stable` requires "no open questions", and 18 specifications still carry a live
-inline `TBD` marker. Those markers are the real remaining design work: several ask
+**Status posture (URL-grammar pass, 2026-08-22):** the count is **8 `Stable`,
+17 `RFC`**. The 2026-08-20 stabilization pass promoted 6 of 25; the delivery pair left
+that set briefly on 2026-08-21 — reverted to `RFC` by the constitution's amendment
+rule, then re-promoted the same day once the findings that held them there were closed
+— and the Amendment Ledger below records that round trip. This pass added
+`l1-localization.md` and `l1-seo.md`; the URL-Grammar Ledger below records why.
+
+The gate for the remaining 17 is §2 of the project constitution — `RFC → Stable`
+requires "no open questions", and each still carries a live inline `TBD` marker. Those
+markers are the real remaining design work, and they are not uniform: several ask
 questions the implementation has already answered in practice without the answer ever
-being written back. The nineteenth, `l1-localization.md`, is held for a different
-reason — its §7 keeps per-country domains as "a documented later migration", which the
-project owner retired on 2026-08-15 in favour of a single host with the language as
-the leading path segment. Per-file reasons are in the Stabilization Ledger below.
+being written back, while others are genuinely open product decisions. Per-file
+reasons are in the Stabilization Ledger below.
 
 A second, line-by-line pass over `[TZ]` on the same date closed six coverage gaps and
 added three specifications: `l1-home-page.md` (§4/§5), `l1-public-api.md` (§19), and
@@ -63,9 +63,9 @@ Delivery → Optional → Implementation); the registry itself is flat.
 
 | File | Description | Status | Layer | Version |
 | --- | --- | --- | --- | --- |
-| [l1-platform-foundation.md](specifications/l1-platform-foundation.md) | Foundation. Cross-cutting invariants: delivery (incl. accessibility), reach, domain, governance, commerce, evolution, privacy; delivery stages | Stable | 1 | 1.5.2 |
+| [l1-platform-foundation.md](specifications/l1-platform-foundation.md) | Foundation. Cross-cutting invariants: delivery (incl. accessibility), reach, domain, governance, commerce, evolution, privacy; delivery stages | Stable | 1 | 1.5.3 |
 | [l1-feature-modules.md](specifications/l1-feature-modules.md) | Foundation. Administrator-toggleable capability modules; scoping ladder, dependencies, inertness, candidate modules | RFC | 1 | 0.2.1 |
-| [l1-localization.md](specifications/l1-localization.md) | Foundation. Countries, languages (launch: EN + RU), per-entity translation model, phased activation | RFC | 1 | 0.2.1 |
+| [l1-localization.md](specifications/l1-localization.md) | Foundation. Countries, languages (launch: EN + RU), per-entity translation model, phased activation | Stable | 1 | 0.3.0 |
 | [l1-geography.md](specifications/l1-geography.md) | Foundation. Recursive territory hierarchy, per-country level vocabularies, landing pages | RFC | 1 | 0.1.1 |
 | [l1-platform-shell.md](specifications/l1-platform-shell.md) | Public. Header, data-driven navigation, language and country switchers, footer, cookie notice, 404, legal pages | RFC | 1 | 0.3.0 |
 | [l1-home-page.md](specifications/l1-home-page.md) | Public. Front-page block inventory, data sources, curation, four-viewport behaviour | Stable | 1 | 0.1.1 |
@@ -73,7 +73,7 @@ Delivery → Optional → Implementation); the registry itself is flat.
 | [l1-object-profile.md](specifications/l1-object-profile.md) | Public. Object page; direct-contact conversion contract, rooms, prices, services, reviews | RFC | 1 | 1.1.1 |
 | [l1-availability-status.md](specifications/l1-availability-status.md) | Public. Owner-asserted "vacancies available" flag, staleness management | Stable | 1 | 0.2.0 |
 | [l1-content-publishing.md](specifications/l1-content-publishing.md) | Public. Articles, news, and promotions; shared publication pipeline | RFC | 1 | 1.0.0 |
-| [l1-seo.md](specifications/l1-seo.md) | Public. URL grammar, metadata, indexation policy, structured data, sitemaps, redirects | RFC | 1 | 0.1.2 |
+| [l1-seo.md](specifications/l1-seo.md) | Public. URL grammar, metadata, indexation policy, structured data, sitemaps, redirects | Stable | 1 | 0.2.0 |
 | [l1-object-onboarding.md](specifications/l1-object-onboarding.md) | Owner. Object submission and the full owner cabinet lifecycle | RFC | 1 | 1.2.1 |
 | [l1-back-office.md](specifications/l1-back-office.md) | Operator. Portal administration, scoped RBAC, bulk operations, import/export, settings | RFC | 1 | 0.1.1 |
 | [l1-moderation-governance.md](specifications/l1-moderation-governance.md) | Operator. Moderation modes and queue, audit journal, soft deletion, confirmation gates | RFC | 1 | 0.1.1 |
@@ -110,13 +110,16 @@ what let both L2 promotions satisfy the rule that an implementation spec needs a
 hard-dependency cycle, layer constraint satisfied, Overview plus substantive design
 sections present, Canonical References filled.
 
-**Skipped — live `TBD` marker (18).** The constitution's §2 gate is "no open
+**Skipped — live `TBD` marker (18, now 17).** The constitution's §2 gate is "no open
 questions", and each of these still carries one inline: `l1-advertising` (2),
 `l1-analytics`, `l1-back-office`, `l1-content-publishing`, `l1-feature-modules`,
 `l1-geography`, `l1-moderation-governance`, `l1-notifications`, `l1-object-catalog`,
 `l1-object-onboarding`, `l1-object-profile`, `l1-placement-monetization`,
-`l1-platform-shell`, `l1-public-api`, `l1-room-reservation`, `l1-seo`,
+`l1-platform-shell`, `l1-public-api`, `l1-room-reservation`, ~~`l1-seo`~~,
 `l2-data-model`, `l2-third-party-integrations`.
+
+`l1-seo` left this list on 2026-08-22 — its `TBD` was the domain question, closed by
+the URL-Grammar Ledger below.
 
 These are not uniform. Some ask questions the delivered implementation has already
 answered in practice — the answer was simply never written back into the specification,
@@ -125,18 +128,20 @@ product decisions (`l1-room-reservation`'s commission model, `l1-public-api`'s a
 consumer and rate limits). Closing them is design work, not a status edit, and it is
 the precondition for the next stabilization pass.
 
-**Skipped — superseded content (1).** `l1-localization` §7 keeps per-country domains
-as "a documented later migration". The project owner retired that on 2026-08-15: one
-host, language as the leading path segment, no subdomains and no per-country domains.
-Promoting the spec would ratify a decision that has been reversed. `l1-seo` §2 carries
-the same stale expectation and is already held above for its own `TBD`.
+**Skipped — superseded content (1). Closed 2026-08-22.** `l1-localization` §7 kept
+per-country domains as "a documented later migration". The project owner retired that
+on 2026-08-15: one origin, language as the leading path segment, no subdomains and no
+per-country domains. Promoting the spec would have ratified a decision that had been
+reversed. `l1-seo` §2 carried the same stale expectation and was held above for its
+own `TBD`. Both are resolved in the URL-Grammar Ledger below.
 
-**Advisory, non-blocking.** `l1-platform-foundation` §5.1 still frames the URL grammar
-as an open choice — "prefix vs. domain vs. subdomain" — and delegates it to
-`l1-localization` §5.3 and `l1-seo` §5.1. The delegation is structurally right and the
-duplication rule says the decision belongs in those files, not restated here; but both
-referents are `RFC` and stale on exactly that point. Amending them resolves the
-phrasing here at the same time.
+**Advisory, non-blocking. Closed 2026-08-22.** `l1-platform-foundation` §5.1 framed the
+URL grammar as an open choice — "prefix vs. domain vs. subdomain" — and delegated it to
+`l1-localization` §5.3 and `l1-seo` §5.1. The delegation was structurally right and the
+duplication rule puts the decision in those files rather than restated here; but both
+referents were `RFC` and stale on exactly that point. Amending them resolved the
+phrasing here at the same time, and surfaced that one of the two delegation targets was
+wrong — see below.
 
 ## Amendment Ledger (2026-08-21)
 
@@ -217,7 +222,50 @@ were resolved, and a fourth surfaced while resolving them.
 The lesson is recorded in L1 §5.5.2 rather than only here: declaring a zone is not
 enforcing it, both halves fail quietly, and neither may be inferred from the other.
 
+## URL-Grammar Ledger (2026-08-22)
+
+Three specifications still described per-country domains as a live deferred migration
+five weeks after the project owner retired the option. This pass reconciled the record
+to the decision. Nothing in the delivered design changed — `l1-seo` §5.1 already
+specified the single-origin, language-prefixed grammar the owner chose — so the whole
+correction is to the framing around it, and to what that framing was obliging
+downstream sections to preserve.
+
+**Amended (3).**
+
+- `l1-localization` **0.2.1 → 0.3.0**, `RFC → Stable`. §7 records country-per-domain as
+  retired rather than deferred, and states the consequence: downstream addressing rules
+  are no longer obliged to stay portable to a multi-origin layout. This was the sole
+  reason the specification was held back on 2026-08-20; with it closed and no inline
+  `TBD` anywhere in the file, the §2 gate is satisfied.
+- `l1-seo` **0.1.2 → 0.2.0**, `RFC → Stable`. §2's `TBD` — the domain question — is
+  replaced by the settled constraint plus its effect on §3.1 and §3.3: a canonical URL
+  and its alternates are always same-origin. §7 records the subdomain/domain option as
+  retired. This was the file's only `TBD`.
+- `l1-platform-foundation` **1.5.2 → 1.5.3**, stays `Stable`. §5.1 no longer frames the
+  grammar as an open three-way choice. Patch, not minor: no invariant was added,
+  changed, or removed, so the amendment rule's `Stable → RFC` transition does not fire
+  and no C12 cascade reaches `l2-tech-stack`.
+
+**Surfaced while amending.** §5.1 delegated the URL grammar to `l1-localization` §5.3
+*and* `l1-seo` §5.1. The first reference is wrong — §5.3 specifies language resolution
+and fallback and has never defined a URL shape. The grammar has exactly one owner,
+`l1-seo` §5.1, and §5.1 now says so. A delegation pointing at a section that does not
+contain the delegated content reads as correct for as long as nobody follows it, which
+is why it survived three prior passes over this file.
+
+**Open, not addressed here.** `l1-platform-foundation` §5.1's site map still lists the
+back office at `/admin/**` and the owner cabinet at `/cabinet/**` as literal paths.
+Both are configuration in the delivered system, and the staff panel's default is
+deliberately *not* `/admin` — a guessable staff address attracts the credential-stuffing
+traffic the sign-in throttle then absorbs. No specification in this workspace states
+that requirement at all, so writing it into §5.1 would be a new requirement rather than
+a correction: minor bump, `Stable → RFC`, and a C12 cascade quarantining
+`l2-tech-stack`. That is a deliberate amendment to schedule, not a side effect to take
+on inside a URL-grammar pass. `l1-back-office` is the natural home for the requirement
+and is already `RFC`, so siting it there costs no cascade at all.
+
 ## Meta Information
 
 - **Maintainer**: Core Team
-- **Last Updated**: 2026-08-21 (delivery pair reconciled, remediated, and re-promoted to `Stable` at 0.4.0 — 25 specifications)
+- **Last Updated**: 2026-08-22 (URL grammar reconciled to the 2026-08-15 single-origin decision; `l1-localization` and `l1-seo` promoted to `Stable` — 25 specifications, 8 `Stable`)

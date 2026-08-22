@@ -1,7 +1,7 @@
 # Localization
 
-**Version:** 0.2.1
-**Status:** RFC
+**Version:** 0.3.0
+**Status:** Stable
 **Layer:** concept
 
 ## Overview
@@ -259,7 +259,7 @@ If that is not true, the deferral was not implemented as specified.
    `[TZ]` §42 gives an owner a cabinet-language setting distinct from the site
    language they browse.
 
-## 7. Drawbacks & Alternatives
+## 7. Drawbacks & Alternatives [MODIFIED — v0.3.0]
 
 **Column-per-language, as literally written in `[TZ]` §66.** The client's own draft
 shows `name_uk`, `name_ru`, `name_ro`, `name_ka` columns on the country table.
@@ -275,11 +275,22 @@ but loses per-language uniqueness constraints on slugs, makes "list all untransl
 objects" (`[TZ]` §108) a full scan, and cannot be foreign-keyed to the language
 registry. Rejected on the reporting requirement alone.
 
-**Country-per-domain (`.md`, `.ua`, `.ge`).** Strong for local SEO and rejected only
+**Country-per-domain (`.md`, `.ua`, `.ge`).** Strong for local SEO, and rejected
 because it multiplies deployment, certificate, and back-office complexity by three
-before the portal has proven any of the three markets. Kept as a documented later
-migration — the URL grammar in [l1-seo.md](l1-seo.md) §5.1 is chosen so the move
-stays possible.
+before the portal has proven any of the three markets.
+
+Until 2026-08-15 this section kept the option alive as "a documented later
+migration". The project owner closed it on that date: the portal serves all three
+countries from **one origin**, with the language as the leading path segment and no
+per-country domains or subdomains — the grammar already recorded in
+[l1-seo.md](l1-seo.md) §5.1. The option is recorded here as **retired**, not
+deferred.
+
+The distinction matters beyond bookkeeping. A deferred migration is a standing
+constraint: every addressing, canonical, and alternate-link rule downstream has to
+stay portable to a layout nobody has committed to building. Retiring it removes that
+obligation, and it is the reason the rules in [l1-seo.md](l1-seo.md) §3.1 and §3.3
+may now assume a single origin outright rather than merely happening to have one.
 
 ## Canonical References
 
@@ -295,3 +306,4 @@ stays possible.
 | 0.1.0 | 2026-08-05 | Initial draft derived from the client technical specification. |
 | 0.2.0 | 2026-08-05 | Minor: split the language set into launch (English, Russian) and eventual (plus Romanian, Ukrainian, Georgian) per explicit product direction; added §5.6 Phased Language Activation with the no-code-change trace, the inactive-primary-language consequence, and a definition of done for the deferral. |
 | 0.2.1 | 2026-08-05 | Patch: translated quoted `[TZ]` excerpts from Russian to English per the project's language policy; no meaning changed. |
+| 0.3.0 | 2026-08-22 | Minor: §7 records country-per-domain as retired rather than deferred, following the project owner's 2026-08-15 decision to serve all three countries from one origin with the language as the leading path segment. Adds the consequence — downstream addressing rules are no longer obliged to stay portable to a multi-origin layout. No rule in §5 changed; the grammar was already single-origin. |

@@ -30,3 +30,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated task execution state (main)
 - Updated implementation plan (main)
 - Updated a specification (main)
+- Updated 3 specifications (main)

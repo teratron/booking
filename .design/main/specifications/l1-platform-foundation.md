@@ -1,6 +1,6 @@
 # Platform Foundation
 
-**Version:** 1.5.2
+**Version:** 1.5.3
 **Status:** Stable
 **Layer:** concept
 
@@ -235,9 +235,11 @@ specs from each carrying their own private theory of what the product is.
 /admin/**                        Portal back office            -> l1-back-office
 ```
 
-Every public route above is language-prefixed and country-aware; the exact URL
-grammar (prefix vs. domain vs. subdomain) is owned by
-[l1-localization.md](l1-localization.md) §5.3 and [l1-seo.md](l1-seo.md) §5.1.
+Every public route above is language-prefixed and country-aware. The exact URL grammar
+is owned by [l1-seo.md](l1-seo.md) §5.1 — a single owner, and settled rather than
+open: the alternatives it was once weighed against were retired on 2026-08-15
+([l1-localization.md](l1-localization.md) §7). The site map above is therefore the
+shape the portal ships, not one candidate among several.
 
 ### 5.2 Core Entity Relationship
 
@@ -384,3 +386,4 @@ trade is no longer close.
 | 1.5.0 | 2026-08-20 | Minor: added the accessibility-parity invariant to §3.1 Delivery — WCAG 2.2 AA for the portal's own interface, explicitly distinguished from `[TZ]` §78's unrelated object-amenity "accessible for people with disabilities" flag. Mechanism recorded in [l2-tech-stack.md](l2-tech-stack.md) §5.9. |
 | 1.5.1 | 2026-08-20 | Patch: named ARIA explicitly, within the existing accessibility-parity bullet, as the mechanism for custom-component semantics — clarification only, no new invariant (ARIA validity is covered by the same §5.9 verification, not a separate one). |
 | 1.5.2 | 2026-08-20 | Patch: linked the new release-operations specification, which serves §5.4's delivery stages. Navigation only — no invariant added, changed, or removed. |
+| 1.5.3 | 2026-08-22 | Patch: §5.1 no longer frames the URL grammar as an open choice between prefix, domain, and subdomain — the choice was settled on 2026-08-15 in favour of a single origin with a language path prefix. Also corrects the delegation target: the grammar is owned by [l1-seo.md](l1-seo.md) §5.1, not by [l1-localization.md](l1-localization.md) §5.3, which specifies resolution and fallback. Clarification only — no invariant added, changed, or removed. |
