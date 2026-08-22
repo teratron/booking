@@ -14,13 +14,17 @@ booking marketplace to a multi-country tourism information portal. See
 scope-delta ledger.
 
 **Status posture (branch-model pass, 2026-08-22):** the count is **6 `Stable`,
-19 `RFC`** — the delivery pair returned to `RFC` on the same day it had been at 8/17,
-this time by an amendment that was expected rather than discovered. The Branch-Model
-Ledger below records it. Earlier the same day the count was 8/17: The 2026-08-20 stabilization pass promoted 6 of 25; the delivery pair left
-that set briefly on 2026-08-21 — reverted to `RFC` by the constitution's amendment
-rule, then re-promoted the same day once the findings that held them there were closed
-— and the Amendment Ledger below records that round trip. This pass added
-`l1-localization.md` and `l1-seo.md`; the URL-Grammar Ledger below records why.
+19 `RFC`** — the delivery pair returned to `RFC` on the same day it had reached 8/17,
+this time to reconcile the registry with an owner decision recorded elsewhere in the
+repository, not to correct a newly found defect. The Branch-Model Ledger below records
+it, including where the ledger's own first draft mis-stated the decision's origin.
+
+Earlier the same day the count was 8/17. The 2026-08-20 stabilization pass promoted 6
+of 25; the delivery pair left that set briefly on 2026-08-21 — reverted to `RFC` by the
+constitution's amendment rule, then re-promoted the same day once the findings that
+held them there were closed — and the Amendment Ledger below records that round trip.
+A same-day URL-grammar pass added `l1-localization.md` and `l1-seo.md`; the
+URL-Grammar Ledger below records why.
 
 The gate for the remaining 17 is §2 of the project constitution — `RFC → Stable`
 requires "no open questions", and each still carries a live inline `TBD` marker. Those
@@ -84,12 +88,12 @@ Delivery → Optional → Implementation); the registry itself is flat.
 | [l1-advertising.md](specifications/l1-advertising.md) | Commerce. Geo/language-targeted banners, slots, scheduling, promotional labels | RFC | 1 | 0.2.1 |
 | [l1-analytics.md](specifications/l1-analytics.md) | Commerce. Event model, aggregation, traffic sources, owner and operator reporting, privacy bounds | RFC | 1 | 0.2.1 |
 | [l1-public-api.md](specifications/l1-public-api.md) | Integration. Outward-facing REST contract, issued tokens, scoping, rate limits, documentation | RFC | 1 | 0.1.1 |
-| [l1-release-operations.md](specifications/l1-release-operations.md) | Delivery. Promotion path, gate obligations, release records, the two reversal paths, operator documentation set, agent-decided vs. human-decided release actions, scoped development-phase gate-construction exception, standing autonomous-operation grant with its sensitive-zone circuit breaker, interim single-line branch state | RFC | 1 | 0.5.0 |
+| [l1-release-operations.md](specifications/l1-release-operations.md) | Delivery. Promotion path, gate obligations, release records, the two reversal paths, operator documentation set, agent-decided vs. human-decided release actions, scoped development-phase gate-construction exception, standing autonomous-operation grant with its sensitive-zone circuit breaker, interim single-line branch state | RFC | 1 | 0.5.1 |
 | [l1-room-reservation.md](specifications/l1-room-reservation.md) | Optional module — **disabled by default**. Booking: calendars, requests, prepaid checkout | RFC | 1 | 1.0.1 |
 | [l2-data-model.md](specifications/l2-data-model.md) | Implementation. Consolidated table inventory, conventions, index plan, deletion and archival rules, schema deliverables | RFC | 2 | 0.3.1 |
 | [l2-tech-stack.md](specifications/l2-tech-stack.md) | Implementation. Laravel 13 + Filament 5 + PostgreSQL/PostGIS + Redis; package set, bespoke surface, quality gates (incl. WCAG 2.2 AA + ARIA) and performance budgets, self-hosted deployment, dev/production environment configuration | Stable | 2 | 2.4.1 |
 | [l2-third-party-integrations.md](specifications/l2-third-party-integrations.md) | Implementation. External services: storage, CDN, map tiles, SMTP, CAPTCHA, error tracking, dormant payment | RFC | 2 | 2.0.0 |
-| [l2-release-pipeline.md](specifications/l2-release-pipeline.md) | Implementation. Git Flow branch contract, two GitHub Actions workflows, image digest as release artefact, pull-based deploy with health-assertion rollback, destructive-migration scan, automation identity permissions, sensitive-zone enforcement, EN/RU/agent documentation tree | RFC | 2 | 0.5.0 |
+| [l2-release-pipeline.md](specifications/l2-release-pipeline.md) | Implementation. Git Flow branch contract, two GitHub Actions workflows, image digest as release artefact, pull-based deploy with health-assertion rollback, destructive-migration scan, automation identity permissions, sensitive-zone enforcement, EN/RU/agent documentation tree | RFC | 2 | 0.5.1 |
 
 ## Rename Map (2026-08-05)
 
@@ -311,12 +315,31 @@ release, not restored after one.
 
 `l1-release-operations` §5.5.2 now carries a third failure mode alongside the two the
 2026-08-21 round trip produced. Declared-but-not-enforced and enforced-but-incomplete
-were both about enforcement never built; this one is enforcement that was built, verified
-live, and later ceased to exist. A declared zone, an enforced zone, and a *still*-enforced
-zone are three different claims, and only a live read establishes the third.
+were both about enforcement never built; this one is enforcement that was built,
+verified live, and then deliberately taken down in the same decision that opened the
+interim state — not lost to drift, but identical in effect. A declared zone, an
+enforced zone, and a *currently* enforced zone are three different claims, and a live
+read is what distinguishes them — cross-checked against the decision record that
+explains what it should currently show, since a project's own operating decisions can
+suspend enforcement on purpose.
 
 **Quarantine (C12).** `l1-release-operations` dropping to `RFC` cascades to
 `l2-release-pipeline`, already `RFC` here on its own amendment. No further dependents.
+
+**Correction, same day (0.5.0 → 0.5.1, both specs).** This ledger's own first pass, and
+the 0.5.0 specification text it summarized, framed the pause as newly discovered — "a
+live read... found", "enforcement that was built, verified live, and later ceased to
+exist... found on 2026-08-22". That is not what happened. The pause was decided and
+recorded the same day, before this pass began, in the project's own engineering-
+conventions document and branch-model runbook, with the prior working state (both
+branches protected, `develop` present) preserved at a named git tag. The live read this
+pass performed confirmed a documented decision; it did not uncover an undocumented one.
+The paragraphs above are corrected in place rather than left with the wrong framing,
+since — unlike the specification files, which carry their own dated history — this
+registry entry has none. §3.3 also gained the resumption condition both external
+documents already carried and this ledger's first pass omitted: a second developer
+joining ends the interim as surely as client launch does, since the reasoning is about
+headcount, not launch status.
 
 **Not addressed here — plan layer.** `T-8A01`, `T-8F02`, and `T-8F03` stand `Done` with
 `Verify` lines that no longer pass. Task records are `/magic.task`'s to reconcile, not
@@ -325,4 +348,4 @@ this workflow's.
 ## Meta Information
 
 - **Maintainer**: Core Team
-- **Last Updated**: 2026-08-22 (branch model reconciled to the owner's single-line development posture; delivery pair back to `RFC` at 0.5.0 — 25 specifications, 6 `Stable`)
+- **Last Updated**: 2026-08-22 (branch model reconciled to the owner's single-line development posture, then corrected same-day to attribute the pause to its actual recorded decision rather than to newly found drift; delivery pair back to `RFC` at 0.5.1 — 25 specifications, 6 `Stable`)

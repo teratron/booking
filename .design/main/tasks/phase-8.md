@@ -15,7 +15,7 @@ duration_minutes: ~
 # Stage 8 Tasks — Delivery Pipeline & Operator Documentation
 
 **Phase:** 8
-**Status:** In Progress (20/23 — Track F closed 2026-08-21 and both source specifications returned to `Stable` at v0.4.0 the same day, lifting the C12 quarantine this phase briefly carried. `T-8E01`, `T-8E03`, `T-8T03` are `Todo` again and remain owner-only for their own reasons, unrelated to spec status: no API path exists to create a GitHub App, the production credentials do not exist in this environment, and the rehearsal requires a human executor by the specification's own text — see STATE.md and [l1-release-operations.md](../specifications/l1-release-operations.md) §5.5.1)
+**Status:** In Progress (20/23 — the three remaining tasks are `Blocked [!] (C12)`. Track F closed 2026-08-21 and both source specifications returned to `Stable` at v0.4.0 the same day; on 2026-08-22 both dropped to `RFC` again — not by regression, but to reconcile with the project owner's single-line branch decision for the development period, recorded in `CLAUDE.md` § Release & Deployment and [l1-release-operations.md](../specifications/l1-release-operations.md) §3.3. `T-8E01`, `T-8E03`, `T-8T03` each already carried their own owner-only blocker unrelated to spec status — no API path to create a GitHub App, absent production credentials, and a human-executor requirement in the specification's own text — and the C12 marker sits alongside those, not in place of them. The quarantine lifts when §3.3's resumption condition is met, not by any task in this phase. See STATE.md and [l1-release-operations.md](../specifications/l1-release-operations.md) §5.5.1.)
 **Strategic Goal:** The portal's implementation is complete and it has never been
 released. This phase builds the path a change takes from an accepted branch to a
 serving production portal, the path back when a release turns out wrong, and the
@@ -77,9 +77,9 @@ and defers its proof to `T-8T03`, rather than claiming a verification it cannot 
 
 ### Track E — Identity, Environment & Secrets (operator-performed)
 
-- [ ] [T-8E01] Automation identity — a GitHub App with an explicitly withheld permission set
+- [ ] [T-8E01] Automation identity — a GitHub App with an explicitly withheld permission set `Blocked [!] (C12)`
 - [x] [T-8E02] `production` environment and its required reviewers
-- [ ] [T-8E03] Secrets across the three tiers, none of them in the repository
+- [ ] [T-8E03] Secrets across the three tiers, none of them in the repository `Blocked [!] (C12)`
 
 ### Track F — Sensitive-Zone Gate Integrity
 
@@ -91,7 +91,7 @@ and defers its proof to `T-8T03`, rather than claiming a verification it cannot 
 
 - [x] [T-8T01] Pipeline containment and gate parity, asserted as tests
 - [x] [T-8T02] Documentation parity — the three trees hold the same procedure set
-- [ ] [T-8T03] Rehearse the whole path on a disposable host, from the operator document
+- [ ] [T-8T03] Rehearse the whole path on a disposable host, from the operator document `Blocked [!] (C12)`
 
 ## Track Ordering
 
@@ -316,7 +316,7 @@ than last despite being the least technically interesting work in the phase.
 - **Assignment:** User
 - **Verify:** `gh api /app --jq '.permissions'` (authenticated as the app) shows contents read, pull-request write, and no repository-administration permission; the app does not appear in `gh api repos/teratron/booking/environments/production --jq '.protection_rules'` reviewer list.
 - **Handoff:** `T-8E02` must not add this identity as a reviewer.
-- **Notes:** A GitHub App installation — **not** a personal access token and not a shared account — so its actions are attributable to it rather than to whoever created its credential. The withheld column is the whole point: it may open, update and merge pull requests into `develop`, push tags, comment and report, but it cannot approve reviews on `master`, cannot change its own permissions, and holds no production-tier credential. An identity that can both request and grant its own promotion has no gate at all.
+- **Notes:** A GitHub App installation — **not** a personal access token and not a shared account — so its actions are attributable to it rather than to whoever created its credential. The withheld column is the whole point: it may open, update and merge pull requests into `develop`, push tags, comment and report, but it cannot approve reviews on `master`, cannot change its own permissions, and holds no production-tier credential. An identity that can both request and grant its own promotion has no gate at all. **`develop` is exactly the branch this task's own scope no longer exists against** — [l1-release-operations.md](../specifications/l1-release-operations.md) §3.3's 2026-08-22 interim clause removed it. Blocked doubly now: no GitHub API path to create the App (unrelated to spec status), and `Blocked [!] (C12)` because its L1 parent is `RFC`. Neither blocker is the other's to lift; C12 clears when [l1-release-operations.md](../specifications/l1-release-operations.md) §3.3's resumption condition is met, not by any action in this phase.
 
 **[T-8E02] `production` environment and its required reviewers**
 
@@ -341,6 +341,8 @@ than last despite being the least technically interesting work in the phase.
   Values are held by whoever operates the host. This task records **which** credentials exist and what each is for; their contents never enter this repository, this plan, or any release record.
 
   **`T-8B02` made one production-tier name concrete**: `MAINTENANCE_BYPASS_SECRET`, read by `docker/deploy/deploy.sh` from the `deploy` job's own environment and passed to `php artisan down --secret=`. Registry credentials need no separate secret at all — `T-8B01`'s `build` job already authenticates to `ghcr.io` with the built-in `GITHUB_TOKEN`. Repository-tier `MAP_TILE_KEY` was already named in `T-8B01`. The self-hosted-runner deployment model `T-8B02` chose also means "host access" is not a runner-side secret the way an SSH-based design would need — the runner already executes locally on the host under whatever account installed it.
+
+  **`Blocked [!] (C12)`, alongside its existing owner-only blocker.** The production credentials this task registers do not exist in this development environment regardless of spec status — that blocker is unrelated to and unaffected by the branch-model reconciliation. The C12 marker records the mechanical fact that its L1 parent is `RFC`, not a second, independent reason to wait.
 
 ### Track T — Validation & Acceptance
 
@@ -379,6 +381,8 @@ than last despite being the least technically interesting work in the phase.
 - **Notes:** The compliance test for "operable without its author" is not that the document exists — it is that somebody who did not write it completed the operation from it. That is why the executor must not be the author, and why an agent cannot substitute for this even in principle: an agent reading its own generated procedure proves nothing about whether a person can follow it.
 
   This task mirrors the restore rehearsal the project already performed rather than trusted, and it carries the same scheduling hazard the load test did in the previous phase: it sits last by dependency, which makes it the natural casualty of a compressed schedule. It is not optional. A deploy path accepted without its rollback rehearsed is exactly the state the reversibility invariant forbids, and "we will rehearse it after launch" is how it stays that way.
+
+  **`Blocked [!] (C12)`, alongside its existing dependency chain.** Both its L1 and L2 sources are `RFC` again as of 2026-08-22 (Overview, above). This changes nothing about what the rehearsal will verify when it runs — the rehearsal target is the target branch model, reached at resumption — but it means the task cannot close before then regardless of every other prerequisite being satisfied.
 
 ### Track F — Sensitive-Zone Gate Integrity
 

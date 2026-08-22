@@ -1,11 +1,11 @@
 # Master Task Index (Registry)
 
-**Version:** 1.9.0
+**Version:** 1.10.0
 **Generated:** 2026-08-05
-**Based on:** .design/main/PLAN.md v3.8.0
+**Based on:** .design/main/PLAN.md v3.9.0
 **Based on RULES:** .design/RULES.md v1.4.0
 **Execution Mode:** Parallel
-**Status:** Active — Phase 8 (7 phases done, 1 active at 20/23; C12 quarantine lifted 2026-08-21; re-synchronized to registry v2.9.0 on 2026-08-22 with no task change)
+**Status:** Active — Phase 8 (7 phases done, 1 active at 20/23; three remaining tasks `Blocked [!] (C12)` since 2026-08-22 — branch-model reconciliation, not regression; see Overview)
 
 ## Overview
 
@@ -19,26 +19,40 @@ across that entire run. Their planning audits and track rationale are preserved 
 archived task files. A plan-wide L2 retrospective ran when Phase 7 closed on 2026-08-20;
 see `RETROSPECTIVE.md` Session 1.
 
-**Phase 8 is decomposed at 20 tasks across five tracks plus validation, and is the first
-phase in this plan built on `Stable` specifications** — both of its sources reached
-`Stable` in the 2026-08-20 stabilization pass, and both originate with the project owner
-rather than `[TZ]`, which is silent on how code reaches a server. It is also the first
-phase carrying tasks an agent must not perform: Track E's three items are
-repository-administration work, marked `Assignment: User`, and they gate four tasks in
-two other tracks.
+**Phase 8 is decomposed at 23 tasks across six tracks plus validation.** Its two sources
+reached `Stable` in the 2026-08-20 stabilization pass, round-tripped to `RFC` and back
+on 2026-08-21 (Track F, below), then round-tripped to `RFC` a second time on 2026-08-22
+for an unrelated reason (Overview, below) and remain `RFC` as of this version. Both
+originate with the project owner rather than `[TZ]`, which is silent on how code reaches
+a server. Phase 8 is also the only phase carrying tasks an agent must not perform:
+Track E's three items are repository-administration work, marked `Assignment: User`,
+and they gate four tasks in two other tracks.
 
 Two findings from the retrospective remain open outside Phase 8: the suite-wide
 `composer test:coverage` floor (78.3%, ~20 pre-existing Phase 1–6 files) as its own
-separately-scoped follow-up, and the specifications still at `RFC` — **17 as of
+separately-scoped follow-up, and the specifications still at `RFC` — **19 as of
 2026-08-22** — which carry the set's real remaining design work and none of which is a
 Phase 8 input.
 
-**Re-planned on 2026-08-22, and no task moved.** `l1-localization` and `l1-seo` reached
-`Stable`, closing the registry-to-plan `SYNC_GAP`; both had already been built in
-Phases 5 and 6, and the amendment that promoted them corrected the record around a
-decision without touching a single rule the implementation reads. The pass added one
-`## Backlog` entry — the panel addresses are runtime configuration and no specification
-says so — and no phase.
+**Re-planned on 2026-08-22, in two passes, no task added or removed.** The first pass:
+`l1-localization` and `l1-seo` reached `Stable`, closing the registry-to-plan
+`SYNC_GAP`; both had already been built in Phases 5 and 6, and the amendment that
+promoted them corrected the record around a decision without touching a single rule the
+implementation reads. It added one `## Backlog` entry — the panel addresses are runtime
+configuration and no specification says so — and no phase.
+
+The second pass, hours later: a live check of the repository, prompted by the project
+owner asking whether Phase 8 was the only outstanding work, found `l1-release-operations`
+and `l2-release-pipeline` — which had reached `Stable` in the first pass, alongside the
+other two — still describing a multi-line Git Flow the repository had stopped running
+the same day, per a decision recorded outside `.design/` (`CLAUDE.md`, the branch-model
+and pipeline runbooks, and a git tag preserving the paused state). The repository was
+correct; the specifications were stale. Both dropped back to `RFC`, reopening Phase 8's
+C12 quarantine — applied below to its three still-`Todo` tasks (`T-8E01`, `T-8E03`,
+`T-8T03`, each now `Blocked [!] (C12)` alongside its pre-existing owner-only blocker) and
+to none of the 20 `Done` tasks, which verified real state at closure and are not what C12
+quarantines. Full detail: [PLAN.md](PLAN.md) Plan Status, [INDEX.md](INDEX.md)
+Branch-Model Ledger.
 
 **Re-planned twice on 2026-08-21, and back where it started.** Both of Phase 8's
 specifications were amended outside the workflow; the re-review that followed the
@@ -65,7 +79,7 @@ archival would have overwritten them.
 | [Phase 5](archives/tasks/phase-5.md) | Public site — shell, home, catalog, object profile, territory pages, built from Figma | `Done (Archived)` (18/18) |
 | [Phase 6](archives/tasks/phase-6.md) | SEO, portal-wide reporting, public REST API | `Done (Archived)` (16/16) |
 | [Phase 7](archives/tasks/phase-7.md) | Import/export, backups and rehearsed restore, production provisioning and observability, load test | `Done (Archived)` (16/16) |
-| [Phase 8](tasks/phase-8.md) | Delivery pipeline — branch contract, release artefact and deployment, irreversibility scan, EN/RU/agent operator documentation, sensitive-zone gate integrity | `In Progress` (20/23) |
+| [Phase 8](tasks/phase-8.md) | Delivery pipeline — branch contract, release artefact and deployment, irreversibility scan, EN/RU/agent operator documentation, sensitive-zone gate integrity | `In Progress` (20/23, remaining 3 `Blocked [!] (C12)`) |
 
 ## Execution Notes
 

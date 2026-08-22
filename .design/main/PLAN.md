@@ -1,10 +1,10 @@
 # Implementation Plan
 
-**Version:** 3.8.0
+**Version:** 3.9.0
 **Generated:** 2026-08-05
-**Based on:** .design/main/INDEX.md v2.9.0
+**Based on:** .design/main/INDEX.md v2.10.0
 **Based on RULES:** .design/RULES.md v1.4.0
-**Status:** Active — Phase 8 (delivery pipeline; 20/23, the three open tasks owner-only. Re-synchronized 2026-08-22 to registry v2.9.0 — no phase added, no task changed; see Plan Status below)
+**Status:** Active — Phase 8 (delivery pipeline; 20/23, the three open tasks owner-only. Its two sources returned to `RFC` on 2026-08-22 to reconcile with the owner's single-line branch decision — not a defect, and not a reason to reopen Done work; see Plan Status below)
 
 ## Overview
 
@@ -16,16 +16,30 @@ languages.
 Phases 1 through 7 were planned and executed against 23 specifications, all at `RFC` at
 the time — `[Bootstrap Plan]` marks that, and every one of those phases was tentative by
 construction. That posture ended on 2026-08-20: six specifications reached `Stable`, and
-**Phase 8 is the first phase in this plan built on `Stable` sources rather than
-provisional ones.** The registry now holds 25 specifications, **8 `Stable` and
-17 `RFC`**; the 17 are the set's real remaining design work rather than a status
-backlog, and none of them is a Phase 8 input.
+**Phase 8 was the first phase in this plan built on `Stable` sources rather than
+provisional ones** — a status its own two sources have since round-tripped away from and
+back to twice more, most recently on 2026-08-22 (below). The registry now holds 25
+specifications, **6 `Stable` and 19 `RFC`**; the 19 are the set's real remaining design
+work rather than a status backlog, and none of them is a Phase 8 input in the sense that
+matters here — Phase 8 was built and closed against these two while they were `Stable`,
+and their current `RFC` status reconciles the record with a decision, not the phase's
+own delivered scope.
 
-The two most recent promotions — `l1-localization` and `l1-seo`, 2026-08-22 — add no
-work to this plan. Both were implemented in Phases 5 and 6 while still at `RFC`, and the
-amendment that promoted them changed the record around a decision rather than the
-decision itself: `l1-seo` §5.1's URL grammar is byte-for-byte what those phases built
-against. What moved is Phase 0's status column, not any phase's scope.
+Two promotions on 2026-08-22 added no work to this plan. `l1-localization` and `l1-seo`
+were implemented in Phases 5 and 6 while still at `RFC`, and the amendment that promoted
+them changed the record around a decision rather than the decision itself: `l1-seo`
+§5.1's URL grammar is byte-for-byte what those phases built against. What moved was
+Phase 0's status column, not any phase's scope.
+
+The delivery pair — `l1-release-operations` and `l2-release-pipeline` — reached `Stable`
+the same day as those two, then returned to `RFC` hours later for an unrelated reason:
+a live check of the repository, prompted by the project owner asking whether Phase 8 was
+the only outstanding work, found both specifications describing a Git Flow branch model
+the repository no longer runs. The repository was correct; the specifications were
+stale. `l1-release-operations` §3.3 now carries the actual interim state — a single
+line, worked on directly, until the product launches in production at the client or a
+second developer joins, whichever comes first — and `l2-release-pipeline` §5.2 and
+§5.11 follow it. Full detail: [INDEX.md](INDEX.md) Branch-Model Ledger.
 
 The previous plan — six phases delivered against a Next.js/TypeScript implementation of
 the superseded hotel-booking product — is archived at
@@ -77,8 +91,11 @@ in it. It says nothing about whether the capability is built — most of the unc
 ones below shipped in Phases 1–7 against an `RFC` source, which is exactly the drift
 this column exists to make visible.*
 
-*8 of 24 are `Stable` as of 2026-08-22. For the other 16 the blocker is a live inline
-`TBD`; per-file reasons are in the Stabilization Ledger in [INDEX.md](INDEX.md).*
+*6 of 24 are `Stable` as of 2026-08-22 — briefly 8, until the delivery pair's own
+branch-model reconciliation moved both back to `RFC` the same day (INDEX.md
+Branch-Model Ledger). For the other 18 the blocker is a live inline `TBD` — 16 of
+them — or, for the delivery pair, the reconciliation itself; per-file reasons are in
+the Stabilization Ledger in [INDEX.md](INDEX.md).*
 
 - [x] **Platform Foundation** ([l1-platform-foundation.md](specifications/l1-platform-foundation.md)) [L1] — `Stable` v1.5.3
 - [ ] **Feature Modules** ([l1-feature-modules.md](specifications/l1-feature-modules.md)) [L1]
@@ -99,11 +116,11 @@ this column exists to make visible.*
 - [ ] **Advertising** ([l1-advertising.md](specifications/l1-advertising.md)) [L1]
 - [ ] **Analytics** ([l1-analytics.md](specifications/l1-analytics.md)) [L1]
 - [ ] **Public API** ([l1-public-api.md](specifications/l1-public-api.md)) [L1]
-- [x] **Release Operations** ([l1-release-operations.md](specifications/l1-release-operations.md)) [L1] — `Stable` v0.4.0
+- [ ] **Release Operations** ([l1-release-operations.md](specifications/l1-release-operations.md)) [L1] — `RFC` v0.5.1 (branch-model reconciliation, 2026-08-22)
 - [x] **Technology Stack** ([l2-tech-stack.md](specifications/l2-tech-stack.md)) [L2] — `Stable` v2.4.1
 - [ ] **Data Model** ([l2-data-model.md](specifications/l2-data-model.md)) [L2]
 - [ ] **Third-Party Integrations** ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
-- [x] **Release Pipeline** ([l2-release-pipeline.md](specifications/l2-release-pipeline.md)) [L2] — `Stable` v0.4.0
+- [ ] **Release Pipeline** ([l2-release-pipeline.md](specifications/l2-release-pipeline.md)) [L2] — `RFC` v0.5.1 (C12 cascade from its L1 parent)
 
 The two delivery specifications were added to this list on 2026-08-22. They were
 authored on 2026-08-20, after Phase 0 was written, and had been tracked only under
@@ -311,13 +328,31 @@ ownership file was never consulted on `master` at all, because the branch did no
 a code owner's review. Both protected branches now carry the same two settings, applied
 in the order that never leaves a gap between them.
 
+**A second C12 quarantine opened on 2026-08-22, on different grounds.** Both
+specifications returned to `RFC` again — not because Track F's mechanism regressed, but
+because the project owner's single-line branch decision (Overview, above) made the
+mechanism's own precondition — a protected line for `CODEOWNERS` to attach to — false for
+as long as that decision holds. `T-8A01`, `T-8F02`, and `T-8F03` **stay `Done`**: they
+verified real, correct state at closure, and C12 quarantines scheduling against an
+unstable parent, not history. `T-8E01`, `T-8E03`, and `T-8T03` — the only tasks still
+`Todo` — are marked `Blocked [!] (C12)` below, alongside the owner-only blockers they
+already carried, since the mechanical rule applies regardless of whether a task has other
+reasons to be stuck. Nothing is scheduled to close this quarantine the way Track F closed
+the first: reconciling the specifications with the owner's own decision is what closed
+it, and that already happened in [INDEX.md](INDEX.md)'s Branch-Model Ledger. The
+quarantine lifts on whichever resumption condition [l1-release-operations.md](specifications/l1-release-operations.md)
+§3.3 names is met first — not on a task in this phase.
+
 ## Backlog
 
 Registered specifications not scheduled into an active phase.
 
-*(The delivery pair's design debt was listed here on 2026-08-21 and closed the same day —
-both specifications are `Stable` at v0.4.0. The Amendment Ledger in [INDEX.md](INDEX.md)
-records the round trip and what each finding turned out to be.)*
+*(The delivery pair's design debt was listed here on 2026-08-21 and closed the same
+day. It is not re-listed for its second, 2026-08-22 round trip — that one is a
+branch-model reconciliation tracked against Phase 8 in Plan Status below, not
+unscheduled backlog work; the pair remains Phase 8's L1/L2 sources throughout. The
+Amendment Ledger and Branch-Model Ledger in [INDEX.md](INDEX.md) record both round
+trips and what each found.)*
 
 - **Design debt, opened 2026-08-22: the panel addresses are configuration, and no specification says so.** [l1-platform-foundation.md](specifications/l1-platform-foundation.md) §5.1's site map lists the back office at `/admin/**` and the owner cabinet at `/cabinet/**` as literal paths. Both are runtime configuration in the delivered system, and the staff panel's default is deliberately *not* `/admin` — a guessable staff address attracts the credential-stuffing traffic the sign-in throttle then has to absorb. The requirement is real, enforced in code, and stated in **no** specification in this registry, so writing it into §5.1 would be a new requirement rather than a correction: minor bump, `Stable → RFC`, and a C12 cascade quarantining [l2-tech-stack.md](specifications/l2-tech-stack.md). Site it in [l1-back-office.md](specifications/l1-back-office.md) instead — already `RFC`, so it costs no cascade at all — and correct §5.1 to delegate. Surfaced by the URL-grammar pass; recorded rather than taken on inside it. Route: `/magic.spec main`.
 
@@ -412,22 +447,36 @@ sit still.
 
 **Next step:** `/magic.run main` — but it will find nothing an agent may execute. All
 20 agent-performable tasks in this phase are done, Track F included, and the three that
-remain are owner-only for reasons no authorization changes: GitHub exposes no API path
-to create an App, the production credentials this environment would need do not exist,
-and the rehearsal's own specification requires an executor who did not write the
-procedure. The phase closes when the owner performs those three. Nothing in the plan
-blocks them any longer — the C12 quarantine that briefly did was lifted when both
-specifications returned to `Stable` at v0.4.0.
+remain carry two independent blockers each: their own owner-only reason (no API path
+to create a GitHub App; absent production credentials; a human-executor requirement in
+the specification's own text) and, as of 2026-08-22, `Blocked [!] (C12)` — their
+sources are `RFC` again. The phase closes when the owner performs those three **and**
+[l1-release-operations.md](specifications/l1-release-operations.md) §3.3's resumption
+condition is met; neither alone is enough, and no task in this phase closes the second.
 
 Three items remain outside this phase deliberately, none of them blocking it. The
 suite-wide `composer test:coverage` floor (78.3% against its own 80% minimum — a long
 tail of ~20 pre-existing Phase 1–6 `Policy`/`Model` files) is scoped as its own future
 cross-phase task; whether `composer test:coverage` should read `--group=slow` coverage
 is an open quality-tooling question for whoever next revises the composer scripts; and
-the **17** specifications still at `RFC` carry the set's real remaining design work —
-each of them a live inline `TBD` — which `/magic.spec` addresses on its own schedule.
-None of the three is a Phase 8 input, and folding any of them in would make a delivery
-phase depend on work that has nothing to do with delivery.
+the **19** specifications now at `RFC` carry the set's real remaining design work — most
+of them a live inline `TBD`, the delivery pair for the branch-model reconciliation below
+— which `/magic.spec` addresses on its own schedule. None of the three is a Phase 8
+input, and folding any of them in would make a delivery phase depend on work that has
+nothing to do with delivery.
+
+**Branch-model reconciliation, 2026-08-22.** Hours after the URL-grammar and
+re-synchronization passes below, `l1-release-operations` and `l2-release-pipeline`
+returned to `RFC` — reached `Stable` earlier the same day, alongside `l1-localization`
+and `l1-seo` — this time because a live check of the repository, prompted by the
+project owner, found both specifications still describing the multi-line Git Flow
+model the repository stopped running the same day, in a decision recorded outside
+`.design/` (`CLAUDE.md`, `docs/release/branching.md`, `docs/release/pipeline.md`, and a
+git tag preserving the paused state). The repository was correct; the specifications
+were stale — reconciled in [INDEX.md](INDEX.md)'s Branch-Model Ledger. This reopened
+Phase 8's C12 quarantine, applied above to its three still-`Todo` tasks only; the 20
+`Done` tasks are unaffected, since they verified real state at closure and C12
+quarantines scheduling against an unstable parent, not history.
 
 **Re-synchronization, 2026-08-22.** The registry moved to v2.9.0 while this plan still
 declared v2.8.0, which is the `SYNC_GAP` this pass closed. Two specifications reached

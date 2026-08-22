@@ -1,6 +1,6 @@
 # Release Operations
 
-**Version:** 0.5.0
+**Version:** 0.5.1
 **Status:** RFC
 **Layer:** concept
 
@@ -122,22 +122,31 @@ scheduled to reappear.
 
 **Interim state, bounded and owner-decided (from 2026-08-22).** The model above — and the
 branch contract [l2-release-pipeline.md](l2-release-pipeline.md) §5.2 derives from it —
-describes the **target** state, reached when the product is launched in production at the
-client. It is not the model in force during development. Until handover there is a
-**single line**, worked on directly: no separate integration line exists, and an
-additional line is opened only where a specific piece of work genuinely needs isolation.
-The concrete naming and settings are §5.2's. The owner decided this deliberately, having
-been told what the deferral costs.
+describes the **target** state. It is not the model in force during development. Until
+resumption there is a **single line**, worked on directly: no separate integration line
+exists, and an additional line is opened only where a specific piece of work genuinely
+needs isolation. The concrete naming and settings are §5.2's.
 
-The reasoning is that this specification's promotion path buys separation between
-contributors and protection for a running release, and during development there is
-neither: one developer, and nothing deployed for an unreviewed change to break. The
-obligations above are not weakened, suspended, or reinterpreted — they are **not yet
+The owner decided this deliberately and recorded the decision outside this specification
+— in the project's own engineering-conventions document and its branch-model runbook,
+with the paused working state preserved at a named git tag for exact restoration. This
+section states the same decision in specification terms rather than duplicating that
+record; where wording differs, the more recently dated source is authoritative, since
+either may be amended independently.
+
+**Resumption is either of two conditions, whichever comes first**: the product is
+launched in production at the client, or a second developer joins the project. The
+second condition exists because the reasoning behind the pause is about headcount, not
+launch status — this specification's promotion path buys separation between
+contributors and protection for a running release, and a solo developer pre-launch has
+neither to protect. A second contributor changes that regardless of launch status: from
+that point there **is** something to separate work from. The obligations in §3.3 above
+are not weakened, suspended, or reinterpreted for the interim — they are **not yet
 applicable**, because the transitions they govern do not occur. That distinction matters
-at the boundary: this clause lapses at the client's production launch, and every rule in
-§3.3 applies in full from that moment, alongside the fuller automation of the
-development flow the owner intends to introduce with it. The one obligation that does
-not wait is §5.5.2's consequence, stated there rather than here.
+at the boundary: whichever condition is met first, every rule in §3.3 applies in full
+from that moment, alongside the fuller automation of the development flow the owner
+intends to introduce at client launch specifically. The one obligation that does not wait
+for either condition is §5.5.2's consequence, stated there rather than here.
 
 ### 3.4 Reversibility
 
@@ -426,10 +435,14 @@ other's presence. [l2-release-pipeline.md](l2-release-pipeline.md) §5.11 carrie
 this stack, and states which settings make the second half bite. A review that reads one
 half and infers the other has verified nothing.
 
-**And a configured half can be lost again.** The two failure modes above are both about
-enforcement that was never built. There is a third, found on 2026-08-22: enforcement
-that was built, verified against the live system, and later ceased to exist — with no
-event, no failing check, and no change to any text describing it.
+**And a configured half can be deliberately paused, not just silently lost.** The two
+failure modes above are about enforcement that was never built. There is a third: §3.3's
+interim clause suspends the transitions this boundary gates, and the mechanism was
+deliberately taken down alongside them, in the same recorded decision, for the reason
+§3.3 states. This is not the silent drift the first two failure modes describe — it has
+an author, a date, and a record outside this specification. What it shares with them is
+the consequence: whatever the cause, the effect on this section is identical, and stating
+that effect precisely matters more than distinguishing why the boundary is down.
 
 Under §3.3's interim single-line state, the second half is absent, and the first is
 consequently consulted by nothing. **This section's circuit breaker therefore does not
@@ -438,20 +451,22 @@ an ordinary change and one touching a declared zone — currently has no effect 
 because no change on the single line requires a review that a zone touch could withhold.
 The grant is not merely unguarded; the boundary it is drawn against is not being read.
 [l2-release-pipeline.md](l2-release-pipeline.md) §5.11 states what specifically is
-missing and what restoring it requires; it is not restated here, for the reason the
+paused and what restoring it requires; it is not restated here, for the reason the
 paragraph above gives.
 
 What stands in the breaker's place is not a control but a condition: the product is not
 in production, so the money, credential, and authorization surfaces these zones protect
 have no live data behind them and no deploy path in front of them. That is why the
-deferral is acceptable, and exactly why it cannot outlive itself — at the client's
-production launch those surfaces acquire both, and the breaker must be operative
-**before** the first release rather than restored after one.
+deferral is acceptable, and exactly why it cannot outlive itself — at whichever
+resumption condition §3.3 names is met first, those surfaces acquire both, and the
+breaker must be operative **before** the first release rather than restored after one.
 
 The general lesson, now three deep: a declared zone, an enforced zone, and an enforced
-zone that is *still* enforced are three different claims, and none of them implies the
-next. Only the last is worth anything at release time, and no document establishes it —
-only a reading of the running system does.
+zone that is *currently* enforced are three different claims, and none of them implies
+the next — not because enforcement is fragile, but because a project's own operating
+decisions can suspend it on purpose. Only a reading of the running system, cross-checked
+against the decision record that explains what it should currently show, establishes
+which of the three actually holds.
 
 **Scope.** This section governs the ordinary bug-fix and small-change lifecycle the
 owner described when granting it — a work line opened from an existing report,
@@ -543,3 +558,4 @@ outage, and the person who needs the document is not the person who could write 
 | 0.3.0 | 2026-08-21 | §5.5 gains a standing (not one-time) autonomous-operation grant (§5.5.2): an ordinary bug fix may travel unattended from a work line through acceptance into production, without a human granting review, provided it touches none of a declared, mechanically-checked set of sensitive zones (auth, authorization, money, secrets) and carries no undeclared irreversible migration — either condition routes it back to a person. The deploy trigger itself, irreversibility declaration, and restore initiation stay exactly as human-gated as before; this grant only removes the review-grant step ahead of them, never the transitions after. §3.9 gains an interim clause naming the current reality this grant is made against: before §5.10 `[L2]`'s automation identity exists, the actions it covers still run under the owner's own credentials, by the owner's explicit and informed choice, not the project's target state. §5.2's transition table is reworded to state both transitions as either/or (person, or agent under §5.5.2) rather than person-only. Originates with the project owner, who described the intended end-to-end shape of ordinary operation and, when asked, drew the boundary at the deploy trigger, at irreversible changes, and at sensitive-zone changes. |
 | 0.4.0 | 2026-08-21 | §5.5.2's authentication zone is corrected: `app/Http/Middleware/Authenticate*` is a path with no file behind it — the framework owns that middleware — and is now declared as deliberately empty rather than as an existing file, so a published copy arrives already owned. §5.5.2 also gains the separation the first re-review of 0.3.0 found missing: declaring a zone is not enforcing it, the two halves (a check that decides whether a change touches a zone, and a promotion path configured to consult that check) both fail quietly rather than loudly, and neither may be inferred from the other's presence. The mechanism itself is delegated to [l2-release-pipeline.md](l2-release-pipeline.md) §5.11 rather than restated here, keeping one description of it rather than two that can drift. |
 | 0.5.0 | 2026-08-22 | Minor: §3.3 gains a bounded interim clause — until the product is launched in production at the client, the repository runs a single line, `master`, worked on directly; the multi-line promotion path is the target state, not the current one, and lapses into force at launch alongside the fuller development-flow automation the owner intends to introduce with it. Decided by the project owner, whose reasoning is that the promotion path buys contributor separation and protection for a running release, and development has neither. §5.5.2 records the consequence the deferral carries and does not soften it: with no protection rule on the production line, `CODEOWNERS` is consulted by nothing, so both halves of the sensitive-zone boundary are inert and the standing grant runs without its mechanical guard. What substitutes is a condition, not a control — no live data behind the protected surfaces and no deploy path in front of them — which is why the breaker must be operative before the first release rather than restored after one. Adds the third failure mode to the same section: enforcement that was built and verified can later cease to exist, found by a live read on 2026-08-22 returning `404 Branch not protected` where 0.4.0's own verification had returned real data. |
+| 0.5.1 | 2026-08-22 | Patch, corrective: 0.5.0 above framed the pause as a discovery — "found by a live read", "no event, no failing check, no change to any text describing it". That framing was wrong. The pause is a recorded owner decision made the same day, in the project's own engineering-conventions document and branch-model runbook, with the prior working state preserved at a named git tag; a live read confirms it rather than uncovering it. §3.3 gains its correct second resumption trigger — a second developer joining, not client launch alone — matching those two documents, which this specification had not yet been reconciled to. §5.5.2's "lost again" framing is replaced with "deliberately paused, not just silently lost": the consequence for this section is identical either way, but the cause is not what 0.5.0 said it was. |
