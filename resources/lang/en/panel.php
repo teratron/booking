@@ -156,6 +156,7 @@ return [
             'seo_og_description' => 'Open Graph description',
             'seo_og_image' => 'Open Graph image URL',
             'slug_claimed_by_redirect' => 'The address :path is already claimed by an active redirect — this language\'s change was not saved. Retire the redirect first if this reuse is intentional.',
+            'contact_type' => 'Type',
             'contact_value' => 'Value',
             'contact_label' => 'Label',
             'out_of_scope' => 'This country or category is outside your assigned scope.',

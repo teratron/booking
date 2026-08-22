@@ -68,9 +68,9 @@ narrowing that down, not applying a fix sight-unseen.
 
 ### Track A — Contact Channel Type Selection
 
-- [ ] [T-9A01] Admin object form — add the contact-channel type selector
-- [ ] [T-9A02] Cabinet object form — add the contact-channel type selector
-- [ ] [T-9A03] Validation — a contact channel saves cleanly through both forms
+- [x] [T-9A01] Admin object form — add the contact-channel type selector
+- [x] [T-9A02] Cabinet object form — add the contact-channel type selector
+- [x] [T-9A03] Validation — a contact channel saves cleanly through both forms
 
 ### Track B — API Guest-Redirect JSON Contract
 
@@ -109,26 +109,26 @@ narrowing that down, not applying a fix sight-unseen.
 **[T-9A01] Admin object form — add the contact-channel type selector**
 
 - **Spec:** [l1-object-profile.md](../specifications/l1-object-profile.md) §5.2 (Contact Channel Model — `type -> ContactChannelType` is a required, non-optional field of the model); surface is [l1-back-office.md](../specifications/l1-back-office.md)
-- **Status:** Todo — `l1-object-profile.md` promoted `RFC → Stable` (v1.2.0) 2026-08-22; unblocked.
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** `Livewire::test(EditObject::class, ['record' => $objectId])->fillForm(['contactChannels' => [['contact_channel_type_id' => $typeId, 'raw_value' => '+37360000000', 'label' => 'Front desk']]])->call('save')->assertHasNoFormErrors()` succeeds and inserts a `contact_channels` row with a non-null `contact_channel_type_id`, where the prior schema (no type field) threw `QueryException: SQLSTATE[23502]`.
 - **Handoff:** `T-9A03` covers both A01 and A02 in one validation pass.
-- **Notes:** `app/Filament/Admin/Resources/Objects/Schemas/ObjectForm.php`'s `contactsTab()` `Repeater::make('contactChannels')->relationship()` currently schemas only `raw_value` and `label`. Add `Select::make('contact_channel_type_id')->relationship('contactChannelType', 'key')->required()` (or the translated display-name equivalent, matching how `amenities` already resolves labels via `getOptionLabelFromRecordUsing`) inside that repeater's `->schema([...])`. `derived_link` computation (from the type's own `link_template`) is a separate, already-working concern — confirm it still fires correctly once a type is actually selected; do not duplicate that logic here.
+- **Notes:** Added `Select::make('contact_channel_type_id')->relationship(name: 'contactChannelType', titleAttribute: 'key', modifyQueryUsing: fn ($q) => $q->where('is_active', true))->getOptionLabelFromRecordUsing(fn ($type) => $type->display_name ?? $type->key)->required()` to `contactsTab()`'s repeater schema, matching the `amenities` label-resolution pattern. New translation key `panel.objects.form.contact_type` (en/ru). **Correction to this task's own assumption**: `derived_link` is *not* an "already-working concern" — grepped the whole app for any write to that column and found none; `ContactClickController`/`ObjectProfilePresenter`/`ObjectCardPresenter` all resolve the deep link fresh via `ContactChannelLinkResolver` at read/click time instead, never reading the stored column. The column is currently write-and-read-dead. Left it alone — populating a column nothing reads would be new, unrequested surface, not a QA fix — and scoped `T-9A03`'s validation to what the architecture actually does (the click-through), not to the unused column.
 
 **[T-9A02] Cabinet object form — add the contact-channel type selector**
 
 - **Spec:** [l1-object-profile.md](../specifications/l1-object-profile.md) §5.2; surface is [l1-object-onboarding.md](../specifications/l1-object-onboarding.md)
-- **Status:** Todo — same governing spec as `T-9A01`, now `Stable`; unblocked.
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** Same shape as `T-9A01`'s Verify line, against `app/Filament/Cabinet/Resources/Objects/Schemas/ObjectForm.php`'s `contactsSection()`.
 - **Handoff:** `T-9A03`.
-- **Notes:** Identical gap, identical fix, different file — `contactsSection()`'s `Repeater::make('contactChannels')->relationship()` has the same two-field schema as the admin form. This form's own docblock already calls contact channels "the mechanism this portal's whole conversion path depends on," which is exactly why this section is explicitly exempted from the moderation gate the rest of the form goes through — the fix must land inside that same unmoderated write path, not behind it.
+- **Notes:** Identical fix applied to `contactsSection()`'s repeater schema, same `Select` configuration as `T-9A01`. Confirmed it lands inside the section's own unmoderated write path (no relation-manager/moderation wrapper around the repeater), matching this form's own docblock claim.
 
 **[T-9A03] Validation — a contact channel saves cleanly through both forms**
 
 - **Goal:** Verify `T-9A01` and `T-9A02` against [l1-object-profile.md](../specifications/l1-object-profile.md) §5.2 and the live-reproduced failure in `.drafts/qa-sweep-report.md` F-1.
 - **Method:** Feature tests in `tests/Feature/Admin/ObjectResourceFormTest.php` and `tests/Feature/Cabinet/CabinetObjectEditingTest.php` asserting a contact channel with an explicit type saves without a `QueryException`, and that the resulting row's `derived_link` matches the selected type's `link_template` applied to the raw value. Also re-run the already-passing end-to-end proof this phase's own diagnosis relied on: a saved channel's public click route (`{lang}/objects/{object}/contact/{channel}/click`) still 302s to the correct deep link.
-- **Status:** Todo — depends on `T-9A01`/`T-9A02`, both unblocked.
+- **Status:** Done — added one test per form (`ObjectResourceFormTest.php`, `CabinetObjectEditingTest.php`), each seeding a real `contact_channel_types` row and asserting `assertHasNoFormErrors()` plus a non-null `contact_channel_type_id` on the saved row. Ran red beforehand (`git stash` on both form files reproduced the exact `SQLSTATE[23502]` from `.drafts/qa-sweep-report.md` F-1), green after restoring. Did **not** assert on `derived_link` — see `T-9A01`'s Notes on why that column carries no live read path — asserted `raw_value`/`contact_channel_type_id` instead. Re-ran `tests/Feature/Public/PublicContactRailTest.php` (the already-passing click-through proof `T-9A01`'s Notes referenced): all 5 tests still pass unchanged.
 
 ### Track B — API Guest-Redirect JSON Contract
 

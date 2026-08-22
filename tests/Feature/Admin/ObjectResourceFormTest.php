@@ -108,6 +108,29 @@ function fullObjectPermissions(): array
     return ['admin_panel_access', 'object.view', 'object.create', 'object.edit', 'object.publish', 'object.delete'];
 }
 
+it('saves a contact channel with an explicit type, where the prior schema (no type field) threw a QueryException', function (): void {
+    $fixture = objectFormFixture();
+    $actor = objectFormActor(fullObjectPermissions(), 'none', null, 'unrestricted');
+    $typeId = DB::table('contact_channel_types')->insertGetId([
+        'key' => 'phone', 'link_template' => 'tel:{value}', 'is_active' => true,
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    Livewire::actingAs($actor)
+        ->test(EditObject::class, ['record' => $fixture['objectId']])
+        ->fillForm(['contactChannels' => [
+            ['contact_channel_type_id' => $typeId, 'raw_value' => '+37360000000', 'label' => 'Front desk'],
+        ]])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    $channel = DB::table('contact_channels')->where('object_id', $fixture['objectId'])->first();
+
+    expect($channel)->not->toBeNull()
+        ->and($channel->contact_channel_type_id)->toBe($typeId)
+        ->and($channel->raw_value)->toBe('+37360000000');
+});
+
 it('saves a translated name against the object_translations table', function (): void {
     $fixture = objectFormFixture();
     $actor = objectFormActor(fullObjectPermissions(), 'none', null, 'unrestricted');

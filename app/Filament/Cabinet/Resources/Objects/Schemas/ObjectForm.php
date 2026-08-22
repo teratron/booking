@@ -6,6 +6,7 @@ namespace App\Filament\Cabinet\Resources\Objects\Schemas;
 
 use App\Filament\Support\SeoMetadataFields;
 use App\Jobs\StalenessSweepJob;
+use App\Models\ContactChannelType;
 use App\Models\Country;
 use App\Models\Language;
 use App\Models\ModerationRequest;
@@ -24,6 +25,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * The owner cabinet's own object-edit form — grouped into the five sections
@@ -258,6 +260,15 @@ class ObjectForm
                     ->relationship()
                     ->hiddenLabel()
                     ->schema([
+                        Select::make('contact_channel_type_id')
+                            ->label(__('panel.objects.form.contact_type'))
+                            ->relationship(
+                                name: 'contactChannelType',
+                                titleAttribute: 'key',
+                                modifyQueryUsing: fn (Builder $query): Builder => $query->where('is_active', true),
+                            )
+                            ->getOptionLabelFromRecordUsing(fn (ContactChannelType $type): string => $type->display_name ?? $type->key)
+                            ->required(),
                         TextInput::make('raw_value')
                             ->label(__('panel.objects.form.contact_value'))
                             ->required(),

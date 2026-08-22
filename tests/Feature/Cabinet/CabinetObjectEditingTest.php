@@ -131,6 +131,32 @@ function cabinetObjectEditingMountTenant(Object_ $object): void
     Filament::setTenant($object, isQuiet: true);
 }
 
+it('saves a contact channel with an explicit type, where the prior schema (no type field) threw a QueryException', function (): void {
+    $fixture = cabinetObjectEditingGeography();
+    $owner = cabinetObjectEditingOwner('object_owner_contact_channel_type');
+    $object = cabinetObjectEditingMakeObject($fixture, $owner->id, 'draft');
+    $typeId = DB::table('contact_channel_types')->insertGetId([
+        'key' => 'phone', 'link_template' => 'tel:{value}', 'is_active' => true,
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    cabinetObjectEditingMountTenant($object);
+
+    Livewire::actingAs($owner)
+        ->test(EditObject::class, ['record' => $object->getKey()])
+        ->fillForm(['contactChannels' => [
+            ['contact_channel_type_id' => $typeId, 'raw_value' => '+37360000000', 'label' => 'Front desk'],
+        ]])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    $channel = DB::table('contact_channels')->where('object_id', $object->id)->first();
+
+    expect($channel)->not->toBeNull()
+        ->and($channel->contact_channel_type_id)->toBe($typeId)
+        ->and($channel->raw_value)->toBe('+37360000000');
+});
+
 it("renders exactly the declared type's field set, grouped into Core, Geography, Contacts, Translations, and SEO", function (): void {
     $fixture = cabinetObjectEditingGeography();
     $owner = cabinetObjectEditingOwner('object_owner_render_sections');

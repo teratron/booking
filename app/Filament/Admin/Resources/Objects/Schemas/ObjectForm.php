@@ -6,6 +6,7 @@ namespace App\Filament\Admin\Resources\Objects\Schemas;
 
 use App\Filament\Support\SeoMetadataFields;
 use App\Models\Amenity;
+use App\Models\ContactChannelType;
 use App\Models\Country;
 use App\Models\Language;
 use App\Models\Object_;
@@ -24,6 +25,7 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * The object form's tab set, scoped to what this phase actually built.
@@ -205,6 +207,15 @@ class ObjectForm
                 ->relationship()
                 ->label(__('panel.objects.form.tabs.contacts'))
                 ->schema([
+                    Select::make('contact_channel_type_id')
+                        ->label(__('panel.objects.form.contact_type'))
+                        ->relationship(
+                            name: 'contactChannelType',
+                            titleAttribute: 'key',
+                            modifyQueryUsing: fn (Builder $query): Builder => $query->where('is_active', true),
+                        )
+                        ->getOptionLabelFromRecordUsing(fn (ContactChannelType $type): string => $type->display_name ?? $type->key)
+                        ->required(),
                     TextInput::make('raw_value')
                         ->label(__('panel.objects.form.contact_value'))
                         ->required(),
