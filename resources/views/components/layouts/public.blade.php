@@ -39,6 +39,16 @@
         @if ($metadata->ogImageUrl)
             <meta property="og:image" content="{{ $metadata->ogImageUrl }}">
         @endif
+
+        @foreach ($metadata->alternates as $locale => $url)
+            <link rel="alternate" hreflang="{{ $locale }}" href="{{ $url }}">
+        @endforeach
+        @if ($metadata->alternates !== [])
+            @php $defaultLocale = app(\App\Services\Localization\LanguageRegistry::class)->primaryLocale(); @endphp
+            @if (isset($metadata->alternates[$defaultLocale]))
+                <link rel="alternate" hreflang="x-default" href="{{ $metadata->alternates[$defaultLocale] }}">
+            @endif
+        @endif
     @elseif ($noindex)
         <meta name="robots" content="noindex">
     @endif

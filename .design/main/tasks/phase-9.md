@@ -84,9 +84,9 @@ narrowing that down, not applying a fix sight-unseen.
 
 ### Track D — hreflang Alternate Links
 
-- [ ] [T-9D01] Carry per-language alternate URLs on `ResolvedMetadata`
-- [ ] [T-9D02] Emit hreflang alternate tags in the public layout `<head>`
-- [ ] [T-9D03] Validation — hreflang tags present, correct, and reciprocal across active languages
+- [x] [T-9D01] Carry per-language alternate URLs on `ResolvedMetadata`
+- [x] [T-9D02] Emit hreflang alternate tags in the public layout `<head>`
+- [x] [T-9D03] Validation — hreflang tags present, correct, and reciprocal across active languages
 
 ### Track E — Cabinet Settings Crash
 
@@ -157,38 +157,39 @@ narrowing that down, not applying a fix sight-unseen.
 - **Verify:** With `APP_URL=http://booking.test` in `.env`, a request to the object page via a *different* Host header (`http://localhost:8300/en/o/hotel-nistru`) renders `<link rel="canonical" href="http://booking.test/en/o/hotel-nistru">` — matching, not diverging from, `sitemap.xml`'s own already-correct output.
 - **Handoff:** `T-9C02`.
 - **Notes:** Confirmed `l2-tech-stack.md`'s deployment table: production "TLS terminates at the CDN edge" and `bootstrap/app.php` configures no `trustProxies()` at all, so `$request->getScheme()` reports the *raw* connection scheme reaching the app — plain HTTP even in production, unless corrected. This matters because `URL::forceRootUrl()` alone is **not** sufficient: `Illuminate\Routing\UrlGenerator::formatRoot()` rewrites the forced root's own scheme prefix to whatever `formatScheme()` resolves to, which without an explicit `forceScheme()` call falls straight back to the live request's own detected scheme — so a `forceRootUrl`-only fix would still silently downgrade every canonical/OG/API URL to `http://` in production. Implemented in `App\Providers\AppServiceProvider::pinGeneratedUrlsToConfiguredAppUrl()`, called from `boot()`: `URL::forceRootUrl($appUrl)` **and** `URL::forceScheme(parse_url($appUrl, PHP_URL_SCHEME))`, both derived from the same `config('app.url')` value rather than a hard-coded `'https'` literal — stays correct for local dev's own `http://` URL with no environment branch, and can never drift out of sync with `APP_URL` since there is only one source of truth. `sitemap.xml` (`spatie/laravel-sitemap`) already read `config('app.url')` directly and needed no change.
+  **Follow-up fix, found live during Track D (2026-08-22):** `App\Livewire\Public\CatalogSearch::render()` built its canonical via `url()->full()`, which reads `$request->fullUrl()` directly — a *different* code path from `route()`/`url('path')` that bypasses `forceRootUrl()`/`forceScheme()` entirely, so the catalog page alone kept following the request Host after this task was otherwise complete. `curl`-verified live before the fix (`/en/catalog` showed the request's own `localhost:8300`, not `booking.test`). Fixed by switching to `url()->current()` (which *does* route through the forced root, per `UrlGenerator::to()`) with the query string appended manually — the catalog page's canonical must keep its filters, unlike a plain page URL, matching the same pattern `LocaleSwitchResolver::targetUrl()` already uses. `grep`-confirmed no other `url()->full()`/`->fullUrl()` call exists anywhere in `app/`.
 
 **[T-9C02] Validation — canonical/OG URLs match `APP_URL` regardless of request Host**
 
 - **Goal:** Verify `T-9C01` against [l1-seo.md](../specifications/l1-seo.md) and F-3 in `.drafts/qa-sweep-report.md`.
 - **Method:** Feature test asserting the object page, catalog page, and territory page's rendered `<link rel="canonical">` and `og:*` tags equal `config('app.url')` + the expected path, when the test request is made with a Host header that deliberately does not match `APP_URL`. Confirm `PublicPerformanceBudgetTest` still passes (a global `URL::forceRootUrl()` call must not add a query or measurably regress TTFB).
-- **Status:** Done — added `it('names the configured APP_URL host in the canonical link regardless of the request Host header', ...)` to `tests/Feature/Public/MetadataResolutionTest.php`: requests `http://a-completely-different-host.invalid/en/md/host-mismatch` directly (an absolute URL to the test client sets that Host), asserts the canonical link names `config('app.url')`'s host and the mismatched host never appears in the response at all. Ran red against the code with `pinGeneratedUrlsToConfiguredAppUrl()` temporarily removed, green with it restored. Full non-slow `tests/Feature/Public` and `tests/Feature/Api` suites re-run alongside it as a regression check — result recorded at `T-9G01` (the phase's own cross-cutting gate), not duplicated here.
+- **Status:** Done — added `it('names the configured APP_URL host in the canonical link regardless of the request Host header', ...)` to `tests/Feature/Public/MetadataResolutionTest.php`: requests `http://a-completely-different-host.invalid/en/md/host-mismatch` directly (an absolute URL to the test client sets that Host), asserts the canonical link names `config('app.url')`'s host and the mismatched host never appears in the response at all. Ran red against the code with `pinGeneratedUrlsToConfiguredAppUrl()` temporarily removed, green with it restored. Added a second test for the catalog-page follow-up fix (`T-9C01`'s Notes) with the query string preserved; also ran red/green. Full non-slow `tests/Feature/Public` and `tests/Feature/Api` suites re-run alongside both as a regression check — result recorded at `T-9G01` (the phase's own cross-cutting gate), not duplicated here.
 
 ### Track D — hreflang Alternate Links
 
 **[T-9D01] Carry per-language alternate URLs on `ResolvedMetadata`**
 
 - **Spec:** [l1-seo.md](../specifications/l1-seo.md) ("every page declares its alternates in all active languages, plus a default"); [l1-platform-shell.md](../specifications/l1-platform-shell.md) §4 ("emit the language alternates once, in the shell, and reuse them for both the switcher and l1-seo.md's alternate links")
-- **Status:** Todo — `l1-platform-shell.md` promoted `RFC → Stable` (v0.3.1) 2026-08-22, alongside the already-`Stable` `l1-seo.md`; unblocked.
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** `app(\App\Services\Seo\MetadataResolver::class)->resolve($object, 'en')->alternates` returns an array keyed by every active language code (`en`, `ru`) to that page's URL in that language, computed via the same `App\Services\Shell\LocaleSwitchResolver::targetUrl()` call the language switcher already uses — not a second, independent URL-construction path.
 - **Handoff:** `T-9D02`.
-- **Notes:** `App\Support\Seo\ResolvedMetadata` currently has no field for this at all (`title`, `description`, `canonicalUrl`, `indexable`, `ogTitle`, `ogDescription`, `ogImageUrl` only) — confirms this was never wired, not merely disabled. `resources/views/components/public/language-switcher.blade.php` already calls `App\Services\Shell\LocaleSwitchResolver::targetUrl(request(), $language->code)` per active language for its own dropdown; `MetadataResolver::resolve()`/`resolveCatalog()`/`resolveTypedCatalog()` should call the identical resolver for the identical set of active languages and attach the result as a new `alternates` readonly property, so the switcher and the hreflang tags are provably the same URLs, never two independently-computed sets that can drift apart.
+- **Notes:** Added `array $alternates` to `ResolvedMetadata` (required, no default — every construction site updated explicitly). `MetadataResolver` now constructor-injects `PublicShellDataProvider` and `LocaleSwitchResolver` (already-registered services) plus `Illuminate\Http\Request` (Laravel's own current-request binding, auto-resolved), and a new private `alternates()` helper calls `$this->localeSwitch->targetUrl($this->request, $language->code)` for every `$this->shellData->activeLanguages()` entry — the identical call and the identical source list the language switcher itself uses. All three `resolve*()` methods pass it through. `composer analyse` clean; existing `MetadataResolutionTest.php` suite (11 tests) unaffected.
 
 **[T-9D02] Emit hreflang alternate tags in the public layout `<head>`**
 
 - **Spec:** [l1-seo.md](../specifications/l1-seo.md); [l1-platform-shell.md](../specifications/l1-platform-shell.md) §4
-- **Status:** Todo — depends on `T-9D01`, unblocked.
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** Rendered HTML of the object page, catalog page, and home page each include `<link rel="alternate" hreflang="en" href="…">` and `hreflang="ru"`, plus one `hreflang="x-default"` pointing at the primary-language URL — grep the response body for `rel="alternate"` in a feature test rather than asserting manually.
 - **Handoff:** `T-9D03`.
-- **Notes:** `resources/views/components/layouts/public.blade.php` already renders `canonical`/`og:*` from `$metadata` in its `<head>` (lines ~26-40); add a `@foreach ($metadata->alternates as $locale => $url)` loop emitting one `<link rel="alternate" hreflang="{{ $locale }}" href="{{ $url }}">` per entry, plus the `x-default` line, guarded the same way the existing canonical block is guarded (`@if ($metadata)`). No new Livewire/JS surface — this is server-rendered, same request, same response.
+- **Notes:** Added the `@foreach ($metadata->alternates as $locale => $url)` loop exactly as scoped, plus an `x-default` line resolved via `App\Services\Localization\LanguageRegistry::primaryLocale()` (the same registry `AppServiceProvider` seeds at boot), guarded by `@if ($metadata->alternates !== [])` and `isset($metadata->alternates[$defaultLocale])`. Live-verified against a running page before writing the automated test: `curl http://localhost:8300/en/catalog` showed all three tags with the correct `booking.test` host.
 
 **[T-9D03] Validation — hreflang tags present, correct, and reciprocal across active languages**
 
 - **Goal:** Verify `T-9D01` and `T-9D02` against [l1-seo.md](../specifications/l1-seo.md) and F-4 in `.drafts/qa-sweep-report.md`.
 - **Method:** Feature test fetching the EN and RU variants of the same object/catalog/territory page and asserting: (a) each declares hreflang alternates for every other active language, (b) the alternate URLs are reciprocal (EN page's `hreflang="ru"` URL, fetched, declares an `hreflang="en"` pointing back), (c) exactly one `x-default` per page. Extend `PublicShellTest.php` or add a sibling `PublicHreflangTest.php`.
-- **Status:** Todo — depends on `T-9D01`/`T-9D02`, both unblocked.
+- **Status:** Done — added `tests/Feature/Public/PublicHreflangTest.php` (3 tests): territory page carries en/ru alternates plus exactly one x-default (asserted via `substr_count`, not just presence); the EN page's own `ru` alternate, fetched, declares an `en` alternate pointing back to the same EN URL — genuine reciprocity, not just "both exist"; the catalog page carries alternates with the active query string preserved through every one. Ran all three red beforehand (`git stash` on the Track D implementation files reproduced "no such tag" / null-match failures), green after. Full `tests/Feature/Public` and `tests/Feature/Admin` suites re-run as a broader regression check (result at `T-9G01`).
 
 ### Track E — Cabinet Settings Crash
 

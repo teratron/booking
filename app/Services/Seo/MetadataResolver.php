@@ -18,11 +18,15 @@ use App\Models\SeoMetadataTemplate;
 use App\Models\Territory;
 use App\Models\TerritoryTranslation;
 use App\Services\Settings\SettingsRepository;
+use App\Services\Shell\LocaleSwitchResolver;
+use App\Services\Shell\PublicShellDataProvider;
 use App\Support\Seo\ResolvedMetadata;
 use App\Support\Seo\SeoEntityContext;
 use App\Support\Seo\SeoEntityType;
 use App\Support\Seo\SeoMetadataField;
+use App\Support\Shell\PublicLanguageOption;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
@@ -45,6 +49,9 @@ final class MetadataResolver
 
     public function __construct(
         private readonly SettingsRepository $settings,
+        private readonly PublicShellDataProvider $shellData,
+        private readonly LocaleSwitchResolver $localeSwitch,
+        private readonly Request $request,
     ) {}
 
     public function resolve(Model $entity, string $locale, ?string $selfUrl = null): ResolvedMetadata
@@ -62,6 +69,7 @@ final class MetadataResolver
             ogTitle: $this->nonEmpty($context->explicitOgTitle) ?? $title,
             ogDescription: $this->nonEmpty($context->explicitOgDescription) ?? $description,
             ogImageUrl: $this->nonEmpty($context->explicitOgImage) ?? $context->ogImage ?? $this->defaultOgImage(),
+            alternates: $this->alternates(),
         );
     }
 
@@ -96,6 +104,7 @@ final class MetadataResolver
             ogTitle: $title,
             ogDescription: $description,
             ogImageUrl: $ogImage,
+            alternates: $this->alternates(),
         );
     }
 
@@ -131,7 +140,25 @@ final class MetadataResolver
             ogTitle: $title,
             ogDescription: $description,
             ogImageUrl: $ogImage,
+            alternates: $this->alternates(),
         );
+    }
+
+    /**
+     * Every active language's URL for the current page, computed via the
+     * identical {@see LocaleSwitchResolver::targetUrl()} call the language
+     * switcher itself uses — never a second, independently-derived URL set
+     * that could drift from what the switcher actually links to.
+     *
+     * @return array<string, string> locale code => absolute URL
+     */
+    private function alternates(): array
+    {
+        return collect($this->shellData->activeLanguages())
+            ->mapWithKeys(fn (PublicLanguageOption $language): array => [
+                $language->code => $this->localeSwitch->targetUrl($this->request, $language->code),
+            ])
+            ->all();
     }
 
     private function resolveField(?string $explicit, SeoEntityType $type, SeoMetadataField $field, string $locale, string $name, ?string $territoryName): string

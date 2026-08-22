@@ -144,7 +144,15 @@ final class CatalogSearch extends Component
         );
 
         $indexable = app(IndexationPolicy::class)->catalogIndexable($this->activeIndexationFilters($selectedType), $this->q !== '');
-        $metadata = app(MetadataResolver::class)->resolveCatalog($selectedType, $criteria->territory, $indexable, app()->getLocale(), url()->full());
+        // url()->full() reads the request's own Host/scheme directly,
+        // bypassing the app-wide URL::forceRootUrl()/forceScheme() pin —
+        // url()->current() goes through the same UrlGenerator::to() path
+        // route()/url('path') already do, so the query string (which this
+        // page's own canonical must keep, unlike a plain page URL) is
+        // appended manually rather than through url()->full()'s shortcut.
+        $selfUrl = url()->current();
+        $queryString = request()->getQueryString();
+        $metadata = app(MetadataResolver::class)->resolveCatalog($selectedType, $criteria->territory, $indexable, app()->getLocale(), $queryString !== null ? "{$selfUrl}?{$queryString}" : $selfUrl);
 
         return view('livewire.public.catalog-search', [
             'results' => $results,

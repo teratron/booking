@@ -204,6 +204,16 @@ it('names the configured APP_URL host in the canonical link regardless of the re
         ->assertDontSee('a-completely-different-host.invalid', false);
 });
 
+it('names the configured APP_URL host on the catalog page too, including its query string — url()->full() bypasses the root pin, url()->current() does not', function (): void {
+    $registry = metaResolutionRegistry();
+    $appUrl = rtrim((string) config('app.url'), '/');
+
+    $this->get('http://a-completely-different-host.invalid/en/catalog?type=hotel')
+        ->assertOk()
+        ->assertSee('<link rel="canonical" href="'.$appUrl.'/en/catalog?type=hotel">', false)
+        ->assertDontSee('a-completely-different-host.invalid', false);
+});
+
 it('resolves the typed-catalog title and description from the object type template composed with the territory name', function (): void {
     $registry = metaResolutionRegistry();
     $territory = metaResolutionTerritory($registry['countryId'], 'Bukovel');
