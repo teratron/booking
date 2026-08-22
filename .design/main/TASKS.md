@@ -1,11 +1,11 @@
 # Master Task Index (Registry)
 
-**Version:** 1.13.0
+**Version:** 1.14.0
 **Generated:** 2026-08-05
-**Based on:** .design/main/PLAN.md v3.12.0
+**Based on:** .design/main/PLAN.md v3.13.0
 **Based on RULES:** .design/RULES.md v1.4.0
 **Execution Mode:** Parallel
-**Status:** Active — Phase 8 (7 phases done, 1 active at 20/23; three remaining tasks `Blocked [!] (C12)` since 2026-08-22 — branch-model reconciliation, not regression; see Overview) · Phase 9 (post-launch QA remediation, 7/15; Tracks C/E/F closed 2026-08-22, Tracks A/B/D unblocked the same day via `/magic.spec main`; independent of Phase 8; see Overview)
+**Status:** Active — Phase 8 (7 phases done, 1 active at 20/23; three remaining tasks `Blocked [!] (C12)` since 2026-08-22 — branch-model reconciliation, not regression; see Overview) · Phase 9 `Done` (post-launch QA remediation, 15/15, closed 2026-08-22; independent of Phase 8; see Overview)
 
 ## Overview
 
@@ -94,9 +94,16 @@ navigate-vs-rescope) had a single defensible answer already matching the shipped
 component. `l1-object-profile`'s (review authorship) and `l1-public-api`'s (named
 consumer, rate limits, republishing rights) were genuine product decisions — put to
 the project owner directly rather than inferred, per each spec's own Document History.
-This `/magic.task main` pass un-quarantines the eight affected tasks; all fifteen of
-Phase 9's tasks are now schedulable. Full detail: [tasks/phase-9.md](tasks/phase-9.md)
-Status line.
+
+**Phase 9 closed the same day: 15/15, Track G's full regression gate clean (974 passed,
+3 skipped, 0 failed).** Track E widened past its own one-crash estimate — a narrower
+patch fixed the reported symptom and immediately surfaced two more unguarded call
+sites in the same Filament layout chrome — resolved with the framework's own
+`isSimple: true` default rather than patching each site in turn. Track C's own fix
+(APP_URL pinning) turned out to have a second gap, found live while building Track D:
+the catalog page's canonical used `url()->full()`, a code path the root/scheme pin
+does not reach. Full detail: [tasks/phase-9.md](archives/tasks/phase-9.md), this workspace's own
+[CHANGELOG.md](CHANGELOG.md) Phase 9 entry, and `RETROSPECTIVE.md` Snapshots (🟢).
 
 ## Active Phases
 
@@ -110,7 +117,7 @@ Status line.
 | [Phase 6](archives/tasks/phase-6.md) | SEO, portal-wide reporting, public REST API | `Done (Archived)` (16/16) |
 | [Phase 7](archives/tasks/phase-7.md) | Import/export, backups and rehearsed restore, production provisioning and observability, load test | `Done (Archived)` (16/16) |
 | [Phase 8](tasks/phase-8.md) | Delivery pipeline — branch contract, release artefact and deployment, irreversibility scan, EN/RU/agent operator documentation, sensitive-zone gate integrity | `In Progress` (20/23, remaining 3 `Blocked [!] (C12)`) |
-| [Phase 9](tasks/phase-9.md) | Post-launch QA remediation — contact-channel forms, API guest-redirect contract, canonical-host consistency, hreflang alternates, a cabinet Settings crash, one test-suite fix | `In Progress` (7/15, Tracks C/E/F done; A/B/D unblocked, all 15 schedulable) |
+| [Phase 9](archives/tasks/phase-9.md) | Post-launch QA remediation — contact-channel forms, API guest-redirect contract, canonical-host consistency, hreflang alternates, a cabinet Settings crash, one test-suite fix | `Done (Archived)` (15/15) |
 
 ## Execution Notes
 
@@ -238,9 +245,9 @@ three of the six tracks (A, B, D) could not *start* because their governing spec
 at `RFC` (Overview, above) — a plan-time spec-status gap, not a file-level dependency,
 so this rationale's own "no chain" claim held throughout even while three tracks were
 blocked for an unrelated reason. Resolved the same day; all six tracks are schedulable.
-Full rationale in [tasks/phase-9.md](tasks/phase-9.md).
+Full rationale in [tasks/phase-9.md](archives/tasks/phase-9.md).
 
 ## Meta Information
 
-- **Last Updated**: 2026-08-22 (Phase 9 re-planned twice — `/magic.run main`'s Pre-flight halt on Tracks A/B/D, then unblocked via `/magic.spec main` promoting three specs `RFC → Stable`; 7/15 tasks done, all 15 schedulable; 7 phases done, Phase 8 at 20/23)
+- **Last Updated**: 2026-08-22 (Phase 9 closed — 15/15, six tracks, full regression gate clean; 8 phases done total, Phase 8 remains active at 20/23, owner-blocked)
 - **Maintainer**: Core Team

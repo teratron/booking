@@ -147,19 +147,19 @@
 
 ## Recent Changes
 
+- `ResolvedMetadata` now carries per-language alternate URLs, computed through the identical `LocaleSwitchResolver::targetUrl()` call the language switcher itself uses, so hreflang tags and the switcher can never independently drift. The public layout emits one `<link rel="alternate">` per active language plus one `x-default`.
 
-### Track D — Production Provisioning & Observability
+### Track E — Cabinet Settings Crash
 
-- Production object storage and CDN in front of both the application and media, credential exposure checked against the committed tree.
-- Production SMTP confirmed; Sentry/GlitchTip error tracking with personal-data scrubbing covering queue and scheduler failures.
-- Horizon (five declared queues) and Pulse (Redis-backed ingest, zero added query cost) wired as first-class Docker Compose services alongside a real scheduler process.
+- `cabinet/settings` 500d for every owner — the one cabinet route with no tenant segment, inside a panel whose full layout (sidebar, topbar, tenant menu) builds tenant-scoped URLs unconditionally with no null-tenant guard anywhere in that shared Filament chrome. The first, narrower patch fixed the one reported crash and immediately surfaced two more unguarded call sites in the same layout; switched to Filament's own `isSimple: true` default for tenant-independent pages instead of patching each vendor call site in turn.
 
-### Track T — Validation & Launch Readiness
+### Track F — Test-Suite Correction
 
-- Rehearsed restore: a real backup/restore cycle against a genuinely disposable fourth database, run twice in succession, with a recorded runbook.
-- Import/export invariants: a real corrupt-and-reimport round trip, plus zero-automatic-merge and zero-unpermitted-column sweeps.
-- Load test at 52,800 seeded objects — found and fixed a significant, previously invisible bug (`cache.serializable_classes` defaulting to `false` was silently corrupting every real Redis cache hit); surfaced two genuine budget breaches (search p95, catalog cache-miss) for a pre-launch decision.
-- Coverage floor: both named services reached 100% individually; the suite-wide 78.3% floor remains open as a separate, tracked finding across roughly twenty pre-existing Phase 1–6 files — closed on its own literal scope with the project owner's confirmation.
+- `PublicRootEntryTest` asserted a fallback-to-primary-language branch its own bare `$this->get('/')` never actually reached — the HTTP test client silently attaches a default `Accept-Language` header that already matches. Fixed the assumption, not the resolver: `PublicEntryLocaleResolver` was already correct.
 
-Phase 7 closed the plan: all seven phases done, 135/135 tasks. A plan-wide retrospective ran on close — see `RETROSPECTIVE.md` for DORA metrics, observations, and recommendations, most notably promoting qualifying specifications to `Stable` and scoping the residual coverage gap as its own follow-up.
+### Track G — Full-Suite Regression Gate
+
+- 974 tests passed, 3 skipped, 0 failed across the full non-slow suite with all six tracks' fixes applied together, plus a clean `pint`/`composer analyse`/`composer audit`/`composer unused` pass.
+
+Two of Track A/B/D's governing specifications — `l1-object-profile.md` and `l1-public-api.md` — carried a live, unrelated `TBD` that briefly blocked their tracks entirely (this SDD engine's spec-status gate is document-level, not section-level); `l1-platform-shell.md` carried a third. All three were closed and promoted `RFC → Stable` the same day: `l1-platform-shell`'s technical modeling question had a single defensible answer already matching shipped code, while `l1-object-profile`'s (review authorship) and `l1-public-api`'s (API consumer/rate-limit/licensing policy) were genuine product decisions put to the project owner directly rather than inferred.
 

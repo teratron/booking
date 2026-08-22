@@ -272,3 +272,39 @@ phase journal (pre-2026-08-05 pivot) is archived at
 - Coverage floor: both named services reached 100% individually; the suite-wide 78.3% floor remains open as a separate, tracked finding across roughly twenty pre-existing Phase 1–6 files — closed on its own literal scope with the project owner's confirmation.
 
 Phase 7 closed the plan: all seven phases done, 135/135 tasks. A plan-wide retrospective ran on close — see `RETROSPECTIVE.md` for DORA metrics, observations, and recommendations, most notably promoting qualifying specifications to `Stable` and scoping the residual coverage gap as its own follow-up.
+
+## Phase 9 — 2026-08-22
+
+**Post-Launch QA Remediation** — a full-surface functional sweep against the running instance (every public, cabinet, admin, and API route exercised, not inferred from reading code) found five confirmed product defects and one test-suite defect; every one checked directly against its governing specification and found already correct, so this phase is implementation-only, no spec amendment. 15/15 tasks across six independent tracks.
+
+### Track A — Contact Channel Type Selection
+
+- Admin and cabinet object forms' contact-channel repeaters were missing the type selector entirely — no channel could ever be saved through either UI (a `NOT NULL` violation on `contact_channel_type_id`, the portal's whole conversion mechanism silently broken). Both forms now select from the active `ContactChannelType` registry.
+- Found in passing: `derived_link` on `contact_channels` has no write path anywhere in the app — the real deep-link resolution happens dynamically at click time via `ContactChannelLinkResolver`, not from that stored column. Left the column alone rather than wiring a write path nothing reads.
+
+### Track B — API Guest-Redirect JSON Contract
+
+- Every authenticated `api/v1/*` route 500d instead of 401 when the caller omitted an `Accept: application/json` header — Laravel's guest-redirect fallback tried `route('login')`, a name this app never registers. `api/*` now never attempts a guest redirect; the admin and cabinet panels' own login redirects are unaffected.
+
+### Track C — Canonical Host Consistency
+
+- Canonical links, Open Graph tags, and API response URLs followed the incoming request's Host header instead of the configured `APP_URL` — both host and scheme, since `URL::forceRootUrl()` alone doesn't pin the scheme once TLS terminates upstream of the app (this project's own production topology). Both are now pinned from the same `config('app.url')` value.
+- Found live during Track D: the catalog page's own canonical used `url()->full()`, a code path that bypasses the root/scheme pin entirely — the one page Track C's own fix had missed. Fixed alongside it.
+
+### Track D — hreflang Alternate Links
+
+- `ResolvedMetadata` now carries per-language alternate URLs, computed through the identical `LocaleSwitchResolver::targetUrl()` call the language switcher itself uses, so hreflang tags and the switcher can never independently drift. The public layout emits one `<link rel="alternate">` per active language plus one `x-default`.
+
+### Track E — Cabinet Settings Crash
+
+- `cabinet/settings` 500d for every owner — the one cabinet route with no tenant segment, inside a panel whose full layout (sidebar, topbar, tenant menu) builds tenant-scoped URLs unconditionally with no null-tenant guard anywhere in that shared Filament chrome. The first, narrower patch fixed the one reported crash and immediately surfaced two more unguarded call sites in the same layout; switched to Filament's own `isSimple: true` default for tenant-independent pages instead of patching each vendor call site in turn.
+
+### Track F — Test-Suite Correction
+
+- `PublicRootEntryTest` asserted a fallback-to-primary-language branch its own bare `$this->get('/')` never actually reached — the HTTP test client silently attaches a default `Accept-Language` header that already matches. Fixed the assumption, not the resolver: `PublicEntryLocaleResolver` was already correct.
+
+### Track G — Full-Suite Regression Gate
+
+- 974 tests passed, 3 skipped, 0 failed across the full non-slow suite with all six tracks' fixes applied together, plus a clean `pint`/`composer analyse`/`composer audit`/`composer unused` pass.
+
+Two of Track A/B/D's governing specifications — `l1-object-profile.md` and `l1-public-api.md` — carried a live, unrelated `TBD` that briefly blocked their tracks entirely (this SDD engine's spec-status gate is document-level, not section-level); `l1-platform-shell.md` carried a third. All three were closed and promoted `RFC → Stable` the same day: `l1-platform-shell`'s technical modeling question had a single defensible answer already matching shipped code, while `l1-object-profile`'s (review authorship) and `l1-public-api`'s (API consumer/rate-limit/licensing policy) were genuine product decisions put to the project owner directly rather than inferred.

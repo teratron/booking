@@ -1,36 +1,59 @@
 ---
 phase: 9
 name: "Post-Launch QA Remediation"
-status: In Progress
-subsystem: "app/Filament/Admin/Resources/Objects, app/Filament/Cabinet, app/Providers/AppServiceProvider.php, bootstrap/app.php, app/Services/Seo, app/Services/Shell, resources/views/components/layouts, tests/Feature"
+status: Done
+subsystem: "app/Filament/Admin/Resources/Objects, app/Filament/Cabinet, app/Providers/AppServiceProvider.php, bootstrap/app.php, app/Services/Seo, app/Services/Shell, app/Livewire/Public, resources/views/components/layouts, tests/Feature"
 requires: ["phase-2", "phase-4", "phase-6"]
-provides: []
+provides:
+  - "Contact-channel type selector on both object forms — the portal's conversion mechanism can save a channel again"
+  - "api/* returns 401 JSON for every unauthenticated request, regardless of Accept header"
+  - "Canonical/OG/API URLs and the catalog page's own canonical are pinned to config('app.url') (host and scheme), never the request Host"
+  - "hreflang alternate links (per active language plus x-default) on every page carrying $metadata, sourced from the same resolver the language switcher uses"
+  - "cabinet/settings renders for every owner via Filament's isSimple: true, the framework default for a tenant-independent page"
+  - "l1-object-profile.md, l1-public-api.md, l1-platform-shell.md promoted RFC to Stable, closing three live TBDs — two by direct project-owner decision"
 key_files:
-  created: []
+  created:
+    - tests/Feature/Public/PublicHreflangTest.php
   modified:
-    - app/Providers/Filament/CabinetPanelProvider.php
+    - app/Filament/Admin/Resources/Objects/Schemas/ObjectForm.php
+    - app/Filament/Cabinet/Resources/Objects/Schemas/ObjectForm.php
+    - resources/lang/en/panel.php
+    - resources/lang/ru/panel.php
+    - bootstrap/app.php
     - app/Providers/AppServiceProvider.php
-    - tests/Feature/Cabinet/CabinetFoundationTest.php
+    - app/Livewire/Public/CatalogSearch.php
+    - app/Services/Seo/MetadataResolver.php
+    - app/Support/Seo/ResolvedMetadata.php
+    - resources/views/components/layouts/public.blade.php
+    - app/Providers/Filament/CabinetPanelProvider.php
+    - tests/Feature/Admin/ObjectResourceFormTest.php
+    - tests/Feature/Cabinet/CabinetObjectEditingTest.php
+    - tests/Feature/Api/ApiReadContractTest.php
     - tests/Feature/Public/MetadataResolutionTest.php
+    - tests/Feature/Cabinet/CabinetFoundationTest.php
     - tests/Feature/Public/PublicRootEntryTest.php
 patterns_established:
   - "A tenant-independent Filament page inside a tenancy-enabled panel must use ->profile(..., isSimple: true) — the full layout's shared chrome (sidebar, topbar, tenant menu) builds tenant-scoped URLs unconditionally with no null-tenant guard anywhere in that vendor Blade tree."
   - "URL::forceRootUrl() alone does not pin the scheme when TLS terminates upstream of the app — pair it with URL::forceScheme(parse_url($appUrl, PHP_URL_SCHEME)), both derived from the same config('app.url') value."
-duration_minutes: ~
+  - "url()->full() reads the request's own Host/scheme directly and bypasses the forceRootUrl()/forceScheme() pin — route()/url('path')/url()->current() go through the same UrlGenerator::to() path and respect it. Grep for url()->full()/->fullUrl() whenever auditing canonical-URL correctness."
+  - "A phase's Todo tasks referencing an L1 spec directly (not through an L2 Implements chain) are gated by that spec's whole-document Stable status, not the specific section they depend on — verify Stable status per task's Spec: field at plan time, not only at Pre-flight."
+duration_minutes: ~410
 ---
 
 # Stage 9 Tasks — Post-Launch QA Remediation
 
 **Phase:** 9
-**Status:** In Progress (7/15 — Tracks C, E, and F closed 2026-08-22. Tracks A, B, and D
-were briefly `Blocked [!] (Spec RFC)` — `l1-object-profile.md`, `l1-public-api.md`, and
-`l1-platform-shell.md` were `RFC`, caught by `/magic.run main`'s Pre-flight Spec
-Stability Spot-Check before any task in those tracks began. `/magic.spec main` promoted
-all three to `Stable` the same day: `l1-platform-shell`'s country-switcher `TBD`
-confirmed the already-shipped model; `l1-object-profile`'s review-authorship and
-`l1-public-api`'s consumer/rate-limit/licensing `TBD`s were genuine product decisions,
-put to the project owner directly. All eight tasks are unblocked; see each task's Notes
-for the resolution and `INDEX.md`/each spec's Document History for the full record.)
+**Status:** Done (15/15, 2026-08-22). Tracks C, E, and F closed first; Tracks A, B, and D
+were briefly `Blocked [!] (Spec RFC)` the same day — `l1-object-profile.md`,
+`l1-public-api.md`, and `l1-platform-shell.md` were `RFC`, caught by `/magic.run main`'s
+Pre-flight Spec Stability Spot-Check before any task in those tracks began.
+`/magic.spec main` promoted all three to `Stable` the same day: `l1-platform-shell`'s
+country-switcher `TBD` confirmed the already-shipped model; `l1-object-profile`'s
+review-authorship and `l1-public-api`'s consumer/rate-limit/licensing `TBD`s were
+genuine product decisions, put to the project owner directly. Track G's full-suite
+regression gate then closed clean: 974 passed, 3 skipped, 0 failed. See each task's
+Notes for the resolution and `INDEX.md`/each spec's Document History for the full
+record.
 **Strategic Goal:** Close five confirmed, live-reproduced functional defects a full-surface
 QA sweep found against the running instance (`.drafts/qa-sweep-report.md`), plus one
 test-suite defect the same sweep surfaced. Every defect was checked directly against its
@@ -100,7 +123,7 @@ narrowing that down, not applying a fix sight-unseen.
 
 ### Track G — Full-Suite Regression Gate
 
-- [ ] [T-9G01] Full `composer quality` and non-slow Pest suite, clean, after Tracks A–F close
+- [x] [T-9G01] Full `composer quality` and non-slow Pest suite, clean, after Tracks A–F close
 
 ## Task Detail
 
@@ -239,4 +262,4 @@ narrowing that down, not applying a fix sight-unseen.
 
 - **Goal:** Confirm none of the six fixes regressed anything the existing 171-file suite already covers, and that the phase's own new validation tasks (`T-9A03`, `T-9B02`, `T-9C02`, `T-9D03`, `T-9E03`, `T-9F01`) are all green together, not just individually.
 - **Method:** `docker compose exec app sh -c "php artisan config:clear --ansi && php -d memory_limit=1G vendor/bin/pest --exclude-group=slow"` — full pass, zero failures. Also `composer analyse` (PHPStan level 8) and `composer lint` (Pint), since Track D adds a new `ResolvedMetadata` property and Track C/B touch service-provider/bootstrap code that PHPStan resolves eagerly. Run test suites sequentially, never concurrently against `booking_testing`, per this project's own established constraint.
-- **Status:** Todo — waits on Tracks A–F closing; all six are now unblocked (the three `Spec RFC` blockers on A/B/D lifted 2026-08-22).
+- **Status:** Done — `pint --test`: 908 files, clean. `composer analyse`: 707 files, no errors. `composer audit`: no advisories. `composer unused`: none. Full non-slow suite: **974 passed, 3 skipped, 0 failed** (1172s), including `Tests\Architecture\ContainmentTest` (no spec-reference leaks from any of the six tracks' new code or docblocks) and all of `T-9A03`/`T-9B02`/`T-9C02`/`T-9D03`/`T-9E03`/`T-9F01` together, not merely each in isolation. `composer test:coverage`'s pre-existing 78.5%-vs-80% gap (recorded in `STATE.md` before this phase existed, a long cross-cutting tail unrelated to any of these six fixes) is unchanged and, per that same precedent, out of this delivery phase's scope — consistent with how Phase 8's own closure treated it.

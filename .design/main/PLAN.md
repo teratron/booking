@@ -1,10 +1,10 @@
 # Implementation Plan
 
-**Version:** 3.12.0
+**Version:** 3.13.0
 **Generated:** 2026-08-05
 **Based on:** .design/main/INDEX.md v2.11.0
 **Based on RULES:** .design/RULES.md v1.4.0
-**Status:** Active — Phase 8 (delivery pipeline; 20/23, the three open tasks owner-only. Its two sources returned to `RFC` on 2026-08-22 to reconcile with the owner's single-line branch decision — not a defect, and not a reason to reopen Done work; see Plan Status below) · Phase 9 (post-launch QA remediation; 7/15, opened 2026-08-22 from a live functional sweep, independent of Phase 8; Tracks C/E/F closed the same day, Tracks A/B/D briefly `Blocked [!] (Spec RFC)` then unblocked the same day via `/magic.spec main`; see Plan Status below)
+**Status:** Active — Phase 8 (delivery pipeline; 20/23, the three open tasks owner-only. Its two sources returned to `RFC` on 2026-08-22 to reconcile with the owner's single-line branch decision — not a defect, and not a reason to reopen Done work; see Plan Status below) · Phase 9 **Done** (post-launch QA remediation; 15/15, opened and closed 2026-08-22, independent of Phase 8; see Plan Status below)
 
 ## Overview
 
@@ -343,7 +343,7 @@ it, and that already happened in [INDEX.md](INDEX.md)'s Branch-Model Ledger. The
 quarantine lifts on whichever resumption condition [l1-release-operations.md](specifications/l1-release-operations.md)
 §3.3 names is met first — not on a task in this phase.
 
-## Phase 9 — Post-Launch QA Remediation — **Active**
+## Phase 9 — Post-Launch QA Remediation — **Done**
 
 *A full-surface functional sweep against the running instance found five confirmed
 defects and one test-suite defect. This phase fixes them.*
@@ -356,7 +356,7 @@ defects and one test-suite defect. This phase fixes them.*
   requirements the implementation diverges from ([l1-seo.md](specifications/l1-seo.md)) [L1]
 
 Decomposed into 15 atomic tasks across six independent tracks plus a full-suite
-regression gate in [tasks/phase-9.md](tasks/phase-9.md), which carries this phase's own
+regression gate in [archives/tasks/phase-9.md](archives/tasks/phase-9.md), which carries this phase's own
 planning audit.
 
 **Every task in this phase fixes code against a specification that was already
@@ -407,7 +407,7 @@ already-shipped model; `l1-object-profile`'s review-authorship and `l1-public-ap
 consumer/rate-limit/licensing questions were genuine product decisions, put to the
 project owner directly rather than inferred — and promoted all three `RFC → Stable`.
 Eight tasks (`T-9A01`–`03`, `T-9B01`–`02`, `T-9D01`–`03`) are unblocked. Full detail:
-[tasks/phase-9.md](tasks/phase-9.md) Status line and each spec's Document History.
+[archives/tasks/phase-9.md](archives/tasks/phase-9.md) Status line and each spec's Document History.
 
 **Tracks C, E, and F closed the same day** — the three tracks this block never reached.
 Track E (`T-9E01`–`03`) turned out wider than its own root-cause task assumed: the first
@@ -447,6 +447,8 @@ promises — see the note in `STATE.md`'s Blocking Constraints.
 - 2026-08-21 **Decision: the human-only boundary is scoped to production risk, not to infrastructure setup** — the project owner explicitly authorized the agent to build a release gate's own scaffolding (branch protection, the `production` environment, CI/CD workflows) directly, before this project's first production release, having heard the agent's own explanation of why the boundary exists and choosing to relax it anyway. Formalized in [l1-release-operations.md](specifications/l1-release-operations.md) §5.5.1 (v0.2.0) rather than left as a verbal exception, so a future session reads the same rule instead of re-litigating it. The boundary itself is unchanged for release-time decisions (acceptance, irreversibility, restore) — those stay human at every phase, including production. GitHub attributes agent-run `gh api` calls to the owner's own authenticated account; the owner was told this explicitly and said it does not concern them.
 
 - 2026-08-21 **Decision: the ownership file is the single source of sensitive-zone enforcement, and its test checks the tree against it rather than the reverse** — the owner chose this over generating the ownership file from a canonical list held in PHP, which would have added a generator that can itself drift. The consequence accepted with it: the ownership file stays hand-written, so the test must be the thing that notices when the tree outgrows it. That is why coverage is derived by walking the real directories per zone — a new policy, admin surface over money, or credential-table migration fails the gate on the day it is written, not on the day someone remembers the file exists.
+
+- 2026-08-22 **Decision: when a fix's own investigation surfaces a genuine open product question, put it to the project owner directly rather than inferring an answer from the code.** Phase 9's Track E crash widened past one call site into "the full Filament layout assumes a tenant everywhere" — offered a patch-each-site option and the framework-default option (`isSimple: true`); owner chose the complete fix over patching, "no crutches, even if it takes time." Separately, closing `l1-object-profile`/`l1-public-api`'s RFC-blocking `TBD`s meant real business questions (review authorship, API consumer policy) — asked rather than assumed. The line: a technical trade-off with one framework-idiomatic answer is the agent's call; a product/business question is not, even when it happens to gate an unrelated bug fix. Recovered here after `update-state` pruned it from `STATE.md`'s Recent Decisions on the very pass that added it — the pruning heuristic removed the newest entry, not the oldest, contrary to its own documented behavior; see the updated note in `STATE.md`'s Blocking Constraints.
 
 ## Planning Audit
 
@@ -497,7 +499,7 @@ code and one changes a test matrix.
 The remaining eighteen open questions land in Phase 3 and later and are not on the
 critical path out of Phase 2.
 
-## Plan Status: Phase 8 Active, Phase 9 Active
+## Plan Status: Phase 8 Active, Phase 9 Done
 
 **Phases 1 through 7 are done — 135 of 135 tasks**, closed on 2026-08-20. A plan-wide L2
 retrospective ran on that close — Signal 🟢 Green — and is recorded in
@@ -578,24 +580,29 @@ found five reproduced defects and one test-suite defect, recorded in
 `.drafts/qa-sweep-report.md`. `/magic.spec main` checked each finding against its
 governing specification before any task was scheduled; every specification touched was
 already correct, so the dispatch produced zero spec amendments and one recommendation:
-route the findings to `/magic.task`. This phase is that routing. It runs independently of
-Phase 8 — no shared file, no shared track, no shared blocker — and either phase may close
-before the other.
+route the findings to `/magic.task`. This phase is that routing. It ran independently of
+Phase 8 — no shared file, no shared track, no shared blocker — and closed first, the same
+day it opened; Phase 8 remains active, owner-blocked, unaffected by this phase's own close.
 
-**Re-planned twice more the same day: `/magic.run main` halted at Pre-flight, then
-`/magic.spec main` and `/magic.task main` unblocked it.** The Spot-Check found three of
-the six tracks scheduled above (A, B, D) reference specifications at `RFC`, not
-`Stable` — a gap the `/magic.spec main` content review did not surface because it
-checked *what the specs say*, not their document-level status field, and this plan did
-not separately check either. Tracks C, E, and F were unaffected and closed the same day
-— 7/15 tasks done, Track E's own scope widening past its original one-crash estimate
-once its fix surfaced two further unguarded call sites in the same Filament layout
-chrome. A follow-up `/magic.spec main` pass then closed each blocking spec's own live
-`TBD` and promoted all three to `Stable`: `l1-platform-shell`'s was a technical
-modeling question with an already-shipped answer, while `l1-object-profile`'s and
-`l1-public-api`'s were genuine product decisions put to the project owner directly.
-This `/magic.task main` pass un-quarantines the eight affected tasks. Full detail in
-the Phase 9 section above and [tasks/phase-9.md](tasks/phase-9.md).
+**Re-planned twice more the same day, then closed: `/magic.run main` halted at
+Pre-flight, `/magic.spec main` and `/magic.task main` unblocked it, and a second
+`/magic.run main` pass closed it.** The Spot-Check found three of the six tracks
+scheduled above (A, B, D) reference specifications at `RFC`, not `Stable` — a gap the
+`/magic.spec main` content review did not surface because it checked *what the specs
+say*, not their document-level status field, and this plan did not separately check
+either. Tracks C, E, and F were unaffected and closed first, Track E's own scope
+widening past its original one-crash estimate once its fix surfaced two further
+unguarded call sites in the same Filament layout chrome. A follow-up `/magic.spec main`
+pass then closed each blocking spec's own live `TBD` and promoted all three to
+`Stable`: `l1-platform-shell`'s was a technical modeling question with an
+already-shipped answer, while `l1-object-profile`'s and `l1-public-api`'s were genuine
+product decisions put to the project owner directly. Tracks A, B, and D then closed —
+Track C's own APP_URL fix turned out to have a second gap, found live while building
+Track D (the catalog page's canonical bypassed the root/scheme pin via `url()->full()`)
+and fixed alongside it. Track G's full regression gate closed clean: 974 passed, 3
+skipped, 0 failed. **15/15, Phase 9 done.** Full detail in the Phase 9 section above,
+[archives/tasks/phase-9.md](archives/tasks/phase-9.md), and this workspace's own
+[CHANGELOG.md](CHANGELOG.md).
 
 Phase registry in [TASKS.md](TASKS.md). The first seven phases are archived at
 [archives/tasks/phase-1.md](archives/tasks/phase-1.md),
