@@ -1,7 +1,7 @@
 # Release Pipeline
 
-**Version:** 0.4.0
-**Status:** Stable
+**Version:** 0.5.0
+**Status:** RFC
 **Layer:** implementation
 **Implements:** l1-release-operations.md
 
@@ -89,7 +89,7 @@ Verified against the repository, so the delta below is checkable rather than ass
 | --- | --- |
 | `.github/workflows/quality.yml` | Single `quality` job on `push` and `pull_request`, unfiltered by branch. Provisions PHP 8.5 with the full extension set, a `postgis/postgis:18-3.6-alpine` service container matching the local stack's image tag, the dedicated test database and its three extensions, pnpm and Node 24. Runs the JS gate, a pull-request-scoped changed-file audit, the Vite build, `migrate:fresh --seed` from empty, and finally `composer quality`. |
 | `.githooks/pre-commit` | Versioned, activated per clone by pointing `core.hooksPath` at it. Checks staged PHP with Pint and staged JS/CSS with Biome, inside the running container. |
-| Branches | `master` (default) and `develop` on the remote. No protection rules specified anywhere. |
+| Branches | **`master` only** — the sole head on the remote, and the working branch. `develop` does not exist. No protection rule on `master`, and no repository ruleset: `branches/master/protection` returns `404 Branch not protected` and `rulesets` returns `[]`. Re-verified 2026-08-22; this row previously described two branches and was accurate when written. |
 | `docs/` | Six technical runbooks plus an index, English, developer audience: schema, backups, restore rehearsal, production provisioning, mail and error tracking, queues and observability. |
 | Tags | One historical tag, `v0.1.34`, marking the superseded implementation. |
 | `CHANGELOG.md` | Keep a Changelog format, semantic versioning declared, `[Unreleased]` section maintained. |
@@ -97,7 +97,23 @@ Verified against the repository, so the delta below is checkable rather than ass
 Absent: any deployment, any release definition, any branch contract, any protection
 rule, any rollback path, and any operator-audience or Russian-language documentation.
 
-### 5.2 Branch Topology
+### 5.2 Branch Topology [MODIFIED — v0.5.0]
+
+**This table is the target state, in force from the client's production launch — not the
+model running today.** Until handover the repository runs a single line, `master`, worked
+on directly, per [l1-release-operations.md](l1-release-operations.md) §3.3's interim
+clause. Nothing below is weakened or reinterpreted for the interim; the transitions the
+rules govern simply do not occur while there is one line and nothing deployed. The
+interim state has exactly two rules of its own, and they are the whole of it:
+
+- Work lands on `master` directly. An additional branch is opened only where a specific
+  piece of work genuinely needs isolation — not as the default shape of a change.
+- The quality gate still runs on every push, unchanged and unconditional. It is the only
+  gate that exists during this period, which is why it is also the only one that may not
+  be skipped.
+
+Everything below activates together at launch, with the protection settings §5.11
+names — and §5.11's own inertness during the interim is stated there, not glossed here.
 
 | Line | Branch | Rules |
 | --- | --- | --- |
@@ -368,6 +384,18 @@ merge without a person granting review, and exempts a declared set of sensitive 
 from that grant. This section is how the exemption is enforced on this stack. It has
 two halves, and §5.5.2's own warning applies: neither may be inferred from the other.
 
+> **Currently inert — state, not design.** Under §5.2's interim single-line model there
+> is no protection rule on `master`, so the protection settings below are absent and the
+> ownership file is consulted by nothing. Only the tree-walking test still runs, and a
+> test whose result no merge path reads is documentation. Nothing in this section is
+> withdrawn or rewritten for that period — the mechanism described here is the mechanism
+> to restore, and restoring it is a precondition of the first release, not a follow-up
+> to it. The settings table below doubles as the restoration procedure, including its
+> ordering constraint. Verify by reading the live state back, never by assuming the
+> configuration survived: on 2026-08-22 `branches/master/protection` returned
+> `404 Branch not protected` where this section's own installation had verified real
+> data days earlier.
+
 **The ownership file is the single source.** `.github/CODEOWNERS` maps each zone §5.5.2
 declares onto the paths that hold it, with the project owner as the named owner of every
 entry. Patterns are globs rather than one line per file, so the next file in a zone is
@@ -511,3 +539,4 @@ deployment credentials in scope.
 | 0.2.0 | 2026-08-21 | §5.10 gains a note on the development-phase ordering: branch protection and the `production` environment can exist before the automation identity does, per [l1-release-operations.md](l1-release-operations.md) §5.5.1 — this section's own withheld-permissions design still governs the identity once installed, unaffected. Companion to that spec's own 0.2.0. |
 | 0.3.0 | 2026-08-21 | §5.10's granted/withheld table extends to `master`: the automation identity may merge an ordinary change (one carrying no sensitive-zone touch and no undeclared irreversible migration) into `master` itself, not only `develop` — matching [l1-release-operations.md](l1-release-operations.md) §5.5.2's new standing grant. Pushing the tag that starts a deploy stays withheld unconditionally, regardless of which line authorized the `master` change; reaching `master` is never deploying it. Companion to that spec's own 0.3.0. |
 | 0.4.0 | 2026-08-21 | New §5.11 (Sensitive-Zone Enforcement) — the section the first re-review of 0.3.0 found missing entirely: `.github/CODEOWNERS` as the single source of ownership patterns, an architecture test deriving its candidates by walking the real tree per zone rather than from a hand-written path list, and the `require_code_owner_reviews` / `required_approving_review_count` protection settings that make the check actually block a merge. States the ordering constraint between those two settings as a safety property — enabling code-owner review always precedes lowering the approving count, since the reverse order opens a window with neither guarantee — and states what the mechanism deliberately does not gate. §5.2's branch topology table is corrected to match: both protected branches require code-owner review and carry no approving-review count of their own, where the table previously described `develop` as requiring one approving review and said nothing about code owners on either line. §4 gains a compliance row for [l1-release-operations.md](l1-release-operations.md) §5.5.2, which had none. |
+| 0.5.0 | 2026-08-22 | Minor: §5.2's topology table is reframed as the target state, in force from the client's production launch, following [l1-release-operations.md](l1-release-operations.md) §3.3's interim clause — until handover the repository runs a single line, `master`, and the interim's own two rules (work lands directly; the quality gate stays unconditional) are stated so the period has a contract rather than an absence of one. §5.1's Current State row is corrected against a live read: `develop` does not exist, `master` is the sole remote head, `branches/master/protection` returns `404 Branch not protected` and `rulesets` returns `[]` — the row previously described two branches and was accurate when written. §5.11 gains an inertness notice: with no protection rule, its settings are absent and `CODEOWNERS` is consulted by nothing, leaving only the tree-walking test, whose result no merge path reads. The mechanism is not withdrawn — the section doubles as the restoration procedure, and restoration is a precondition of the first release rather than a follow-up to it. |

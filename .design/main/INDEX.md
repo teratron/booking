@@ -1,6 +1,6 @@
 # Workspace Specifications Registry
 
-**Version:** 2.9.0
+**Version:** 2.10.0
 **Status:** Active
 
 ## Overview
@@ -13,8 +13,10 @@ booking marketplace to a multi-country tourism information portal. See
 [l1-platform-foundation.md](specifications/l1-platform-foundation.md) §5.3 for the
 scope-delta ledger.
 
-**Status posture (URL-grammar pass, 2026-08-22):** the count is **8 `Stable`,
-17 `RFC`**. The 2026-08-20 stabilization pass promoted 6 of 25; the delivery pair left
+**Status posture (branch-model pass, 2026-08-22):** the count is **6 `Stable`,
+19 `RFC`** — the delivery pair returned to `RFC` on the same day it had been at 8/17,
+this time by an amendment that was expected rather than discovered. The Branch-Model
+Ledger below records it. Earlier the same day the count was 8/17: The 2026-08-20 stabilization pass promoted 6 of 25; the delivery pair left
 that set briefly on 2026-08-21 — reverted to `RFC` by the constitution's amendment
 rule, then re-promoted the same day once the findings that held them there were closed
 — and the Amendment Ledger below records that round trip. This pass added
@@ -82,12 +84,12 @@ Delivery → Optional → Implementation); the registry itself is flat.
 | [l1-advertising.md](specifications/l1-advertising.md) | Commerce. Geo/language-targeted banners, slots, scheduling, promotional labels | RFC | 1 | 0.2.1 |
 | [l1-analytics.md](specifications/l1-analytics.md) | Commerce. Event model, aggregation, traffic sources, owner and operator reporting, privacy bounds | RFC | 1 | 0.2.1 |
 | [l1-public-api.md](specifications/l1-public-api.md) | Integration. Outward-facing REST contract, issued tokens, scoping, rate limits, documentation | RFC | 1 | 0.1.1 |
-| [l1-release-operations.md](specifications/l1-release-operations.md) | Delivery. Promotion path, gate obligations, release records, the two reversal paths, operator documentation set, agent-decided vs. human-decided release actions, scoped development-phase gate-construction exception, standing autonomous-operation grant with its sensitive-zone circuit breaker | Stable | 1 | 0.4.0 |
+| [l1-release-operations.md](specifications/l1-release-operations.md) | Delivery. Promotion path, gate obligations, release records, the two reversal paths, operator documentation set, agent-decided vs. human-decided release actions, scoped development-phase gate-construction exception, standing autonomous-operation grant with its sensitive-zone circuit breaker, interim single-line branch state | RFC | 1 | 0.5.0 |
 | [l1-room-reservation.md](specifications/l1-room-reservation.md) | Optional module — **disabled by default**. Booking: calendars, requests, prepaid checkout | RFC | 1 | 1.0.1 |
 | [l2-data-model.md](specifications/l2-data-model.md) | Implementation. Consolidated table inventory, conventions, index plan, deletion and archival rules, schema deliverables | RFC | 2 | 0.3.1 |
 | [l2-tech-stack.md](specifications/l2-tech-stack.md) | Implementation. Laravel 13 + Filament 5 + PostgreSQL/PostGIS + Redis; package set, bespoke surface, quality gates (incl. WCAG 2.2 AA + ARIA) and performance budgets, self-hosted deployment, dev/production environment configuration | Stable | 2 | 2.4.1 |
 | [l2-third-party-integrations.md](specifications/l2-third-party-integrations.md) | Implementation. External services: storage, CDN, map tiles, SMTP, CAPTCHA, error tracking, dormant payment | RFC | 2 | 2.0.0 |
-| [l2-release-pipeline.md](specifications/l2-release-pipeline.md) | Implementation. Git Flow branch contract, two GitHub Actions workflows, image digest as release artefact, pull-based deploy with health-assertion rollback, destructive-migration scan, automation identity permissions, sensitive-zone enforcement, EN/RU/agent documentation tree | Stable | 2 | 0.4.0 |
+| [l2-release-pipeline.md](specifications/l2-release-pipeline.md) | Implementation. Git Flow branch contract, two GitHub Actions workflows, image digest as release artefact, pull-based deploy with health-assertion rollback, destructive-migration scan, automation identity permissions, sensitive-zone enforcement, EN/RU/agent documentation tree | RFC | 2 | 0.5.0 |
 
 ## Rename Map (2026-08-05)
 
@@ -265,7 +267,62 @@ a correction: minor bump, `Stable → RFC`, and a C12 cascade quarantining
 on inside a URL-grammar pass. `l1-back-office` is the natural home for the requirement
 and is already `RFC`, so siting it there costs no cascade at all.
 
+## Branch-Model Ledger (2026-08-22)
+
+A live read of the repository, prompted by the project owner asking whether Phase 8 was
+really the only outstanding work, found the delivery pair describing a repository that no
+longer exists.
+
+**What the read returned.** `master` is the sole remote head; `develop` does not exist.
+`branches/master/protection` returns `404 Branch not protected`, `branches/develop/protection`
+returns `404 Branch not found`, and `rulesets` returns `[]`. The repository is public and
+on a personal account, so branch protection is available and its absence is not a plan
+limitation. `.github/CODEOWNERS` is present in the tree. `T-8A01` had closed on a live
+verification that returned real protection data for both branches, and `T-8F02`/`T-8F03`
+on a read-back confirming the two branches matched field-for-field.
+
+**The decision, and which side was wrong.** The owner had settled this in an earlier
+session and restated it here: while the project is in development and has not been handed
+to the client, work goes directly into `master`, with additional branches only on genuine
+need. Full Git Flow, with partial or preferably full automation of the development flow,
+arrives at the client's production launch. So the repository is correct and the
+specifications were stale — the opposite of the usual direction, and the reason it is
+worth recording rather than quietly amending.
+
+**Amended (2), both `Stable → RFC` by the amendment rule.**
+
+- `l1-release-operations` **0.4.0 → 0.5.0**. §3.3 gains a bounded interim clause: the
+  multi-line promotion path is the target state, reached at launch, and until then there
+  is one line. The obligations are not suspended — the transitions they govern do not
+  occur. §5.5.2 records what the deferral costs, without softening it.
+- `l2-release-pipeline` **0.4.0 → 0.5.0**. §5.2's table is reframed as the target state
+  and the interim's own two rules are stated, so the period has a contract rather than an
+  absence of one. §5.1's Current State row is corrected against the live read. §5.11
+  gains an inertness notice and doubles as the restoration procedure.
+
+**The finding that outlives the amendment.** With no protection rule on the production
+line, `CODEOWNERS` takes effect nowhere, so both halves of the sensitive-zone boundary
+are inert and §5.5.2's standing grant runs without the mechanical guard its own text
+assumes. What stands in its place is a condition rather than a control: nothing is in
+production, so the money, credential, and authorization surfaces have no live data behind
+them and no deploy path in front of them. That is why the deferral is acceptable and
+exactly why it cannot outlive itself — the breaker must be operative **before** the first
+release, not restored after one.
+
+`l1-release-operations` §5.5.2 now carries a third failure mode alongside the two the
+2026-08-21 round trip produced. Declared-but-not-enforced and enforced-but-incomplete
+were both about enforcement never built; this one is enforcement that was built, verified
+live, and later ceased to exist. A declared zone, an enforced zone, and a *still*-enforced
+zone are three different claims, and only a live read establishes the third.
+
+**Quarantine (C12).** `l1-release-operations` dropping to `RFC` cascades to
+`l2-release-pipeline`, already `RFC` here on its own amendment. No further dependents.
+
+**Not addressed here — plan layer.** `T-8A01`, `T-8F02`, and `T-8F03` stand `Done` with
+`Verify` lines that no longer pass. Task records are `/magic.task`'s to reconcile, not
+this workflow's.
+
 ## Meta Information
 
 - **Maintainer**: Core Team
-- **Last Updated**: 2026-08-22 (URL grammar reconciled to the 2026-08-15 single-origin decision; `l1-localization` and `l1-seo` promoted to `Stable` — 25 specifications, 8 `Stable`)
+- **Last Updated**: 2026-08-22 (branch model reconciled to the owner's single-line development posture; delivery pair back to `RFC` at 0.5.0 — 25 specifications, 6 `Stable`)
