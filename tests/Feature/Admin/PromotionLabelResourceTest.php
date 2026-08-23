@@ -8,6 +8,7 @@ use App\Filament\Admin\Resources\PromotionLabels\PromotionLabelResource;
 use App\Models\PromotionLabel;
 use App\Models\User;
 use App\Support\Advertising\CardPosition;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
@@ -228,4 +229,32 @@ it('refuses every ability to a role holding no advertising permission at all', f
         ->and($stranger->can('create', PromotionLabel::class))->toBeFalse()
         ->and($stranger->can('update', $label))->toBeFalse()
         ->and($stranger->can('delete', $label))->toBeFalse();
+});
+
+it('rejects an out-of-range position_on_card at the database, before it can crash the list page', function (): void {
+    // F-15: the column shipped as an unconstrained varchar despite the
+    // model casting it to CardPosition — a bad row previously reached the
+    // table fine and only threw ValueError once a query touched it,
+    // taking the whole list page down with no way to open the row to fix it.
+    expect(fn () => DB::transaction(fn () => DB::table('promotion_labels')->insert([
+        'border_colour' => '#000000', 'text_colour' => '#ffffff', 'background_colour' => '#ff0000',
+        'icon' => null, 'position_on_card' => 'top_left', 'is_active' => true,
+        'created_at' => now(), 'updated_at' => now(),
+    ])))->toThrow(QueryException::class);
+
+    expect(DB::table('promotion_labels')->count())->toBe(0);
+});
+
+it('renders the list and edit pages for existing, validly positioned labels', function (): void {
+    promotionLabelLanguage();
+    $actor = promotionLabelActor();
+
+    $labelId = DB::table('promotion_labels')->insertGetId([
+        'border_colour' => '#000000', 'text_colour' => '#ffffff', 'background_colour' => '#ff0000',
+        'icon' => null, 'position_on_card' => CardPosition::BottomRight->value, 'is_active' => true,
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    test()->actingAs($actor)->get(PromotionLabelResource::getUrl('index', panel: 'admin'))->assertSuccessful();
+    test()->actingAs($actor)->get(PromotionLabelResource::getUrl('edit', ['record' => $labelId], panel: 'admin'))->assertSuccessful();
 });

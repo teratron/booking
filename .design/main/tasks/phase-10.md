@@ -129,9 +129,9 @@ same local PHP available.
 
 ### Track E — Role Data & Schema Hygiene
 
-- [ ] [T-10E01] Correct the seeded role-to-permission grants
-- [ ] [T-10E02] Add the missing check constraint on `promotion_labels.position_on_card`
-- [ ] [T-10E03] Validation
+- [x] [T-10E01] Correct the seeded role-to-permission grants
+- [x] [T-10E02] Add the missing check constraint on `promotion_labels.position_on_card`
+- [x] [T-10E03] Validation
 
 ### Track F — Content Lifecycle & Third-Party Wiring
 
@@ -290,26 +290,30 @@ same local PHP available.
 **[T-10E01] Correct the seeded role-to-permission grants**
 
 - **Spec:** [l1-back-office.md](../specifications/l1-back-office.md) §3.1/§5.2 (roles are data, verbs are `view, create, edit, publish, delete, export, financial access, user management, settings management`; the specific role-to-permission mapping is left illustrative, not a spec commitment — confirmed during this planning pass)
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** `advertising_manager` can reach `banners`/`banner-slots`/`promotion-labels`; `technical_support` can reach `owners` (the entry point for `impersonate`, which it already holds) and cannot reach `portal-settings`/`languages`/`modules`; `finance_manager` can reach `commerce-reports`.
 - **Notes (finding):** `RoleSeeder.php`'s permission grants do not match the duties each role's own name implies — confirmed live against a 9-role × 78-route matrix. `qa-deep-findings.md` F-09 names the specific corrections per role.
+- **Changes:** Per F-09's own fix list — `advertising_manager` → `advertising.*` (the actual gate `BannerPolicy`/`BannerSlotPolicy`/`PromotionLabelPolicy` authorize against, replacing the `content.*` grant that touched news/promotions instead of this role's own resources) + `content.view` + `object.view` + `analytics.view`; `technical_support` → `user.view` (the entry point `impersonate` needed) + `impersonate` + `audit.view` only, dropping `settings.view`/`settings_management` (the over-broad grant that let it reach portal-settings/languages/modules); `country_administrator` → added `user.view`/`user.create`/`user.edit` (the CRUD verbs `UserPolicy` actually checks — `user_management` alone gates nothing); `finance_manager` → added `commerce.view` (the placement package/tier registry, distinct from `finance.view`, which already covered commerce-reports); `content_manager` → added `analytics.view`. New `tests/Feature/Admin/RoleDutyAccessTest.php` seeds the real database and grants each real role via `RoleGrantService::grantRole()` (not an ad-hoc test role), then hits the actual panel URLs — red against 3 of 4 checks before the fix (`git stash` on `RoleSeeder.php`; the fourth, finance_manager → commerce-reports, already passed unfixed since that page is gated by `finance.view`, which `finance.*` already covered), green after. Moderator's own news/promotions gap from the Observed table is deliberately **not** touched — absent from F-09's own fix list and this task's Verify line, so out of scope here.
+- **Incidental fix:** the slow-group `tests/Feature/Admin/PanelQueryBudgetTest.php`'s `queryBudgetActor()` was missing `api.view`/`seo.view`, 403ing on `ApiClientResource` and the three `seo.view`-gated resources — confirmed pre-existing (reproduces identically on the clean tree, unrelated to this track's own changes) via a full audit of every Policy's `viewAny()` gate against the actor's permission list. Fixed in the same pass this track's own wider regression surfaced it.
 
 **[T-10E02] Add the missing check constraint on `promotion_labels.position_on_card`**
 
 - **Spec:** [l2-data-model.md](../specifications/l2-data-model.md)
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** Inserting `position_on_card = 'not-a-real-value'` directly via SQL fails the constraint instead of reaching the row; the promotion-labels list and edit pages both render 200 for existing, valid data.
 - **Notes (finding):** `CardPosition`'s own docblock says the column exists "so an administrator-authored label can never carry an arbitrary position value" — but the column is an unconstrained `varchar`, and one out-of-range value (`'top_left'` instead of the enum's `'top-left'`) throws `ValueError` and takes down the whole list page with no way to open the offending record to fix it. `qa-deep-findings.md` F-15.
+- **Changes:** New migration `2026_08_23_170000_add_position_on_card_check_to_promotion_labels_table.php` adds a raw `CHECK (position_on_card in ('top-left', 'top-right', 'bottom-left', 'bottom-right'))` constraint — no existing rows to backfill, so no data migration needed. `tests/Feature/Admin/PromotionLabelResourceTest.php` gained two tests: a direct-SQL insert of `'top_left'` wrapped in `DB::transaction()` (a savepoint, so the assertion that follows can still query — Postgres aborts the whole outer transaction on a caught constraint violation otherwise) asserts a `QueryException`; a second confirms the list and edit pages both render for a validly-positioned label. Verified live against both the `booking_testing` and local dev databases via `php artisan migrate:fresh --seed` and a direct `pg_get_constraintdef` read.
 
 **[T-10E03] Validation**
 
 - **Goal:** Verify `T-10E01`–`02` against their specs and `qa-deep-findings.md` F-09/F-15.
 - **Method:** The 9-role × 78-route access matrix, re-run and diffed against `qa-admin-matrix.log`'s original findings; a constraint-violation test for `T-10E02`.
-- **Status:** Todo
+- **Status:** Done
 - **Note:** F-24 is **not** scheduled in this phase — see the Track Ordering section's
   correction. `qa-deep-findings.md` itself carries the corrected write-up.
+- **Changes:** Wider regression — `tests/Feature/Admin` (all files) + `tests/Feature/RolePermissionSeederTest.php`: 403 tests, 400 passed, 3 skipped, 0 failed, including the realistic-volume `PanelQueryBudgetTest` (52,800 objects / 6,270 territories) confirming every one of the eleven dynamically-discovered admin resources renders within the 30-query budget for the corrected actor. `composer lint`/`analyse` clean on the touched `database/` files.
 
 ### Track F — Content Lifecycle & Third-Party Wiring
 

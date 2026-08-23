@@ -38,7 +38,12 @@ final class RoleSeeder extends Seeder
             [
                 'key' => 'country_administrator', 'system' => true,
                 'name' => ['en' => 'Country Administrator', 'ru' => 'Администратор страны'],
-                'permissions' => ['object.*', 'content.*', 'moderation.*', 'geography.*', 'user_management', 'admin_panel_access', 'audit.view'],
+                // `user_management` alone gates nothing on its own — it is
+                // the door key `impersonate` and similar capabilities check
+                // for, not a substitute for the `user.*` CRUD verbs
+                // `UserPolicy` actually authorizes against; without these
+                // three, the owner-management screen 403s outright.
+                'permissions' => ['object.*', 'content.*', 'moderation.*', 'geography.*', 'user.view', 'user.create', 'user.edit', 'user_management', 'admin_panel_access', 'audit.view'],
             ],
             [
                 'key' => 'region_administrator', 'system' => true,
@@ -53,7 +58,7 @@ final class RoleSeeder extends Seeder
             [
                 'key' => 'content_manager', 'system' => true,
                 'name' => ['en' => 'Content Manager', 'ru' => 'Контент-менеджер'],
-                'permissions' => ['content.*', 'admin_panel_access'],
+                'permissions' => ['content.*', 'analytics.view', 'admin_panel_access'],
             ],
             [
                 'key' => 'seo_specialist', 'system' => true,
@@ -68,17 +73,30 @@ final class RoleSeeder extends Seeder
             [
                 'key' => 'advertising_manager', 'system' => true,
                 'name' => ['en' => 'Advertising Manager', 'ru' => 'Менеджер по рекламе'],
-                'permissions' => ['content.*', 'object.view', 'admin_panel_access'],
+                // `advertising.*` is the actual gate BannerPolicy and
+                // PromotionLabelPolicy authorize against — the previous
+                // `content.*` grant let this role touch news/promotions
+                // articles while leaving its own namesake resources 403.
+                'permissions' => ['advertising.*', 'content.view', 'object.view', 'analytics.view', 'admin_panel_access'],
             ],
             [
                 'key' => 'finance_manager', 'system' => true,
                 'name' => ['en' => 'Finance Manager', 'ru' => 'Финансовый менеджер'],
-                'permissions' => ['finance.*', 'financial_access', 'admin_panel_access'],
+                // `commerce.view` covers the placement package/tier registry
+                // `finance.*` alone does not reach — a distinct gate from
+                // the commerce-reports page, which `finance.view` already
+                // covers.
+                'permissions' => ['finance.*', 'commerce.view', 'financial_access', 'admin_panel_access'],
             ],
             [
                 'key' => 'technical_support', 'system' => true,
                 'name' => ['en' => 'Technical Support', 'ru' => 'Техническая поддержка'],
-                'permissions' => ['settings.view', 'settings_management', 'admin_panel_access', 'audit.view', 'impersonate'],
+                // `user.view` is the entry point `impersonate` needs — this
+                // role held `impersonate` with no screen to use it from.
+                // `settings.view`/`settings_management` are dropped: they
+                // let this role reach portal-settings, languages, and
+                // modules, duties this role's own name does not imply.
+                'permissions' => ['user.view', 'impersonate', 'audit.view', 'admin_panel_access'],
             ],
             [
                 'key' => 'object_owner', 'system' => true,

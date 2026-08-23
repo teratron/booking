@@ -38,8 +38,11 @@ function queryBudgetActor(): User
         // introduced the eleven resources this sweep now iterates — without
         // these the dynamic loop below 403s before it ever reaches a query
         // count, which hides a real budget regression behind an unrelated
-        // authorization failure.
-        'content.view', 'commerce.view', 'finance.view', 'advertising.view',
+        // authorization failure. api.view/seo.view cover ApiClientResource
+        // and the three seo.view-gated resources, added the same way once
+        // the loop's own dynamic resource discovery
+        // (Filament::getPanel('admin')->getResources()) surfaced them too.
+        'content.view', 'commerce.view', 'finance.view', 'advertising.view', 'api.view', 'seo.view',
     ];
 
     foreach ($permissions as $permission) {
