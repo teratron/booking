@@ -157,6 +157,30 @@ it('saves a contact channel with an explicit type, where the prior schema (no ty
         ->and($channel->raw_value)->toBe('+37360000000');
 });
 
+it('renders the edit page for an object whose contact channel already carries a type — not just the save path', function (): void {
+    // Same gap as the admin form's own equivalent test: fillForm()->call()
+    // never renders the repeater's *existing* item, so it never exercised
+    // getOptionLabelFromRecordUsing() the way a real page load does.
+    $fixture = cabinetObjectEditingGeography();
+    $owner = cabinetObjectEditingOwner('object_owner_contact_channel_render');
+    $object = cabinetObjectEditingMakeObject($fixture, $owner->id, 'draft');
+    $typeId = DB::table('contact_channel_types')->insertGetId([
+        'key' => 'phone', 'link_template' => 'tel:{value}', 'is_active' => true,
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('contact_channels')->insert([
+        'object_id' => $object->id, 'contact_channel_type_id' => $typeId,
+        'raw_value' => '+37360000000', 'label' => 'Front desk', 'display_order' => 1,
+        'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    $response = $this->actingAs($owner)->get(
+        ObjectResource::getUrl('edit', ['record' => $object], panel: 'cabinet', tenant: $object)
+    );
+
+    $response->assertOk();
+});
+
 it("renders exactly the declared type's field set, grouped into Core, Geography, Contacts, Translations, and SEO", function (): void {
     $fixture = cabinetObjectEditingGeography();
     $owner = cabinetObjectEditingOwner('object_owner_render_sections');

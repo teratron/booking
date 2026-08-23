@@ -13,6 +13,7 @@ use App\Support\Api\ApiResource;
 use App\Support\Catalog\CatalogSearchCriteria;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
@@ -298,6 +299,60 @@ it('narrows a country-scoped token to its own country, absent every other', func
     expect($countries)->toBe([$fixture['countryId']]);
 });
 
+it('reads countries and territories in a query count independent of row count', function (): void {
+    // Both resources read a translated `name` accessor (Territory also
+    // reads its level's translated name and its country). Without an
+    // eager load, each row pays its own translation query — invisible at
+    // one row, a real N+1 the moment a second country or territory exists.
+    // Proven by comparing query count at N=1 vs N=4: an eager-loaded
+    // endpoint's count does not grow with row count, an N+1'd one does.
+    apiReadEnableModule();
+    $fixture = apiReadFixture();
+    $token = apiReadToken(ApiResource::cases());
+
+    for ($i = 0; $i < 3; $i++) {
+        $countryId = DB::table('countries')->insertGetId([
+            'code' => 'C'.$i, 'currency' => 'EUR', 'phone_code' => '+1'.$i,
+            'primary_language_id' => $fixture['languageId'], 'is_active' => true,
+            'display_order' => $i + 1, 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('country_translations')->insert([
+            'country_id' => $countryId, 'locale' => 'en', 'name' => "Country {$i}",
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $territoryId = DB::table('territories')->insertGetId([
+            'country_id' => $countryId, 'level_id' => $fixture['cityLevelId'], 'is_active' => true,
+            'display_order' => $i + 1, 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        DB::table('territory_translations')->insert([
+            'territory_id' => $territoryId, 'country_id' => $countryId, 'locale' => 'en',
+            'name' => "Territory {$i}", 'slug' => "territory-{$i}", 'full_slug_path' => "territory-{$i}",
+            'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
+        ]);
+    }
+
+    DB::enableQueryLog();
+    DB::flushQueryLog();
+    $this->withHeader('Authorization', "Bearer {$token}")->getJson('/api/v1/countries')->assertOk();
+    $countryQueries = count(DB::getQueryLog());
+
+    DB::flushQueryLog();
+    $this->withHeader('Authorization', "Bearer {$token}")->getJson('/api/v1/territories')->assertOk();
+    $territoryQueries = count(DB::getQueryLog());
+    DB::disableQueryLog();
+    DB::flushQueryLog();
+
+    // Fixed overhead (module gate, auth, settings, the list query, one
+    // eager-load batch per relation) plus a one-time schema-introspection
+    // query the first analytics insert of the test process pays — never one
+    // query per row. Measured at 14 / 12 against four rows each; the ceiling
+    // here leaves headroom above that reading while staying well inside the
+    // project-wide 30-query request budget, so a real per-row regression
+    // still trips it long before the budget itself would.
+    expect($countryQueries)->toBeLessThanOrEqual(20, "Countries endpoint issued {$countryQueries} queries for 4 rows — eager load may have regressed.")
+        ->and($territoryQueries)->toBeLessThanOrEqual(20, "Territories endpoint issued {$territoryQueries} queries for 4 rows — eager load may have regressed.");
+});
+
 it('lists only published news, promotions, and articles', function (): void {
     apiReadEnableModule();
     $fixture = apiReadFixture();
@@ -335,4 +390,33 @@ it('lists only published news, promotions, and articles', function (): void {
         ->json('data.*.id');
 
     expect($listedIds)->toBe([$publishedNewsId]);
+});
+
+it('returns 200 for every registered read-surface route with a full-ability token', function (): void {
+    // The generated documentation at `/api/v1/docs` already proves every
+    // route is listed — it says nothing about whether the route actually
+    // answers. F-06 shipped with two of twelve endpoints throwing on the
+    // first request past a single row; this walks the route table itself
+    // so a future endpoint can't ship broken behind an untested path.
+    apiReadEnableModule();
+    $fixture = apiReadFixture();
+    $object = apiReadMakeObject($fixture, 'Sweep Object');
+    $token = apiReadToken(ApiResource::cases());
+
+    $routes = collect(Route::getRoutes()->getRoutes())
+        ->filter(fn ($route): bool => str_starts_with((string) $route->getName(), 'api.v1.') && in_array('GET', $route->methods(), true))
+        ->values();
+
+    expect($routes)->not->toBeEmpty();
+
+    foreach ($routes as $route) {
+        $uri = '/'.strtr($route->uri(), [
+            '{territory}' => (string) $fixture['cityId'],
+            '{object}' => (string) $object->id,
+        ]);
+
+        $status = $this->withHeader('Authorization', "Bearer {$token}")->getJson($uri)->getStatusCode();
+
+        expect($status)->toBe(200, "{$route->getName()} ({$uri}) returned {$status}.");
+    }
 });

@@ -32,7 +32,10 @@ final class TerritoryController extends Controller implements DocumentsQueryPara
     {
         $validated = $request->validate(self::queryParameterRules());
 
-        $query = Territory::query()->where('is_active', true)->orderBy('display_order');
+        $query = Territory::query()
+            ->with(['translations', 'level.translations', 'country'])
+            ->where('is_active', true)
+            ->orderBy('display_order');
 
         if (isset($validated['country'])) {
             $query->where('country_id', $validated['country']);
@@ -53,7 +56,9 @@ final class TerritoryController extends Controller implements DocumentsQueryPara
 
     public function show(Request $request, int $territory): TerritoryResource
     {
-        $query = Territory::query()->where('is_active', true);
+        $query = Territory::query()
+            ->with(['translations', 'level.translations', 'country'])
+            ->where('is_active', true);
 
         app(ResourceQueryScoper::class)->applyConstraint($query, $this->scopeConstraint($request), 'country_id');
 

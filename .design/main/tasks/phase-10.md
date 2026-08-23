@@ -116,10 +116,10 @@ same local PHP available.
 
 ### Track C — Missing Eager Loads
 
-- [ ] [T-10C01] Object form contact-channel-type selector eager-loads translations
-- [ ] [T-10C02] Placement package form tier selector eager-loads translations
-- [ ] [T-10C03] API territory/country endpoints eager-load their relations
-- [ ] [T-10C04] Validation
+- [x] [T-10C01] Object form contact-channel-type selector eager-loads translations
+- [x] [T-10C02] Placement package form tier selector eager-loads translations
+- [x] [T-10C03] API territory/country endpoints eager-load their relations
+- [x] [T-10C04] Validation
 
 ### Track D — Cache & Analytics Correctness
 
@@ -227,32 +227,36 @@ same local PHP available.
 **[T-10C01] Object form contact-channel-type selector eager-loads translations**
 
 - **Spec:** [l1-object-profile.md](../specifications/l1-object-profile.md) §5.2
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** `Livewire::test(EditObject::class, ...)` (admin and cabinet forms both) opens cleanly for an object carrying at least one contact channel — no lazy-loading exception.
 - **Notes (finding):** The `Select::make('contact_channel_type_id')` relationship query filters `is_active` without eager-loading `translations`, and its label closure reads the translated `display_name` accessor — `Attempted to lazy load [translations]`. `qa-deep-findings.md` F-04. Same one-line fix, same shape, in both `app/Filament/Admin/Resources/Objects/Schemas/ObjectForm.php` and `app/Filament/Cabinet/Resources/Objects/Schemas/ObjectForm.php`.
+- **Changes:** Added `->with('translations')` to the `contactChannelType` relationship's `modifyQueryUsing` closure in both forms. `tests/Feature/Admin/ObjectResourceFormTest.php` and `tests/Feature/Cabinet/CabinetObjectEditingTest.php` each gained a test that opens the edit page for an object whose contact channel already carries a type. Ran red before the fix (`git stash` on both form files reproduced the lazy-loading exception once the fixture carried more than one contact-channel-type row), green after.
 
 **[T-10C02] Placement package form tier selector eager-loads translations**
 
 - **Spec:** [l1-placement-monetization.md](../specifications/l1-placement-monetization.md)
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** `placement-packages/create` and `placement-packages/{id}/edit` both render 200 for a chief administrator.
 - **Notes (finding):** Identical shape to `T-10C01` — the tier `Select` labels options via a translated accessor with no eager load. `qa-deep-findings.md` F-05.
+- **Changes:** Added `->with('translations')` to the `PlacementTier::query()` call backing the `placement_tier_id` `Select`. `tests/Feature/Admin/PlacementRegistryTest.php` gained a plain-GET test against both the create and edit routes. Ran red before the fix, green after, alongside `T-10C01`'s stash cycle.
 
 **[T-10C03] API territory/country endpoints eager-load their relations**
 
 - **Spec:** [l1-public-api.md](../specifications/l1-public-api.md)
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** `GET /api/v1/countries` and `GET /api/v1/territories` (valid token, module enabled) both return 200 with the documented shape.
 - **Notes (finding):** `CountryController::index()` reads `Country::query()` with no `with('translations')`; `TerritoryController::index()`/`show()` read no `with(['translations', 'level.translations', 'country'])`. `qa-deep-findings.md` F-06 — the same defect class as `T-10C01`/`T-10C02`, in the API layer.
+- **Changes:** Added the missing `with()` calls to both controllers. `tests/Feature/Api/ApiReadContractTest.php` gained an N+1-shaped regression test: a single-row fixture did not reproduce the crash (Astrotomic's translation resolution takes a different internal path for the first model in a request), so the test seeds four countries/territories and asserts the request both succeeds and stays within a fixed query-count ceiling — reproduced the exact `LazyLoadingViolationException` from the original QA sweep on the unfixed controllers, green after restoring the fix.
 
 **[T-10C04] Validation**
 
 - **Goal:** Verify `T-10C01`–`03` against their specs and `qa-deep-findings.md` F-04/F-05/F-06. Also add the missing endpoint contract test: every route in `routes/api_v1.php` walked with a full-ability token asserts 200 — the gap that let two of twelve endpoints ship broken.
 - **Method:** Feature tests per finding; one new sweep test over the whole API surface.
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** Added "returns 200 for every registered read-surface route with a full-ability token" to `tests/Feature/Api/ApiReadContractTest.php` — walks `Route::getRoutes()` filtered to `api.v1.*` GET routes, substitutes the `{territory}`/`{object}` fixtures, and asserts every one of the 14 registered routes returns 200. 40 tests pass across the four Track C files (`ObjectResourceFormTest`, `CabinetObjectEditingTest`, `PlacementRegistryTest`, `ApiReadContractTest`); a wider pass including `ApiRateLimitTest` and `ApiModuleGateTest` (50 tests) shows no side effect. `composer lint`/`analyse` clean on the touched `app/` files (PHPStan's configured paths exclude `tests/`, matching `phpstan.neon`).
 
 ### Track D — Cache & Analytics Correctness
 

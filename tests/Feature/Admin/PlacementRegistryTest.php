@@ -150,6 +150,33 @@ it('creates a category-scoped package binding a tier to a price and validity win
         ->and(DB::table('placement_package_translations')->where('placement_package_id', $package->id)->value('name'))->toBe('Hotel Business');
 });
 
+it('renders the create and edit package pages — the tier selector reads a translated label on every render', function (): void {
+    // A direct GET, not Livewire::test()->fillForm(): a plain fillForm call
+    // can resolve the form's options closures without the same lazy-load
+    // guard a full page render triggers, so this is the shape that
+    // actually reproduces the crash a live sweep found.
+    seedLanguage();
+
+    $tierId = DB::table('placement_tiers')->insertGetId([
+        'rank' => 5, 'border_colour' => '#000000', 'badge_colour' => '#111111',
+        'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('placement_tier_translations')->insert([
+        'placement_tier_id' => $tierId, 'locale' => 'en', 'label' => 'Rank Five',
+        'badge_text' => 'Rank Five', 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $packageId = DB::table('placement_packages')->insertGetId([
+        'placement_tier_id' => $tierId, 'price' => 10, 'currency' => 'EUR',
+        'validity_days' => 30, 'bump_allowed' => false, 'is_active' => true,
+        'display_order' => 1, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    $actor = placementRegistryActor();
+
+    $this->actingAs($actor)->get('/portal-admin/placement-packages/create')->assertOk();
+    $this->actingAs($actor)->get("/portal-admin/placement-packages/{$packageId}/edit")->assertOk();
+});
+
 it('package parity: a package varies only tier, price, validity, and bump terms — no content-gating column exists on the model', function (): void {
     // Structural assertion, not behavioural: the guarded column set is the
     // spec's package-parity invariant made checkable. A future migration

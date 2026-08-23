@@ -131,6 +131,32 @@ it('saves a contact channel with an explicit type, where the prior schema (no ty
         ->and($channel->raw_value)->toBe('+37360000000');
 });
 
+it('renders the edit page for an object whose contact channel already carries a type — not just the save path', function (): void {
+    // The fillForm()->call('save') test above never renders the repeater's
+    // *existing* item, only sets and submits new state, so it never
+    // exercised getOptionLabelFromRecordUsing() the way a real page load
+    // does. A GET to the edit page for an object with an already-saved
+    // channel is what actually triggers Filament resolving that closure
+    // against the current value on render.
+    $fixture = objectFormFixture();
+    $actor = objectFormActor(fullObjectPermissions(), 'none', null, 'unrestricted');
+    $typeId = DB::table('contact_channel_types')->insertGetId([
+        'key' => 'phone', 'link_template' => 'tel:{value}', 'is_active' => true,
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('contact_channels')->insert([
+        'object_id' => $fixture['objectId'], 'contact_channel_type_id' => $typeId,
+        'raw_value' => '+37360000000', 'label' => 'Front desk', 'display_order' => 1,
+        'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    $response = $this->actingAs($actor)->get(
+        ObjectResource::getUrl('edit', ['record' => $fixture['objectId']])
+    );
+
+    $response->assertOk();
+});
+
 it('saves a translated name against the object_translations table', function (): void {
     $fixture = objectFormFixture();
     $actor = objectFormActor(fullObjectPermissions(), 'none', null, 'unrestricted');

@@ -212,7 +212,7 @@ class ObjectForm
                         ->relationship(
                             name: 'contactChannelType',
                             titleAttribute: 'key',
-                            modifyQueryUsing: fn (Builder $query): Builder => $query->where('is_active', true),
+                            modifyQueryUsing: fn (Builder $query): Builder => $query->where('is_active', true)->with('translations'),
                         )
                         ->getOptionLabelFromRecordUsing(fn (ContactChannelType $type): string => $type->display_name ?? $type->key)
                         ->required(),

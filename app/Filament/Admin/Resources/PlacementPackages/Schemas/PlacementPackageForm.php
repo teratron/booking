@@ -29,6 +29,7 @@ class PlacementPackageForm
                 ->label(__('panel.placement_packages.form.tier'))
                 ->required()
                 ->options(fn (): array => PlacementTier::query()
+                    ->with('translations')
                     ->orderBy('rank')
                     ->get()
                     ->mapWithKeys(fn (PlacementTier $tier): array => [$tier->id => $tier->label ?? "#{$tier->rank}"])

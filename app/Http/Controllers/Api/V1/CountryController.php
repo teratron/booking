@@ -18,7 +18,7 @@ final class CountryController extends Controller
 
     public function index(Request $request): AnonymousResourceCollection
     {
-        $query = Country::query()->where('is_active', true)->orderBy('display_order');
+        $query = Country::query()->with('translations')->where('is_active', true)->orderBy('display_order');
 
         app(ResourceQueryScoper::class)->applyConstraint($query, $this->scopeConstraint($request), 'id');
 
