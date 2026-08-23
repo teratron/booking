@@ -1,10 +1,10 @@
 # Implementation Plan
 
-**Version:** 3.13.0
+**Version:** 3.14.0
 **Generated:** 2026-08-05
-**Based on:** .design/main/INDEX.md v2.11.0
+**Based on:** .design/main/INDEX.md v2.12.0
 **Based on RULES:** .design/RULES.md v1.4.0
-**Status:** Active — Phase 8 (delivery pipeline; 20/23, the three open tasks owner-only. Its two sources returned to `RFC` on 2026-08-22 to reconcile with the owner's single-line branch decision — not a defect, and not a reason to reopen Done work; see Plan Status below) · Phase 9 **Done** (post-launch QA remediation; 15/15, opened and closed 2026-08-22, independent of Phase 8; see Plan Status below)
+**Status:** Active — Phase 8 (delivery pipeline; 20/23, the three open tasks owner-only. Its two sources returned to `RFC` on 2026-08-22 to reconcile with the owner's single-line branch decision — not a defect, and not a reason to reopen Done work; see Plan Status below) · Phase 9 **Done** (post-launch QA remediation; 15/15, opened and closed 2026-08-22, independent of Phase 8; see Plan Status below) · Phase 10 **Todo** (deep QA remediation; 0/32, opened 2026-08-23, independent of Phase 8; see Plan Status below)
 
 ## Overview
 
@@ -422,6 +422,63 @@ answer was to fix it completely rather than patch around it. `T-9G01` (full regr
 gate) still waits on Tracks A/B/D closing — three of six tracks done does not satisfy a
 gate whose own precondition is all six.
 
+## Phase 10 — Deep QA Remediation — **Todo**
+
+*A second, deeper functional sweep — every route driven for every actor, including all
+nine staff roles past the second-factor gate that stopped Phase 9's own sweep around
+110 of 181 routes — found 24 findings. Two (F-07 banner counters, F-23 a Windows-only
+test-path bug) were fixed directly before this phase was planned, since neither carried
+a design question. F-11 (reviews have no submission path) needed one first —
+`/magic.spec main` resolved it as an administrator-selectable submission-gating mode.
+This phase schedules the remaining 21.*
+
+- **Object Profile** §2, §3.4, §5.4 v1.3.0 — review submission gating, the one genuinely
+  new invariant this planning pass added
+  ([l1-object-profile.md](specifications/l1-object-profile.md)) [L1]
+- **Third-Party Integrations** §5.5 v2.1.0 — CAPTCHA applies conditionally on the
+  submission mode, not blanket
+  ([l2-third-party-integrations.md](specifications/l2-third-party-integrations.md)) [L2]
+- Every other finding checked directly against its governing spec and found already
+  correct — back-office, SEO, public API, advertising, content publishing, availability
+  status, platform shell, and platform foundation. No further amendment.
+
+Decomposed into 32 atomic tasks across nine tracks plus a full-suite regression gate in
+[tasks/phase-10.md](tasks/phase-10.md), which carries this phase's own planning audit
+and Track Ordering rationale.
+
+**Nine tracks, six of them genuinely file-independent.** Track A (access — a fresh
+install has no usable administrator, and a disabled API module leaks past
+authentication), Track C (three near-identical crashes from a missing eager load —
+same one-line defect shape, three files), Track D (cache tags that never reach the
+reads they were meant to invalidate, plus an analytics event emitted per photo instead
+of per interaction), Track E (role-data correctness and one missing check constraint),
+and Track H (two missing static pages and a map section the object page's own §5.1
+composition already lists) touch six disjoint file sets and share no resource. Track B
+(three URL/routing correctness bugs) and Track F (five smaller fixes and third-party
+wiring) each carry one real reason to be sequenced rather than parallel — see the
+phase file's own Track Ordering section for both. Track G — review submission — is the
+phase's one new-capability track, built against the specification amendment above,
+scheduled last among the build tracks because its `open`-mode CAPTCHA check depends on
+Track F's settings-wiring task landing first.
+
+**A planning-time correction, made before any task ran.** The QA sweep's own F-24
+recommended dropping five "unreferenced" tables. Reading this plan's own Backlog
+(below) and `l2-data-model.md` §5.5 first — this workflow's own Registry Integrity
+invariant, skipped when the finding was originally written — found three of the five
+are deliberate scaffolding for [l1-room-reservation.md](specifications/l1-room-reservation.md),
+already recorded in this Backlog as dormant-by-design, and the other two carry their
+own open design questions in `l2-data-model.md` §5.5 rather than being orphaned. No
+task in this phase drops any of them; `qa-deep-findings.md` F-24 is corrected to match.
+The lesson generalizes: a finding written against the running system alone, without a
+pass over the specification registry, can misdiagnose intentional incompleteness as
+dead code — exactly the check this workflow's own Core Invariant #2 exists to force.
+
+**Severity ordered the tracks, the same convention Phase 9 established, and Phase 9's
+own precedent — splitting a task once its true shape emerges mid-run rather than
+guessing upfront — is expected to recur here too**, particularly in Track G, the
+widest single build task in the phase (`T-10G02`, the review submission form covering
+both modes).
+
 ## Backlog
 
 Registered specifications not scheduled into an active phase.
@@ -499,7 +556,7 @@ code and one changes a test matrix.
 The remaining eighteen open questions land in Phase 3 and later and are not on the
 critical path out of Phase 2.
 
-## Plan Status: Phase 8 Active, Phase 9 Done
+## Plan Status: Phase 8 Active, Phase 9 Done, Phase 10 Todo
 
 **Phases 1 through 7 are done — 135 of 135 tasks**, closed on 2026-08-20. A plan-wide L2
 retrospective ran on that close — Signal 🟢 Green — and is recorded in
@@ -612,3 +669,27 @@ Phase registry in [TASKS.md](TASKS.md). The first seven phases are archived at
 [archives/tasks/phase-5.md](archives/tasks/phase-5.md),
 [archives/tasks/phase-6.md](archives/tasks/phase-6.md), and
 [archives/tasks/phase-7.md](archives/tasks/phase-7.md) respectively.
+
+**Phase 10 opened 2026-08-23, independently of Phase 8, from a second and deeper
+functional sweep than Phase 9's own.** Phase 9's sweep reached roughly 110 of 181
+routes before stopping at the staff panel's second-factor gate; this one built a
+populated fixture world (three countries, all four placement tiers, every contact
+channel type, and one MFA-enrolled account per staff role) and drove all 177 routes for
+every actor, including a real browser pass for what a Livewire/Filament test harness
+cannot see. 24 findings, 3 of them blockers reachable in the first minutes of a
+demonstration — a seeded chief administrator with no usable scope grant, a language
+switcher that 404s on its own alternate, and a guessable URL that returns a raw SQL
+error. Two findings (F-07, F-23) needed no design input and were fixed directly before
+this plan was written, matching how Phase 9's own findings needed none. F-11 (reviews)
+did — `/magic.spec main` resolved it as an administrator-selectable submission-gating
+mode, amending [l1-object-profile.md](specifications/l1-object-profile.md) to v1.3.0
+(`Stable → RFC` on the new invariant) and
+[l2-third-party-integrations.md](specifications/l2-third-party-integrations.md) to
+v2.1.0. Full findings, the corrected TZ-conformance matrix, and the simulation plan
+that drove the sweep: `.drafts/qa-deep-findings.md`, `.drafts/qa-tz-conformance.md`,
+`.drafts/qa-deep-plan.md`.
+
+Decomposed into 32 atomic tasks across nine tracks in
+[tasks/phase-10.md](tasks/phase-10.md), full detail and rationale in the Phase 10
+section above and that file's own Track Ordering section. Runs independently of
+Phase 8 — no shared file, no shared blocker.

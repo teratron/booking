@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-08-22
+**Generated:** 2026-08-23
 
 ## Active Technologies
 
@@ -21,10 +21,15 @@
 │   └── workspace.json
 ├── .dockerignore
 ├── .drafts/
+│   ├── .prompt.md
 │   ├── TODO.md
 │   ├── booking.md
 │   ├── production-clearance.md
-│   └── qa-sweep-report.md
+│   ├── qa-deep-findings.md
+│   ├── qa-deep-plan.md
+│   ├── qa-sweep-report.md
+│   ├── qa-tz-conformance.md
+│   └── review-submission-design-decision.md
 ├── .editorconfig
 ├── .env.example
 ├── .env.production.example
@@ -39,6 +44,8 @@
 ├── .magic/
 ├── .markdownlint.json
 ├── .npmrc
+├── .secrets/
+│   └── .gitignore
 ├── CHANGELOG.md
 ├── CLAUDE.md
 ├── README.md

@@ -46,7 +46,7 @@ carried forward as bugs.
 | F-21 | Low | Banner mobile creatives are uploadable but never served |
 | F-22 | Low | No cookie-consent notice is rendered anywhere |
 | F-23 | Low | ~~The project's own quality gate cannot pass on Windows~~ — **fixed** |
-| F-24 | Low | Five tables carry no model, service, or UI |
+| F-24 | Low | ~~Five tables carry no model, service, or UI~~ — **corrected: not dead schema, see entry** |
 
 ## Blockers
 
@@ -735,25 +735,38 @@ Also fixed alongside, discovered while implementing F-07: the suite needs
 `memory_limit` above PHP's 128 MB CLI default on this machine — noted for the
 README rather than worked around per-command.
 
-### F-24 · Five tables carry no model, service, or UI
+### F-24 · CORRECTED 2026-08-23 — not dead schema; a known, always-zero statistic
 
 `reservations`, `room_availabilities`, `booking_settings`,
 `home_block_selections`, and `favorites` were migrated on 2026-08-06 and have
-no `App\Models` class, no service, no seeder, and no screen. `favorites` is
-*read* by `ObjectStatisticsService::favouriteCount()` — so the owner's
-"added to favourites" figure is structurally always 0, since nothing writes the
-table. `home_block_selections` was evidently meant for administrator-curated
-home page blocks (TZ §101 «быстрые действия» and §5's "recommended objects"),
-which the home page currently derives by query instead.
+no `App\Models` class, no service, no seeder, and no screen — that part of the
+original observation was accurate. The **recommendation was not**: it read the
+tables as accidental dead code without first checking whether the specification
+registry already accounts for them, which `.design/main/PLAN.md`'s own Backlog
+and `l2-data-model.md` §5.5 both do.
 
-Three of them (`reservations`, `room_availabilities`, `booking_settings`) belong
-to a `booking` feature module whose only consumer is a structured-data flag —
-and the TZ is explicit that the portal is **not** a booking system and keeps no
-occupancy calendar (§76, §1). **Fix:** decide per table and record the decision.
-Either implement the surface, or drop the table in a new migration and remove
-the dead read in `ObjectStatisticsService`. Carrying unreferenced schema
-contradicts the project's own cleanliness rule and gives the client's future
-maintainer a false map of the domain.
+- `reservations`, `room_availabilities`, `booking_settings` are deliberate
+  scaffolding for `l1-room-reservation.md` — a registered, `RFC`-status
+  specification for the dormant, module-gated booking capability, already
+  recorded in `PLAN.md`'s Backlog as intentionally deferred rather than
+  in-scope for launch (`[TZ]` §64 lists it among future modules; §1/§76 keep
+  the *default* configuration booking-free, which is exactly what "module
+  ships disabled" delivers).
+- `favorites` has its own open `<!-- TBD -->` in `l2-data-model.md` §5.5:
+  whether it is visitor-facing (with cross-device sync needing the
+  `guest_accounts` module) or an owner-side bookmark. Unbuilt because the
+  question is unresolved, not because the table was forgotten.
+- `home_block_selections` is named in the same file's table inventory as
+  "per-country curated selections" — spec'd, unbuilt admin surface, not an
+  orphan.
+
+**What is real:** `ObjectStatisticsService::favouriteCount()` reads a table
+nothing writes to, so the owner's Statistics page shows a "Favorites" figure
+that is structurally always 0. That is a genuine rough edge, but fixing it
+honestly means resolving `l2-data-model.md` §5.5's own open question first —
+building a writer for the reading nobody has chosen yet would very possibly
+need reworking once it is answered. Left as tracked, pre-existing design debt
+rather than scheduled as a fix; **no table listed above should be dropped.**
 
 ## Cleared — investigated and *not* defects
 

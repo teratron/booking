@@ -1,11 +1,11 @@
 # Master Task Index (Registry)
 
-**Version:** 1.14.0
+**Version:** 1.15.0
 **Generated:** 2026-08-05
-**Based on:** .design/main/PLAN.md v3.13.0
+**Based on:** .design/main/PLAN.md v3.14.0
 **Based on RULES:** .design/RULES.md v1.4.0
 **Execution Mode:** Parallel
-**Status:** Active — Phase 8 (7 phases done, 1 active at 20/23; three remaining tasks `Blocked [!] (C12)` since 2026-08-22 — branch-model reconciliation, not regression; see Overview) · Phase 9 `Done` (post-launch QA remediation, 15/15, closed 2026-08-22; independent of Phase 8; see Overview)
+**Status:** Active — Phase 8 (7 phases done, 1 active at 20/23; three remaining tasks `Blocked [!] (C12)` since 2026-08-22 — branch-model reconciliation, not regression; see Overview) · Phase 9 `Done` (post-launch QA remediation, 15/15, closed 2026-08-22; independent of Phase 8; see Overview) · Phase 10 `Todo` (deep QA remediation, 0/32, opened 2026-08-23; independent of Phase 8; see Overview)
 
 ## Overview
 
@@ -105,6 +105,15 @@ the catalog page's canonical used `url()->full()`, a code path the root/scheme p
 does not reach. Full detail: [tasks/phase-9.md](archives/tasks/phase-9.md), this workspace's own
 [CHANGELOG.md](CHANGELOG.md) Phase 9 entry, and `RETROSPECTIVE.md` Snapshots (🟢).
 
+**Phase 10 opened 2026-08-23, from a second and deeper functional sweep than Phase 9's
+own — every route driven for every actor, all nine staff roles included, past the
+second-factor gate Phase 9's sweep stopped at.** 24 findings; two needed no design
+input and were fixed directly before this phase existed; one (reviews have no
+submission path) needed a real decision, resolved by `/magic.spec main` as an
+administrator-selectable submission-gating mode. 32 tasks across nine tracks, six of
+them file-independent. Full detail: [tasks/phase-10.md](tasks/phase-10.md),
+[PLAN.md](PLAN.md) Phase 10 section, `.drafts/qa-deep-findings.md`.
+
 ## Active Phases
 
 | Phase | Description | Status |
@@ -118,6 +127,7 @@ does not reach. Full detail: [tasks/phase-9.md](archives/tasks/phase-9.md), this
 | [Phase 7](archives/tasks/phase-7.md) | Import/export, backups and rehearsed restore, production provisioning and observability, load test | `Done (Archived)` (16/16) |
 | [Phase 8](tasks/phase-8.md) | Delivery pipeline — branch contract, release artefact and deployment, irreversibility scan, EN/RU/agent operator documentation, sensitive-zone gate integrity | `In Progress` (20/23, remaining 3 `Blocked [!] (C12)`) |
 | [Phase 9](archives/tasks/phase-9.md) | Post-launch QA remediation — contact-channel forms, API guest-redirect contract, canonical-host consistency, hreflang alternates, a cabinet Settings crash, one test-suite fix | `Done (Archived)` (15/15) |
+| [Phase 10](tasks/phase-10.md) | Deep QA remediation — access/module gating, URL routing, three eager-load crashes, cache invalidation, role data, content lifecycle and third-party wiring, review submission, missing pages, full regression gate | `Todo` (0/32) |
 
 ## Execution Notes
 
@@ -247,7 +257,26 @@ so this rationale's own "no chain" claim held throughout even while three tracks
 blocked for an unrelated reason. Resolved the same day; all six tracks are schedulable.
 Full rationale in [tasks/phase-9.md](archives/tasks/phase-9.md).
 
+**Phase 10 is nine-wide, six of them genuinely file-independent — the honest shape is
+`(A ∥ C ∥ D ∥ E ∥ H) → B → F → G → I`, not nine-wide throughout.** Unlike Phase 9,
+narrative severity order (A first, for a fresh install's usable administrator) does not
+here coincide with file independence for every track — B is sequenced after A/C/D/E/H
+only as a verification caution, not a code dependency, and F is sequenced after B
+because `T-10B01` and `T-10F04` share `MetadataResolver`/`ResolvedMetadata`, the exact
+files Phase 9's own Track D worked in. One real cross-track edge: `T-10F03` (wiring
+`.env` map-tile/CAPTCHA settings) before `T-10G02` (the review form's `open`-mode
+CAPTCHA check). `T-10I01` (full-suite regression gate) is the only task that waits on
+everything, the same acceptance-task shape Phase 8's `T03` and Phase 9's `T-9G01` both
+used. A planning-time correction is recorded here rather than only in the phase file:
+`qa-deep-findings.md`'s original F-24 recommended dropping five tables; reading this
+plan's own Backlog and `l2-data-model.md` §5.5 first found three are deliberate
+scaffolding for the already-registered, already-Backlogged
+[l1-room-reservation.md](specifications/l1-room-reservation.md), and the other two
+carry their own open design questions — none is scheduled for removal. Full rationale
+in [tasks/phase-10.md](tasks/phase-10.md) §Track Ordering.
+
 ## Meta Information
 
-- **Last Updated**: 2026-08-22 (Phase 9 closed — 15/15, six tracks, full regression gate clean; 8 phases done total, Phase 8 remains active at 20/23, owner-blocked)
+- **Last Updated**: 2026-08-23 (Phase 10 planned — 32 tasks, nine tracks, opened from a second deeper QA sweep; independent of Phase 8; 9 phases total, Phase 8 remains active at 20/23, owner-blocked, Phase 9 done)
+- **Previously**: 2026-08-22 (Phase 9 closed — 15/15, six tracks, full regression gate clean; 8 phases done total, Phase 8 remains active at 20/23, owner-blocked)
 - **Maintainer**: Core Team
