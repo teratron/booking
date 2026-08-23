@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use App\Models\Object_;
+use App\Models\Review;
 use App\Models\User;
+use App\Services\Reviews\ReviewModerationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -55,6 +57,15 @@ function reviewSubmissionRegistry(): array
     DB::table('object_type_translations')->insert([
         'object_type_id' => $typeId, 'locale' => 'en', 'name' => 'Hotel', 'slug' => 'hotel',
         'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    // Reviews ships default-enabled in production (ModuleSeeder) — reproduced
+    // directly here since ObjectProfilePresenter gates the itemized review
+    // list on this module, not merely on a review's own published status.
+    DB::table('modules')->insert([
+        'key' => 'reviews', 'default_state' => 'enabled',
+        'scopable_levels' => json_encode(['portal', 'country', 'category', 'object']),
+        'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
     ]);
 
     return compact('languageId', 'countryId', 'territoryId', 'typeId');
@@ -221,4 +232,29 @@ it('rate-limits repeated submissions from the same IP', function (): void {
 
     $this->post(route('public.objects.reviews.submit', ['lang' => 'en', 'object' => $object]), reviewSubmissionPayload())
         ->assertStatus(429);
+});
+
+it('carries a review from public submission through admin moderation to public visibility', function (): void {
+    $fixture = reviewSubmissionRegistry();
+    $object = reviewSubmissionMakeObject($fixture, 'Full Lifecycle Hotel');
+
+    $this->post(route('public.objects.reviews.submit', ['lang' => 'en', 'object' => $object]), reviewSubmissionPayload([
+        'body' => 'A review that should travel the whole moderation lifecycle.',
+    ]))->assertSessionHas('public-review-submitted', true);
+
+    /** @var Review $review */
+    $review = Review::query()->where('object_id', $object->id)->firstOrFail();
+    expect($review->status)->toBe('pending');
+
+    // Not visible yet — only a moderation decision changes that.
+    $this->get(publicObjectUrl($object))->assertOk()
+        ->assertDontSee('A review that should travel the whole moderation lifecycle.');
+
+    $moderator = User::factory()->create();
+    app(ReviewModerationService::class)->publish($review, $moderator);
+
+    expect($review->fresh()->status)->toBe('published');
+
+    $this->get(publicObjectUrl($object))->assertOk()
+        ->assertSee('A review that should travel the whole moderation lifecycle.');
 });

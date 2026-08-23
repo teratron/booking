@@ -127,7 +127,7 @@ them file-independent. Full detail: [tasks/phase-10.md](tasks/phase-10.md),
 | [Phase 7](archives/tasks/phase-7.md) | Import/export, backups and rehearsed restore, production provisioning and observability, load test | `Done (Archived)` (16/16) |
 | [Phase 8](tasks/phase-8.md) | Delivery pipeline — branch contract, release artefact and deployment, irreversibility scan, EN/RU/agent operator documentation, sensitive-zone gate integrity | `In Progress` (20/23, remaining 3 `Blocked [!] (C12)`) |
 | [Phase 9](archives/tasks/phase-9.md) | Post-launch QA remediation — contact-channel forms, API guest-redirect contract, canonical-host consistency, hreflang alternates, a cabinet Settings crash, one test-suite fix | `Done (Archived)` (15/15) |
-| [Phase 10](tasks/phase-10.md) | Deep QA remediation — access/module gating, URL routing, three eager-load crashes, cache invalidation, role data, content lifecycle and third-party wiring, review submission, missing pages, full regression gate | `Active` (27/32, Tracks A + B + C + D + E + F + H done) |
+| [Phase 10](tasks/phase-10.md) | Deep QA remediation — access/module gating, URL routing, three eager-load crashes, cache invalidation, role data, content lifecycle and third-party wiring, review submission, missing pages, full regression gate | `Active` (31/32, Tracks A + B + C + D + E + F + G + H done, Track I remaining) |
 
 ## Execution Notes
 

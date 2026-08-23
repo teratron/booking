@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services\Reviews;
 
+use App\Http\Controllers\Public\ObjectPageController;
 use App\Models\Review;
 use App\Models\User;
 use App\Services\Audit\AuditJournal;
 use App\Services\Moderation\ModerationDecisionService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -37,6 +39,8 @@ final class ReviewModerationService
 
             $this->journal->record('review_published', $review, ['status' => 'pending'], ['status' => 'published'], $actor, ['reviews']);
         });
+
+        $this->flushObjectProfileCache($review);
     }
 
     public function reject(Review $review, string $reason, User $actor): void
@@ -61,5 +65,20 @@ final class ReviewModerationService
 
             $this->journal->record('review_hidden', $review, ['status' => 'published'], ['status' => 'hidden', 'reason' => $reason], $actor, ['reviews']);
         });
+
+        $this->flushObjectProfileCache($review);
+    }
+
+    /**
+     * Publish and hide both change what the owning object's cached profile
+     * would render — {@see ObjectPageController}
+     * caches it under this exact tag set, the same one every other write
+     * that changes object-page content already flushes (availability,
+     * bumps, placement, content publication). reject() needs no flush: a
+     * rejected review was never shown, so nothing cached changes.
+     */
+    private function flushObjectProfileCache(Review $review): void
+    {
+        Cache::tags(['catalog', "territory:{$review->territory_id}", "object:{$review->object_id}"])->flush();
     }
 }

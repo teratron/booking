@@ -144,10 +144,10 @@ same local PHP available.
 
 ### Track G — Review Submission
 
-- [ ] [T-10G01] `reviews.submission_mode` setting and the contact-click session gate
-- [ ] [T-10G02] Public review submission form, both modes
-- [ ] [T-10G03] Admin `ReviewResource`
-- [ ] [T-10G04] Validation
+- [x] [T-10G01] `reviews.submission_mode` setting and the contact-click session gate
+- [x] [T-10G02] Public review submission form, both modes
+- [x] [T-10G03] Admin `ReviewResource`
+- [x] [T-10G04] Validation
 
 ### Track H — Missing Public Pages & Compliance
 
@@ -380,33 +380,40 @@ same local PHP available.
 **[T-10G01] `reviews.submission_mode` setting and the contact-click session gate**
 
 - **Spec:** [l1-object-profile.md](../specifications/l1-object-profile.md) §2, §3.4 v1.3.0
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** With the setting at `contact_gated`, a visitor who has not clicked a contact channel for an object cannot reach that object's review submission endpoint (refused server-side, not merely hidden — per §3.4's explicit enforcement invariant); after clicking a contact channel for that object, the same visitor's session can.
 - **Handoff:** `T-10G02`.
 - **Notes:** Add `reviews.submission_mode` (`open` default, `contact_gated`) to `SettingsRegistry`. Extend `ContactClickController` to set a session flag scoped to the object id at the point it already records the `contact_click` event — no new persisted tracking record, matching §2's minimal-data constraint. This task owns the gate mechanism only; `T-10G02` owns the form that calls it.
+- **Changes:** `reviews.submission_mode` added to `SettingsRegistry` (group `reviews`, default `open`). New `App\Services\Reviews\ReviewSubmissionGate` — `mode()`, `recordContactClick(int $objectId)` (session key `reviews.contact_clicked.{objectId}`), and `canSubmit(int $objectId)`, the server-side enforcement point. `ContactClickController` calls `recordContactClick()` right where it already captures the `contact_click` analytics event. Two new tests in `tests/Feature/Public/PublicContactRailTest.php` (gate opens only for the clicked object, this session, in `contact_gated` mode; stays open for every object in the default `open` mode) — red-before/green-after via `git stash -u`.
 
 **[T-10G02] Public review submission form, both modes**
 
 - **Spec:** [l1-object-profile.md](../specifications/l1-object-profile.md) §2, §3.4, §5.4 v1.3.0; CAPTCHA per [l2-third-party-integrations.md](../specifications/l2-third-party-integrations.md) §5.5 v2.1.0
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** In `open` mode, a submission without a valid CAPTCHA response is refused server-side; a valid submission enters `status = 'pending'`. In `contact_gated` mode, no CAPTCHA challenge is presented or required, and the gate from `T-10G01` is the only enforcement. Both modes: the submitted review is invisible on the public page until an administrator approves it (existing moderation checkpoint, unchanged).
 - **Depends on:** `T-10F03` (CAPTCHA settings must be wired before this form can validate against them) and `T-10G01`.
 - **Notes:** Name, rating (1–5), body — matching the existing `reviews` table shape (`author_id` nullable, `author_name` for a guest). Rate-limited per IP in `open` mode alongside the CAPTCHA check, the same defence-in-depth the feedback form already gets.
+- **Changes:** New `App\Services\Integrations\CaptchaVerifier` — Cloudflare Turnstile per the spec's own decision; `isEnabled()` false when `integrations.captcha_provider = none` (a fresh clone's own default), in which case `verify()` always passes rather than blocking a form no administrator has configured a provider for yet. New `ReviewSubmissionService` (gate check, then CAPTCHA check only in `open` mode, then creates the `Review` row as `status = 'pending'`) and `ReviewSubmissionController` (`POST /{lang}/objects/{object}/reviews`, `throttle:5,1`). The object page's own submission form (`resources/views/public/object/show.blade.php`) renders the Turnstile widget only in `open` mode when a provider is configured, and shows a "contact this listing first" message in `contact_gated` mode until the gate opens. Eight new tests in `tests/Feature/Public/PublicReviewSubmissionTest.php` covering both modes, CAPTCHA required/refused/passed, validation, and rate limiting — red-before/green-after via `git stash -u`.
+- **Incidental finding:** the feedback form's own rate limiting the Notes above assumed existing turned out not to exist (no `throttle` middleware on `public.feedback.submit`) — not in this task's scope to add, so left alone; this task's own route carries its own `throttle:5,1` regardless of that gap.
 
 **[T-10G03] Admin `ReviewResource`**
 
 - **Spec:** [l1-back-office.md](../specifications/l1-back-office.md) §5.1 (already lists "Reviews -> l1-object-profile §3.4" as a required section); [l1-object-profile.md](../specifications/l1-object-profile.md) §3.4
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** A moderator can list reviews filtered by object/status/reported flag, publish, reject with a reason, hide a published review with a reason, and view the owner's reply — matching §3.4's "an owner may reply and report, never delete or edit" and the removal-is-administrator-only invariant.
 - **Notes:** No resource currently exists for this model at all — this is the gap that made F-11 unfixable by wiring a form alone; the moderation queue this feeds into is `l1-moderation-governance.md`'s existing mechanism, unchanged.
+- **Divergence from the Notes above, found during implementation:** a review does **not** flow through the generic `ModerationRequest` queue after all. `ModerationPipeline::submit()` requires a non-nullable registered `User $submittedBy` — structurally incompatible with an anonymous guest submission, which `open` mode explicitly permits. The generic queue's whole design (a snapshot diff of a *change* to an already-published record) also has no natural fit for a review, which is a pure create with nothing published yet to diff against. `l1-moderation-governance.md` §5.2's own target list naming `Review` is read as documenting the conceptual moderation checkpoint every review passes, not a commitment to the specific polymorphic mechanism — the `reviews` table's own pre-existing `status` enum (`pending`/`published`/`rejected`, a different vocabulary than `ModerationRequest.decision`'s `pending`/`approved`/`rejected`/`revision_requested`) already provided the dedicated path this resource acts on directly.
+- **Changes:** New `App\Services\Reviews\ReviewModerationService` — `publish()`, `reject(reason)`, `hide(reason)` (soft delete, distinct from `rejection_reason` which a review that was never live uses), each journalled via `AuditJournal` in the same transaction as the mutation. New migration denormalizes `country_id`/`territory_id`/`object_type_id` onto `reviews` (mirroring how `moderation_requests` already denormalizes its own scope columns) plus `rejection_reason` — `ScopedResource`'s scope-narrowing needs a plain column on the queried table, not a join through `object_id`. `ReviewPolicy` gained `publish`/`reject`/`hide`, gated on `moderation.edit` (the same permission `ModerationRequestPolicy::update()` already uses for the equivalent decision on the generic queue). New `ReviewResource` (list-only, no create/edit page — a review's core fields are permanently immutable per policy) with filters (object, status, reported) and the three row actions; the `object_id` filter's own options query is scoped through `ReviewResource::getEloquentQuery()` rather than a raw unscoped query, closing a scope leak the test suite caught live (a country-scoped moderator's filter dropdown otherwise named another country's object). Six new tests in `tests/Feature/Admin/ReviewResourceTest.php` — red-before/green-after via `git stash -u`.
 
 **[T-10G04] Validation**
 
 - **Goal:** Verify `T-10G01`–`03` against `l1-object-profile.md` §2/§3.4/§5.4 and `l2-third-party-integrations.md` §5.5.
 - **Method:** Feature tests: both submission modes end to end (gate refused/admitted, CAPTCHA required/not-required), a submitted review's full lifecycle through the admin resource to publication, and the existing owner reply/report surface still functions unchanged.
+- **Status:** Done
+- **Changes:** One new test (`PublicReviewSubmissionTest.php`) carries a review through the whole chain — public submission (pending, not visible) → `ReviewModerationService::publish()` → visible on the object's own public page — the piece no per-task test alone proved. Writing it surfaced a real bug: `ReviewModerationService::publish()`/`hide()` were not flushing the owning object's cached profile (`Cache::tags(['catalog', "territory:{id}", "object:{id}"])`, the same tag set every other write that changes object-page content already flushes — availability, bumps, placement, content publication), so a freshly published review stayed invisible for up to the cache's 300-second TTL. Fixed by adding the identical flush to both methods (not `reject()`, which never made anything visible in the first place). `tests/Feature/Cabinet/CabinetReviewsTest.php` (the existing owner reply/report surface) needed no changes and stayed green throughout — confirmed via the full-suite regression below, not a new test, since nothing in Track G touches that file's own surface. Full-suite regression: 1044 tests, 3 skipped, 0 failed; Pint and PHPStan clean.
 - **Status:** Todo
 
 ### Track H — Missing Public Pages & Compliance
