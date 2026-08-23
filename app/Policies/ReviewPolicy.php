@@ -9,6 +9,7 @@ use App\Models\Review;
 use App\Models\User;
 use App\Services\Authorization\CabinetAccessResolver;
 use App\Services\Authorization\ScopeAuthorizer;
+use App\Services\Reviews\ReviewModerationService;
 
 /**
  * Guards one review by delegating to its owning object's own ownership
@@ -84,6 +85,46 @@ final class ReviewPolicy extends ScopedPolicy
     public function report(User $user, Review $review): bool
     {
         return $this->authorizeAgainstObject($user, 'object.edit', $review);
+    }
+
+    /**
+     * Whether $user may publish, reject, or hide $review — the three
+     * moderation decisions {@see ReviewModerationService}
+     * makes. Gated on `moderation.edit`, the same permission
+     * {@see ModerationRequestPolicy::update()} already uses for the
+     * equivalent decision on the generic moderation queue — a review's own
+     * dedicated resource is a different mechanism, not a different grant.
+     */
+    public function publish(User $user, Review $review): bool
+    {
+        return $this->authorizeModerationDecision($user, $review);
+    }
+
+    public function reject(User $user, Review $review): bool
+    {
+        return $this->authorizeModerationDecision($user, $review);
+    }
+
+    public function hide(User $user, Review $review): bool
+    {
+        return $this->authorizeModerationDecision($user, $review);
+    }
+
+    private function authorizeModerationDecision(User $user, Review $review): bool
+    {
+        $object = $review->object;
+
+        if (! $object instanceof Object_) {
+            return false;
+        }
+
+        return $this->authorize(
+            $user,
+            'moderation.edit',
+            (int) $object->country_id,
+            (int) $object->territory_id,
+            (int) $object->object_type_id,
+        );
     }
 
     private function authorizeAgainstObject(User $user, string $permission, Review $review): bool

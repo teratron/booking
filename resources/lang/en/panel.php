@@ -1017,6 +1017,45 @@ return [
         ],
     ],
 
+    'reviews' => [
+        'title' => 'Reviews',
+        'model_label' => 'review',
+        'anonymous' => 'Guest',
+
+        'columns' => [
+            'object' => 'Object',
+            'author' => 'Author',
+            'rating' => 'Rating',
+            'status' => 'Status',
+            'reported' => 'Reported',
+            'owner_reply' => 'Owner reply',
+            'submitted_at' => 'Submitted',
+        ],
+
+        'status' => [
+            'pending' => 'Pending',
+            'published' => 'Published',
+            'rejected' => 'Rejected',
+        ],
+
+        'filters' => [
+            'reported' => 'Reported only',
+        ],
+
+        'actions' => [
+            'publish' => 'Publish',
+            'reject' => 'Reject',
+            'hide' => 'Hide',
+            'reason' => 'Reason',
+        ],
+
+        'notifications' => [
+            'published' => 'Review published.',
+            'rejected' => 'Review rejected.',
+            'hidden' => 'Review hidden.',
+        ],
+    ],
+
     'moderation_queue' => [
         'title' => 'Moderation queue',
         'model_label' => 'moderation request',

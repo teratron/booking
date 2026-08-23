@@ -298,6 +298,58 @@
             </section>
         @endif
 
+        {{-- Review submission form — reachable per reviews.submission_mode
+             (ReviewSubmissionGate): always in `open` mode (a CAPTCHA
+             challenge is the control there instead), or only after a
+             contact-channel click for this object, this session, in
+             `contact_gated` mode. Enforced again server-side by
+             ReviewSubmissionController regardless of what renders here. --}}
+        <section class="mt-10">
+            @if (session('public-review-submitted'))
+                <p class="rounded-lg bg-emerald-50 p-4 text-sm text-emerald-700">{{ __('public.object.reviews.form.thanks') }}</p>
+            @elseif ($reviewForm->mode === 'contact_gated' && ! $reviewForm->canSubmit)
+                <p class="rounded-lg bg-surface-muted p-4 text-sm text-ink-muted">{{ __('public.object.reviews.form.contact_first') }}</p>
+            @else
+                <h2 class="text-xl font-semibold text-ink">{{ __('public.object.reviews.form.heading') }}</h2>
+
+                @error('review')
+                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+
+                <form method="POST" action="{{ route('public.objects.reviews.submit', ['lang' => app()->getLocale(), 'object' => $object->id]) }}" class="mt-4 flex flex-col gap-3">
+                    @csrf
+
+                    <div>
+                        <label class="block text-sm font-medium text-ink" for="review-author-name">{{ __('public.object.reviews.form.name') }}</label>
+                        <input id="review-author-name" name="author_name" type="text" required value="{{ old('author_name') }}" class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-ink" for="review-rating">{{ __('public.object.reviews.form.rating') }}</label>
+                        <select id="review-rating" name="rating" required class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm">
+                            @for ($stars = 5; $stars >= 1; $stars--)
+                                <option value="{{ $stars }}" @selected(old('rating') == $stars)>{{ $stars }} / 5</option>
+                            @endfor
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-ink" for="review-body">{{ __('public.object.reviews.form.body') }}</label>
+                        <textarea id="review-body" name="body" rows="4" required class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm">{{ old('body') }}</textarea>
+                    </div>
+
+                    @if ($reviewForm->mode === 'open' && $reviewForm->captchaEnabled)
+                        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+                        <div class="cf-turnstile" data-sitekey="{{ $reviewForm->captchaSiteKey }}"></div>
+                    @endif
+
+                    <button type="submit" class="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
+                        {{ __('public.object.reviews.form.submit') }}
+                    </button>
+                </form>
+            @endif
+        </section>
+
         {{-- Nearby objects — the object's own territory, tier-ordered
              through CatalogQueryService like every other listing surface. --}}
         @if (count($profile->nearbyObjects) > 0)

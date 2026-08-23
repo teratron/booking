@@ -9,12 +9,15 @@ use App\Models\Object_;
 use App\Models\Territory;
 use App\Services\Analytics\EventCaptureService;
 use App\Services\Catalog\ObjectProfilePresenter;
+use App\Services\Integrations\CaptchaVerifier;
 use App\Services\Modules\ModuleContext;
 use App\Services\Modules\ModuleResolver;
+use App\Services\Reviews\ReviewSubmissionGate;
 use App\Services\Seo\MetadataResolver;
 use App\Services\Seo\PublicSlugResolver;
 use App\Services\Seo\PublicUrlGenerator;
 use App\Services\Seo\StructuredDataBuilder;
+use App\Support\Reviews\ReviewFormViewData;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Cache;
 
@@ -43,6 +46,8 @@ final class ObjectPageController extends Controller
         private readonly MetadataResolver $metadata,
         private readonly StructuredDataBuilder $structuredData,
         private readonly ModuleResolver $modules,
+        private readonly ReviewSubmissionGate $reviewGate,
+        private readonly CaptchaVerifier $captcha,
     ) {}
 
     public function show(string $lang, string $slug): View
@@ -93,6 +98,12 @@ final class ObjectPageController extends Controller
             'breadcrumbs' => $this->breadcrumbs($object),
             'metadata' => $this->metadata->resolve($object, $lang, $this->urls->objectUrl($object, $lang)),
             'structuredData' => $this->structuredData->forObject($object, $profile, $bookingActive),
+            'reviewForm' => new ReviewFormViewData(
+                mode: $this->reviewGate->mode(),
+                canSubmit: $this->reviewGate->canSubmit($object->id),
+                captchaEnabled: $this->captcha->isEnabled(),
+                captchaSiteKey: $this->captcha->siteKey(),
+            ),
         ]);
     }
 

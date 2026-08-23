@@ -167,6 +167,14 @@ final class SettingsRegistry
             // Appended verbatim as its own line in robots.txt, after the
             // fixed Disallow rules RobotsController always emits.
             new SettingDefinition('seo.robots_extra', 'seo', 'string', ''),
+
+            // Which visitor may reach the review-submission form at all —
+            // 'open' (CAPTCHA-gated) or 'contact_gated' (reachable only
+            // after a contact-channel click for that object, same session).
+            // Independent of moderation.default_mode, which decides what
+            // happens to a review once submitted, not who may submit one.
+            // See ReviewSubmissionGate, the sole reader of this setting.
+            new SettingDefinition('reviews.submission_mode', 'reviews', 'string', 'open'),
         ];
     }
 }

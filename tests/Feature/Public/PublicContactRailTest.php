@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Jobs\CaptureStatEventJob;
 use App\Models\Object_;
 use App\Models\User;
+use App\Services\Reviews\ReviewSubmissionGate;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
@@ -262,4 +263,38 @@ it('keeps the contact rail above the fold — it appears before the description 
         ->and($detailsPosition)->not->toBeFalse()
         ->and($railPosition)->toBeLessThan($descriptionPosition)
         ->and($railPosition)->toBeLessThan($detailsPosition);
+});
+
+it('opens the review-submission gate for this object, this session, once a contact channel has been clicked — in contact_gated mode only', function (): void {
+    $fixture = publicContactRailRegistry();
+    $phone = publicContactRailMakePhoneType();
+    $object = publicContactRailMakeObject($fixture, 'Gate Hotel');
+    $otherObject = publicContactRailMakeObject($fixture, 'Untouched Hotel');
+    $channelId = publicContactRailGiveChannel($object, $phone['typeId'], '37360000000', displayOrder: 0);
+
+    DB::table('settings')->insert([
+        'key' => 'reviews.submission_mode', 'value' => json_encode('contact_gated'),
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    // Before any click: gated shut for every object, including this one.
+    $this->get(publicObjectUrl($object));
+    expect(app(ReviewSubmissionGate::class)->canSubmit($object->id))->toBeFalse();
+
+    $this->get(route('public.objects.contact.click', [
+        'lang' => 'en', 'object' => $object, 'channel' => $channelId,
+    ]))->assertRedirect('tel:37360000000');
+
+    // Open for the clicked object, in the same session...
+    expect(app(ReviewSubmissionGate::class)->canSubmit($object->id))->toBeTrue()
+        // ...but not for a different object no click ever named.
+        ->and(app(ReviewSubmissionGate::class)->canSubmit($otherObject->id))->toBeFalse();
+});
+
+it('leaves the review-submission gate open for every object in the default open mode, contact click or not', function (): void {
+    $fixture = publicContactRailRegistry();
+    $object = publicContactRailMakeObject($fixture, 'Open Mode Hotel');
+
+    expect(app(ReviewSubmissionGate::class)->mode())->toBe('open')
+        ->and(app(ReviewSubmissionGate::class)->canSubmit($object->id))->toBeTrue();
 });

@@ -1016,6 +1016,45 @@ return [
         ],
     ],
 
+    'reviews' => [
+        'title' => 'Отзывы',
+        'model_label' => 'отзыв',
+        'anonymous' => 'Гость',
+
+        'columns' => [
+            'object' => 'Объект',
+            'author' => 'Автор',
+            'rating' => 'Оценка',
+            'status' => 'Статус',
+            'reported' => 'Жалоба',
+            'owner_reply' => 'Ответ владельца',
+            'submitted_at' => 'Подан',
+        ],
+
+        'status' => [
+            'pending' => 'На модерации',
+            'published' => 'Опубликован',
+            'rejected' => 'Отклонён',
+        ],
+
+        'filters' => [
+            'reported' => 'Только с жалобой',
+        ],
+
+        'actions' => [
+            'publish' => 'Опубликовать',
+            'reject' => 'Отклонить',
+            'hide' => 'Скрыть',
+            'reason' => 'Причина',
+        ],
+
+        'notifications' => [
+            'published' => 'Отзыв опубликован.',
+            'rejected' => 'Отзыв отклонён.',
+            'hidden' => 'Отзыв скрыт.',
+        ],
+    ],
+
     'moderation_queue' => [
         'title' => 'Очередь модерации',
         'model_label' => 'заявка на модерацию',

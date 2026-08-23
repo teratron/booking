@@ -16,6 +16,7 @@ use App\Http\Controllers\Public\MapPinsController;
 use App\Http\Controllers\Public\NewsController;
 use App\Http\Controllers\Public\ObjectPageController;
 use App\Http\Controllers\Public\PromotionController;
+use App\Http\Controllers\Public\ReviewSubmissionController;
 use App\Http\Controllers\Public\RobotsController;
 use App\Http\Controllers\Public\RootRedirectController;
 use App\Http\Controllers\Public\SitemapController;
@@ -86,6 +87,9 @@ Route::prefix('{lang}')
         // URL would break a ranked page on every such move.
         Route::get('/o/{slug}', [ObjectPageController::class, 'show'])->name('objects.show');
         Route::get('/objects/{object}/contact/{channel}/click', ContactClickController::class)->name('objects.contact.click');
+        Route::post('/objects/{object}/reviews', ReviewSubmissionController::class)
+            ->middleware('throttle:5,1')
+            ->name('objects.reviews.submit');
         Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
         Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
         Route::get('/news', [NewsController::class, 'index'])->name('news.index');

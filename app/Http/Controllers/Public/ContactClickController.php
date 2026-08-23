@@ -11,6 +11,7 @@ use App\Models\ContactChannelType;
 use App\Models\Object_;
 use App\Services\Analytics\EventCaptureService;
 use App\Services\Contact\ContactChannelLinkResolver;
+use App\Services\Reviews\ReviewSubmissionGate;
 use Illuminate\Http\RedirectResponse;
 
 /**
@@ -21,12 +22,17 @@ use Illuminate\Http\RedirectResponse;
  * for banner clicks. The redirect target is still the channel's own direct
  * deep link (`tel:`, `wa.me`, …); the portal never becomes a party to the
  * conversation that follows.
+ *
+ * Also the sole trigger for {@see ReviewSubmissionGate::recordContactClick()}
+ * — the `contact_gated` review-submission mode's own session flag, set here
+ * rather than as a second, persisted tracking record.
  */
 final class ContactClickController extends Controller
 {
     public function __construct(
         private readonly ContactChannelLinkResolver $resolver,
         private readonly EventCaptureService $events,
+        private readonly ReviewSubmissionGate $reviewGate,
     ) {}
 
     /**
@@ -55,6 +61,8 @@ final class ContactClickController extends Controller
             'country_id' => $object->country_id,
             'locale' => $lang,
         ]);
+
+        $this->reviewGate->recordContactClick($object->id);
 
         $href = $this->resolver->resolve($type, $channel->raw_value);
         abort_if($href === null, 404);
