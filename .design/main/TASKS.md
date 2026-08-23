@@ -5,7 +5,7 @@
 **Based on:** .design/main/PLAN.md v3.14.0
 **Based on RULES:** .design/RULES.md v1.4.0
 **Execution Mode:** Parallel
-**Status:** Active — Phase 8 (7 phases done, 1 active at 20/23; three remaining tasks `Blocked [!] (C12)` since 2026-08-22 — branch-model reconciliation, not regression; see Overview) · Phase 9 `Done` (post-launch QA remediation, 15/15, closed 2026-08-22; independent of Phase 8; see Overview) · Phase 10 `Active` (deep QA remediation, 21/32, opened 2026-08-23; independent of Phase 8; see Overview)
+**Status:** Active — Phase 8 (7 phases done, 1 active at 20/23; three remaining tasks `Blocked [!] (C12)` since 2026-08-22 — branch-model reconciliation, not regression; see Overview) · Phase 9 `Done` (post-launch QA remediation, 15/15, closed 2026-08-22; independent of Phase 8; see Overview) · Phase 10 `Done` (deep QA remediation, 32/32, closed 2026-08-23; independent of Phase 8; see Overview)
 
 ## Overview
 
@@ -127,7 +127,7 @@ them file-independent. Full detail: [tasks/phase-10.md](tasks/phase-10.md),
 | [Phase 7](archives/tasks/phase-7.md) | Import/export, backups and rehearsed restore, production provisioning and observability, load test | `Done (Archived)` (16/16) |
 | [Phase 8](tasks/phase-8.md) | Delivery pipeline — branch contract, release artefact and deployment, irreversibility scan, EN/RU/agent operator documentation, sensitive-zone gate integrity | `In Progress` (20/23, remaining 3 `Blocked [!] (C12)`) |
 | [Phase 9](archives/tasks/phase-9.md) | Post-launch QA remediation — contact-channel forms, API guest-redirect contract, canonical-host consistency, hreflang alternates, a cabinet Settings crash, one test-suite fix | `Done (Archived)` (15/15) |
-| [Phase 10](tasks/phase-10.md) | Deep QA remediation — access/module gating, URL routing, three eager-load crashes, cache invalidation, role data, content lifecycle and third-party wiring, review submission, missing pages, full regression gate | `Active` (31/32, Tracks A + B + C + D + E + F + G + H done, Track I remaining) |
+| [Phase 10](tasks/phase-10.md) | Deep QA remediation — access/module gating, URL routing, three eager-load crashes, cache invalidation, role data, content lifecycle and third-party wiring, review submission, missing pages, full regression gate | `Done` (32/32, all nine tracks closed) |
 
 ## Execution Notes
 
@@ -277,6 +277,7 @@ in [tasks/phase-10.md](tasks/phase-10.md) §Track Ordering.
 
 ## Meta Information
 
-- **Last Updated**: 2026-08-23 (Phase 10 planned — 32 tasks, nine tracks, opened from a second deeper QA sweep; independent of Phase 8; 9 phases total, Phase 8 remains active at 20/23, owner-blocked, Phase 9 done)
-- **Previously**: 2026-08-22 (Phase 9 closed — 15/15, six tracks, full regression gate clean; 8 phases done total, Phase 8 remains active at 20/23, owner-blocked)
+- **Last Updated**: 2026-08-23 (Phase 10 closed — 32/32, nine tracks, full `composer quality` gate clean via `docker compose exec app`; independent of Phase 8; Phase 8 remains active at 20/23, owner-blocked, Phase 9 done)
+- **Previously**: 2026-08-23 (Phase 10 planned — 32 tasks, nine tracks, opened from a second deeper QA sweep)
+- **Before that**: 2026-08-22 (Phase 9 closed — 15/15, six tracks, full regression gate clean; 8 phases done total, Phase 8 remains active at 20/23, owner-blocked)
 - **Maintainer**: Core Team

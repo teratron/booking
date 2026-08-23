@@ -158,7 +158,7 @@ same local PHP available.
 
 ### Track I — Full-Suite Regression Gate
 
-- [ ] [T-10I01] Full `composer quality` and non-slow Pest suite, clean, after Tracks A–H close
+- [x] [T-10I01] Full `composer quality` and non-slow Pest suite, clean, after Tracks A–H close
 
 ## Task Detail
 
@@ -458,7 +458,8 @@ same local PHP available.
 
 - **Goal:** Confirm no track regressed another; confirm the whole phase together.
 - **Method:** `docker compose exec app composer quality` (or the equivalent local-toolchain invocation this session used, if a future session inherits it) end to end; `docker compose exec app composer test` (non-slow group); `php artisan migrate:fresh --seed` from empty.
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** Ran the literal reference invocation, not the local-toolchain equivalent this session otherwise used throughout Tracks A–H — `docker compose exec app composer quality` end to end: `pint --test` clean, PHPStan level 8 clean, the non-slow Pest suite green, `--coverage --min=80` at 87.1% (the local Herd PHP install has no coverage driver; the `app` container's own PCOV does, which is why this one task specifically ran there rather than locally), `composer audit` clean (no advisories), `composer-unused` clean (0 unused packages). `docker compose exec app php artisan migrate:fresh --seed` also applied cleanly from empty through the container, alongside the equivalent local run already exercised after every track this phase. Exit code 0 throughout — Phase 10 closes at 32/32.
 
 ## Track Ordering
 
