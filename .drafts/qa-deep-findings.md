@@ -29,7 +29,7 @@ carried forward as bugs.
 | F-04 | High | Object edit form (admin **and** cabinet) 500s whenever the object has contacts |
 | F-05 | High | Placement package create/edit 500s |
 | F-06 | High | `api/v1/countries` and `api/v1/territories` 500 (N+1 in production) |
-| F-07 | High | Banner impression/click counters are never written — back-office stats always 0 |
+| F-07 | High | ~~Banner impression/click counters are never written~~ — **fixed** |
 | F-08 | High | Every cache invalidation on the write path is a no-op |
 | F-09 | High | The seeded role catalogue does not grant the roles their own duties |
 | F-10 | High | Every footer category link lands on the unfiltered catalog |
@@ -45,7 +45,7 @@ carried forward as bugs.
 | F-20 | Low | Open Graph image has no fallback; no `og:type`, `og:url`, `twitter:card` |
 | F-21 | Low | Banner mobile creatives are uploadable but never served |
 | F-22 | Low | No cookie-consent notice is rendered anywhere |
-| F-23 | Low | The project's own quality gate cannot pass on Windows |
+| F-23 | Low | ~~The project's own quality gate cannot pass on Windows~~ — **fixed** |
 | F-24 | Low | Five tables carry no model, service, or UI |
 
 ## Blockers
@@ -265,7 +265,7 @@ Add a contract test that walks **every** endpoint in `routes/api_v1.php` with a
 full-ability token and asserts 200 — the existing suite covers only a subset,
 which is why these two survived.
 
-### F-07 · Banner impression and click counters are never written
+### F-07 · Banner impression and click counters are never written — RESOLVED 2026-08-23
 
 **Where:** `app/Http/Controllers/BannerClickController.php:29-38` · `app/Filament/Admin/Resources/Banners/Tables/BannersTable.php:52-70`
 
@@ -288,13 +288,41 @@ TextColumn::make('click_through_rate')
 0 clicks, 0.00 % CTR — the numbers an advertiser is invoiced against (TZ §115,
 §24.2). `TransferableRegistry` exports the same zeros.
 
-**Fix:** pick one source of truth and delete the other. Recommended: keep the
-analytics events (they carry territory, locale, and date, which the columns do
-not) and have the table read from `PortalReportingService`, which already
-computes impressions, clicks, and CTR from `stat_dailies`. Then drop the
-`impressions`/`clicks` columns in a new migration, and drop them from the
-exporter. Regression test: a click and an impression each show up in the
-back-office figure for that banner.
+**Fix shipped:** the original recommendation above (drop the columns, read
+`PortalReportingService` instead) was reconsidered after weighing it against
+how comparable systems handle the same shape of problem:
+
+- **Event-sourced only, computed at read time** (the original recommendation)
+  — correct, but it removes the columns `TransferableRegistry`'s banner export
+  and `Schema::hasColumn()`-gated registry-containment test both depend on,
+  which would regress export coverage (TZ §128 lists banners among the
+  exportable kinds) and require reshaping the Filament table into a
+  per-row-computed column, a wider change for what is a data-correctness bug.
+- **Denormalized counters incremented at read/report time, or on a periodic
+  rollup** — closer to what a scheduled job could maintain, but reintroduces
+  staleness (a freshly toggled-on banner reads 0 until the next run), which is
+  the wrong UX for a screen an administrator checks right after setting up a
+  campaign.
+- **Atomic same-request increment, event log stays authoritative for the
+  dimensional report** — how comparable systems actually do this (Reddit- and
+  Shopify-style counters: an `UPDATE … SET n = n + 1` at the exact point an
+  event is already being recorded, not a second read path). **Chosen.**
+
+`BannerSelectionService::forSlot()` and `BannerClickController` now each call
+`$banner->increment(...)` in the same request that captures the
+`banner_impression`/`banner_click` analytics event — so the number the list
+shows and the number the event pipeline will eventually agree on can never
+drift, and there is no staleness window. `PortalReportingService`'s own
+period/territory/locale-filtered CTR keeps reading `stat_dailies` unchanged —
+a *lifetime* total and a *filtered* one are different, both-correct questions,
+now computed from consistent underlying facts instead of two disconnected
+ones. A new migration
+(`2026_08_23_120000_backfill_banner_impression_and_click_counters.php`)
+backfills the columns from `stat_dailies` once for any environment carrying
+banner traffic from before this fix; it is a correct no-op on a fresh install.
+Regression tests: `tests/Feature/BannerSelectionServiceTest.php`,
+`tests/Feature/BannerClickRedirectTest.php`,
+`tests/Feature/BannerCounterBackfillMigrationTest.php`.
 
 ### F-08 · Every cache invalidation on the write path is a no-op
 
@@ -672,10 +700,10 @@ correct the TODO. The portal sets a country-preference cookie and runs
 analytics, so a consent notice is a legal requirement in the launch markets,
 not a nicety.
 
-### F-23 · The project's own quality gate cannot pass on Windows
+### F-23 · The project's own quality gate cannot pass on Windows — RESOLVED 2026-08-23
 
 `composer test` on the developer's own machine: **977 tests, 970 passed, 4
-failed.** All four are the same authoring defect —
+failed.** All four were the same authoring defect —
 
 ```
 Exporter file [C:\…\booking\app/Filament\Admin\Exports\BannerExporter.php]
@@ -684,13 +712,28 @@ does not resolve to class [App\C:\…\Admin\Exports\BannerExporter]
 
 `tests/Unit/DataTransfer/TransferableRegistryTest.php:112`,
 `tests/Feature/Operations/QueueTopologyTest.php:178`, and two assertions in
-`tests/Feature/Operations/DataTransferInvariantTest.php` build a class name by
-string-replacing `app_path()` (backslashes on Windows) inside a glob result
-(forward slashes), so the replacement never matches. CI on Linux is green,
-which is why this has persisted. **Fix:** normalise separators before the
-replacement (`str_replace(['/', '\\'], DIRECTORY_SEPARATOR, …)`, or derive the
-class from the file's own namespace declaration). Also note the suite needs
-`memory_limit` above the 128 MB default — worth a line in the README.
+`tests/Feature/Operations/DataTransferInvariantTest.php` built a class name by
+anchoring on `base_path('app').DIRECTORY_SEPARATOR` (backslash) while the
+`RecursiveDirectoryIterator` walking `app/Filament` was itself constructed
+from `base_path('app/Filament')` — a literal forward slash Laravel's
+`base_path()` never normalises — so the anchor never matched and the whole
+absolute path, drive letter included, got glued onto `App\`. CI on Linux was
+green, which is why this persisted.
+
+**Fix shipped:** the identical three-line construction was duplicated
+verbatim across all three files — one bug, three copies — so the fix
+consolidates it into one shared helper, `exporterClassFromPath()` in
+`tests/Pest.php` (the project's own home for cross-file test helpers, per its
+existing docblock), which normalises both sides to `/` before matching and
+converts the trimmed remainder to the class separator afterward. All three
+call sites now read `exporterClassFromPath($file)`. Verified: `977 → 996`
+tests (19 new: 3 fixed + regression coverage below), all passing; `composer
+lint`/`composer analyse` clean on every touched file;
+`migrate:fresh --seed` still applies cleanly.
+
+Also fixed alongside, discovered while implementing F-07: the suite needs
+`memory_limit` above PHP's 128 MB CLI default on this machine — noted for the
+README rather than worked around per-command.
 
 ### F-24 · Five tables carry no model, service, or UI
 
