@@ -9,7 +9,6 @@ use Filament\Actions\Exports\Exporter;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
 
@@ -106,8 +105,7 @@ it('never lets an Exporter name a column its own kind does not declare', functio
     }
 
     foreach ($files as $file) {
-        $relative = Str::of($file)->after(base_path('app').DIRECTORY_SEPARATOR)->replace(['/', '\\'], '\\')->beforeLast('.php');
-        $fqcn = 'App\\'.$relative;
+        $fqcn = exporterClassFromPath($file);
 
         expect(class_exists($fqcn))->toBeTrue("Exporter file [{$file}] does not resolve to class [{$fqcn}].");
         expect(is_subclass_of($fqcn, Exporter::class))->toBeTrue("[{$fqcn}] does not extend Filament's Exporter.");

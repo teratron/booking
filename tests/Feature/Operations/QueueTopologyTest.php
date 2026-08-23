@@ -9,7 +9,6 @@ use Filament\Actions\Exports\Models\Export;
 use Filament\Actions\Imports\Models\Import;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Str;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -172,8 +171,7 @@ it('routes every Filament import/export job to the declared "bulk" queue', funct
     $checked = 0;
 
     foreach ($files as $file) {
-        $relative = Str::of($file)->after(base_path('app').DIRECTORY_SEPARATOR)->replace(['/', '\\'], '\\')->beforeLast('.php');
-        $fqcn = 'App\\'.$relative;
+        $fqcn = exporterClassFromPath($file);
 
         expect(class_exists($fqcn))->toBeTrue("Exporter file [{$file}] does not resolve to class [{$fqcn}].");
         expect(is_subclass_of($fqcn, Exporter::class))->toBeTrue("[{$fqcn}] does not extend Filament's Exporter.");

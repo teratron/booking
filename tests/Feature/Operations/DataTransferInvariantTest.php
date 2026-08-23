@@ -136,11 +136,7 @@ function dataTransferInvariantDiscoverExporters(): array
             continue;
         }
 
-        $relative = Str::of($fileInfo->getPathname())
-            ->after(base_path('app').DIRECTORY_SEPARATOR)
-            ->replace(['/', '\\'], '\\')
-            ->beforeLast('.php');
-        $fqcn = 'App\\'.$relative;
+        $fqcn = exporterClassFromPath($fileInfo->getPathname());
 
         if (! class_exists($fqcn) || ! is_subclass_of($fqcn, Exporter::class) || ! method_exists($fqcn, 'transferableKey')) {
             continue;

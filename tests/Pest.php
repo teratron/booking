@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\Object_;
 use App\Models\Territory;
 use App\Services\Seo\PublicUrlGenerator;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /*
@@ -42,4 +43,32 @@ function publicObjectUrl(Object_ $object): string
 function publicTerritoryUrl(Territory $territory): string
 {
     return (string) app(PublicUrlGenerator::class)->territoryUrl($territory);
+}
+
+/*
+|--------------------------------------------------------------------------
+| Exporter File-to-Class Resolution
+|--------------------------------------------------------------------------
+|
+| Three suites walk `app/Filament` for `*Exporter.php` files and resolve
+| each one back to its class name by trimming `base_path('app')` off the
+| front of the absolute path. On Windows, `RecursiveDirectoryIterator`
+| mixes the literal `/` embedded in the `base_path('app/Filament')` call
+| that constructs it with the `\` it appends for every nested directory —
+| so an anchor built from a bare `DIRECTORY_SEPARATOR` never matches, and
+| the whole absolute path (including the drive letter) gets glued onto
+| `App\`. Normalising both sides to `/` before matching, then converting
+| the trimmed remainder to the class separator, works on every OS.
+|
+*/
+
+function exporterClassFromPath(string $path): string
+{
+    $anchor = str_replace('\\', '/', base_path('app')).'/';
+    $relative = Str::of(str_replace('\\', '/', $path))
+        ->after($anchor)
+        ->replace('/', '\\')
+        ->beforeLast('.php');
+
+    return 'App\\'.$relative;
 }
