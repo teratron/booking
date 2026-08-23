@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Http\Middleware\EnsureModuleEnabled;
 use App\Http\Middleware\RecordApiConsumption;
 use App\Http\Middleware\ResolveApiLocale;
-use Illuminate\Auth\Middleware\Authenticate;
+use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -36,9 +36,15 @@ return Application::configure(basePath: dirname(__DIR__))
         // inspected. Laravel's default priority list would otherwise run
         // `auth:sanctum` first, since a custom alias not in that list keeps
         // its declared route position only relative to other unlisted
-        // middleware.
+        // middleware. The anchor must be the *contract* the priority list
+        // actually carries — `AuthenticatesRequests` — not the concrete
+        // `Authenticate` class: `prependToPriorityList()` requires an exact
+        // match against an existing list entry, and the concrete class is
+        // not itself in the list, so anchoring on it silently appended this
+        // gate to the end instead of before authentication, and every
+        // guest/disabled-module probe reached `auth:sanctum` first.
         $middleware->prependToPriorityList(
-            before: Authenticate::class,
+            before: AuthenticatesRequests::class,
             prepend: EnsureModuleEnabled::class,
         );
 

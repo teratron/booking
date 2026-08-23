@@ -5,8 +5,10 @@ declare(strict_types=1);
 use App\Exceptions\UnrevocableGrantException;
 use App\Models\User;
 use App\Services\Authorization\RoleGrantService;
+use App\Services\Authorization\ScopeAuthorizer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
@@ -65,4 +67,62 @@ test('the chief administrator role can be revoked when another holder remains', 
 
     expect($first->fresh()->hasRole('chief_administrator'))->toBeFalse();
     expect($second->fresh()->hasRole('chief_administrator'))->toBeTrue();
+});
+
+/*
+|--------------------------------------------------------------------------
+| Scope Grant — RoleGrantService::grantRole()
+|--------------------------------------------------------------------------
+|
+| A role assigned through Spatie's bare assignRole() carries a permission
+| with no scope decision behind it — ScopeAuthorizer reads that as "reaches
+| no axis" and every scoped back-office resource fails closed. grantRole()
+| exists so the role and its scope are written together, in one call, and
+| can never drift apart the way the seeder's own bare assignRole() call
+| once did.
+|
+*/
+
+test('grantRole() writes both the Spatie assignment and a matching role_scopes row', function (): void {
+    $actor = User::factory()->create();
+    $subject = User::factory()->create();
+
+    app(RoleGrantService::class)->grantRole($subject, 'moderator', $actor);
+
+    expect($subject->fresh()->hasRole('moderator'))->toBeTrue();
+
+    $roleId = Role::where('name', 'moderator')->value('id');
+    $row = DB::table('role_scopes')
+        ->where('user_id', $subject->id)
+        ->where('role_id', $roleId)
+        ->first();
+
+    expect($row)->not->toBeNull()
+        ->and($row->scope_kind)->toBe('none')
+        ->and($row->scope_reference_id)->toBeNull()
+        ->and($row->granted_by)->toBe($actor->id);
+});
+
+test('grantRole() records a bounded scope when one is given', function (): void {
+    $actor = User::factory()->create();
+    $subject = User::factory()->create();
+
+    app(RoleGrantService::class)->grantRole($subject, 'country_administrator', $actor, 'country', 7);
+
+    $roleId = Role::where('name', 'country_administrator')->value('id');
+    $row = DB::table('role_scopes')
+        ->where('user_id', $subject->id)
+        ->where('role_id', $roleId)
+        ->first();
+
+    expect($row->scope_kind)->toBe('country')
+        ->and($row->scope_reference_id)->toBe(7);
+});
+
+test('the seeded chief administrator has an unrestricted scope grant, not just the role', function (): void {
+    $admin = User::where('email', 'test@example.com')->firstOrFail();
+
+    $constraint = app(ScopeAuthorizer::class)->constraintFor($admin, 'object.view');
+
+    expect($constraint->isUnrestricted)->toBeTrue();
 });

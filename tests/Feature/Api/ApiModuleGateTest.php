@@ -68,3 +68,25 @@ it('still 404s an unregistered route once the api module is enabled', function (
 
     $this->getJson('/api/v1/this-route-does-not-exist')->assertNotFound();
 });
+
+/*
+|--------------------------------------------------------------------------
+| Gate Ordering on a Token-Protected Route
+|--------------------------------------------------------------------------
+|
+| /status carries no auth:sanctum middleware, so every test above passes
+| even if the module gate runs after authentication — nothing upstream of
+| it can produce a different status code. /objects does carry auth:sanctum,
+| which is the one shape that exposes the priority-list anchor actually
+| taking effect: an anonymous, tokenless request must still see the module
+| as absent (404), never as "present but unauthenticated" (401) — the
+| ordering bootstrap/app.php's own prependToPriorityList() call exists to
+| guarantee.
+|
+*/
+
+it('404s a token-protected endpoint for an anonymous caller while the api module is disabled', function (): void {
+    apiModuleFixture();
+
+    $this->getJson('/api/v1/objects')->assertNotFound();
+});

@@ -103,9 +103,9 @@ same local PHP available.
 
 ### Track A — Access & Module Gating
 
-- [ ] [T-10A01] Grant the seeded chief administrator an unrestricted scope
-- [ ] [T-10A02] Anchor the API module gate on the real priority-list contract
-- [ ] [T-10A03] Validation — a fresh install has a usable administrator; a disabled module never leaks past authentication
+- [x] [T-10A01] Grant the seeded chief administrator an unrestricted scope
+- [x] [T-10A02] Anchor the API module gate on the real priority-list contract
+- [x] [T-10A03] Validation — a fresh install has a usable administrator; a disabled module never leaks past authentication
 
 ### Track B — Public URL & Routing Correctness
 
@@ -167,25 +167,28 @@ same local PHP available.
 **[T-10A01] Grant the seeded chief administrator an unrestricted scope**
 
 - **Spec:** [l1-back-office.md](../specifications/l1-back-office.md) §3.1 ("Permissions are scopable... A grant may be unrestricted or bounded")
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** `php artisan migrate:fresh --seed`, sign in as the seeded chief administrator, complete MFA, open one resource from each of the eleven navigation groups — every one returns 200, none returns 403 or 404-on-edit.
 - **Notes (finding):** `ScopeAuthorizer::constraintFor()` treats an actor with no `role_scopes` row as reaching no axis; `ResourceQueryScoper::applyConstraint()` correctly fails closed. `DatabaseSeeder` assigns the role and never writes the `scope_kind = 'none'` row. Fix in the seeder; consider whether `RoleGrantService` (or wherever role assignment is centralized) should write a default unrestricted scope whenever a role is granted with no explicit narrowing, so every future staff account is usable without a second manual step — `qa-deep-findings.md` F-01 recommends this as the durable fix, not just the seeder patch.
+- **Changes:** Took the durable path rather than the seeder-only patch. Added `RoleGrantService::grantRole()` — assigns the Spatie role and writes the matching `role_scopes` row (unrestricted by default, or a bounded country/territory/category scope when given) in one transaction, so the two can never be written independently and drift the way the bare `assignRole()` call did. `DatabaseSeeder` now calls it (self-attributed `granted_by`, no other account exists yet at that point). `RoleGrantService` previously held only `revokeRole()`; the class's own docblock now states the symmetric reasoning. Ran red before the fix (`git stash` on both files reproduced `ScopeAuthorizer::constraintFor()` returning `isUnrestricted: false` for the seeded admin), green after.
 
 **[T-10A02] Anchor the API module gate on the real priority-list contract**
 
 - **Spec:** [l1-public-api.md](../specifications/l1-public-api.md) (a disabled module is indistinguishable from an unregistered path)
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** With the `api` module in its shipped-disabled state, `curl http://<host>/api/v1/objects` (no token) returns 404, not 401.
 - **Handoff:** `T-10A03`.
 - **Notes (finding):** `bootstrap/app.php` anchors `EnsureModuleEnabled` `before: Authenticate::class` — but Laravel's own middleware priority list carries the contract `Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests`, not the concrete `Authenticate` class, so the anchor never matches and the gate is silently appended to the end of the list instead. `qa-deep-findings.md` F-12.
+- **Changes:** Confirmed the exact contract against Laravel's own `Foundation\Http\Kernel::$middlewarePriority` source (`AuthenticatesRequests` is the sixth entry; `Authenticate` itself is not in the list at all) before changing the anchor. Swapped the import and the `before:` argument; comment explains why the concrete class silently fails as an anchor rather than erroring. Ran red before the fix (`git stash` on `bootstrap/app.php` reproduced 401 on a tokenless `GET /api/v1/objects` with the module disabled — the existing `ApiModuleGateTest` suite never caught this since its four cases all target `/api/v1/status`, which carries no `auth:sanctum` middleware at all), green after.
 
 **[T-10A03] Validation — a fresh install has a usable administrator; a disabled module never leaks past authentication**
 
 - **Goal:** Verify `T-10A01`/`T-10A02` against their specs and `qa-deep-findings.md` F-01/F-12.
 - **Method:** Feature test asserting a freshly seeded chief administrator reaches 200 on a representative resource per navigation group; feature test asserting `api/v1/objects` returns 404 for every request shape (no token, valid token, bogus token) while the module is disabled.
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** `tests/Feature/RolePermissionSeederTest.php` gained three tests (`grantRole()` writes both halves; a bounded scope is recorded correctly; the seeded chief administrator resolves as unrestricted via `ScopeAuthorizer`). `tests/Feature/Api/ApiModuleGateTest.php` gained one test targeting `/api/v1/objects` specifically, the gap the existing four `/status`-only tests left open. 21/21 pass; `composer lint`/`analyse` clean; a wider regression pass (`tests/Feature/Api`, `AdminDashboardTest`, `CabinetFoundationTest`, `PublicShellTest` — 54 tests, since the middleware-priority change is global) shows no side effect on panel guest redirects.
 
 ### Track B — Public URL & Routing Correctness
 
