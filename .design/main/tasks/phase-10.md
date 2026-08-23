@@ -138,8 +138,8 @@ same local PHP available.
 - [x] [T-10F01] Promotion visibility checks `ends_at`, not status alone
 - [x] [T-10F02] Backup administration degrades instead of crashing when the destination is unreachable
 - [x] [T-10F03] Wire `.env` map-tile and CAPTCHA values into the settings registry
-- [ ] [T-10F04] Complete the Open Graph tag set and default image fallback
-- [ ] [T-10F05] Render the banner's mobile creative on narrow viewports
+- [x] [T-10F04] Complete the Open Graph tag set and default image fallback
+- [x] [T-10F05] Render the banner's mobile creative on narrow viewports
 - [ ] [T-10F06] Validation
 
 ### Track G — Review Submission
@@ -352,18 +352,21 @@ same local PHP available.
 **[T-10F04] Complete the Open Graph tag set and default image fallback**
 
 - **Spec:** [l1-seo.md](../specifications/l1-seo.md)
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** Every page carrying `$metadata` emits `og:type`, `og:url`, `og:image` (falling back to a configured default when the entity has none), and the four `twitter:*` tags.
 - **Notes (finding):** `og:title`/`og:description` render; `og:type`, `og:url`, and the whole Twitter card family are absent, and `og:image` has no portal-wide fallback though `MetadataResolver::defaultOgImage()` already exists as a hook. `qa-deep-findings.md` F-20.
+- **Changes:** The default-image fallback mechanism already existed end to end (`seo.default_og_image` setting, `defaultOgImage()`, the `?? $this->defaultOgImage()` chain in every `ResolvedMetadata` builder) — a fresh install simply has no value in it yet, which is the correct administrator-configurable state, not a defect. The actual gap was the missing tags, and every page carrying `$metadata` renders through the one shared `resources/views/components/layouts/public.blade.php` head block, so the fix lives in exactly one place: `og:type` (constant `"website"` — the finding does not ask for per-entity-type nuance, and this project has no article/product distinction elsewhere in its OG usage), `og:url` (mirrors `$metadata->canonicalUrl`), and `twitter:card`/`twitter:title`/`twitter:description`/`twitter:image` (card type is `summary_large_image` when an image exists, else `summary`, matching how `og:image` itself is already conditionally rendered). Test coverage: two new `tests/Feature/Public/PublicObjectProfileTest.php` cases, one with a photo (full tag set, large-image card) and one without (no image tags, plain summary card) — chosen because `Object_` is the one entity type in `MetadataResolver`'s ladder with genuinely conditional `ogImage`, unlike the territory/promotion/news/article contexts, which always resolve one.
+- **Incidental scope note:** the phase header's warning about `T-10B01` and this task both touching `MetadataResolver` did not materialize into a conflict — B's changes were to `alternates()`/`LocaleSwitchResolver` seeding, F04's change is confined to the Blade layout, and neither reads or writes the other's surface.
 
 **[T-10F05] Render the banner's mobile creative on narrow viewports**
 
 - **Spec:** [l1-advertising.md](../specifications/l1-advertising.md)
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** A banner with both creatives uploaded renders the mobile one under a `max-width` media query in a browser at 390px width; a banner with only a desktop creative still renders correctly at the same width.
 - **Notes (finding):** `Banner::registerMediaCollections()` declares and the admin form uploads both `desktop_creative` and `mobile_creative`, but every public template renders `getFirstMediaUrl('desktop_creative')` unconditionally — the mobile creative is collected and never served. `qa-deep-findings.md` F-21.
+- **Changes:** New `resources/views/components/public/banner-creative.blade.php` renders a `<picture>` with a `<source media="(max-width: 639px)">` for the mobile creative when one is uploaded, falling back to the desktop `<img>` at every width otherwise — served by viewport per the spec's own Implementation Notes ("not by user-agent sniffing"), not a second page. Replaces all four `getFirstMediaUrl('desktop_creative')` call sites in `resources/views/public/home/show.blade.php` (top, mid, partner-strip, bottom banner slots) — the only public template rendering banner creative in the current codebase; the finding's own "territory" mention names no existing render site and nothing in `TerritoryPageController`/`territory/show.blade.php` renders a `Banner`, so out of scope here. Verified two ways: `tests/Feature/Public/PublicHomeTest.php` gained two tests (mobile `<source>` present alongside the desktop fallback; no `<source>` at all when only a desktop creative exists) asserting the exact rendered markup; and live in a browser — a temporary `php artisan serve` instance against a banner seeded with two distinct local images, resized to 390px and to 1440px, confirmed via the Network panel that the browser actually requests the mobile image at the narrow width and the desktop image at the wide one (the seeded fixture and slot were removed afterward).
 
 **[T-10F06] Validation**
 

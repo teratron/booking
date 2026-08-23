@@ -2,11 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Models\Banner;
 use App\Models\Object_;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
@@ -127,6 +130,52 @@ function publicHomeMakeObject(int $countryId, int $typeId, string $name, array $
 
     return $object;
 }
+
+/** Places a banner in the `home-top` slot, matching every visitor (no territory/language targeting). */
+function publicHomeMakeBanner(string $linkText = 'Advertiser banner'): Banner
+{
+    $slotId = DB::table('banner_slots')->insertGetId([
+        'key' => 'home-top', 'surfaces' => json_encode(['home']),
+        'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $bannerId = DB::table('banners')->insertGetId([
+        'banner_slot_id' => $slotId, 'name' => 'Home top banner', 'advertiser' => 'Acme',
+        'destination_link' => 'https://example.test', 'display_order' => 0,
+        'starts_at' => now()->subDay()->toDateString(), 'ends_at' => now()->addMonth()->toDateString(),
+        'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('banner_translations')->insert([
+        'banner_id' => $bannerId, 'locale' => 'en', 'link_text' => $linkText,
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    return Banner::query()->findOrFail($bannerId);
+}
+
+it('serves the banner mobile creative under a max-width media query, alongside the desktop fallback', function (): void {
+    Storage::fake('public');
+    publicHomeRegistry();
+    $banner = publicHomeMakeBanner();
+    $banner->addMedia(UploadedFile::fake()->image('desktop.jpg', 1920, 600))->toMediaCollection('desktop_creative');
+    $banner->addMedia(UploadedFile::fake()->image('mobile.jpg', 600, 800))->toMediaCollection('mobile_creative');
+
+    $html = (string) $this->get('/en')->assertOk()->getContent();
+
+    expect($html)->toContain('<source media="(max-width: 639px)" srcset="'.$banner->getFirstMediaUrl('mobile_creative').'">')
+        ->and($html)->toContain($banner->getFirstMediaUrl('desktop_creative'));
+});
+
+it('falls back to the desktop creative at every width when no mobile creative was uploaded', function (): void {
+    Storage::fake('public');
+    publicHomeRegistry();
+    $banner = publicHomeMakeBanner();
+    $banner->addMedia(UploadedFile::fake()->image('desktop.jpg', 1920, 600))->toMediaCollection('desktop_creative');
+
+    $html = (string) $this->get('/en')->assertOk()->getContent();
+
+    expect($html)->not->toContain('<source media="(max-width: 639px)"')
+        ->and($html)->toContain($banner->getFirstMediaUrl('desktop_creative'));
+});
 
 it('renders every block for a fixture with content in each, and omits blocks with nothing to show', function (): void {
     $fixture = publicHomeRegistry();

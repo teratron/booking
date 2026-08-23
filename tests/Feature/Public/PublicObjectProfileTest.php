@@ -315,6 +315,35 @@ it('degrades independently — a fixture with a single photo and no optional dat
     expect($profile->galleryPhotoUrls)->toHaveCount(0);
 });
 
+it('emits og:type, og:url, and a large-image Twitter card for an object with a photo', function (): void {
+    Storage::fake('public');
+    $fixture = publicObjectRegistry();
+    $type = publicObjectMakeAccommodationType();
+    $object = publicObjectMake($fixture, $type['typeId'], 'Photographed Hotel');
+    $object->addMedia(UploadedFile::fake()->image('cover.jpg', 800, 600))->toMediaCollection('photos');
+
+    $this->get(publicObjectUrl($object))
+        ->assertOk()
+        ->assertSee('property="og:type" content="website"', false)
+        ->assertSee('property="og:url"', false)
+        ->assertSee('name="twitter:card" content="summary_large_image"', false)
+        ->assertSee('name="twitter:title"', false)
+        ->assertSee('name="twitter:description"', false)
+        ->assertSee('name="twitter:image"', false);
+});
+
+it('falls back to a plain Twitter summary card, with no image tags, for an object with no photo', function (): void {
+    $fixture = publicObjectRegistry();
+    $type = publicObjectMakeAccommodationType();
+    $object = publicObjectMake($fixture, $type['typeId'], 'Unphotographed Hotel');
+
+    $this->get(publicObjectUrl($object))
+        ->assertOk()
+        ->assertSee('name="twitter:card" content="summary"', false)
+        ->assertDontSee('property="og:image"', false)
+        ->assertDontSee('name="twitter:image"', false);
+});
+
 it('never varies page content by placement package — only the tier badge differs between a VIP and an unranked fixture', function (): void {
     $fixture = publicObjectRegistry();
     $type = publicObjectMakeAccommodationType();

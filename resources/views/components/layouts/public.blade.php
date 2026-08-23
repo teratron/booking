@@ -34,10 +34,21 @@
             <meta name="robots" content="noindex">
         @endif
 
+        <meta property="og:type" content="website">
         <meta property="og:title" content="{{ $metadata->ogTitle }}">
         <meta property="og:description" content="{{ $metadata->ogDescription }}">
+        @if ($metadata->canonicalUrl)
+            <meta property="og:url" content="{{ $metadata->canonicalUrl }}">
+        @endif
         @if ($metadata->ogImageUrl)
             <meta property="og:image" content="{{ $metadata->ogImageUrl }}">
+        @endif
+
+        <meta name="twitter:card" content="{{ $metadata->ogImageUrl ? 'summary_large_image' : 'summary' }}">
+        <meta name="twitter:title" content="{{ $metadata->ogTitle }}">
+        <meta name="twitter:description" content="{{ $metadata->ogDescription }}">
+        @if ($metadata->ogImageUrl)
+            <meta name="twitter:image" content="{{ $metadata->ogImageUrl }}">
         @endif
 
         @foreach ($metadata->alternates as $locale => $url)

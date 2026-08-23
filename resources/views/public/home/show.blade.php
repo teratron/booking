@@ -19,7 +19,7 @@
         @if ($bannerTop)
             <section class="mb-10">
                 <a href="{{ route('banners.click', ['banner' => $bannerTop->id]) }}">
-                    <img src="{{ $bannerTop->getFirstMediaUrl('desktop_creative') }}" alt="{{ $bannerTop->link_text }}" class="w-full rounded-lg">
+                    <x-public.banner-creative :banner="$bannerTop" class="w-full rounded-lg" />
                 </a>
             </section>
         @endif
@@ -77,7 +77,7 @@
         @if ($bannerMid)
             <section class="mb-10">
                 <a href="{{ route('banners.click', ['banner' => $bannerMid->id]) }}">
-                    <img src="{{ $bannerMid->getFirstMediaUrl('desktop_creative') }}" alt="{{ $bannerMid->link_text }}" class="w-full rounded-lg">
+                    <x-public.banner-creative :banner="$bannerMid" class="w-full rounded-lg" />
                 </a>
             </section>
         @endif
@@ -195,7 +195,7 @@
                 <div class="mt-4 flex flex-wrap items-center gap-6">
                     @foreach ($partners as $partner)
                         <a href="{{ route('banners.click', ['banner' => $partner->id]) }}" class="block h-12">
-                            <img src="{{ $partner->getFirstMediaUrl('desktop_creative') }}" alt="{{ $partner->link_text }}" class="h-full w-auto object-contain">
+                            <x-public.banner-creative :banner="$partner" class="h-full w-auto object-contain" />
                         </a>
                     @endforeach
                 </div>
@@ -206,7 +206,7 @@
         @if ($bannerBottom)
             <section>
                 <a href="{{ route('banners.click', ['banner' => $bannerBottom->id]) }}">
-                    <img src="{{ $bannerBottom->getFirstMediaUrl('desktop_creative') }}" alt="{{ $bannerBottom->link_text }}" class="w-full rounded-lg">
+                    <x-public.banner-creative :banner="$bannerBottom" class="w-full rounded-lg" />
                 </a>
             </section>
         @endif
