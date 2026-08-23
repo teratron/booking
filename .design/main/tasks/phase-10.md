@@ -140,7 +140,7 @@ same local PHP available.
 - [x] [T-10F03] Wire `.env` map-tile and CAPTCHA values into the settings registry
 - [x] [T-10F04] Complete the Open Graph tag set and default image fallback
 - [x] [T-10F05] Render the banner's mobile creative on narrow viewports
-- [ ] [T-10F06] Validation
+- [x] [T-10F06] Validation
 
 ### Track G — Review Submission
 
@@ -372,7 +372,8 @@ same local PHP available.
 
 - **Goal:** Verify `T-10F01`–`05` against their specs and `qa-deep-findings.md` F-13/F-14/F-16/F-20/F-21.
 - **Method:** Feature test per finding; a browser check for `T-10F05`'s two viewport cases.
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** Each of `T-10F01`–`05` already carried its own dedicated feature-test coverage as it landed (`PublicNewsAndPromotionsTest.php` for F-13; `BackupAdministrationTest.php` for F-14; `PublicMapTest.php` + `SeoAdministrationTest.php` for F-16; `PublicObjectProfileTest.php` for F-20; `PublicHomeTest.php` plus the live browser pass for F-21), so this task's own gate is the full-suite regression: 1025 passed, 3 skipped, 0 failed (1028 total, `slow` group excluded), Pint clean codebase-wide, PHPStan level 8 clean, `composer audit` clean, `composer unused` clean.
 
 ### Track G — Review Submission
 
