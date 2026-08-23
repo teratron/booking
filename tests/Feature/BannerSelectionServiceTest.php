@@ -349,3 +349,28 @@ it('invalidates both the origin and destination slot when a banner is reassigned
     expect(Cache::tags(["slot:{$slotA->id}"])->get('probe'))->toBeNull()
         ->and(Cache::tags(["slot:{$slotB->id}"])->get('probe'))->toBeNull();
 });
+
+it('increments the winning banner\'s lifetime impressions counter atomically alongside the event', function (): void {
+    Queue::fake();
+
+    $slot = selectionSlot();
+    $banner = selectionBanner($slot->id);
+
+    expect($banner->impressions)->toBe(0);
+
+    app(BannerSelectionService::class)->forSlot($slot);
+    app(BannerSelectionService::class)->forSlot($slot);
+
+    expect($banner->fresh()->impressions)->toBe(2);
+});
+
+it('never increments impressions for a banner the pipeline did not select', function (): void {
+    Queue::fake();
+
+    $slot = selectionSlot();
+    $loser = selectionBanner($slot->id, ['is_active' => false]);
+
+    app(BannerSelectionService::class)->forSlot($slot);
+
+    expect($loser->fresh()->impressions)->toBe(0);
+});

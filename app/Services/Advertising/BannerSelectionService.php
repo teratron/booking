@@ -92,6 +92,18 @@ final class BannerSelectionService
             static fn (mixed $value): bool => $value !== null,
         ));
 
+        // The lifetime counter the back-office list and export both read.
+        // Incremented here, synchronously, rather than derived from
+        // `stat_dailies` at read time or by a rollup job: the dimensional
+        // breakdown (period, territory, locale) still comes from the event
+        // pipeline above — {@see \App\Services\Analytics\PortalReportingService::bannerClickThroughRate()}
+        // — this column exists only for the one figure that has no
+        // dimension, "how many times ever," and a same-request atomic
+        // `UPDATE … SET impressions = impressions + 1` can never drift from
+        // the count the event pipeline will eventually agree on, unlike a
+        // periodic batch that would leave the list stale between runs.
+        $banner->increment('impressions');
+
         return $banner;
     }
 

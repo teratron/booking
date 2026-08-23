@@ -54,6 +54,8 @@ final class Banner extends Model implements HasMedia, TranslatableContract
             'is_active' => 'boolean',
             'starts_at' => 'date',
             'ends_at' => 'date',
+            'impressions' => 'integer',
+            'clicks' => 'integer',
         ];
     }
 

@@ -33,6 +33,13 @@ final class BannerClickController extends Controller
 
         $events->capture('banner_click', $banner);
 
+        // The lifetime counter the back-office list, its click-through-rate
+        // column, and the export all read — see the matching comment on
+        // {@see \App\Services\Advertising\BannerSelectionService::forSlot()}
+        // for why an atomic same-request increment, not a rollup, is what
+        // keeps this in agreement with the event pipeline.
+        $banner->increment('clicks');
+
         return redirect()->away($banner->destination_link);
     }
 }

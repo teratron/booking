@@ -124,3 +124,25 @@ it('still serves a click on the last day of the campaign window', function (): v
     $this->get(route('banners.click', $banner))
         ->assertRedirect('https://advertiser.example/landing');
 });
+
+it('increments the banner\'s lifetime clicks counter atomically alongside the event', function (): void {
+    $banner = clickRedirectBanner();
+
+    expect($banner->clicks)->toBe(0);
+
+    $this->get(route('banners.click', $banner));
+    $this->get(route('banners.click', $banner));
+
+    expect($banner->fresh()->clicks)->toBe(2);
+});
+
+it('never increments clicks for a banner outside its own flight window', function (): void {
+    $banner = clickRedirectBanner([
+        'starts_at' => now()->subMonth()->toDateString(),
+        'ends_at' => now()->subDay()->toDateString(),
+    ]);
+
+    $this->get(route('banners.click', $banner))->assertNotFound();
+
+    expect($banner->fresh()->clicks)->toBe(0);
+});
