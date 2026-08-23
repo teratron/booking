@@ -6,6 +6,7 @@ use App\Jobs\CaptureStatEventJob;
 use App\Models\Object_;
 use App\Models\Room;
 use App\Models\User;
+use App\Services\Cabinet\AvailabilityToggleService;
 use App\Services\Catalog\ObjectProfilePresenter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -365,7 +366,11 @@ it('404s an object that is not published', function (): void {
     $this->get(publicObjectUrl($object))->assertNotFound();
 });
 
-it('captures one object_page_view and one photo_view per photo through EventCaptureService', function (): void {
+it('captures one object_page_view and at most one photo_view regardless of photo count, through EventCaptureService', function (): void {
+    // F-19: this used to fire one photo_view per photo on every single page
+    // view, whether or not the visitor ever opened the gallery — the stat
+    // was structurally page views × photo count. Now it fires at most once
+    // per render, present only when there is a gallery to show at all.
     Bus::fake();
     Storage::fake('public');
     $fixture = publicObjectRegistry();
@@ -373,6 +378,7 @@ it('captures one object_page_view and one photo_view per photo through EventCapt
     $object = publicObjectMake($fixture, $type['typeId'], 'Tracked Hotel');
     $object->addMedia(UploadedFile::fake()->image('a.jpg'))->toMediaCollection('photos');
     $object->addMedia(UploadedFile::fake()->image('b.jpg'))->toMediaCollection('photos');
+    $object->addMedia(UploadedFile::fake()->image('c.jpg'))->toMediaCollection('photos');
 
     $this->get(publicObjectUrl($object))->assertOk();
 
@@ -381,7 +387,46 @@ it('captures one object_page_view and one photo_view per photo through EventCapt
         'subjectId' => (new ReflectionProperty($job, 'subjectId'))->getValue($job),
     ]);
 
-    expect($dispatched)->toHaveCount(3)
+    expect($dispatched)->toHaveCount(2)
         ->and($dispatched->where('subjectId', $object->id)->where('kind', 'object_page_view'))->toHaveCount(1)
-        ->and($dispatched->where('subjectId', $object->id)->where('kind', 'photo_view'))->toHaveCount(2);
+        ->and($dispatched->where('subjectId', $object->id)->where('kind', 'photo_view'))->toHaveCount(1);
+});
+
+it('emits no photo_view for a fixture with no gallery at all', function (): void {
+    Bus::fake();
+    $fixture = publicObjectRegistry();
+    $type = publicObjectMakeAccommodationType();
+    $object = publicObjectMake($fixture, $type['typeId'], 'Photoless Hotel');
+
+    $this->get(publicObjectUrl($object))->assertOk();
+
+    $dispatched = Bus::dispatched(CaptureStatEventJob::class)->map(fn (CaptureStatEventJob $job): string => (new ReflectionProperty($job, 'kind'))->getValue($job));
+
+    expect($dispatched)->toContain('object_page_view')
+        ->and($dispatched)->not->toContain('photo_view');
+});
+
+it('reflects an owner-toggled availability status immediately, not the profile cache left over from the previous request', function (): void {
+    // F-08: the profile cache this page reads was written untagged, so
+    // AvailabilityToggleService's own tagged flush never reached it — a
+    // toggle was invisible on the object page until the TTL happened to
+    // expire on its own, well past the toggle's whole point of immediacy.
+    // The badge itself only ever renders the positive "available" state
+    // (show.blade.php has no branch for unavailable/unspecified) — the
+    // observable effect of a toggle away from "available" is the badge's
+    // disappearance, not a second piece of text replacing it.
+    $fixture = publicObjectRegistry();
+    $type = publicObjectMakeAccommodationType();
+    $owner = User::factory()->create();
+    $object = publicObjectMake($fixture, $type['typeId'], 'Toggle Hotel', ['owner_id' => $owner->id]);
+
+    $this->get(publicObjectUrl($object))
+        ->assertOk()
+        ->assertSee(__('public.catalog.card.availability.available'));
+
+    app(AvailabilityToggleService::class)->toggle($object->fresh(), $owner);
+
+    $this->get(publicObjectUrl($object))
+        ->assertOk()
+        ->assertDontSee(__('public.catalog.card.availability.available'));
 });

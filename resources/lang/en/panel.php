@@ -676,7 +676,7 @@ return [
         'kinds' => [
             'object_card_view' => 'Card views',
             'object_page_view' => 'Page views',
-            'photo_view' => 'Photo views',
+            'photo_view' => 'Views with photos',
             'contact_click' => 'Contact clicks',
             'banner_impression' => 'Banner impressions',
             'banner_click' => 'Banner clicks',
@@ -1565,7 +1565,7 @@ return [
             'title' => 'Statistics',
             'object_name' => 'Object',
             'page_views' => 'Page views',
-            'photo_views' => 'Photo views',
+            'photo_views' => 'Views with photos',
             'contact_clicks_total' => 'Contact clicks (total)',
             'favorite_count' => 'Favorites',
             'channel_breakdown_title' => 'Contact clicks by channel',

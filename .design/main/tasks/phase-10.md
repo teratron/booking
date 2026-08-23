@@ -123,9 +123,9 @@ same local PHP available.
 
 ### Track D — Cache & Analytics Correctness
 
-- [ ] [T-10D01] Tag the three untagged public read caches
-- [ ] [T-10D02] Emit one `photo_view` per interaction, not one per photo per page view
-- [ ] [T-10D03] Validation
+- [x] [T-10D01] Tag the three untagged public read caches
+- [x] [T-10D02] Emit one `photo_view` per interaction, not one per photo per page view
+- [x] [T-10D03] Validation
 
 ### Track E — Role Data & Schema Hygiene
 
@@ -263,24 +263,27 @@ same local PHP available.
 **[T-10D01] Tag the three untagged public read caches**
 
 - **Spec:** [l1-availability-status.md](../specifications/l1-availability-status.md), [l1-object-catalog.md](../specifications/l1-object-catalog.md)
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** Toggle an object's availability status through `AvailabilityToggleService`; re-request its public page within the cache TTL — the badge reflects the new status, not the stale one.
 - **Notes (finding):** Five write paths invalidate by tag (`Cache::tags([...])->flush()`); the three public reads (`ObjectPageController`, `CatalogQueryService::search()`, `TerritoryPageController`) write `Cache::remember()` untagged, so no tagged flush ever reaches them. `qa-deep-findings.md` F-08. Add an architecture test asserting no `Cache::remember()` call in `app/Http/Controllers/Public` or `app/Services/Catalog` is untagged, per the finding's own recommendation — the class of bug that reads correct from both sides alone deserves a mechanical check, not just a fix.
+- **Changes:** `ObjectPageController` now tags its profile cache `['catalog', "territory:{id}", "object:{id}"]` — the exact set `AvailabilityToggleService`/`AvailabilityAdministrationService`/`BumpService`/`PlacementLifecycleService` already flush. `TerritoryPageController`'s sidebar cache (news/promotions/child territories) tags `['content', "territory:{id}"]`, matching `ContentPublicationService::invalidate()`'s own tag set. `CatalogQueryService::search()` tags `['catalog']` plus `"territory:{id}"` when the criteria carries one. New architecture test `tests/Architecture/CachedReadTaggingTest.php` content-scans `app/Http/Controllers/Public` and `app/Services/Catalog` for the literal `Cache::remember(` substring, which only the untagged form contains — red against all three files before the fix (confirmed via `git stash`), green after. New feature test in `tests/Feature/Public/PublicObjectProfileTest.php` toggles availability via the real service and re-requests the page, asserting the "Vacancies available" badge disappears (the view has no branch for `unavailable`/`unspecified`, so absence of the positive badge is the correct, observable signal) — red on unfixed code (stale badge persisted across the toggle), green after.
 
 **[T-10D02] Emit one `photo_view` per interaction, not one per photo per page view**
 
 - **Spec:** [l1-analytics.md](../specifications/l1-analytics.md)
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** Rendering an object page with 20 photos emits at most one `photo_view` event for that render, not 20.
 - **Notes (finding):** `ObjectPageController` loops `getMedia('photos')->count()` times, capturing one event per photo on every page view regardless of whether the visitor ever opened the gallery — multiplies write volume on the hottest page and the owner's "photo views" statistic is structurally `page views × photo count`. `qa-deep-findings.md` F-19. Minimal fix per the finding: emit at most one `photo_view` when the gallery is present, and relabel the statistic; a real per-photo signal (gallery open/advance) is future work, not this task's scope.
+- **Changes:** Replaced the per-photo loop with a single conditional capture when `getMedia('photos')->isNotEmpty()`. Relabelled `panel.analytics.kinds.photo_view` and `panel.cabinet.statistics.photo_views` from "Photo views"/"Просмотры фото" to "Views with photos"/"Просмотры с фото" in both `en` and `ru` — the metric now literally counts renders that had a gallery, not photo interactions. Updated the two existing tests that hard-coded the old per-photo count (`PublicObjectProfileTest`'s event-capture test, now asserting exactly one `photo_view` for a three-photo fixture plus a new zero-photo case; `PublicEventEmissionInvariantTest`'s queued-jobs count, 3 → 2) — both red against unfixed code (`git stash` on the controller reproduced the old per-photo counts), green after. The four other test files referencing `photo_view` (`AnalyticsReportingTest`, `AnalyticsRollupAndCompactionTest`, `CabinetStatisticsTest`, `EventCaptureServiceTest`) call `EventCaptureService::capture()` or insert raw `stat_events` rows directly, never through this controller, so none needed updating — confirmed by running all four (24 tests, all green).
 
 **[T-10D03] Validation**
 
 - **Goal:** Verify `T-10D01`/`02` against `qa-deep-findings.md` F-08/F-19.
 - **Method:** Feature test per finding; the new architecture test from `T-10D01`'s notes.
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** Wider regression pass — `tests/Feature/Public` (all files), `tests/Feature/Cabinet/CabinetAvailabilityToggleTest.php`, `tests/Architecture` (all files): 181/181 pass, including the realistic-volume benchmark test seeded at 300 objects/9 territories, all three surfaces within their cache-hit/cache-miss budgets. `composer lint`/`analyse` clean on the touched `app/` files.
 
 ### Track E — Role Data & Schema Hygiene
 

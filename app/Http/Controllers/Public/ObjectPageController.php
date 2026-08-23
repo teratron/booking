@@ -63,16 +63,18 @@ final class ObjectPageController extends Controller
             'country_id' => $object->country_id,
         ]);
 
-        $photoCount = $object->getMedia('photos')->count();
-
-        for ($i = 0; $i < $photoCount; $i++) {
+        // One event per page view that has a gallery to show, never one per
+        // photo — the visitor viewed the page once regardless of how many
+        // photos it carries; a per-photo signal belongs to a real gallery
+        // open/advance interaction, which this event does not yet track.
+        if ($object->getMedia('photos')->isNotEmpty()) {
             $this->events->capture('photo_view', $object, [
                 'territory_id' => $object->territory_id,
                 'country_id' => $object->country_id,
             ]);
         }
 
-        $profile = Cache::remember(
+        $profile = Cache::tags(['catalog', "territory:{$object->territory_id}", "object:{$object->id}"])->remember(
             sprintf('object:profile:%d:%s', $object->id, $lang),
             self::PROFILE_CACHE_TTL_SECONDS,
             fn () => $this->presenter->present($object)

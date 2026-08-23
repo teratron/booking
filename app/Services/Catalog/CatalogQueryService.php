@@ -121,7 +121,13 @@ final class CatalogQueryService
      */
     public function search(CatalogSearchCriteria $criteria, ?ScopeConstraint $constraint = null): LengthAwarePaginator
     {
-        return Cache::remember(
+        $tags = ['catalog'];
+
+        if ($criteria->territory instanceof Territory) {
+            $tags[] = "territory:{$criteria->territory->id}";
+        }
+
+        return Cache::tags($tags)->remember(
             $this->cacheKey($criteria, $constraint),
             self::RESULT_CACHE_TTL_SECONDS,
             function () use ($criteria, $constraint): LengthAwarePaginator {

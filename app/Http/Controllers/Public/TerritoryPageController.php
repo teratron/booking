@@ -79,7 +79,7 @@ final class TerritoryPageController extends Controller
             return $this->showTypedCatalog($request, $lang, $territory, $objectType);
         }
 
-        $sidebar = Cache::remember(
+        $sidebar = Cache::tags(['content', "territory:{$territory->id}"])->remember(
             sprintf('territory:sidebar:%d:%s', $territory->id, $lang),
             self::SIDEBAR_CACHE_TTL_SECONDS,
             fn (): array => [

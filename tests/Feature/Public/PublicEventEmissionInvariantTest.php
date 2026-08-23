@@ -154,7 +154,10 @@ it('never writes a stat event synchronously when a card renders', function (): v
     Queue::assertPushed(CaptureStatEventJob::class, 1);
 });
 
-it('never writes stat events synchronously when the object page renders, page-view and every photo-view included', function (): void {
+it('never writes stat events synchronously when the object page renders, page-view and its one gallery-present photo-view included', function (): void {
+    // Only ever one photo_view per render regardless of photo count (F-19)
+    // — the job count here is page-view (1) + photo-view (1), not one job
+    // per photo.
     Queue::fake();
     Storage::fake('public');
     $fixture = eventInvariantRegistry();
@@ -165,7 +168,7 @@ it('never writes stat events synchronously when the object page renders, page-vi
     $this->get(publicObjectUrl($object))->assertOk();
 
     expect(StatEvent::query()->count())->toBe(0);
-    Queue::assertPushed(CaptureStatEventJob::class, 3);
+    Queue::assertPushed(CaptureStatEventJob::class, 2);
 });
 
 it('never writes a stat event synchronously when a contact click redirects', function (): void {

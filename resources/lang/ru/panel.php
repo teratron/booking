@@ -675,7 +675,7 @@ return [
         'kinds' => [
             'object_card_view' => 'Просмотры карточки',
             'object_page_view' => 'Просмотры страницы',
-            'photo_view' => 'Просмотры фото',
+            'photo_view' => 'Просмотры с фото',
             'contact_click' => 'Клики по контактам',
             'banner_impression' => 'Показы баннеров',
             'banner_click' => 'Клики по баннерам',
@@ -1564,7 +1564,7 @@ return [
             'title' => 'Статистика',
             'object_name' => 'Объект',
             'page_views' => 'Просмотры страницы',
-            'photo_views' => 'Просмотры фото',
+            'photo_views' => 'Просмотры с фото',
             'contact_clicks_total' => 'Клики по контактам (всего)',
             'favorite_count' => 'В избранном',
             'channel_breakdown_title' => 'Клики по контактам по каналам',
