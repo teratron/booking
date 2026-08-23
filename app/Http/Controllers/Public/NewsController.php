@@ -7,8 +7,10 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Models\NewsItem;
 use App\Services\Seo\MetadataResolver;
+use App\Services\Seo\PublicSlugResolver;
 use App\Services\Seo\StructuredDataBuilder;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 
 /**
  * The portal-wide public news feed and each item's own detail page. A news
@@ -23,6 +25,7 @@ final class NewsController extends Controller
     public function __construct(
         private readonly MetadataResolver $metadata,
         private readonly StructuredDataBuilder $structuredData,
+        private readonly PublicSlugResolver $resolver,
     ) {}
 
     public function index(string $lang): View
@@ -42,18 +45,34 @@ final class NewsController extends Controller
     }
 
     /**
-     * `$lang` is unused but must stay declared first: Laravel's controller
-     * dependency resolver splices route parameters by reflection position,
-     * and a leading route segment with no corresponding method parameter
-     * throws that splice out of alignment for the model that follows.
+     * `$slug` binds by translated slug, not the raw primary key — a
+     * non-existent slug 404s cleanly instead of reaching Postgres as an
+     * invalid `bigint` comparison. A numeric segment matching a real,
+     * publicly visible item's own id redirects permanently to its
+     * canonical slug URL, so a link built before slug addressing existed
+     * keeps working.
      */
-    public function show(string $lang, NewsItem $newsItem): View
+    public function show(string $lang, string $slug): View|RedirectResponse
     {
+        $newsItem = $this->resolver->resolveNewsSlug($lang, $slug);
+
+        if (! $newsItem instanceof NewsItem) {
+            if (ctype_digit($slug)) {
+                $byId = NewsItem::query()->with('translations')->find((int) $slug);
+
+                if ($byId instanceof NewsItem && $this->isPubliclyVisible($byId) && $byId->slug !== null) {
+                    return redirect()->route('public.news.show', ['lang' => $lang, 'slug' => $byId->slug], 301);
+                }
+            }
+
+            abort(404);
+        }
+
         abort_unless($this->isPubliclyVisible($newsItem), 404);
 
         $newsItem->loadMissing(['translations', 'territory.translations', 'territory.country', 'object.translations', 'author']);
 
-        $selfUrl = route('public.news.show', ['lang' => $lang, 'newsItem' => $newsItem]);
+        $selfUrl = route('public.news.show', ['lang' => $lang, 'slug' => $newsItem->slug]);
 
         return view('public.news.show', [
             'newsItem' => $newsItem,

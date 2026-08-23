@@ -83,7 +83,7 @@
             <ul class="mt-2 flex flex-col gap-1 text-sm text-white/90">
                 @foreach ($groups as $group)
                     <li>
-                        <x-public.nav-link :href="$urlIfRouted('public.catalog.index', ['type' => $group->key])">
+                        <x-public.nav-link :href="$urlIfRouted('public.catalog.index', ['type' => $group->id])">
                             {{ $group->name }}
                         </x-public.nav-link>
                     </li>

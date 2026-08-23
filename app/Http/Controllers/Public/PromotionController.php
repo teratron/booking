@@ -9,9 +9,11 @@ use App\Models\Object_;
 use App\Models\Promotion;
 use App\Models\Territory;
 use App\Services\Seo\MetadataResolver;
+use App\Services\Seo\PublicSlugResolver;
 use App\Services\Seo\PublicUrlGenerator;
 use App\Services\Seo\StructuredDataBuilder;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 
 /**
  * A single promotion's own detail page. Promotions are always scoped to
@@ -25,16 +27,33 @@ final class PromotionController extends Controller
         private readonly PublicUrlGenerator $urls,
         private readonly MetadataResolver $metadata,
         private readonly StructuredDataBuilder $structuredData,
+        private readonly PublicSlugResolver $resolver,
     ) {}
 
     /**
-     * `$lang` is unused but must stay declared first: Laravel's controller
-     * dependency resolver splices route parameters by reflection position,
-     * and a leading route segment with no corresponding method parameter
-     * throws that splice out of alignment for the model that follows.
+     * `$slug` binds by translated slug, not the raw primary key — a
+     * non-existent slug 404s cleanly instead of reaching Postgres as an
+     * invalid `bigint` comparison. A numeric segment matching a real,
+     * publicly visible promotion's own id redirects permanently to its
+     * canonical slug URL, so a link built before slug addressing existed
+     * keeps working.
      */
-    public function __invoke(string $lang, Promotion $promotion): View
+    public function __invoke(string $lang, string $slug): View|RedirectResponse
     {
+        $promotion = $this->resolver->resolvePromotionSlug($lang, $slug);
+
+        if (! $promotion instanceof Promotion) {
+            if (ctype_digit($slug)) {
+                $byId = Promotion::query()->with('translations')->find((int) $slug);
+
+                if ($byId instanceof Promotion && $this->isPubliclyVisible($byId) && $byId->slug !== null) {
+                    return redirect()->route('public.promotions.show', ['lang' => $lang, 'slug' => $byId->slug], 301);
+                }
+            }
+
+            abort(404);
+        }
+
         abort_unless($this->isPubliclyVisible($promotion), 404);
 
         $promotion->loadMissing(['translations', 'object.translations', 'territory.translations', 'territory.country']);
@@ -48,7 +67,7 @@ final class PromotionController extends Controller
         abort_unless($object instanceof Object_ && $territory instanceof Territory, 500);
 
         $objectUrl = $this->urls->objectUrl($object, $lang) ?? url()->current();
-        $selfUrl = route('public.promotions.show', ['lang' => $lang, 'promotion' => $promotion]);
+        $selfUrl = route('public.promotions.show', ['lang' => $lang, 'slug' => $promotion->slug]);
 
         return view('public.promotions.show', [
             'promotion' => $promotion,

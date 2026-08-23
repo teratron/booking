@@ -10,7 +10,7 @@
                     <x-public.content-card
                         :title="$article->title"
                         :summary="$article->summary"
-                        :href="route('public.blog.show', ['lang' => app()->getLocale(), 'article' => $article])"
+                        :href="route('public.blog.show', ['lang' => app()->getLocale(), 'slug' => $article->slug])"
                         :kicker="$article->category?->name"
                     >
                         @if ($article->tags->isNotEmpty())

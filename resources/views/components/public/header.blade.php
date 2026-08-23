@@ -13,7 +13,7 @@
     $urlIfRouted = fn (string $name, array $params = []) => \Illuminate\Support\Facades\Route::has($name)
         ? route($name, ['lang' => $lang, ...$params])
         : null;
-    $typeUrl = fn (string $key) => $urlIfRouted('public.catalog.index', ['type' => $key]);
+    $typeUrl = fn (int $id) => $urlIfRouted('public.catalog.index', ['type' => $id]);
     $ownerEntryHref = \Illuminate\Support\Facades\Route::has('filament.cabinet.auth.login')
         ? route('filament.cabinet.auth.login')
         : null;
@@ -64,13 +64,13 @@
                     @if (count($group->children) > 0)
                         <div class="mt-1 flex flex-col gap-1 pl-3">
                             @foreach ($group->children as $child)
-                                <x-public.nav-link :href="$typeUrl($child->key)" class="text-sm text-white">
+                                <x-public.nav-link :href="$typeUrl($child->id)" class="text-sm text-white">
                                     {{ $child->name }}
                                 </x-public.nav-link>
                             @endforeach
                         </div>
                     @else
-                        <x-public.nav-link :href="$typeUrl($group->key)" class="text-sm text-white">
+                        <x-public.nav-link :href="$typeUrl($group->id)" class="text-sm text-white">
                             {{ $group->name }}
                         </x-public.nav-link>
                     @endif

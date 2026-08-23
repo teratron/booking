@@ -4,11 +4,17 @@ declare(strict_types=1);
 
 namespace App\Services\Seo;
 
+use App\Models\Article;
+use App\Models\ArticleTranslation;
 use App\Models\Country;
+use App\Models\NewsItem;
+use App\Models\NewsTranslation;
 use App\Models\Object_;
 use App\Models\ObjectTranslation;
 use App\Models\ObjectType;
 use App\Models\ObjectTypeTranslation;
+use App\Models\Promotion;
+use App\Models\PromotionTranslation;
 use App\Models\Territory;
 use App\Models\TerritoryTranslation;
 use Illuminate\Support\Str;
@@ -107,6 +113,60 @@ final class PublicSlugResolver
         }
 
         return Object_::query()->find($translation->object_id);
+    }
+
+    /**
+     * Returns `null` — never throws — when no translation matches; carries
+     * no opinion on whether the resolved item is publicly visible.
+     */
+    public function resolveNewsSlug(string $locale, string $slug): ?NewsItem
+    {
+        $translation = NewsTranslation::query()
+            ->where('locale', $locale)
+            ->where('slug', $slug)
+            ->first();
+
+        if (! $translation instanceof NewsTranslation) {
+            return null;
+        }
+
+        return NewsItem::query()->find($translation->news_item_id);
+    }
+
+    /**
+     * Returns `null` — never throws — when no translation matches; carries
+     * no opinion on whether the resolved article is publicly visible.
+     */
+    public function resolveArticleSlug(string $locale, string $slug): ?Article
+    {
+        $translation = ArticleTranslation::query()
+            ->where('locale', $locale)
+            ->where('slug', $slug)
+            ->first();
+
+        if (! $translation instanceof ArticleTranslation) {
+            return null;
+        }
+
+        return Article::query()->find($translation->article_id);
+    }
+
+    /**
+     * Returns `null` — never throws — when no translation matches; carries
+     * no opinion on whether the resolved promotion is publicly visible.
+     */
+    public function resolvePromotionSlug(string $locale, string $slug): ?Promotion
+    {
+        $translation = PromotionTranslation::query()
+            ->where('locale', $locale)
+            ->where('slug', $slug)
+            ->first();
+
+        if (! $translation instanceof PromotionTranslation) {
+            return null;
+        }
+
+        return Promotion::query()->find($translation->promotion_id);
     }
 
     /**

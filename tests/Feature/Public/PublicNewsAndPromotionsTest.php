@@ -127,11 +127,11 @@ it('lists published news in the feed, sorts pinned items first, and excludes an 
     expect(strpos($feedHtml, 'Older Pinned News'))->toBeLessThan(strpos($feedHtml, 'Newer Unpinned News'));
 
     // Dropped from the feed, but its own page is still reachable.
-    $this->get(route('public.news.show', ['lang' => 'en', 'newsItem' => $elapsedId]))
+    $this->get(route('public.news.show', ['lang' => 'en', 'slug' => "elapsed-news-{$elapsedId}"]))
         ->assertOk()
         ->assertSee('Elapsed News');
 
-    $this->get(route('public.news.show', ['lang' => 'en', 'newsItem' => $olderPinnedId]))
+    $this->get(route('public.news.show', ['lang' => 'en', 'slug' => "older-pinned-news-{$olderPinnedId}"]))
         ->assertOk()
         ->assertSee('Older Pinned News');
 });
@@ -149,8 +149,8 @@ it('makes a draft or withdrawn news item unreachable on its own page', function 
     $draftId = publicNewsMakeItem('Draft News', ['status' => 'draft']);
     $withdrawnId = publicNewsMakeItem('Withdrawn News', ['status' => 'withdrawn']);
 
-    $this->get(route('public.news.show', ['lang' => 'en', 'newsItem' => $draftId]))->assertNotFound();
-    $this->get(route('public.news.show', ['lang' => 'en', 'newsItem' => $withdrawnId]))->assertNotFound();
+    $this->get(route('public.news.show', ['lang' => 'en', 'slug' => "draft-news-{$draftId}"]))->assertNotFound();
+    $this->get(route('public.news.show', ['lang' => 'en', 'slug' => "withdrawn-news-{$withdrawnId}"]))->assertNotFound();
 });
 
 it('excludes an elapsed promotion from the section that lists it, proven on the territory page, while its own page stays reachable', function (): void {
@@ -169,7 +169,7 @@ it('excludes an elapsed promotion from the section that lists it, proven on the 
     // Dropped from the section, but its own page is still reachable —
     // its own `status` has not been transitioned by the (separately
     // owned) archival job in this fixture.
-    $this->get(route('public.promotions.show', ['lang' => 'en', 'promotion' => $elapsedId]))
+    $this->get(route('public.promotions.show', ['lang' => 'en', 'slug' => "elapsed-promotion-{$elapsedId}"]))
         ->assertOk()
         ->assertSee('Elapsed Promotion');
 });
@@ -179,6 +179,39 @@ it('makes a draft or archived promotion unreachable on its own page', function (
     $draftId = publicNewsMakePromotion($fixture, 'Draft Promotion', ['status' => 'draft']);
     $archivedId = publicNewsMakePromotion($fixture, 'Archived Promotion', ['status' => 'archived']);
 
-    $this->get(route('public.promotions.show', ['lang' => 'en', 'promotion' => $draftId]))->assertNotFound();
-    $this->get(route('public.promotions.show', ['lang' => 'en', 'promotion' => $archivedId]))->assertNotFound();
+    $this->get(route('public.promotions.show', ['lang' => 'en', 'slug' => "draft-promotion-{$draftId}"]))->assertNotFound();
+    $this->get(route('public.promotions.show', ['lang' => 'en', 'slug' => "archived-promotion-{$archivedId}"]))->assertNotFound();
+});
+
+it('404s a non-existent news or promotion slug, never a 500 from an invalid bigint comparison', function (): void {
+    // F-03: these routes used to bind on the raw primary key — any
+    // non-integer segment reached Postgres as a `bigint` comparison and
+    // threw SQLSTATE[22P02] before Laravel could turn a miss into a 404.
+    publicNewsRegistry();
+
+    $this->get('/en/news/not-a-real-thing')->assertNotFound();
+    $this->get('/en/promotions/not-a-real-thing')->assertNotFound();
+});
+
+it('redirects a legacy numeric-id news or promotion link permanently to its slug URL', function (): void {
+    $fixture = publicNewsRegistry();
+    $newsId = publicNewsMakeItem('Redirect News');
+    $promotionId = publicNewsMakePromotion($fixture, 'Redirect Promotion');
+
+    $this->get("/en/news/{$newsId}")
+        ->assertRedirect(route('public.news.show', ['lang' => 'en', 'slug' => "redirect-news-{$newsId}"]))
+        ->assertStatus(301);
+
+    $this->get("/en/promotions/{$promotionId}")
+        ->assertRedirect(route('public.promotions.show', ['lang' => 'en', 'slug' => "redirect-promotion-{$promotionId}"]))
+        ->assertStatus(301);
+});
+
+it('404s a numeric-id link for a news item or promotion that is not publicly visible, rather than redirecting to it', function (): void {
+    $fixture = publicNewsRegistry();
+    $draftNewsId = publicNewsMakeItem('Hidden News', ['status' => 'draft']);
+    $draftPromotionId = publicNewsMakePromotion($fixture, 'Hidden Promotion', ['status' => 'draft']);
+
+    $this->get("/en/news/{$draftNewsId}")->assertNotFound();
+    $this->get("/en/promotions/{$draftPromotionId}")->assertNotFound();
 });

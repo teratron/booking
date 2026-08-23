@@ -149,6 +149,33 @@ it('reads navigation entries from the object-type registry rather than a hard-co
     $response->assertSee('Glamping')->assertDontSee('Retired Type');
 });
 
+it('links every category entry — header, mobile drawer, and footer — by the type\'s numeric id, not its string key', function (): void {
+    // F-10: the footer passed the object type's key while CatalogSearch
+    // declares public ?int $type — a non-numeric value can't bind, so the
+    // filter silently drops. The same $typeUrl(string $key) pattern was
+    // duplicated into the desktop nav and the mobile drawer too, so all
+    // three category-link surfaces carried the identical dead link, not
+    // only the footer the original finding named.
+    publicShellRegistry();
+    registerPublicShellTestRoute();
+
+    $typeId = DB::table('object_types')->insertGetId([
+        'key' => 'glamping', 'is_active' => true, 'display_order' => 1,
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('object_type_translations')->insert([
+        'object_type_id' => $typeId, 'locale' => 'en', 'name' => 'Glamping', 'slug' => 'glamping',
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    $response = $this->get('/en/__shell-test');
+    $expectedUrl = route('public.catalog.index', ['lang' => 'en', 'type' => $typeId]);
+
+    expect(substr_count((string) $response->getContent(), 'href="'.$expectedUrl.'"'))
+        ->toBeGreaterThanOrEqual(3)
+        ->and($response->getContent())->not->toContain('type=glamping');
+});
+
 it('renders breadcrumbs as links on a page below the home page', function (): void {
     publicShellRegistry();
     registerPublicShellTestRoute();

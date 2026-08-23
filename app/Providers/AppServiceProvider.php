@@ -20,6 +20,7 @@ use App\Services\Authorization\ScopeAuthorizer;
 use App\Services\Localization\DatabaseOverlayLoader;
 use App\Services\Localization\LanguageRegistry;
 use App\Services\Settings\SettingsRepository;
+use App\Services\Shell\LocaleSwitchResolver;
 use Astrotomic\Translatable\Locales;
 use Filament\Facades\Filament;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -60,6 +61,15 @@ class AppServiceProvider extends ServiceProvider
         // scoping it backs can otherwise ask the same (user, object,
         // permission) question twice in one request.
         $this->app->singleton(CabinetAccessResolver::class);
+
+        // Singleton so its per-request object/territory resolution memo
+        // (see its own docblock) actually spans the whole request — the
+        // header's desktop and mobile language switchers each call
+        // `app(LocaleSwitchResolver::class)` directly, and the page's own
+        // hreflang alternates resolve a third, separately injected
+        // instance; without this, each of the three re-runs the same
+        // slug resolution from scratch.
+        $this->app->singleton(LocaleSwitchResolver::class);
     }
 
     /**

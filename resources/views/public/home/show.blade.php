@@ -89,7 +89,7 @@
                 <div class="mt-4 flex gap-4 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-4">
                     @foreach ($promotions as $promotion)
                         <x-public.nav-link
-                            :href="\Illuminate\Support\Facades\Route::has('public.promotions.show') ? route('public.promotions.show', ['lang' => app()->getLocale(), 'promotion' => $promotion->id]) : null"
+                            :href="\Illuminate\Support\Facades\Route::has('public.promotions.show') ? route('public.promotions.show', ['lang' => app()->getLocale(), 'slug' => $promotion->slug]) : null"
                             class="block w-64 shrink-0 rounded-lg border border-gray-200 p-4 sm:w-auto"
                         >
                             <p class="font-medium text-ink">{{ $promotion->title }}</p>
@@ -147,7 +147,7 @@
                 <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($newsItems as $newsItem)
                         <x-public.nav-link
-                            :href="\Illuminate\Support\Facades\Route::has('public.news.show') ? route('public.news.show', ['lang' => app()->getLocale(), 'newsItem' => $newsItem->id]) : null"
+                            :href="\Illuminate\Support\Facades\Route::has('public.news.show') ? route('public.news.show', ['lang' => app()->getLocale(), 'slug' => $newsItem->slug]) : null"
                             class="block rounded-lg border border-gray-200 p-4"
                         >
                             <span class="text-xs font-semibold uppercase text-brand">{{ __('public.shell.nav.news') }}</span>
@@ -156,7 +156,7 @@
                     @endforeach
                     @foreach ($articles as $article)
                         <x-public.nav-link
-                            :href="\Illuminate\Support\Facades\Route::has('public.blog.show') ? route('public.blog.show', ['lang' => app()->getLocale(), 'article' => $article->id]) : null"
+                            :href="\Illuminate\Support\Facades\Route::has('public.blog.show') ? route('public.blog.show', ['lang' => app()->getLocale(), 'slug' => $article->slug]) : null"
                             class="block rounded-lg border border-gray-200 p-4"
                         >
                             <span class="text-xs font-semibold uppercase text-brand">{{ __('public.shell.nav.blog') }}</span>

@@ -166,7 +166,7 @@ it('renders full body, author, category, tags, and real links to related objects
     /** @var Territory $territory */
     $territory = Territory::query()->findOrFail($fixture['territoryId']);
 
-    $response = $this->get(route('public.blog.show', ['lang' => 'en', 'article' => $articleId]));
+    $response = $this->get(route('public.blog.show', ['lang' => 'en', 'slug' => "full-article-{$articleId}"]));
 
     $objectHref = publicObjectUrl($object);
     $territoryHref = publicTerritoryUrl($territory);
@@ -192,6 +192,33 @@ it('makes a draft or future-scheduled article unreachable publicly', function ()
     $futureId = publicBlogMakeArticle(['publish_at' => now()->addDay()]);
     publicBlogGiveTranslation($futureId, 'Future Article');
 
-    $this->get(route('public.blog.show', ['lang' => 'en', 'article' => $draftId]))->assertNotFound();
-    $this->get(route('public.blog.show', ['lang' => 'en', 'article' => $futureId]))->assertNotFound();
+    $this->get(route('public.blog.show', ['lang' => 'en', 'slug' => "draft-article-{$draftId}"]))->assertNotFound();
+    $this->get(route('public.blog.show', ['lang' => 'en', 'slug' => "future-article-{$futureId}"]))->assertNotFound();
+});
+
+it('404s a non-existent article slug, never a 500 from an invalid bigint comparison', function (): void {
+    // F-03: this route used to bind on the raw primary key — any
+    // non-integer segment reached Postgres as a `bigint` comparison and
+    // threw SQLSTATE[22P02] before Laravel could turn a miss into a 404.
+    publicBlogRegistry();
+
+    $this->get('/en/blog/not-a-real-thing')->assertNotFound();
+});
+
+it('redirects a legacy numeric-id article link permanently to its slug URL', function (): void {
+    publicBlogRegistry();
+    $articleId = publicBlogMakeArticle(['publish_at' => now()->subDay()]);
+    publicBlogGiveTranslation($articleId, 'Redirect Article');
+
+    $this->get("/en/blog/{$articleId}")
+        ->assertRedirect(route('public.blog.show', ['lang' => 'en', 'slug' => "redirect-article-{$articleId}"]))
+        ->assertStatus(301);
+});
+
+it('404s a numeric-id link for a draft article rather than redirecting to it', function (): void {
+    publicBlogRegistry();
+    $draftId = publicBlogMakeArticle(['status' => 'draft']);
+    publicBlogGiveTranslation($draftId, 'Hidden Article');
+
+    $this->get("/en/blog/{$draftId}")->assertNotFound();
 });

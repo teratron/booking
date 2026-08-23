@@ -87,10 +87,10 @@ Route::prefix('{lang}')
         Route::get('/o/{slug}', [ObjectPageController::class, 'show'])->name('objects.show');
         Route::get('/objects/{object}/contact/{channel}/click', ContactClickController::class)->name('objects.contact.click');
         Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
-        Route::get('/blog/{article}', [BlogController::class, 'show'])->name('blog.show');
+        Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
         Route::get('/news', [NewsController::class, 'index'])->name('news.index');
-        Route::get('/news/{newsItem}', [NewsController::class, 'show'])->name('news.show');
-        Route::get('/promotions/{promotion}', PromotionController::class)->name('promotions.show');
+        Route::get('/news/{slug}', [NewsController::class, 'show'])->name('news.show');
+        Route::get('/promotions/{slug}', PromotionController::class)->name('promotions.show');
         // Territory paths mirror the hierarchy (§5.1): `{path}` is the
         // territory's own cached `full_slug_path`, optionally followed by an
         // object-type slug for the typed-catalog-within-a-territory case

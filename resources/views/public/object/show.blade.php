@@ -242,7 +242,7 @@
                         <x-public.content-card
                             :title="$promotion->title"
                             :summary="$promotion->summary"
-                            :href="\Illuminate\Support\Facades\Route::has('public.promotions.show') ? route('public.promotions.show', ['lang' => app()->getLocale(), 'promotion' => $promotion->id]) : null"
+                            :href="\Illuminate\Support\Facades\Route::has('public.promotions.show') ? route('public.promotions.show', ['lang' => app()->getLocale(), 'slug' => $promotion->slug]) : null"
                         />
                     @endforeach
                 </div>
@@ -258,7 +258,7 @@
                         <x-public.content-card
                             :title="$newsItem->title"
                             :summary="$newsItem->summary"
-                            :href="\Illuminate\Support\Facades\Route::has('public.news.show') ? route('public.news.show', ['lang' => app()->getLocale(), 'newsItem' => $newsItem->id]) : null"
+                            :href="\Illuminate\Support\Facades\Route::has('public.news.show') ? route('public.news.show', ['lang' => app()->getLocale(), 'slug' => $newsItem->slug]) : null"
                         />
                     @endforeach
                 </div>

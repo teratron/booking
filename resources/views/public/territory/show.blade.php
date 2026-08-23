@@ -36,7 +36,7 @@
                 <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($newsItems as $newsItem)
                         <x-public.nav-link
-                            :href="\Illuminate\Support\Facades\Route::has('public.news.show') ? route('public.news.show', ['lang' => app()->getLocale(), 'newsItem' => $newsItem->id]) : null"
+                            :href="\Illuminate\Support\Facades\Route::has('public.news.show') ? route('public.news.show', ['lang' => app()->getLocale(), 'slug' => $newsItem->slug]) : null"
                             class="block rounded-lg border border-gray-200 p-4 hover:border-brand"
                         >
                             <p class="font-medium text-ink">{{ $newsItem->title }}</p>
@@ -55,7 +55,7 @@
                 <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($promotions as $promotion)
                         <x-public.nav-link
-                            :href="\Illuminate\Support\Facades\Route::has('public.promotions.show') ? route('public.promotions.show', ['lang' => app()->getLocale(), 'promotion' => $promotion->id]) : null"
+                            :href="\Illuminate\Support\Facades\Route::has('public.promotions.show') ? route('public.promotions.show', ['lang' => app()->getLocale(), 'slug' => $promotion->slug]) : null"
                             class="block rounded-lg border border-gray-200 p-4 hover:border-brand"
                         >
                             <p class="font-medium text-ink">{{ $promotion->title }}</p>

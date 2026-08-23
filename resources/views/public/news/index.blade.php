@@ -10,7 +10,7 @@
                     <x-public.content-card
                         :title="$newsItem->title"
                         :summary="$newsItem->summary"
-                        :href="route('public.news.show', ['lang' => app()->getLocale(), 'newsItem' => $newsItem])"
+                        :href="route('public.news.show', ['lang' => app()->getLocale(), 'slug' => $newsItem->slug])"
                         :kicker="$newsItem->is_pinned ? __('public.news.pinned') : null"
                     />
                 @endforeach

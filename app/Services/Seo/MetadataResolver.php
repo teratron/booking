@@ -69,7 +69,7 @@ final class MetadataResolver
             ogTitle: $this->nonEmpty($context->explicitOgTitle) ?? $title,
             ogDescription: $this->nonEmpty($context->explicitOgDescription) ?? $description,
             ogImageUrl: $this->nonEmpty($context->explicitOgImage) ?? $context->ogImage ?? $this->defaultOgImage(),
-            alternates: $this->alternates(),
+            alternates: $this->alternates($entity),
         );
     }
 
@@ -104,6 +104,10 @@ final class MetadataResolver
             ogTitle: $title,
             ogDescription: $description,
             ogImageUrl: $ogImage,
+            // Not seeded with $territory: this route also carries an
+            // object-type segment, and seeding only the territory half
+            // would make the resolver build a URL missing it. Left to its
+            // own full resolution, which correctly recovers both halves.
             alternates: $this->alternates(),
         );
     }
@@ -150,10 +154,20 @@ final class MetadataResolver
      * switcher itself uses — never a second, independently-derived URL set
      * that could drift from what the switcher actually links to.
      *
+     * `$entity`, when the caller already has it in hand (every {@see resolve()}
+     * call does), seeds the resolver's own request-scoped memo directly —
+     * the entity was already fetched with `translations` eager-loaded to
+     * render the page itself, so this avoids a second, from-scratch slug
+     * resolution paying for the identical row again.
+     *
      * @return array<string, string> locale code => absolute URL
      */
-    private function alternates(): array
+    private function alternates(?Model $entity = null): array
     {
+        if ($entity instanceof Object_ || $entity instanceof Territory) {
+            $this->localeSwitch->seed($entity);
+        }
+
         return collect($this->shellData->activeLanguages())
             ->mapWithKeys(fn (PublicLanguageOption $language): array => [
                 $language->code => $this->localeSwitch->targetUrl($this->request, $language->code),

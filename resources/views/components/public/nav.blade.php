@@ -10,7 +10,7 @@
     $urlIfRouted = fn (string $name, array $params = []) => \Illuminate\Support\Facades\Route::has($name)
         ? route($name, ['lang' => $lang, ...$params])
         : null;
-    $typeUrl = fn (string $key) => $urlIfRouted('public.catalog.index', ['type' => $key]);
+    $typeUrl = fn (int $id) => $urlIfRouted('public.catalog.index', ['type' => $id]);
 @endphp
 <nav {{ $attributes->merge(['class' => 'border-t border-white/20 bg-brand']) }} aria-label="{{ __('public.shell.nav.primary') }}">
     <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-6 px-4 py-2 lg:px-8">
@@ -25,14 +25,14 @@
                     </button>
                     <div x-show="open" x-cloak class="absolute left-0 z-20 mt-2 min-w-40 rounded bg-white py-1 shadow-lg">
                         @foreach ($group->children as $child)
-                            <x-public.nav-link :href="$typeUrl($child->key)" class="block px-3 py-1 text-sm text-ink hover:bg-surface-muted">
+                            <x-public.nav-link :href="$typeUrl($child->id)" class="block px-3 py-1 text-sm text-ink hover:bg-surface-muted">
                                 {{ $child->name }}
                             </x-public.nav-link>
                         @endforeach
                     </div>
                 </div>
             @else
-                <x-public.nav-link :href="$typeUrl($group->key)" class="text-sm font-medium text-white">
+                <x-public.nav-link :href="$typeUrl($group->id)" class="text-sm font-medium text-white">
                     {{ $group->name }}
                 </x-public.nav-link>
             @endif

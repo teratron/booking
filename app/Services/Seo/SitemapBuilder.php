@@ -118,11 +118,11 @@ final class SitemapBuilder
             ->where(fn ($query) => $query->whereNull('n.publish_at')->orWhere('n.publish_at', '<=', now()))
             ->where(fn ($query) => $query->whereNull('n.end_at')->orWhere('n.end_at', '>', now()))
             ->where(fn ($query) => $query->whereNull('nt.seo_indexable')->orWhere('nt.seo_indexable', true))
-            ->select(['n.id', 'nt.updated_at'])
+            ->select(['n.id', 'nt.slug', 'nt.updated_at'])
             ->orderBy('n.id')
             ->get()
             ->map(fn (object $row): array => [
-                'url' => url("/{$locale}/news/{$row->id}"),
+                'url' => url("/{$locale}/news/{$row->slug}"),
                 'lastmod' => $row->updated_at !== null ? (string) $row->updated_at : null,
             ]);
     }
@@ -137,11 +137,11 @@ final class SitemapBuilder
             ->whereNull('a.deleted_at')
             ->where(fn ($query) => $query->whereNull('a.publish_at')->orWhere('a.publish_at', '<=', now()))
             ->where(fn ($query) => $query->whereNull('at.seo_indexable')->orWhere('at.seo_indexable', true))
-            ->select(['a.id', 'at.updated_at'])
+            ->select(['a.id', 'at.slug', 'at.updated_at'])
             ->orderBy('a.id')
             ->get()
             ->map(fn (object $row): array => [
-                'url' => url("/{$locale}/blog/{$row->id}"),
+                'url' => url("/{$locale}/blog/{$row->slug}"),
                 'lastmod' => $row->updated_at !== null ? (string) $row->updated_at : null,
             ]);
     }
@@ -158,11 +158,11 @@ final class SitemapBuilder
             ->where('p.starts_at', '<=', now()->toDateString())
             ->where('p.ends_at', '>=', now()->toDateString())
             ->where(fn ($query) => $query->whereNull('pt.seo_indexable')->orWhere('pt.seo_indexable', true))
-            ->select(['p.id', 'pt.updated_at'])
+            ->select(['p.id', 'pt.slug', 'pt.updated_at'])
             ->orderBy('p.id')
             ->get()
             ->map(fn (object $row): array => [
-                'url' => url("/{$locale}/promotions/{$row->id}"),
+                'url' => url("/{$locale}/promotions/{$row->slug}"),
                 'lastmod' => $row->updated_at !== null ? (string) $row->updated_at : null,
             ]);
     }

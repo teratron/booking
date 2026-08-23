@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
 use App\Services\Seo\SitemapBuilder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -126,4 +127,31 @@ it('404s a sitemap route before the generation job has ever run', function (): v
 
     $this->get('/sitemap.xml')->assertNotFound();
     $this->get('/sitemaps/en/territory-1.xml')->assertNotFound();
+});
+
+it('lists a news item at its canonical slug URL, not the raw numeric id', function (): void {
+    // F-03's route fix (numeric-id binding replaced by slug binding)
+    // left the sitemap generator building the old id-based URL directly —
+    // listing a URL that now 301-redirects defeats the sitemap's own
+    // purpose of naming the canonical address.
+    Storage::fake('public');
+    sitemapRegistry();
+
+    $newsId = DB::table('news_items')->insertGetId([
+        'author_id' => User::factory()->create()->id,
+        'status' => 'published', 'moderation_status' => 'approved', 'publish_at' => now()->subDay(),
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('news_translations')->insert([
+        'news_item_id' => $newsId, 'locale' => 'en', 'title' => 'Sitemap News',
+        'body' => 'Body.', 'slug' => 'sitemap-news',
+        'needs_review' => false, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    app(SitemapBuilder::class)->generate();
+
+    $sitemap = (string) Storage::disk('public')->get('sitemaps/en/news-1.xml');
+
+    expect($sitemap)->toContain('/en/news/sitemap-news')
+        ->and($sitemap)->not->toContain("/en/news/{$newsId}<");
 });

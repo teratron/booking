@@ -109,10 +109,10 @@ same local PHP available.
 
 ### Track B — Public URL & Routing Correctness
 
-- [ ] [T-10B01] Resolve the language switcher and hreflang alternates through `PublicUrlGenerator`
-- [ ] [T-10B02] Bind news, blog, and promotion routes by translated slug
-- [ ] [T-10B03] Fix the footer category links' type parameter
-- [ ] [T-10B04] Validation
+- [x] [T-10B01] Resolve the language switcher and hreflang alternates through `PublicUrlGenerator`
+- [x] [T-10B02] Bind news, blog, and promotion routes by translated slug
+- [x] [T-10B03] Fix the footer category links' type parameter
+- [x] [T-10B04] Validation
 
 ### Track C — Missing Eager Loads
 
@@ -195,32 +195,36 @@ same local PHP available.
 **[T-10B01] Resolve the language switcher and hreflang alternates through `PublicUrlGenerator`**
 
 - **Spec:** [l1-seo.md](../specifications/l1-seo.md) (hreflang alternates, already-settled requirement)
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** For an object and a territory whose EN and RU slugs differ, the language switcher's RU link and the page's `hreflang="ru"` tag both resolve to the correct RU-locale URL and return 200, not 404.
 - **Notes (finding):** `LocaleSwitchResolver::targetUrl()` rebuilds the current route with only the `lang` parameter swapped, keeping the current locale's slug — its own docblock says per-entity slug translation "does not exist yet"; it does now, in `PublicUrlGenerator`, and this resolver was never revisited. `MetadataResolver::alternates()` delegates to the same method, so the bug reaches every `hreflang` tag site-wide, not just the switcher. `qa-deep-findings.md` F-02.
+- **Changes:** For `public.objects.show`/`public.territories.show` (plain, not the typed-catalog composite), `LocaleSwitchResolver` now resolves the current entity via `PublicSlugResolver` and calls `PublicUrlGenerator::objectUrl()`/`territoryUrl()`/`typedCatalogUrl()` for the target locale, falling back to the prior same-slug swap when the entity or its target-locale translation is missing. Existing coverage (`PublicHreflangTest`) didn't catch this originally because its own EN/RU name fixture (`'Bukovel'`/`'Буковель'`) transliterates to the *same* ASCII slug in both locales — added two new tests using deliberately unrelated EN/RU slugs, which do reproduce and then prove the fix (red confirmed via `git stash` before adding the fix). **Regression caught by this track's own wider pass, not the new tests**: the territory page's query budget jumped 30 → 45 (three independent resolutions per request — the head's hreflang alternates, plus the header's desktop and mobile language switchers, each calling `app(LocaleSwitchResolver::class)` directly rather than by injection). Fixed in two layers: (1) bound `LocaleSwitchResolver` as a singleton in `AppServiceProvider` so all three call sites share one instance and its request-scoped resolution memo; (2) added `LocaleSwitchResolver::seed()`, called from `MetadataResolver::resolve()` with the entity it already fetched (translations already eager-loaded to render the page itself), so the *first* resolution is free too, not just deduplicated. Back to the original 30-query baseline.
 
 **[T-10B02] Bind news, blog, and promotion routes by translated slug**
 
 - **Spec:** [l1-seo.md](../specifications/l1-seo.md) (URL grammar — every entity gets a slug-based address)
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** `/en/news/not-a-real-thing` (and the blog/promotions equivalents) returns 404, never 500; the existing numeric-id links continue to work as a permanent redirect to the slug URL.
 - **Notes (finding):** These three routes bind on the raw primary key; any non-integer segment reaches Postgres as a `bigint` comparison and throws (`SQLSTATE[22P02]`) before Laravel can turn a missing model into a 404 — reproducible today, and with `APP_DEBUG=true` it leaks a full stack trace. `qa-deep-findings.md` F-03.
+- **Changes:** Routes rebound `{newsItem}`/`{article}`/`{promotion}` → `{slug}`; `PublicSlugResolver` gained `resolveNewsSlug()`/`resolveArticleSlug()`/`resolvePromotionSlug()`, matching the existing `resolveObjectSlug()` pattern. Each of the three controllers now resolves by slug, 404s a genuine miss, and 301-redirects a numeric segment matching a real, *publicly visible* item's own id to its canonical slug URL (a hidden item's numeric id 404s directly rather than redirecting to a page that would itself 404). Nine call sites across five views updated from `['newsItem' => $model]`-style params to `['slug' => $model->slug]`. **Found in the same sweep**: `SitemapBuilder`'s news/article/promotion URL builders were building the raw-id URL directly (not through `route()`), which would now list a redirecting, non-canonical URL — fixed to select and interpolate the translation's own `slug` column instead. Existing tests updated to the new param name (their fixtures already compute a deterministic `Str::slug($title).'-'.$id`); new tests added for the 404/redirect/hidden-item cases across all three controllers plus the sitemap fix, each red-before (`git stash`) — the 404 case reproduced the exact `SQLSTATE[22P02]` from the finding — green after.
 
 **[T-10B03] Fix the footer category links' type parameter**
 
 - **Spec:** [l1-object-catalog.md](../specifications/l1-object-catalog.md)
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** Clicking a footer category link (e.g. "Hotel") lands on `/en/catalog` filtered to that type, not the unfiltered catalog.
 - **Notes (finding):** The footer passes the object type's key (`['type' => $group->key]`) while `CatalogSearch` declares `public ?int $type`; a non-numeric value cannot bind, so the filter is silently dropped — eight dead links on every page. `qa-deep-findings.md` F-10.
+- **Changes:** Same bug, wider surface than originally documented — the identical `$typeUrl(string $key) => [...'type' => $key]` pattern was duplicated into the desktop primary nav (`nav.blade.php`) and the header's own mobile drawer (`header.blade.php`), not only the footer. All three now pass the type's numeric `id`, matching the home page's own category tiles (`$tile['entry']->id`), which never had this bug. New test in `PublicShellTest.php` counts matching hrefs across all three surfaces in one page render; red-before (0 matches) via `git stash`, green after (≥3 matches, and the old `type={key}` string confirmed absent).
 
 **[T-10B04] Validation**
 
 - **Goal:** Verify `T-10B01`–`03` against `l1-seo.md`, `l1-object-catalog.md`, and `qa-deep-findings.md` F-02/F-03/F-10.
 - **Method:** Feature tests per finding, each red-before/green-after against the reproduction steps in `qa-deep-findings.md`.
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** Wider regression — `tests/Feature/Public` (all files) + `tests/Architecture` (all files): 187/187 pass, including the realistic-volume `PublicPerformanceBudgetTest`, which is also the test that caught T-10B01's own query-budget regression before it shipped. `composer lint`/`analyse` clean on every touched `app/`/`routes/` file.
 
 ### Track C — Missing Eager Loads
 

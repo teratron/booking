@@ -7,8 +7,10 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Models\Article;
 use App\Services\Seo\MetadataResolver;
+use App\Services\Seo\PublicSlugResolver;
 use App\Services\Seo\StructuredDataBuilder;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 
 /**
  * The public blog: a paginated listing of published articles and each
@@ -23,6 +25,7 @@ final class BlogController extends Controller
     public function __construct(
         private readonly MetadataResolver $metadata,
         private readonly StructuredDataBuilder $structuredData,
+        private readonly PublicSlugResolver $resolver,
     ) {}
 
     public function index(string $lang): View
@@ -41,13 +44,29 @@ final class BlogController extends Controller
     }
 
     /**
-     * `$lang` is unused but must stay declared first: Laravel's controller
-     * dependency resolver splices route parameters by reflection position,
-     * and a leading route segment with no corresponding method parameter
-     * throws that splice out of alignment for the model that follows.
+     * `$slug` binds by translated slug, not the raw primary key — a
+     * non-existent slug 404s cleanly instead of reaching Postgres as an
+     * invalid `bigint` comparison. A numeric segment matching a real,
+     * publicly visible article's own id redirects permanently to its
+     * canonical slug URL, so a link built before slug addressing existed
+     * keeps working.
      */
-    public function show(string $lang, Article $article): View
+    public function show(string $lang, string $slug): View|RedirectResponse
     {
+        $article = $this->resolver->resolveArticleSlug($lang, $slug);
+
+        if (! $article instanceof Article) {
+            if (ctype_digit($slug)) {
+                $byId = Article::query()->with('translations')->find((int) $slug);
+
+                if ($byId instanceof Article && $this->isPubliclyVisible($byId) && $byId->slug !== null) {
+                    return redirect()->route('public.blog.show', ['lang' => $lang, 'slug' => $byId->slug], 301);
+                }
+            }
+
+            abort(404);
+        }
+
         abort_unless($this->isPubliclyVisible($article), 404);
 
         $article->loadMissing([
@@ -55,7 +74,7 @@ final class BlogController extends Controller
             'objects.translations', 'territories.translations', 'territories.country',
         ]);
 
-        $selfUrl = route('public.blog.show', ['lang' => $lang, 'article' => $article]);
+        $selfUrl = route('public.blog.show', ['lang' => $lang, 'slug' => $article->slug]);
 
         return view('public.blog.show', [
             'article' => $article,
