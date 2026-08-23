@@ -90,4 +90,29 @@ return [
         'staleness_threshold_hours' => (int) env('BACKUP_STALENESS_THRESHOLD_HOURS', 48),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Third-Party Integrations
+    |--------------------------------------------------------------------------
+    |
+    | Map tile provider and CAPTCHA credentials, read here from `.env` so a
+    | fresh clone works out of the box — {@see \App\Services\Settings\SettingsRegistry}
+    | wires each value in as that setting's own *default*, not a separate
+    | source of truth: an administrator changing the value from the settings
+    | screen still writes a row that overrides it, exactly like every other
+    | setting. Provider keys are lower-cased here once, since the map/CAPTCHA
+    | resolvers key their own provider maps in lowercase and `.env` is
+    | otherwise free-form (`MAP_TILE_PROVIDER=MapTiler` is the documented
+    | example).
+    |
+    */
+
+    'integrations' => [
+        'map_tile_provider' => strtolower((string) env('MAP_TILE_PROVIDER', 'maptiler')),
+        'map_tile_key' => (string) env('MAP_TILE_KEY', ''),
+        'captcha_provider' => strtolower((string) env('CAPTCHA_PROVIDER', 'none')),
+        'captcha_site_key' => (string) env('CAPTCHA_SITE_KEY', ''),
+        'captcha_secret' => (string) env('CAPTCHA_SECRET_KEY', ''),
+    ],
+
 ];

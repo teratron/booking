@@ -34,4 +34,16 @@ final class MapTileConfigResolver
 
         return str_replace('{key}', $key, $template);
     }
+
+    /**
+     * False when no tile key is configured at all — the map component's own
+     * signal to render a labelled placeholder instead of a tile request
+     * that can only ever fail. `.env`'s `MAP_TILE_KEY` (wired in as this
+     * setting's own default) covers a fresh clone; an administrator setting
+     * a key from the settings screen covers everything after.
+     */
+    public function hasKey(): bool
+    {
+        return $this->settings->get('integrations.map_tile_key') !== '';
+    }
 }

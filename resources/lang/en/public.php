@@ -134,6 +134,7 @@ return [
         ],
         'map' => [
             'label' => 'Map of matching objects',
+            'unavailable' => 'Map unavailable — no map provider is configured yet.',
         ],
         'nav' => [
             'primary' => 'Primary navigation',

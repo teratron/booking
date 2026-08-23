@@ -133,11 +133,17 @@ final class SettingsRegistry
             // regardless of which staff account sent the message.
             new SettingDefinition('notifications.broadcast_rate_limit', 'notifications', 'int', 5),
 
-            new SettingDefinition('integrations.map_tile_provider', 'integrations', 'string', 'maptiler'),
-            new SettingDefinition('integrations.map_tile_key', 'integrations', 'string', '', isCritical: true),
-            new SettingDefinition('integrations.captcha_provider', 'integrations', 'string', 'none'),
-            new SettingDefinition('integrations.captcha_site_key', 'integrations', 'string', ''),
-            new SettingDefinition('integrations.captcha_secret', 'integrations', 'string', '', isCritical: true),
+            // Defaults read from config/booking.php's own 'integrations'
+            // section, itself sourced from .env — a fresh clone with
+            // MAP_TILE_KEY/CAPTCHA_* already set in .env works without an
+            // administrator visiting the settings screen first. Still only
+            // a default: a stored administrator override still wins, the
+            // same as every other setting here.
+            new SettingDefinition('integrations.map_tile_provider', 'integrations', 'string', config('booking.integrations.map_tile_provider', 'maptiler')),
+            new SettingDefinition('integrations.map_tile_key', 'integrations', 'string', config('booking.integrations.map_tile_key', ''), isCritical: true),
+            new SettingDefinition('integrations.captcha_provider', 'integrations', 'string', config('booking.integrations.captcha_provider', 'none')),
+            new SettingDefinition('integrations.captcha_site_key', 'integrations', 'string', config('booking.integrations.captcha_site_key', '')),
+            new SettingDefinition('integrations.captcha_secret', 'integrations', 'string', config('booking.integrations.captcha_secret', ''), isCritical: true),
             new SettingDefinition('integrations.analytics_measurement_id', 'integrations', 'string', ''),
 
             new SettingDefinition('security.session_lifetime_minutes', 'security', 'int', 120, isCritical: true),

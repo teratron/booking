@@ -6,6 +6,7 @@ use App\Filament\Admin\Pages\SeoHealthDashboard;
 use App\Models\User;
 use App\Services\Seo\SeoHealthReport;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -154,4 +155,33 @@ it('gates the SEO health dashboard behind the SEO grant', function (): void {
 
     $this->actingAs($permitted)->get(SeoHealthDashboard::getUrl(panel: 'admin'))->assertSuccessful();
     $this->actingAs($refused)->get(SeoHealthDashboard::getUrl(panel: 'admin'))->assertForbidden();
+});
+
+it('shows the map-tile-key-missing banner when no key is configured, and hides it once one is', function (): void {
+    // F-16: MapTileConfigResolver read integrations.map_tile_key only from
+    // the settings table, whose registry default is an empty string — the
+    // map is dead out of the box, and nothing on this dashboard said so.
+    config(['booking.integrations.map_tile_key' => '']);
+    $actor = seoAdminActor(['admin_panel_access', 'seo.view'], 'seo_map_key_missing');
+
+    $this->actingAs($actor)->get(SeoHealthDashboard::getUrl(panel: 'admin'))
+        ->assertSuccessful()
+        ->assertSee(__('panel.seo_health.map_tile_key_missing'));
+
+    // Written directly rather than through SettingsRepository::set(): this
+    // key is critical (chief-administrator-only), and the write path
+    // itself is not what this test is about. SettingsRepository caches its
+    // resolved values for the process lifetime and only invalidates that
+    // cache from within set() (see its own docblock), so a direct write
+    // must drop the same key or the second request below would still see
+    // the first request's cached "no key" answer.
+    DB::table('settings')->insert([
+        'key' => 'integrations.map_tile_key', 'value' => json_encode('a-real-key'),
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+    Cache::forget('portal.settings');
+
+    $this->actingAs($actor)->get(SeoHealthDashboard::getUrl(panel: 'admin'))
+        ->assertSuccessful()
+        ->assertDontSee(__('panel.seo_health.map_tile_key_missing'));
 });

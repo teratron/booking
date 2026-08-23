@@ -153,7 +153,13 @@ it('makes a draft or withdrawn news item unreachable on its own page', function 
     $this->get(route('public.news.show', ['lang' => 'en', 'slug' => "withdrawn-news-{$withdrawnId}"]))->assertNotFound();
 });
 
-it('excludes an elapsed promotion from the section that lists it, proven on the territory page, while its own page stays reachable', function (): void {
+it('excludes an elapsed promotion from the section that lists it, proven on the territory page, and its own page 404s too', function (): void {
+    // F-13: isPubliclyVisible() used to check only status and starts_at,
+    // deferring ends_at entirely to PromotionArchivalJob's own daily
+    // status transition — a promotion past its own end date could still
+    // serve its own page as current for up to 24 hours, its `status`
+    // column not yet caught up. Checking `ends_at` directly here closes
+    // that window without needing the job to run first.
     $fixture = publicNewsRegistry();
     $validId = publicNewsMakePromotion($fixture, 'Valid Promotion');
     $elapsedId = publicNewsMakePromotion($fixture, 'Elapsed Promotion', [
@@ -166,12 +172,8 @@ it('excludes an elapsed promotion from the section that lists it, proven on the 
         ->assertSee('Valid Promotion')
         ->assertDontSee('Elapsed Promotion');
 
-    // Dropped from the section, but its own page is still reachable —
-    // its own `status` has not been transitioned by the (separately
-    // owned) archival job in this fixture.
     $this->get(route('public.promotions.show', ['lang' => 'en', 'slug' => "elapsed-promotion-{$elapsedId}"]))
-        ->assertOk()
-        ->assertSee('Elapsed Promotion');
+        ->assertNotFound();
 });
 
 it('makes a draft or archived promotion unreachable on its own page', function (): void {

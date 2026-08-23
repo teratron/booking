@@ -1,6 +1,14 @@
 <x-filament-panels::page>
     @php $warnings = $this->warnings(); @endphp
 
+    @if ($this->mapTileKeyMissing())
+        <div class="fi-section rounded-xl bg-danger-50 p-4 ring-1 ring-danger-600/20 dark:bg-danger-500/10 dark:ring-danger-400/20">
+            <p class="text-sm font-medium text-danger-700 dark:text-danger-400">
+                {{ __('panel.seo_health.map_tile_key_missing') }}
+            </p>
+        </div>
+    @endif
+
     <div class="grid grid-cols-2 gap-4 lg:grid-cols-3">
         @foreach ($warnings as $key => $rows)
             <a href="#warning-{{ $key }}" class="fi-section rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">

@@ -168,3 +168,35 @@ it('never configures the OSMF-prohibited public OpenStreetMap tile host, for any
             ->not->toContain('openstreetmap.org');
     }
 });
+
+it('picks up a tile key already set in .env, with no administrator settings-panel step', function (): void {
+    // F-16: nothing imported the documented .env variables into the
+    // settings registry, so a fresh clone's MAP_TILE_KEY was silently
+    // ignored — the map stayed dead until someone visited the settings
+    // screen. config/booking.php now wires .env in as the setting's own
+    // *default*, so this needs no administrator action at all.
+    config(['booking.integrations.map_tile_key' => 'env-sourced-key']);
+
+    $resolver = app(MapTileConfigResolver::class);
+
+    expect($resolver->hasKey())->toBeTrue()
+        ->and($resolver->styleUrl())->toContain('env-sourced-key');
+});
+
+it('renders a labelled placeholder instead of a broken tile request when no key is configured at all', function (): void {
+    config(['booking.integrations.map_tile_key' => '']);
+
+    $html = (string) $this->blade('<x-public.map />');
+
+    expect($html)->toContain(__('public.shell.map.unavailable'))
+        ->and($html)->not->toContain('catalogMap(');
+});
+
+it('renders the real map component once a key is configured', function (): void {
+    config(['booking.integrations.map_tile_key' => 'env-sourced-key']);
+
+    $html = (string) $this->blade('<x-public.map />');
+
+    expect($html)->toContain('catalogMap(')
+        ->and($html)->not->toContain(__('public.shell.map.unavailable'));
+});

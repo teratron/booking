@@ -1,9 +1,24 @@
 <x-filament-panels::page>
     @php
+        // Computed together, in this order, before anything renders: every
+        // one reads through the same memoized service instance, so
+        // $unreachable (computed last) reflects whether *any* of the reads
+        // above it failed, not only whichever ran first.
         $lastDatabaseBackup = $this->lastDatabaseBackup();
         $lastMediaDate = $this->lastMediaBackupDate();
         $isStale = $this->isDatabaseBackupStale();
+        $databaseHistory = $this->databaseBackupHistory();
+        $mediaHistory = $this->mediaGenerationHistory();
+        $unreachable = $this->destinationUnreachable();
     @endphp
+
+    @if ($unreachable)
+        <div class="fi-section rounded-xl bg-danger-50 p-4 ring-1 ring-danger-600/20 dark:bg-danger-500/10 dark:ring-danger-400/20">
+            <p class="text-sm font-medium text-danger-700 dark:text-danger-400">
+                {{ __('panel.backup_administration.destination_unreachable') }}
+            </p>
+        </div>
+    @endif
 
     @if ($isStale)
         <div class="fi-section rounded-xl bg-danger-50 p-4 ring-1 ring-danger-600/20 dark:bg-danger-500/10 dark:ring-danger-400/20">
@@ -54,8 +69,6 @@
     <div class="fi-section rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
         <h3 class="text-base font-semibold">{{ __('panel.backup_administration.log.database_title') }}</h3>
 
-        @php $databaseHistory = $this->databaseBackupHistory(); @endphp
-
         @if ($databaseHistory->isEmpty())
             <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ __('panel.backup_administration.none') }}</p>
         @else
@@ -80,8 +93,6 @@
 
     <div class="fi-section rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
         <h3 class="text-base font-semibold">{{ __('panel.backup_administration.log.media_title') }}</h3>
-
-        @php $mediaHistory = $this->mediaGenerationHistory(); @endphp
 
         @if ($mediaHistory->isEmpty())
             <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ __('panel.backup_administration.none') }}</p>

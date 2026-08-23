@@ -203,6 +203,24 @@ services:
     volumes:
       - minio-data:/data
 
+  minio-init:
+    # A fresh MinIO volume starts with no buckets at all — media uploads
+    # and the backup destination both 404 until someone creates them by
+    # hand, which .env.example used to just document as a manual step
+    # ("docker compose exec minio mc mb local/booking-backups"). This
+    # one-shot container does it automatically on every `compose up`,
+    # idempotently (`--ignore-existing`), then exits — it is not a
+    # long-running service, so it carries no restart policy.
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 ${AWS_ACCESS_KEY_ID:-booking} ${AWS_SECRET_ACCESS_KEY:-booking-secret}; do sleep 1; done;
+      mc mb --ignore-existing local/${AWS_BUCKET:-booking-media};
+      mc mb --ignore-existing local/${BACKUP_AWS_BUCKET:-booking-backups};
+      "
+
   mailpit:
     # Local SMTP sink — notification templates are developed against it
     # without sending real mail.

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\PromotionArchivalJob;
 use App\Models\Object_;
 use App\Models\Promotion;
 use App\Models\Territory;
@@ -83,17 +84,19 @@ final class PromotionController extends Controller
     }
 
     /**
-     * Matches {@see Promotion::scopePublished()} minus its own `ends_at`
-     * check — the scheduled archival job this task does not own already
-     * transitions an elapsed promotion's own `status` away from
-     * `published` (unlike a news item's `end_at`, which never changes
-     * `status`), so `status` alone is not enough on its own; `starts_at`
-     * still guards against a promotion published administratively ahead
-     * of its own start date.
+     * Checks `ends_at` directly rather than deferring entirely to
+     * {@see PromotionArchivalJob}'s own `status` transition — that
+     * job runs once daily, so an elapsed promotion could otherwise still
+     * serve its own page as current for up to 24 hours. This is defence in
+     * depth, not a replacement: the job still owns the durable transition
+     * (dropping the promotion from every listing that reads `status`), and
+     * this check only additionally guards the one page that reads
+     * `ends_at` directly.
      */
     private function isPubliclyVisible(Promotion $promotion): bool
     {
         return $promotion->status === 'published'
-            && $promotion->starts_at->lte(now());
+            && $promotion->starts_at->lte(now())
+            && $promotion->ends_at->gte(now());
     }
 }

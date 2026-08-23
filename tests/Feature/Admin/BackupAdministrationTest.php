@@ -156,3 +156,42 @@ it('downloads the technical report as a plain-text file naming the destination d
         ->and($report)->toContain('Destination disk: backups')
         ->and($report)->toContain('Health checks');
 });
+
+it('degrades to a failure banner instead of a 500 when the backup destination disk is unreachable', function (): void {
+    // F-14: the one screen whose job is to report backup health used to
+    // be the one that could not report a problem — NoSuchBucket /
+    // FilesystemException reached the page unhandled. Pointing the
+    // destination at a disk name with no configured driver reproduces the
+    // same class of failure (an unresolvable destination) without a real
+    // network dependency: every disk read below throws exactly the way an
+    // unreachable S3 bucket would.
+    config(['backup.backup.destination.disks' => ['unreachable-test-disk']]);
+    $actor = backupAdminActor();
+
+    $response = $this->actingAs($actor)->get(BackupAdministration::getUrl(panel: 'admin'));
+
+    $response->assertSuccessful();
+    $response->assertSee(__('panel.backup_administration.destination_unreachable'));
+});
+
+it('degrades every destination-disk read to a safe default instead of throwing', function (): void {
+    config(['backup.backup.destination.disks' => ['unreachable-test-disk']]);
+
+    $service = app(BackupAdministrationService::class);
+
+    expect($service->destinationUnreachable())->toBeFalse();
+
+    // healthStatuses() is Spatie's own monitor factory, which already
+    // treats an unreachable destination as a normal "unhealthy" result
+    // rather than throwing — the other three genuinely throw, since
+    // they call the destination disk directly with no such handling of
+    // their own.
+    expect($service->lastDatabaseBackup())->toBeNull()
+        ->and($service->databaseBackupHistory())->toBeEmpty()
+        ->and($service->mediaGenerationHistory())->toBeEmpty()
+        ->and($service->healthStatuses())->not->toBeEmpty()
+        ->and($service->destinationUnreachable())->toBeTrue();
+
+    // Never throws, even though every read above failed.
+    expect($service->technicalReport())->toContain('WARNING: the backup destination could not be reached');
+});

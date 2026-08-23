@@ -422,6 +422,7 @@ return [
     'seo_health' => [
         'title' => 'SEO Health',
         'navigation_label' => 'Health Dashboard',
+        'map_tile_key_missing' => 'No map tile provider key is configured — the public map renders a placeholder instead of live tiles. Set MAP_TILE_KEY in .env or configure a key from the settings screen.',
         'columns' => [
             'entity_type' => 'Entity type',
             'locale' => 'Language',
@@ -888,6 +889,7 @@ return [
         'title' => 'Backup Administration',
         'none' => 'None yet',
         'staleness_warning' => 'The last database backup is older than :hours hours.',
+        'destination_unreachable' => 'The backup destination could not be reached. The figures below may be incomplete — this has been reported.',
 
         'fields' => [
             'last_database_backup' => 'Last successful database backup',

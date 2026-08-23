@@ -37,6 +37,15 @@ class BackupAdministration extends Page
 {
     protected string $view = 'filament.admin.pages.backup-administration';
 
+    /**
+     * Memoized rather than resolved fresh per call: the view calls several
+     * of this page's methods in sequence during one render, and
+     * {@see BackupAdministrationService::destinationUnreachable()}'s own
+     * memo only means anything if every one of those calls shares the same
+     * service instance.
+     */
+    private ?BackupAdministrationService $service = null;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedServerStack;
 
     protected static string|UnitEnum|null $navigationGroup = 'system';
@@ -121,8 +130,13 @@ class BackupAdministration extends Page
         }, $fileName, ['Content-Type' => 'text/plain']);
     }
 
+    public function destinationUnreachable(): bool
+    {
+        return $this->service()->destinationUnreachable();
+    }
+
     private function service(): BackupAdministrationService
     {
-        return app(BackupAdministrationService::class);
+        return $this->service ??= app(BackupAdministrationService::class);
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Admin\Pages;
 
 use App\Models\User;
+use App\Services\Integrations\MapTileConfigResolver;
 use App\Services\Seo\SeoHealthReport;
 use BackedEnum;
 use Filament\Facades\Filament;
@@ -47,6 +48,19 @@ class SeoHealthDashboard extends Page
     public function warnings(): array
     {
         return app(SeoHealthReport::class)->warnings();
+    }
+
+    /**
+     * Portal-wide, not entity-scoped — deliberately not one of
+     * {@see SeoHealthReport::warnings()}'s own rows, which are each about
+     * one specific catalog row's own SEO data. This is the map component's
+     * own "no provider key configured" condition (F-16), surfaced here
+     * since it is the closest thing this project has to a general
+     * third-party-integration health screen.
+     */
+    public function mapTileKeyMissing(): bool
+    {
+        return ! app(MapTileConfigResolver::class)->hasKey();
     }
 
     public function entityTypeLabel(string $entityType): string

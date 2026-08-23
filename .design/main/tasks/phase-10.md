@@ -135,9 +135,9 @@ same local PHP available.
 
 ### Track F — Content Lifecycle & Third-Party Wiring
 
-- [ ] [T-10F01] Promotion visibility checks `ends_at`, not status alone
-- [ ] [T-10F02] Backup administration degrades instead of crashing when the destination is unreachable
-- [ ] [T-10F03] Wire `.env` map-tile and CAPTCHA values into the settings registry
+- [x] [T-10F01] Promotion visibility checks `ends_at`, not status alone
+- [x] [T-10F02] Backup administration degrades instead of crashing when the destination is unreachable
+- [x] [T-10F03] Wire `.env` map-tile and CAPTCHA values into the settings registry
 - [ ] [T-10F04] Complete the Open Graph tag set and default image fallback
 - [ ] [T-10F05] Render the banner's mobile creative on narrow viewports
 - [ ] [T-10F06] Validation
@@ -324,27 +324,30 @@ same local PHP available.
 **[T-10F01] Promotion visibility checks `ends_at`, not status alone**
 
 - **Spec:** [l1-content-publishing.md](../specifications/l1-content-publishing.md)
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** A promotion whose `ends_at` is in the past and whose `status` is still `published` (the window before the daily archival job runs) returns 404 on its public page.
 - **Notes (finding):** `PromotionController::isPubliclyVisible()` checks `status` and `starts_at` but deliberately defers `ends_at` to `PromotionArchivalJob` — up to 24 hours of a finished offer serving as current. `qa-deep-findings.md` F-13. The job keeps owning the durable status transition; this is defence in depth, not a replacement.
+- **Changes:** `PromotionController::isPubliclyVisible()` now also requires `$promotion->ends_at->gte(now())`. `tests/Feature/Public/PublicNewsAndPromotionsTest.php`'s own elapsed-promotion test previously asserted the old (200) behaviour deliberately — rewritten to assert 404, since it directly encoded the bug this task fixes.
 
 **[T-10F02] Backup administration degrades instead of crashing when the destination is unreachable**
 
 - **Spec:** [l1-back-office.md](../specifications/l1-back-office.md) §5.6 ("raises failure notifications" — a crash is not that)
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** With the backup bucket unreachable (or absent), `portal-admin/backup-administration` renders 200 showing the failure state, not a 500 stack trace.
 - **Notes (finding):** The one screen whose job is to report backup health is the one that cannot report a problem — `NoSuchBucket`/`FilesystemException` reaches the page unhandled. `qa-deep-findings.md` F-14. Also add bucket creation to the local MinIO bootstrap so a fresh clone does not start in this state.
+- **Changes:** `BackupAdministrationService` gained a `guard(callable $read): mixed` wrapper around every disk-touching read (`lastDatabaseBackup()`, `databaseBackupHistory()`, `mediaGenerationHistory()`, `healthStatuses()`) — catches, logs, reports, and returns `null` instead of propagating, with a `destinationUnreachable(): bool` flag the page reads to show a banner. `BackupAdministration` (the Filament page) memoizes the service instance per-page-load rather than re-resolving it per call. `docker-compose.yml` gained a one-shot `minio-init` service (`minio/mc`, polls until MinIO is ready, then `mc mb --ignore-existing` for both the media and backup buckets) so a fresh `docker compose up` no longer starts in the unreachable state this task defends against — verified live (`docker compose up minio-init`, exit 0 on both first creation and idempotent re-run).
 
 **[T-10F03] Wire `.env` map-tile and CAPTCHA values into the settings registry**
 
 - **Spec:** [l2-third-party-integrations.md](../specifications/l2-third-party-integrations.md) §5.3, §5.5
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** A fresh clone with `MAP_TILE_KEY` set in `.env` renders a working map with no manual settings-panel step; with no key set, the map container shows a labelled placeholder, not a silent empty box, and the condition surfaces on the SEO health dashboard.
 - **Handoff:** `T-10G02` depends on the CAPTCHA half of this task landing first (see phase header).
 - **Notes (finding):** `MapTileConfigResolver` reads `integrations.map_tile_provider`/`map_tile_key` from the settings registry only; nothing imports the documented `.env` variables into it, and the registry default is empty — the map is dead out of the box. The same gap applies to the three CAPTCHA settings keys, currently read by nothing. `qa-deep-findings.md` F-16.
+- **Changes:** New `config/booking.php` `'integrations'` section reads `MAP_TILE_PROVIDER`/`MAP_TILE_KEY`/`CAPTCHA_PROVIDER`/`CAPTCHA_SITE_KEY`/`CAPTCHA_SECRET_KEY` from `.env`; `SettingsRegistry`'s five matching declarations now default to `config('booking.integrations.*')` instead of a hardcoded literal, preserving `isCritical: true` on the map key and the CAPTCHA secret — an administrator-stored override still always wins. `MapTileConfigResolver` gained `hasKey(): bool`; `resources/views/components/public/map.blade.php` renders a labelled placeholder when it is false. `SeoHealthDashboard` surfaces the same condition as a dashboard-wide banner (`mapTileKeyMissing()`), independent of the six per-entity checks `SeoHealthReport` already covers. `docker-compose.yml`'s new `minio-init` service (added alongside T-10F02, same commit) also seeded `.env.example`'s `CAPTCHA_PROVIDER=none` default for a fresh clone. Test coverage: `tests/Feature/Public/PublicMapTest.php` (env-default pickup, placeholder-when-no-key, real-map-when-key-configured) and `tests/Feature/Admin/SeoAdministrationTest.php` (banner shown/hidden) — the latter's "hidden once a key is set" half writes directly to the `settings` table rather than through `SettingsRepository::set()` (a critical setting, chief-administrator-only, and the write-authorization path is not what the test is about), which surfaced a real gotcha: `SettingsRepository` caches its resolved read forever and only invalidates on its own `set()`, so a direct write needs an explicit `Cache::forget('portal.settings')` alongside it or a second read within the same test sees the stale answer.
 
 **[T-10F04] Complete the Open Graph tag set and default image fallback**
 

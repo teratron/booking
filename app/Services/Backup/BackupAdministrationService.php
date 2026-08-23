@@ -6,6 +6,7 @@ namespace App\Services\Backup;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Number;
 use Spatie\Backup\BackupDestination\Backup;
@@ -13,6 +14,7 @@ use Spatie\Backup\BackupDestination\BackupDestination;
 use Spatie\Backup\Config\Config as SpatieBackupConfig;
 use Spatie\Backup\Tasks\Monitor\BackupDestinationStatus;
 use Spatie\Backup\Tasks\Monitor\BackupDestinationStatusFactory;
+use Throwable;
 
 /**
  * Everything the backup administration screen reads. Every date here comes
@@ -32,23 +34,42 @@ final class BackupAdministrationService
 {
     private const string MEDIA_GENERATION_PREFIX = 'media';
 
+    /**
+     * Set the moment any destination-disk read below fails — the one
+     * signal the screen itself has no other way to detect, since every
+     * other method here degrades to an empty result rather than
+     * re-throwing. Reset on each new instance (one per request), never
+     * cleared mid-request once tripped.
+     */
+    private bool $destinationUnreachable = false;
+
     public function __construct(
         private readonly DatabaseBackupService $database,
         private readonly MediaBackupService $media,
     ) {}
 
+    /**
+     * True once any read against the backup destination has failed during
+     * this instance's lifetime — the screen's own signal to show a failure
+     * banner instead of (or alongside) silently-empty history tables.
+     */
+    public function destinationUnreachable(): bool
+    {
+        return $this->destinationUnreachable;
+    }
+
     public function lastDatabaseBackup(): ?Backup
     {
-        return $this->database->latest();
+        return $this->guard(fn (): ?Backup => $this->database->latest());
     }
 
     /** @return Collection<int, Backup> every retained database backup, newest first */
     public function databaseBackupHistory(int $limit = 20): Collection
     {
-        return BackupDestination::create($this->database->diskName(), $this->database->backupName())
+        return $this->guard(fn (): Collection => BackupDestination::create($this->database->diskName(), $this->database->backupName())
             ->backups()
             ->take($limit)
-            ->values();
+            ->values()) ?? collect();
     }
 
     /**
@@ -57,13 +78,15 @@ final class BackupAdministrationService
      */
     public function mediaGenerationHistory(int $limit = 20): Collection
     {
-        $disk = Storage::disk($this->media->destinationDiskName());
+        return $this->guard(function () use ($limit): Collection {
+            $disk = Storage::disk($this->media->destinationDiskName());
 
-        return collect($disk->directories(self::MEDIA_GENERATION_PREFIX))
-            ->sortByDesc(fn (string $path): string => $path)
-            ->take($limit)
-            ->map(fn (string $path): array => ['path' => $path, 'date' => $this->mediaGenerationDate($path)])
-            ->values();
+            return collect($disk->directories(self::MEDIA_GENERATION_PREFIX))
+                ->sortByDesc(fn (string $path): string => $path)
+                ->take($limit)
+                ->map(fn (string $path): array => ['path' => $path, 'date' => $this->mediaGenerationDate($path)])
+                ->values();
+        }) ?? collect();
     }
 
     public function lastMediaBackupDate(): ?Carbon
@@ -104,10 +127,12 @@ final class BackupAdministrationService
      */
     public function healthStatuses(): Collection
     {
-        /** @var SpatieBackupConfig $config */
-        $config = app(SpatieBackupConfig::class);
+        return $this->guard(function (): Collection {
+            /** @var SpatieBackupConfig $config */
+            $config = app(SpatieBackupConfig::class);
 
-        return BackupDestinationStatusFactory::createForMonitorConfig($config->monitoredBackups);
+            return BackupDestinationStatusFactory::createForMonitorConfig($config->monitoredBackups);
+        }) ?? collect();
     }
 
     /**
@@ -151,6 +176,11 @@ final class BackupAdministrationService
             $lines[] = '  No media backup generation exists yet.';
         }
 
+        if ($this->destinationUnreachable) {
+            $lines[] = '';
+            $lines[] = 'WARNING: the backup destination could not be reached while generating this report — some figures above may be incomplete.';
+        }
+
         $lines[] = '';
         $lines[] = 'Health checks';
 
@@ -178,5 +208,36 @@ final class BackupAdministrationService
         $parsed = Carbon::createFromFormat('Y-m-d_His', basename($path));
 
         return $parsed instanceof Carbon ? $parsed : now();
+    }
+
+    /**
+     * Every destination-disk read on this screen goes through this one
+     * choke point: an unreachable bucket (`NoSuchBucket`, a network
+     * failure, a filesystem exception from the underlying Flysystem
+     * adapter — the specific failure mode is never assumed) degrades to
+     * `null` rather than taking the whole screen down with a 500. Reported
+     * once per instance via `report()`, which also forwards to Sentry, so
+     * the condition is never silent even though the screen itself stays
+     * up — the specification's own "raises failure notifications"
+     * requirement, satisfied without a page that cannot render its own
+     * failure.
+     *
+     * @template TResult
+     *
+     * @param  callable(): TResult  $read
+     * @return TResult|null
+     */
+    private function guard(callable $read): mixed
+    {
+        try {
+            return $read();
+        } catch (Throwable $exception) {
+            $this->destinationUnreachable = true;
+
+            Log::warning('Backup destination unreachable.', ['exception' => $exception->getMessage()]);
+            report($exception);
+
+            return null;
+        }
     }
 }
