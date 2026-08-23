@@ -151,10 +151,10 @@ same local PHP available.
 
 ### Track H — Missing Public Pages & Compliance
 
-- [ ] [T-10H01] Object page location/map section
-- [ ] [T-10H02] About and Contacts static pages
-- [ ] [T-10H03] Cookie-consent notice
-- [ ] [T-10H04] Validation
+- [x] [T-10H01] Object page location/map section
+- [x] [T-10H02] About and Contacts static pages
+- [x] [T-10H03] Cookie-consent notice
+- [x] [T-10H04] Validation
 
 ### Track I — Full-Suite Regression Gate
 
@@ -403,32 +403,36 @@ same local PHP available.
 **[T-10H01] Object page location/map section**
 
 - **Spec:** [l1-object-profile.md](../specifications/l1-object-profile.md) §5.1 (composition already lists "Location: address · map · directions · nearby attractions")
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** An object page with coordinates renders `<x-public.map>` centred on them; an object with no coordinates omits the section entirely (matching §3.2's "every section degrades independently" invariant), never an empty frame.
 - **Notes (finding):** The template renders every other §5.1 block except this one, though the object already carries `latitude`/`longitude`/`geom` and the component already exists (reused from the home/territory pages, no new JS). `qa-deep-findings.md` F-17.
+- **Changes:** Inserted a Location section into `resources/views/public/object/show.blade.php` between Services and Object promotions, gated on `$object->latitude !== null && $object->longitude !== null` (not a falsy check — a real 0.0 coordinate must still render). Shows the address (when present), a "Get directions" link (Google Maps' universal `dir/?api=1&destination=` URL, no API key needed), and `<x-public.map>` centred on the object at zoom 15, reusing the identical component the home/territory pages already use — no new JS. "Nearby attractions" is served by the map's own tile-layer context, not a second pin-data feature; the page's separate, pre-existing "Nearby objects" card grid already covers "what else is around" as portal listings. Two new tests in `PublicObjectProfileTest.php`; red-before/green-after via `git stash` on the view file.
 
 **[T-10H02] About and Contacts static pages**
 
 - **Spec:** [l1-platform-shell.md](../specifications/l1-platform-shell.md) (footer already links "About" and "Contacts")
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** The footer's "About" and "Contacts" entries resolve to real 200 pages, both locales, sourced from the same translatable-content mechanism the privacy/terms pages already use.
 - **Notes (finding):** The footer's entries currently degrade to inert text because no route exists — the graceful degradation is working as designed, the pages are simply missing. `qa-deep-findings.md` F-18. Contacts page pulls the portal's own contact details from the settings registry.
+- **Changes:** New `StaticPageController` (`about()`/`contacts()`), routes `public.about`/`public.contacts` registered in `routes/web.php` before the two wildcard territory routes, and `resources/views/public/static/{about,contacts}.blade.php` — same shape as `LegalPageController`/`legal/{privacy,terms}.blade.php`: plain views reading paragraph arrays from `resources/lang/{en,ru}/public.php`'s new `static.about`/`static.contacts` keys, not a database table (this is portal-wide developer-maintained copy, not per-entity content). Contacts additionally reads `portal.contact_phone`/`portal.contact_email` from `SettingsRepository`, already used by the footer itself. `PublicErrorAndLegalTest.php` gained three tests covering both locales and the now-live footer links; red-before (404/`RouteNotFoundException` before the routes existed) via `git stash -u`, green after.
 
 **[T-10H03] Cookie-consent notice**
 
 - **Spec:** [l1-platform-shell.md](../specifications/l1-platform-shell.md) (already names "cookie notice" in its own one-line scope)
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** A first-time visitor sees a consent notice; accepting it persists (`localStorage` or a cookie) and the notice does not reappear on the next visit.
 - **Notes (finding):** No cookie-consent markup exists anywhere in `resources/views/` despite the shell spec already scoping it in and `.drafts/TODO.md` recording the item as done — one of the two is wrong, and the spec (which predates that TODO entry) is the one this task follows. `qa-deep-findings.md` F-22.
+- **Changes:** New `<x-public.cookie-consent>` component (Alpine, matching the existing feedback-overlay's structure) wired into `layouts/public.blade.php` — visible only when `localStorage.getItem('cookie-consent-accepted')` is unset, sets it on Accept. New test in `PublicShellTest.php` proves the markup and localStorage gate exist (red-before via `git stash -u`, green after); the actual accept-then-persist-across-reload behaviour was verified live in a real browser (Playwright MCP) against `php artisan serve` with a temporarily overridden `APP_URL` (reverted after) — notice shown on first load, gone after Accept + full page reload, zero console errors beyond a pre-existing, unrelated local MapTiler-key gap.
 
 **[T-10H04] Validation**
 
 - **Goal:** Verify `T-10H01`–`03` against `l1-object-profile.md` §5.1 and `l1-platform-shell.md`, and `qa-deep-findings.md` F-17/F-18/F-22.
 - **Method:** Feature test per finding; a browser check confirming the map renders with no console error and the consent notice persists across a reload.
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** Wider regression — `tests/Feature/Public` (all files) + `tests/Architecture` (all files): 177/177 pass, including the realistic-volume benchmark test; the object page's own query count at seeded volume is unchanged from its pre-Track-H baseline (the Location section adds no query — `latitude`/`longitude`/`address` are already-loaded columns on `$object`). Live browser pass covered all three findings in one session (map, About/Contacts, cookie consent). `composer lint` clean.
 
 ### Track I — Full-Suite Regression Gate
 

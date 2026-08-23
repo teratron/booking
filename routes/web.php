@@ -19,6 +19,7 @@ use App\Http\Controllers\Public\PromotionController;
 use App\Http\Controllers\Public\RobotsController;
 use App\Http\Controllers\Public\RootRedirectController;
 use App\Http\Controllers\Public\SitemapController;
+use App\Http\Controllers\Public\StaticPageController;
 use App\Http\Controllers\Public\TerritoryPageController;
 use App\Http\Middleware\ResolvePublicLocale;
 use App\Http\Middleware\ResolveRedirect;
@@ -75,6 +76,8 @@ Route::prefix('{lang}')
         Route::post('/feedback', FeedbackSubmissionController::class)->name('feedback.submit');
         Route::get('/privacy-policy', [LegalPageController::class, 'privacy'])->name('legal.privacy');
         Route::get('/terms', [LegalPageController::class, 'terms'])->name('legal.terms');
+        Route::get('/about', [StaticPageController::class, 'about'])->name('about');
+        Route::get('/contacts', [StaticPageController::class, 'contacts'])->name('contacts');
         Route::get('/map/pins', [MapPinsController::class, 'index'])->name('map.pins.index');
         Route::get('/map/pins/{object}', [MapPinsController::class, 'show'])->name('map.pins.show');
         Route::get('/catalog', CatalogSearch::class)->name('catalog.index');

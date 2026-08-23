@@ -73,6 +73,8 @@ return [
         'prices_heading' => 'Prices',
         'details_heading' => 'Details',
         'services_heading' => 'Services & facilities',
+        'location_heading' => 'Location',
+        'directions_link' => 'Get directions',
         'room' => [
             'capacity' => 'Capacity',
             'room_count' => 'Rooms available',
@@ -164,6 +166,10 @@ return [
             'message' => 'Message',
             'submit' => 'Send',
         ],
+        'cookie_consent' => [
+            'message' => 'We use cookies to keep the portal working smoothly and to understand how it is used.',
+            'accept' => 'Accept',
+        ],
     ],
 
     'legal' => [
@@ -193,6 +199,25 @@ return [
                 'To the extent permitted by law, the portal is not liable for the conduct of object owners, the accuracy of listing information, or the outcome of any arrangement a visitor makes directly with an owner.',
                 'These terms may be updated from time to time; the version published at this address is always the current one.',
             ],
+        ],
+    ],
+
+    'static' => [
+        'about' => [
+            'title' => 'About',
+            'body' => [
+                'This portal is a directory for accommodation, dining, and leisure across Moldova, Ukraine, and Georgia — a single place to browse what each destination offers before reaching out directly to the people who run it.',
+                'We publish what object owners tell us: descriptions, photos, prices, and availability, organised by destination and category so a visitor can find what they are looking for quickly. Every listing hands you straight to the owner\'s own phone number or messenger — we do not take bookings or payments on anyone\'s behalf.',
+                'Placement on the portal is paid by object owners, which is how the directory stays free for every visitor to browse.',
+            ],
+        ],
+        'contacts' => [
+            'title' => 'Contacts',
+            'body' => [
+                'Have a question about the portal, spotted an issue with a listing, or want to talk about placing your own object here? Reach us using the details below, or through the feedback form available on every page.',
+            ],
+            'phone_label' => 'Phone',
+            'email_label' => 'Email',
         ],
     ],
 

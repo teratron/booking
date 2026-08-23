@@ -206,6 +206,33 @@
             </section>
         @endif
 
+        {{-- Location: address, map, directions --}}
+        @if ($object->latitude !== null && $object->longitude !== null)
+            <section class="mt-10">
+                <h2 class="text-xl font-semibold text-ink">{{ __('public.object.location_heading') }}</h2>
+                <div class="mt-4 flex flex-wrap items-center justify-between gap-4">
+                    @if ($object->address)
+                        <p class="text-ink">{{ $object->address }}</p>
+                    @endif
+                    <a
+                        href="https://www.google.com/maps/dir/?api=1&destination={{ $object->latitude }},{{ $object->longitude }}"
+                        target="_blank"
+                        rel="noopener"
+                        class="text-sm font-medium text-brand hover:underline"
+                    >
+                        {{ __('public.object.directions_link') }}
+                    </a>
+                </div>
+                <div class="mt-4">
+                    <x-public.map
+                        :center-lat="(float) $object->latitude"
+                        :center-lng="(float) $object->longitude"
+                        :zoom="15"
+                    />
+                </div>
+            </section>
+        @endif
+
         {{-- Object promotions --}}
         @if (count($profile->objectPromotions) > 0)
             <section class="mt-10">

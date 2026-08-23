@@ -102,6 +102,8 @@
 
     <x-public.feedback-overlay />
 
+    <x-public.cookie-consent />
+
     @livewireScripts
 </body>
 

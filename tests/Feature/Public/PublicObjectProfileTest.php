@@ -430,3 +430,32 @@ it('reflects an owner-toggled availability status immediately, not the profile c
         ->assertOk()
         ->assertDontSee(__('public.catalog.card.availability.available'));
 });
+
+it('renders the location section — address, map, and directions link — for an object carrying coordinates', function (): void {
+    // F-17: §5.1 lists "Location: address · map · directions · nearby
+    // attractions" among the page's sections, but the template rendered
+    // every other block except this one despite the object already
+    // carrying latitude/longitude and the map component already existing.
+    $fixture = publicObjectRegistry();
+    $type = publicObjectMakeAccommodationType();
+    $object = publicObjectMake($fixture, $type['typeId'], 'Located Hotel', [
+        'address' => '12 Vineyard Street', 'latitude' => 47.0245, 'longitude' => 28.8322,
+    ]);
+
+    $this->get(publicObjectUrl($object))
+        ->assertOk()
+        ->assertSee(__('public.object.location_heading'))
+        ->assertSee('12 Vineyard Street')
+        ->assertSee(__('public.object.directions_link'))
+        ->assertSee('destination=47.0245', false);
+});
+
+it('omits the location section entirely for an object with no coordinates', function (): void {
+    $fixture = publicObjectRegistry();
+    $type = publicObjectMakeAccommodationType();
+    $object = publicObjectMake($fixture, $type['typeId'], 'No-Coordinates Hotel');
+
+    $this->get(publicObjectUrl($object))
+        ->assertOk()
+        ->assertDontSee(__('public.object.location_heading'));
+});

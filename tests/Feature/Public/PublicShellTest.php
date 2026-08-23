@@ -176,6 +176,25 @@ it('makes the shared feedback overlay invokable from a representative page', fun
         ->assertSee('action="'.route('public.feedback.submit', ['lang' => 'en']).'"', false);
 });
 
+it('renders the cookie-consent notice, gated on localStorage rather than shown unconditionally', function (): void {
+    // F-22: the shell spec names a cookie notice in its own scope, but no
+    // such markup existed anywhere in resources/views. The visibility
+    // check itself is client-side (a first-time visitor sees it, a
+    // returning one who already accepted does not) — this proves the
+    // markup and its localStorage gate exist; the accept-then-reload
+    // behaviour itself is verified live in a browser, not through a
+    // server-rendered HTTP assertion.
+    publicShellRegistry();
+    registerPublicShellTestRoute();
+
+    $response = $this->get('/en/__shell-test');
+
+    $response->assertSee(__('public.shell.cookie_consent.message'))
+        ->assertSee(__('public.shell.cookie_consent.accept'))
+        ->assertSee("localStorage.getItem('cookie-consent-accepted')", false)
+        ->assertSee("localStorage.setItem('cookie-consent-accepted'", false);
+});
+
 it('404s an inactive or unknown language segment rather than silently falling back', function (): void {
     publicShellRegistry();
     registerPublicShellTestRoute();
