@@ -1,6 +1,6 @@
 # Third-Party Integrations
 
-**Version:** 2.0.0
+**Version:** 2.1.0
 **Status:** RFC
 **Layer:** implementation
 **Implements:** l1-platform-foundation.md
@@ -139,6 +139,16 @@ specified.
 privacy-preserving, requires no visual puzzle, and is already in the Cloudflare account
 from §5.2. hCaptcha is the equivalent alternative.
 
+**Review submission is conditional, not blanket** [ADDED — v2.1.0]. The blanket
+statement above assumed one review-submission surface;
+[l1-object-profile.md](l1-object-profile.md) §2 now specifies two selectable modes.
+Turnstile applies only in the `open` mode. The
+`contact_gated` mode's own gate (a prior contact-channel click, same session, same
+object) is the friction that mode relies on instead — invoking Turnstile there as well
+would be a second control stacked on the weaker of the two signals for no added
+guarantee, not defence in depth. Registration and contact forms are unaffected by
+either mode and stay Turnstile-gated as originally decided.
+
 ### 5.6 Payment — Dormant, Module-Gated
 
 **Decision**: no payment provider is integrated. The capability is registered as a
@@ -270,3 +280,4 @@ operational cost.
 | 0.2.0 | 2026-07-30 | Replaced AdminJS with react-admin via shadcn-admin-kit. |
 | 1.0.0 | 2026-08-05 | Major restructure against the client technical specification: payment reclassified as dormant and module-gated; storage, mail, queue, and map selections added. |
 | 2.0.0 | 2026-08-05 | **Rewritten for the Laravel stack.** Authentication, the admin framework, and the REST adapter are no longer integrations — the framework and Filament cover them. Remaining scope narrowed to genuinely external services: S3-compatible storage, CDN, map tiles, SMTP, CAPTCHA, error tracking, and the dormant payment module. Records the OSM tile-policy correction as a required line item. |
+| 2.1.0 | 2026-08-23 | Minor: §5.5 amended — Turnstile now applies conditionally on the review-submission surface, not blanket, following [l1-object-profile.md](l1-object-profile.md) §2's new submission-gating invariant (v1.3.0). Stays `RFC`; no status transition (was not `Stable`). |

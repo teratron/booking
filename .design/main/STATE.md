@@ -4,7 +4,7 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-22 20:58
+**Updated:** 2026-08-23 11:45
 **Phase:** 8 — Delivery Pipeline & Operator Documentation (Phase 9 — Post-Launch QA Remediation — **Done**, 15/15)
 **Status:** Active
 
@@ -14,7 +14,7 @@
 - **Task (Phase 8, unchanged):** **Phase 8 at 20/23 — every agent-performable task is done; three owner-only tasks remain and nothing blocks them.** Track F closed and the C12 quarantine it ran under was lifted the same day when both specifications returned to `Stable` at v0.4.0. Owner chose "master = develop" for `T-8F02`: `require_code_owner_reviews` enabled first (read back to confirm before the boundary was ever observably absent), then `required_approving_review_count` dropped to 0 — same order the task's own Notes required. `T-8F03`'s read-back confirms `master` now matches `develop` field-for-field: ordinary changes clear the gate and merge unattended; any `.github/CODEOWNERS`-matched path always waits for `@teratron`, on either branch. Full detail and the comparison table: `tasks/phase-8.md` Track F.
 - **Previous:** Following the owner's development-phase authorization (§5.5.1), the agent completed every other agent-performable Phase 8 task — branch contract, deploy/verify/rollback/record pipeline, irreversibility scan, EN/RU/agent operator docs, pipeline containment tests — across three prior sessions on 2026-08-20/21. **Remaining, all owner-only regardless of authorization**: `T-8E01` (no API/CLI path to create a GitHub App), `T-8E03` (needs real production credentials absent from this dev environment), `T-8T03` (rehearsal requires a human executor by the spec's own text).
 - **Spec:** **25 specs — 9 `Stable`, 16 `RFC`.** `l1-platform-shell`, `l1-object-profile`, `l1-public-api` promoted `RFC → Stable` 2026-08-22 (Phase 9). The delivery pair's own earlier 2026-08-21 round trip (amended outside the workflow, reconciled, re-promoted to `Stable` at v0.4.0) is unrelated — see `INDEX.md`'s Amendment/Branch-Model Ledgers.
-- **Next Action:** Phase 9 is done — nothing left to run there. Only Phase 8 remains open: resolve the owner-only blocker on T-8E01 — see ## Blockers.
+- **Next Action:** Run /magic.task main to update the plan
 
 ## Progress
 
@@ -32,7 +32,6 @@ Phase 9 tracks:  A 3/3 · B 2/2 · C 2/2 · D 3/3 · E 3/3 · F 1/1 · G 1/1 —
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
 - 2026-08-21 **Decision: a declared boundary and an enforced boundary are two separate obligations, and the specification now says so** — the re-review that held the delivery pair at `RFC` found the sensitive-zone boundary declared in three places and enforced in none of them completely: the coverage check sampled a hand-written list, the ownership file missed two live zones, and `master` did not consult the file at all. All three were green or silent. L1 §5.5.2 now carries the general lesson (both halves fail quietly, neither may be inferred from the other) and L2 §5.11 carries the mechanism plus the setting-order constraint that makes it safe to change. The rule for future boundaries of any kind: verifying one half and inferring the other proves nothing.
-- 2026-08-22 **Decision: when a fix's own investigation surfaces a genuine open product question, put it to the project owner directly rather than inferring an answer from the code.** Full text recovered in `PLAN.md`'s Decision Archive after `update-state` pruned this entry from this exact section on the pass that added it.
 
 ## Blockers
 

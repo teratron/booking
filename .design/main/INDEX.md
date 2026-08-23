@@ -13,6 +13,14 @@ booking marketplace to a multi-country tourism information portal. See
 [l1-platform-foundation.md](specifications/l1-platform-foundation.md) §5.3 for the
 scope-delta ledger.
 
+**Status posture (review-submission-gating pass, 2026-08-23):** the count is
+**8 `Stable`, 17 `RFC`** — `l1-object-profile` returned to `RFC` the day after this
+same file's own TBD-closing promotion, not because that promotion was wrong but
+because a QA sweep found a second, un-asked question underneath the one that was
+closed: authorship (who may be named) was resolved; gating (what stops abuse) was
+not. The Review-Submission-Gating Ledger below records the amendment and the one
+deliberate TBD it leaves open. Before this pass:
+
 **Status posture (Phase 9 remediation pass, 2026-08-22):** the count is **9 `Stable`,
 16 `RFC`** — `l1-platform-shell`, `l1-object-profile`, and `l1-public-api` promoted the
 same day, each closing a live `TBD` blocking Phase 9's Tracks A/B/D (see the note
@@ -81,7 +89,7 @@ Delivery → Optional → Implementation); the registry itself is flat.
 | [l1-platform-shell.md](specifications/l1-platform-shell.md) | Public. Header, data-driven navigation, language and country switchers, footer, cookie notice, 404, legal pages | Stable | 1 | 0.3.1 |
 | [l1-home-page.md](specifications/l1-home-page.md) | Public. Front-page block inventory, data sources, curation, four-viewport behaviour | Stable | 1 | 0.1.1 |
 | [l1-object-catalog.md](specifications/l1-object-catalog.md) | Public. Object type registry, search, filters, tier-governed ordering, map | RFC | 1 | 1.1.1 |
-| [l1-object-profile.md](specifications/l1-object-profile.md) | Public. Object page; direct-contact conversion contract, rooms, prices, services, reviews | Stable | 1 | 1.2.0 |
+| [l1-object-profile.md](specifications/l1-object-profile.md) | Public. Object page; direct-contact conversion contract, rooms, prices, services, reviews | RFC | 1 | 1.3.0 |
 | [l1-availability-status.md](specifications/l1-availability-status.md) | Public. Owner-asserted "vacancies available" flag, staleness management | Stable | 1 | 0.2.0 |
 | [l1-content-publishing.md](specifications/l1-content-publishing.md) | Public. Articles, news, and promotions; shared publication pipeline | RFC | 1 | 1.0.0 |
 | [l1-seo.md](specifications/l1-seo.md) | Public. URL grammar, metadata, indexation policy, structured data, sitemaps, redirects | Stable | 1 | 0.2.0 |
@@ -97,8 +105,54 @@ Delivery → Optional → Implementation); the registry itself is flat.
 | [l1-room-reservation.md](specifications/l1-room-reservation.md) | Optional module — **disabled by default**. Booking: calendars, requests, prepaid checkout | RFC | 1 | 1.0.1 |
 | [l2-data-model.md](specifications/l2-data-model.md) | Implementation. Consolidated table inventory, conventions, index plan, deletion and archival rules, schema deliverables | RFC | 2 | 0.3.1 |
 | [l2-tech-stack.md](specifications/l2-tech-stack.md) | Implementation. Laravel 13 + Filament 5 + PostgreSQL/PostGIS + Redis; package set, bespoke surface, quality gates (incl. WCAG 2.2 AA + ARIA) and performance budgets, self-hosted deployment, dev/production environment configuration | Stable | 2 | 2.4.1 |
-| [l2-third-party-integrations.md](specifications/l2-third-party-integrations.md) | Implementation. External services: storage, CDN, map tiles, SMTP, CAPTCHA, error tracking, dormant payment | RFC | 2 | 2.0.0 |
+| [l2-third-party-integrations.md](specifications/l2-third-party-integrations.md) | Implementation. External services: storage, CDN, map tiles, SMTP, CAPTCHA, error tracking, dormant payment | RFC | 2 | 2.1.0 |
 | [l2-release-pipeline.md](specifications/l2-release-pipeline.md) | Implementation. Git Flow branch contract, two GitHub Actions workflows, image digest as release artefact, pull-based deploy with health-assertion rollback, destructive-migration scan, automation identity permissions, sensitive-zone enforcement, EN/RU/agent documentation tree | RFC | 2 | 0.5.1 |
+
+## Review-Submission-Gating Ledger (2026-08-23)
+
+A functional QA sweep of the whole running instance (`.drafts/qa-deep-findings.md`)
+found the review module had no submission path at all — reading and moderating a
+review existed; nothing could create one. `l1-object-profile.md` §2 had already
+flagged half the gap ("no public submission surface exists yet") but only resolved
+review *authorship* (guest vs. registered), not what stops abuse once a surface
+exists. This dispatch closes that second half, deciding it the same way the sweep's
+own analysis reached it: neither "open, CAPTCHA-only" nor "gated behind a prior
+contact click" dominates the other for a directory with no transactional record to
+verify against, so both ship as an administrator-selectable portal setting rather
+than one being picked once for the client — the same shape of decision
+`moderation.default_mode` and `presentation.within_tier_order` already are.
+
+**Amended (2).**
+
+- `l1-object-profile.md` **1.2.0 → 1.3.0**, `Stable → RFC` by the amendment rule
+  (substantive new invariant, not a typo). §2 gains the submission-gating decision
+  and its reasoning; §3.4 gains the terse invariant plus the explicit server-side-
+  enforcement requirement (matching this project's own "hiding a control is a
+  usability affordance, never an access control" posture, applied here for the first
+  time to a public-facing gate rather than a back-office one); §5.4's lifecycle
+  diagram gains the gate as its own decision node ahead of submission, with an
+  explicit note that the gate and the moderation checkpoint are independent controls.
+  One `<!-- TBD -->` remains — an object with no active contact channel is
+  permanently unreachable for review submission in `contact_gated` mode, and the
+  right fallback is a product decision the spec defers rather than guesses at. That
+  TBD is why the file stays `RFC` rather than re-promoting in the same pass.
+- `l2-third-party-integrations.md` **2.0.0 → 2.1.0**, stays `RFC` (was not `Stable`).
+  §5.5's blanket "Turnstile on reviews" is narrowed to the `open` mode only — the
+  `contact_gated` mode's own click gate is the friction that mode relies on, and
+  stacking Turnstile on top of it would be a second control on the weaker of the two
+  signals, not genuine defence in depth.
+
+**Quarantine (C12).** No specification declares `l1-object-profile.md` as its L1
+parent (`Implements:` field checked against all four L2 files) — no cascade.
+
+**Not addressed here.** Which of the twenty-two remaining `qa-deep-findings.md`
+entries are pure implementation bugs against specifications that already state the
+correct behaviour — confirmed against this pass's own reading of `l1-back-office.md`
+(§5.1 already requires "Users & roles" and "Reviews" sections; §5.2 already leaves
+the exact role-to-permission seed mapping as illustrative data, not a spec
+commitment; §5.6 already requires the backup screen to raise failure notifications
+rather than crash) — versus genuine specification gaps, is `/magic.task`'s
+decomposition to make, not a further round of this workflow.
 
 ## Rename Map (2026-08-05)
 
@@ -365,4 +419,5 @@ this workflow's.
 ## Meta Information
 
 - **Maintainer**: Core Team
-- **Last Updated**: 2026-08-22 (Phase 9 remediation pass — `l1-platform-shell`, `l1-object-profile`, `l1-public-api` promoted RFC → Stable, closing their live TBDs; 25 specifications, 9 `Stable`. Earlier the same day: branch model reconciled to the owner's single-line development posture, then corrected same-day to attribute the pause to its actual recorded decision rather than to newly found drift; delivery pair back to `RFC` at 0.5.1)
+- **Last Updated**: 2026-08-23 (Review-submission-gating pass — `l1-object-profile` amended 1.2.0 → 1.3.0, `Stable → RFC` on a new invariant with one deliberate open TBD; `l2-third-party-integrations` amended 2.0.0 → 2.1.0, stays `RFC`; 25 specifications, 8 `Stable`)
+- **Previously**: 2026-08-22 (Phase 9 remediation pass — `l1-platform-shell`, `l1-object-profile`, `l1-public-api` promoted RFC → Stable, closing their live TBDs; 25 specifications, 9 `Stable`. Earlier the same day: branch model reconciled to the owner's single-line development posture, then corrected same-day to attribute the pause to its actual recorded decision rather than to newly found drift; delivery pair back to `RFC` at 0.5.1)

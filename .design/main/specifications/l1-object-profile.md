@@ -1,7 +1,7 @@
 # Object Profile
 
-**Version:** 1.2.0
-**Status:** Stable
+**Version:** 1.3.0
+**Status:** RFC
 **Layer:** concept
 
 ## Overview
@@ -32,6 +32,7 @@ therefore promoted from a footnote to the page's primary contract.
 - [l1-seo.md](l1-seo.md) - This page is the portal's deepest indexable surface.
 - [l1-feature-modules.md](l1-feature-modules.md) - [ADDED] Determines which optional sections this page composes.
 - [l1-room-reservation.md](l1-room-reservation.md) - [ADDED] Optional module adding a booking panel alongside the contact rail.
+- [l2-third-party-integrations.md](l2-third-party-integrations.md) - [ADDED — v1.3.0] Supplies the CAPTCHA mechanism the review-submission gate invokes in its `open` mode (§5.5).
 
 ## 1. Motivation
 
@@ -65,10 +66,50 @@ capture it.
   setting selects whether a review requires a registered visitor or accepts a named
   guest, defaulting to permitting a guest author, matching the reviews table's own
   schema (`author_id` nullable, `author_name` carries the guest-supplied name), which
-  needed no migration to support either mode. The setting's storage key and its
-  enforcement point belong to whichever phase builds the review-submission flow —
-  no public submission surface exists in this codebase yet; only owner-reply,
-  owner-report, and administrator moderation act on an existing review (§3.4, §5.4).
+  needed no migration to support either mode.
+- **Submission gating is a second, independent portal setting — resolved
+  [ADDED — v1.3.0].** Authorship (above) decides *who may be named* on a review;
+  gating decides *what a visitor must have done* to reach the submission form at all,
+  and the two do not collapse into one setting because they answer different threats.
+  A directory with no transactional record to check against (no completed stay, no
+  purchase — [l1-platform-foundation.md](l1-platform-foundation.md) §3.5) cannot gate
+  on "verified stay" the way a booking platform does, so the choice is between the two
+  mechanisms that remain viable for this shape of product, and the project owner's
+  decision is that both ship as selectable modes rather than one being picked for the
+  client:
+  - `open` — anyone may reach the form; abuse resistance is a CAPTCHA challenge at
+    submission ([l2-third-party-integrations.md](l2-third-party-integrations.md)
+    §5.5) plus the moderation queue every review already passes through (§3.4). The
+    launch default: it costs nothing in friction for a catalog that needs review
+    volume more than it needs to filter visitors who never clicked anything.
+  - `contact_gated` — the form is reachable only once the current visitor has
+    activated at least one contact channel for *that object* in the current session
+    (§3.1's contact-click event is the trigger; no new tracking record is added — a
+    session-scoped flag, not a stored visitor identifier, keeping `[TZ]` §89's
+    minimal-data principle). No CAPTCHA challenge applies in this mode — the click
+    gate is the friction, and stacking a second one on top of it is not a stronger
+    guarantee, since a click is already the weaker of the two signals to fake.
+  - The setting is a single portal-wide value at launch, not scoped per country or
+    per category — `[TZ]` §39/§87/§120 describe no such scoping for reviews
+    specifically, unlike moderation mode ([l1-moderation-governance.md](l1-moderation-governance.md)
+    §3.1), which does. Finer scoping is deferred until a reason to add it appears.
+  - The setting's storage key and its enforcement point belong to whichever phase
+    builds the review-submission flow — no public submission surface exists in this
+    codebase yet; only owner-reply, owner-report, and administrator moderation act on
+    an existing review (§3.4, §5.4).
+  - **The gate is enforced server-side, always** — the same posture this project
+    applies to every other authorization decision. Hiding the submission form from a
+    visitor who has not clicked a contact channel is a usability affordance; the
+    write endpoint itself refuses a submission that does not carry a genuine
+    server-recorded contact-click event for that object and session, not merely one
+    whose client-side form happened to be reachable.
+  - <!-- TBD: an object with no active contact channel at all makes `contact_gated`
+       mode permanently unreachable for that object — no click can ever occur. Left
+       open because the right answer depends on how common a channel-less object is
+       expected to be in practice: falling back to `open` mode for that one object,
+       or accepting the object simply cannot collect reviews until it has a working
+       contact, are both defensible and the choice is a product one, not an
+       architectural one. -->
 
 ## 3. Core Invariants (Layer 1 only)
 
@@ -138,6 +179,11 @@ capture it.
   (`[TZ]` §120).
 - Reviews pass the moderation checkpoint before publication
   ([l1-moderation-governance.md](l1-moderation-governance.md)).
+- **Reaching the submission form is itself gated by a portal setting** [ADDED —
+  v1.3.0], independent of the moderation checkpoint that follows it — see §2's
+  submission-gating decision. A submitted review always enters the moderation
+  checkpoint regardless of which gate admitted it; the setting controls who may
+  submit, never whether what they submit is reviewed.
 - The page shows an aggregate score plus itemized reviews; an object with zero
   reviews renders without an empty review block.
 
@@ -219,7 +265,12 @@ conversion signal the portal will ever have.
 
 ```mermaid
 graph TD
-    A[Author submits review] --> B{Moderation enabled for this scope?}
+    Z{Portal submission-gate setting} -->|open| Z1[CAPTCHA challenge]
+    Z -->|contact_gated| Z2{Visitor clicked a contact channel for this object this session?}
+    Z1 -->|passed| A[Author submits review]
+    Z2 -->|yes| A
+    Z2 -->|no| Z3[Form not reachable]
+    A --> B{Moderation enabled for this scope?}
     B -->|yes| C[Queued for moderation]
     B -->|no| D[Published]
     C -->|approved| D
@@ -230,6 +281,10 @@ graph TD
     H -->|upheld| I[Hidden with a recorded reason]
     H -->|dismissed| D
 ```
+
+The gate (`Z`) and the moderation checkpoint (`B`) are independent controls answered
+by two different settings — see §2. A mode change never bypasses moderation, and a
+moderation-mode change never bypasses the submission gate.
 
 ### 5.5 Media
 
@@ -291,3 +346,4 @@ tooling.
 | 1.1.0 | 2026-08-05 | Minor: scoped the no-occupancy-calendar constraint to the default configuration and added the contact-is-never-displaced invariant, so an activated booking module composes additively rather than replacing the page's conversion path. |
 | 1.2.0 | 2026-08-22 | Minor: closed §2's inline TBD on review authorship — the project owner's decision is that it stays an administrator-configurable portal setting (registered visitor vs. named guest), not a fixed policy; the schema already supports either mode with no migration. `Status: RFC → Stable`. |
 | 1.1.1 | 2026-08-05 | Patch: translated quoted `[TZ]` excerpts from Russian to English per the project's language policy; no meaning changed. |
+| 1.3.0 | 2026-08-23 | Minor: added the submission-gating invariant (§2, §3.4, §5.4) — a second, independent portal setting alongside review authorship, resolving the open question a QA sweep raised (`open` + CAPTCHA vs. `contact_gated`, both shipped as selectable modes rather than one being chosen for the client). Cross-references `l2-third-party-integrations.md` §5.5 for the `open`-mode CAPTCHA mechanism, added to Related Specifications. `Status: Stable → RFC` per the amendment rule — substantive new requirement, not a typo. |
