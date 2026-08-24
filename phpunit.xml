@@ -30,6 +30,12 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing" />
+        <!-- Fixed regardless of the developer's own .env (Herd's booking.test,
+             Docker's localhost:8300, or anything else): PublicHreflangTest
+             asserts against this exact absolute host, so leaving it to
+             whatever APP_URL a given machine happens to have makes the
+             suite pass or fail depending on who's running it. -->
+        <env name="APP_URL" value="http://booking.test" />
         <env name="APP_MAINTENANCE_DRIVER" value="file" />
         <env name="BCRYPT_ROUNDS" value="4" />
         <env name="BROADCAST_CONNECTION" value="null" />
