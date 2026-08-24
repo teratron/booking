@@ -4,7 +4,7 @@ The deep QA plan (`qa-deep-plan.md`) mapped against the client's requirements
 document `.drafts/booking.md`, section by section. Every row was checked against
 a running instance or the code, not inferred from the specifications layer.
 
-**Legend**
+## Legend
 
 | Mark | Meaning |
 | --- | --- |

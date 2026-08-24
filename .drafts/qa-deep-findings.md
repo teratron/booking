@@ -84,6 +84,7 @@ it needs a manual `INSERT` into `role_scopes`.
 
 1. In `DatabaseSeeder`, after `assignRole('chief_administrator')`, write the
    unrestricted grant:
+
    ```php
    DB::table('role_scopes')->insert([
        'user_id' => $user->id,
@@ -94,6 +95,7 @@ it needs a manual `INSERT` into `role_scopes`.
        'granted_at' => now(), 'created_at' => now(), 'updated_at' => now(),
    ]);
    ```
+
 2. Make the grant a consequence of assigning a role, not a separate step a
    caller can forget: have `RoleGrantService` write a default `none` scope
    whenever a role is granted without an explicit narrowing, so every future
@@ -217,9 +219,11 @@ crash for any object that has a phone number — i.e. every real object. Outside
 so production does not crash — it silently issues one query per option instead.
 
 **Fix:** eager-load in the relationship query, in both forms:
+
 ```php
 modifyQueryUsing: fn (Builder $query): Builder => $query->where('is_active', true)->with('translations'),
 ```
+
 Regression test: render both edit pages for an object carrying one channel of
 each seeded type and assert 200.
 

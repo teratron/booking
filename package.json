@@ -15,14 +15,16 @@
         "review": "fallow review --brief",
         "quality": "pnpm run lint && pnpm run analyse"
     },
+    "dependencies": {
+        "maplibre-gl": "^6.6.0",
+        "tailwindcss": "^4.3.3"
+    },
     "devDependencies": {
         "@biomejs/biome": "^2.5.10",
         "@tailwindcss/vite": "^4.3.3",
         "concurrently": "^10.0.5",
         "fallow": "^3.17.0",
         "laravel-vite-plugin": "^3.2.0",
-        "maplibre-gl": "^6.5.0",
-        "tailwindcss": "^4.3.3",
         "vite": "^8.2.2"
     }
 }
