@@ -9,8 +9,11 @@ export default defineConfig({
             input: ['resources/css/app.css', 'resources/js/app.js', 'resources/js/map.js'],
             refresh: true,
             fonts: [
-                bunny('Instrument Sans', {
-                    weights: [400, 500, 600],
+                bunny('Jost', {
+                    weights: [300, 400, 500, 600],
+                }),
+                bunny('Kalam', {
+                    weights: [700],
                 }),
             ],
         }),

@@ -21,7 +21,7 @@
 @endphp
 <header class="bg-brand" x-data="{ mobileOpen: false }">
     <div class="mx-auto flex max-w-7xl items-center gap-4 px-4 py-4 lg:px-8">
-        <x-public.nav-link :href="$urlIfRouted('public.home')" class="shrink-0 text-2xl font-semibold italic text-white">
+        <x-public.nav-link :href="$urlIfRouted('public.home')" class="font-logo shrink-0 text-2xl text-white">
             {{ $portalName }}
         </x-public.nav-link>
 

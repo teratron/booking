@@ -118,6 +118,7 @@ return [
         'hero' => [
             'title' => 'Find your next stay',
             'subtitle' => 'Hotels, guesthouses, restaurants, and attractions across Moldova, Ukraine, and Georgia.',
+            'submit' => 'Search',
         ],
         'categories_heading' => 'Browse by category',
         'recommended_heading' => 'Recommended for you',
@@ -185,6 +186,7 @@ return [
 
     'legal' => [
         'not_found' => [
+            'eyebrow' => 'Oops!',
             'title' => 'Page not found',
             'body' => "The page you're looking for doesn't exist, may have been moved, or the address was typed incorrectly.",
             'home_link' => 'Back to home',

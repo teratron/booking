@@ -94,6 +94,10 @@
         <script type="application/ld+json">{!! json_encode($block, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
     @endforeach
 
+    {{-- Self-hosted via the Vite fonts pipeline (vite.config.js), not a
+         runtime request to Bunny Fonts — see Vite::fonts() below. --}}
+    {{ \Illuminate\Support\Facades\Vite::fonts() }}
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>

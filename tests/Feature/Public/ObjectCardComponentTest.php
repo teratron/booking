@@ -203,9 +203,9 @@ it('renders the tier badge and border colour, keeping card geometry identical ac
     $vipStructure = preg_replace('/<span[^>]*style="background-color[^<]*<\/span>/', '', $stripBorder($vipHtml));
     $unrankedStructure = $stripBorder($unrankedHtml);
 
-    expect(substr_count((string) $vipStructure, 'class="flex w-full flex-col overflow-hidden rounded-lg bg-surface-muted shadow-sm sm:flex-row"'))
+    expect(substr_count((string) $vipStructure, 'class="flex w-full flex-col overflow-hidden rounded-lg bg-surface-muted shadow-card sm:flex-row"'))
         ->toBe(1)
-        ->and(substr_count((string) $unrankedStructure, 'class="flex w-full flex-col overflow-hidden rounded-lg bg-surface-muted shadow-sm sm:flex-row"'))
+        ->and(substr_count((string) $unrankedStructure, 'class="flex w-full flex-col overflow-hidden rounded-lg bg-surface-muted shadow-card sm:flex-row"'))
         ->toBe(1);
 });
 

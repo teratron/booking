@@ -17,7 +17,7 @@
         @foreach ($groups as $group)
             @if (count($group->children) > 0)
                 <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
-                    <button type="button" class="flex items-center gap-1 text-sm font-medium text-white" @click="open = !open" :aria-expanded="open.toString()">
+                    <button type="button" class="flex items-center gap-1 text-base font-medium text-white" @click="open = !open" :aria-expanded="open.toString()">
                         {{ $group->name }}
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="currentColor" viewBox="0 0 10 6" aria-hidden="true">
                             <path d="M0 0l5 6 5-6z" />
@@ -32,25 +32,25 @@
                     </div>
                 </div>
             @else
-                <x-public.nav-link :href="$typeUrl($group->id)" class="text-sm font-medium text-white">
+                <x-public.nav-link :href="$typeUrl($group->id)" class="text-base font-medium text-white">
                     {{ $group->name }}
                 </x-public.nav-link>
             @endif
         @endforeach
 
-        <x-public.nav-link :href="$urlIfRouted('public.news.index')" class="text-sm font-medium text-white">
+        <x-public.nav-link :href="$urlIfRouted('public.news.index')" class="text-base font-medium text-white">
             {{ __('public.shell.nav.news') }}
         </x-public.nav-link>
-        <x-public.nav-link :href="$urlIfRouted('public.promotions.index')" class="text-sm font-medium text-white">
+        <x-public.nav-link :href="$urlIfRouted('public.promotions.index')" class="text-base font-medium text-white">
             {{ __('public.shell.nav.promotions') }}
         </x-public.nav-link>
-        <x-public.nav-link :href="$urlIfRouted('public.blog.index')" class="text-sm font-medium text-white">
+        <x-public.nav-link :href="$urlIfRouted('public.blog.index')" class="text-base font-medium text-white">
             {{ __('public.shell.nav.blog') }}
         </x-public.nav-link>
-        <x-public.nav-link :href="$urlIfRouted('public.about')" class="text-sm font-medium text-white">
+        <x-public.nav-link :href="$urlIfRouted('public.about')" class="text-base font-medium text-white">
             {{ __('public.shell.nav.about') }}
         </x-public.nav-link>
-        <x-public.nav-link :href="$urlIfRouted('public.contacts')" class="text-sm font-medium text-white">
+        <x-public.nav-link :href="$urlIfRouted('public.contacts')" class="text-base font-medium text-white">
             {{ __('public.shell.nav.contacts') }}
         </x-public.nav-link>
     </div>

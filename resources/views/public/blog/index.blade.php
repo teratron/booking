@@ -1,6 +1,6 @@
 <x-layouts.public :title="__('public.shell.nav.blog')" :breadcrumbs="$breadcrumbs">
     <div class="mx-auto max-w-7xl px-4 py-8 lg:px-8">
-        <h1 class="text-3xl font-semibold text-ink">{{ __('public.shell.nav.blog') }}</h1>
+        <h1 class="text-3xl font-medium text-ink">{{ __('public.shell.nav.blog') }}</h1>
 
         @if ($articles->isEmpty())
             <p class="mt-6 text-ink-muted">{{ __('public.blog.empty') }}</p>

@@ -1,10 +1,12 @@
 {{--
     The single result-card component every public listing surface renders.
     Card geometry (outer size and structure) never changes between tiers —
-    only the border colour and the ribbon badge do.
+    only the border colour and the ribbon badge do. Typography scale and
+    the soft drop shadow match the Figma source (Booking file, node
+    225:3813 "карточка отеля1").
 --}}
 <div
-    class="flex w-full flex-col overflow-hidden rounded-lg bg-surface-muted shadow-sm sm:flex-row"
+    class="flex w-full flex-col overflow-hidden rounded-lg bg-surface-muted shadow-card sm:flex-row"
     style="border: 2px solid {{ $card->tierBorderColour ?? 'transparent' }}"
     data-object-card-id="{{ $card->objectId }}"
 >
@@ -44,28 +46,23 @@
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
                 @if ($card->detailsUrl)
-                    <a href="{{ $card->detailsUrl }}" class="text-xl font-semibold text-brand hover:underline">
+                    <a href="{{ $card->detailsUrl }}" class="text-2xl font-medium text-brand hover:underline sm:text-3xl">
                         {{ $card->name }}
                     </a>
                 @else
-                    <span class="text-xl font-semibold text-brand">{{ $card->name }}</span>
+                    <span class="text-2xl font-medium text-brand sm:text-3xl">{{ $card->name }}</span>
                 @endif
 
                 @if ($card->settlement !== '')
-                    <p class="text-sm text-ink">{{ $card->settlement }}</p>
+                    <p class="text-lg font-medium text-ink">{{ $card->settlement }}</p>
                 @endif
             </div>
 
-            @if ($card->reviewCount > 0)
-                <div class="shrink-0 text-right">
-                    <div class="text-lg font-semibold text-ink">{{ number_format((float) $card->ratingAverage, 1) }} / 5</div>
-                    <div class="text-xs text-ink-muted">{{ trans_choice('public.catalog.card.reviews', $card->reviewCount) }}</div>
-                </div>
-            @endif
+            <x-public.star-rating :average="$card->ratingAverage" :count="$card->reviewCount" />
         </div>
 
         @if ($card->shortDescription)
-            <p class="line-clamp-2 text-sm text-ink">{{ $card->shortDescription }}</p>
+            <p class="line-clamp-2 text-base text-ink">{{ $card->shortDescription }}</p>
         @endif
 
         @if (count($card->keyServices) > 0)
@@ -92,9 +89,9 @@
                 <span class="text-xs text-ink-muted">{{ trans_choice('public.catalog.card.views', $card->viewCount) }}</span>
 
                 @if ($card->priceFromAmount)
-                    <div class="text-sm text-ink">
+                    <div class="text-lg text-ink">
                         {{ __('public.catalog.card.price_from') }}
-                        <span class="font-semibold text-brand">{{ $card->priceFromAmount }}</span>
+                        <span class="font-medium text-brand">{{ $card->priceFromAmount }}</span>
                         {{ $card->priceCurrency }}
                     </div>
                 @endif
@@ -113,12 +110,12 @@
                 @if ($card->detailsUrl)
                     <a
                         href="{{ $card->detailsUrl }}"
-                        class="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+                        class="rounded-lg bg-brand px-6 py-2.5 text-base font-medium text-white hover:opacity-90"
                     >
                         {{ __('public.catalog.card.details') }}
                     </a>
                 @else
-                    <span class="cursor-not-allowed rounded-lg bg-gray-300 px-4 py-2 text-sm font-medium text-gray-500">
+                    <span class="cursor-not-allowed rounded-lg bg-gray-300 px-6 py-2.5 text-base font-medium text-gray-500">
                         {{ __('public.catalog.card.details') }}
                     </span>
                 @endif

@@ -7,7 +7,7 @@
             <span class="text-xs font-semibold uppercase text-brand">{{ __('public.news.pinned') }}</span>
         @endif
 
-        <h1 class="mt-2 text-3xl font-semibold text-ink">{{ $newsItem->title }}</h1>
+        <h1 class="mt-2 text-3xl font-medium text-ink">{{ $newsItem->title }}</h1>
 
         @if ($newsItem->publish_at)
             <p class="mt-2 text-sm text-ink-muted">{{ $newsItem->publish_at->toFormattedDateString() }}</p>

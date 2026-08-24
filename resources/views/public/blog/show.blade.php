@@ -7,7 +7,7 @@
             <span class="text-xs font-semibold uppercase text-brand">{{ $article->category->name }}</span>
         @endif
 
-        <h1 class="mt-2 text-3xl font-semibold text-ink">{{ $article->title }}</h1>
+        <h1 class="mt-2 text-3xl font-medium text-ink">{{ $article->title }}</h1>
 
         <div class="mt-2 flex flex-wrap items-center gap-3 text-sm text-ink-muted">
             @if ($article->author)
@@ -45,7 +45,7 @@
         {{-- Related objects --}}
         @if ($article->objects->isNotEmpty())
             <section class="mt-8">
-                <h2 class="text-xl font-semibold text-ink">{{ __('public.blog.related_objects_heading') }}</h2>
+                <x-public.section-heading>{{ __('public.blog.related_objects_heading') }}</x-public.section-heading>
                 <div class="mt-4 flex flex-wrap gap-3">
                     @foreach ($article->objects as $relatedObject)
                         <a
@@ -62,7 +62,7 @@
         {{-- Related territories --}}
         @if ($article->territories->isNotEmpty())
             <section class="mt-8">
-                <h2 class="text-xl font-semibold text-ink">{{ __('public.blog.related_territories_heading') }}</h2>
+                <x-public.section-heading>{{ __('public.blog.related_territories_heading') }}</x-public.section-heading>
                 <div class="mt-4 flex flex-wrap gap-3">
                     @foreach ($article->territories as $relatedTerritory)
                         <a

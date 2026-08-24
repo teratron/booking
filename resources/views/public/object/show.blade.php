@@ -45,7 +45,7 @@
         {{-- Name · type · category · rating · settlement --}}
         <div class="mt-6 flex flex-wrap items-start justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-semibold text-brand">{{ $profile->name }}</h1>
+                <h1 class="text-3xl font-medium text-brand">{{ $profile->name }}</h1>
                 <p class="mt-1 text-ink-muted">
                     @if ($profile->categoryName)
                         {{ $profile->categoryName }} ·
@@ -54,12 +54,7 @@
                 </p>
             </div>
 
-            @if ($profile->reviewCount > 0)
-                <div class="shrink-0 text-right">
-                    <div class="text-xl font-semibold text-ink">{{ number_format((float) $profile->ratingAverage, 1) }} / 5</div>
-                    <div class="text-sm text-ink-muted">{{ trans_choice('public.catalog.card.reviews', $profile->reviewCount) }}</div>
-                </div>
-            @endif
+            <x-public.star-rating :average="$profile->ratingAverage" :count="$profile->reviewCount" />
         </div>
 
         {{-- Contact rail — the page's own conversion element, kept above
@@ -92,7 +87,7 @@
         {{-- Type-specific block: rooms (accommodation) --}}
         @if ($profile->hasRooms && count($profile->rooms) > 0)
             <section class="mt-10">
-                <h2 class="text-xl font-semibold text-ink">{{ __('public.object.rooms_heading') }}</h2>
+                <x-public.section-heading>{{ __('public.object.rooms_heading') }}</x-public.section-heading>
                 <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($profile->rooms as $room)
                         <div class="rounded-lg border border-gray-200 p-4">
@@ -143,7 +138,7 @@
         {{-- Type-specific block: prices (non-accommodation, e.g. an average cheque) --}}
         @if (! $profile->hasRooms && count($profile->objectPrices) > 0)
             <section class="mt-10">
-                <h2 class="text-xl font-semibold text-ink">{{ __('public.object.prices_heading') }}</h2>
+                <x-public.section-heading>{{ __('public.object.prices_heading') }}</x-public.section-heading>
                 <div class="mt-4 flex flex-wrap gap-3">
                     @foreach ($profile->objectPrices as $price)
                         <span class="rounded-lg border border-gray-200 px-4 py-2 text-sm text-ink">
@@ -161,7 +156,7 @@
         {{-- Type-varying details (catering, house rules, cuisine, opening hours, visiting information — read uniformly from the type's own declared attribute schema) --}}
         @if (count($profile->attributes) > 0)
             <section class="mt-10">
-                <h2 class="text-xl font-semibold text-ink">{{ __('public.object.details_heading') }}</h2>
+                <x-public.section-heading>{{ __('public.object.details_heading') }}</x-public.section-heading>
                 <dl class="mt-4 grid gap-x-6 gap-y-2 sm:grid-cols-2">
                     @foreach ($profile->attributes as $attribute)
                         <div class="flex justify-between border-b border-gray-100 py-2 sm:justify-start sm:gap-3">
@@ -176,7 +171,7 @@
         {{-- Services & infrastructure (grouped, icon-tagged) --}}
         @if (count($profile->amenityGroups) > 0)
             <section class="mt-10">
-                <h2 class="text-xl font-semibold text-ink">{{ __('public.object.services_heading') }}</h2>
+                <x-public.section-heading>{{ __('public.object.services_heading') }}</x-public.section-heading>
                 <div class="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($profile->amenityGroups as $group)
                         <div>
@@ -209,7 +204,7 @@
         {{-- Location: address, map, directions --}}
         @if ($object->latitude !== null && $object->longitude !== null)
             <section class="mt-10">
-                <h2 class="text-xl font-semibold text-ink">{{ __('public.object.location_heading') }}</h2>
+                <x-public.section-heading>{{ __('public.object.location_heading') }}</x-public.section-heading>
                 <div class="mt-4 flex flex-wrap items-center justify-between gap-4">
                     @if ($object->address)
                         <p class="text-ink">{{ $object->address }}</p>
@@ -236,7 +231,7 @@
         {{-- Object promotions --}}
         @if (count($profile->objectPromotions) > 0)
             <section class="mt-10">
-                <h2 class="text-xl font-semibold text-ink">{{ __('public.territory.promotions') }}</h2>
+                <x-public.section-heading>{{ __('public.territory.promotions') }}</x-public.section-heading>
                 <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($profile->objectPromotions as $promotion)
                         <x-public.content-card
@@ -252,7 +247,7 @@
         {{-- Object news --}}
         @if (count($profile->objectNews) > 0)
             <section class="mt-10">
-                <h2 class="text-xl font-semibold text-ink">{{ __('public.shell.nav.news') }}</h2>
+                <x-public.section-heading>{{ __('public.shell.nav.news') }}</x-public.section-heading>
                 <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($profile->objectNews as $newsItem)
                         <x-public.content-card
@@ -272,7 +267,7 @@
              disabled for this object's own scope. --}}
         @if (count($profile->reviews) > 0)
             <section class="mt-10">
-                <h2 class="text-xl font-semibold text-ink">{{ __('public.object.reviews.heading') }}</h2>
+                <x-public.section-heading>{{ __('public.object.reviews.heading') }}</x-public.section-heading>
                 <div class="mt-4 flex flex-col gap-4">
                     @foreach ($profile->reviews as $review)
                         <div class="rounded-lg border border-gray-200 p-4">
@@ -310,7 +305,7 @@
             @elseif ($reviewForm->mode === 'contact_gated' && ! $reviewForm->canSubmit)
                 <p class="rounded-lg bg-surface-muted p-4 text-sm text-ink-muted">{{ __('public.object.reviews.form.contact_first') }}</p>
             @else
-                <h2 class="text-xl font-semibold text-ink">{{ __('public.object.reviews.form.heading') }}</h2>
+                <x-public.section-heading>{{ __('public.object.reviews.form.heading') }}</x-public.section-heading>
 
                 @error('review')
                     <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
@@ -354,7 +349,7 @@
              through CatalogQueryService like every other listing surface. --}}
         @if (count($profile->nearbyObjects) > 0)
             <section class="mt-10">
-                <h2 class="text-xl font-semibold text-ink">{{ __('public.object.nearby_heading') }}</h2>
+                <x-public.section-heading>{{ __('public.object.nearby_heading') }}</x-public.section-heading>
                 <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($profile->nearbyObjects as $nearbyObject)
                         <x-object-card :object="$nearbyObject" wire:key="nearby-card-{{ $nearbyObject->id }}" />
@@ -366,7 +361,7 @@
         {{-- Similar objects — same type, country-wide, tier-ordered. --}}
         @if (count($profile->similarObjects) > 0)
             <section class="mt-10">
-                <h2 class="text-xl font-semibold text-ink">{{ __('public.object.similar_heading') }}</h2>
+                <x-public.section-heading>{{ __('public.object.similar_heading') }}</x-public.section-heading>
                 <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($profile->similarObjects as $similarObject)
                         <x-object-card :object="$similarObject" wire:key="similar-card-{{ $similarObject->id }}" />

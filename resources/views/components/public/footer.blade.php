@@ -29,13 +29,13 @@
 <footer class="bg-brand text-white">
     <div class="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-5 lg:px-8">
         <div class="lg:col-span-1">
-            <x-public.nav-link :href="$urlIfRouted('public.home')" class="text-3xl font-semibold italic">
+            <x-public.nav-link :href="$urlIfRouted('public.home')" class="font-logo text-3xl">
                 {{ $portalName }}
             </x-public.nav-link>
         </div>
 
         <div>
-            <h3 class="text-lg font-semibold">{{ __('public.shell.footer.about_heading') }}</h3>
+            <h3 class="text-2xl font-medium">{{ __('public.shell.footer.about_heading') }}</h3>
             <ul class="mt-2 flex flex-col gap-1 text-sm text-white/90">
                 <li><x-public.nav-link :href="$urlIfRouted('public.about')">{{ __('public.shell.nav.about') }}</x-public.nav-link></li>
                 <li><x-public.nav-link :href="$urlIfRouted('public.blog.index')">{{ __('public.shell.nav.blog') }}</x-public.nav-link></li>
@@ -43,7 +43,7 @@
         </div>
 
         <div>
-            <h3 class="text-lg font-semibold">{{ __('public.shell.footer.contacts_heading') }}</h3>
+            <h3 class="text-2xl font-medium">{{ __('public.shell.footer.contacts_heading') }}</h3>
             <ul class="mt-2 flex flex-col gap-1 text-sm text-white/90">
                 @if ($contactPhone !== '')
                     <li>{{ $contactPhone }}</li>
@@ -66,7 +66,7 @@
         </div>
 
         <div>
-            <h3 class="text-lg font-semibold">{{ __('public.shell.footer.destinations_heading') }}</h3>
+            <h3 class="text-2xl font-medium">{{ __('public.shell.footer.destinations_heading') }}</h3>
             <ul class="mt-2 flex flex-col gap-1 text-sm text-white/90">
                 @foreach ($destinations as $destination)
                     <li>
@@ -79,7 +79,7 @@
         </div>
 
         <div>
-            <h3 class="text-lg font-semibold">{{ __('public.shell.footer.categories_heading') }}</h3>
+            <h3 class="text-2xl font-medium">{{ __('public.shell.footer.categories_heading') }}</h3>
             <ul class="mt-2 flex flex-col gap-1 text-sm text-white/90">
                 @foreach ($groups as $group)
                     <li>

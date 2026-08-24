@@ -21,7 +21,7 @@
 
         @foreach ($catalogBlocks as $block)
             <section class="mt-10">
-                <h2 class="text-xl font-semibold text-ink">{{ $block['type']->name }}</h2>
+                <x-public.section-heading>{{ $block['type']->name }}</x-public.section-heading>
                 <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($block['objects'] as $object)
                         <x-object-card :object="$object" wire:key="territory-card-{{ $object->id }}" />
@@ -32,7 +32,7 @@
 
         @if ($newsItems->isNotEmpty())
             <section class="mt-10">
-                <h2 class="text-xl font-semibold text-ink">{{ __('public.shell.nav.news') }}</h2>
+                <x-public.section-heading>{{ __('public.shell.nav.news') }}</x-public.section-heading>
                 <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($newsItems as $newsItem)
                         <x-public.nav-link
@@ -51,7 +51,7 @@
 
         @if ($promotions->isNotEmpty())
             <section class="mt-10">
-                <h2 class="text-xl font-semibold text-ink">{{ __('public.territory.promotions') }}</h2>
+                <x-public.section-heading>{{ __('public.territory.promotions') }}</x-public.section-heading>
                 <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($promotions as $promotion)
                         <x-public.nav-link
@@ -70,7 +70,7 @@
 
         @if ($territory->latitude !== null && $territory->longitude !== null)
             <section class="mt-10">
-                <h2 class="text-xl font-semibold text-ink">{{ __('public.territory.map') }}</h2>
+                <x-public.section-heading>{{ __('public.territory.map') }}</x-public.section-heading>
                 <div class="mt-4">
                     <x-public.map
                         :territory-id="$territory->id"
@@ -90,7 +90,7 @@
 
         @if ($childTerritories->isNotEmpty())
             <section class="mt-10">
-                <h2 class="text-xl font-semibold text-ink">{{ __('public.territory.explore') }}</h2>
+                <x-public.section-heading>{{ __('public.territory.explore') }}</x-public.section-heading>
                 <div class="mt-4 flex flex-wrap gap-3">
                     @foreach ($childTerritories as $child)
                         <a

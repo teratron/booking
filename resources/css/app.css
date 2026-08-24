@@ -4,23 +4,39 @@
 @source "../../storage/framework/views/*.php";
 
 @theme {
+    /*
+     * The Figma source sets body copy in "FuturaMediumC" / "FuturaLightC" /
+     * "FuturaBookC" (nodes 225:3624, 225:4066, 225:3813, 225:4047) — a
+     * commercial Futura Condensed family this project has no licence for.
+     * Jost is the closest freely-licensed geometric sans (Google Fonts) and
+     * is loaded in the public layout head; it stands in for all three
+     * Futura weights (Light/Book -> 300/400, Medium -> 500/600).
+     */
     --font-sans:
-        "Instrument Sans", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-        "Segoe UI Symbol", "Noto Color Emoji";
+        "Jost", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+        "Noto Color Emoji";
+
+    /* Portal wordmark only (node 227:4210 "Booking") — deliberately not the body font. */
+    --font-logo: "Kalam", cursive;
 
     /*
      * Public-site tokens, extracted from the Figma source (Booking file,
-     * node 225:2734 — the catalog card) rather than invented. Defined once
-     * here and reused as theme-based Tailwind classes (bg-brand, text-ink,
-     * etc.) in every public template, per the project's own no-magic-values
-     * rule — later public-site tasks extend this block as they pull their
-     * own nodes, they do not redefine these.
+     * nodes 225:3619 "Главная", 225:3624 "меню", 225:4066 "поле поиска",
+     * 225:3813 "карточка отеля1", 225:4047 "футер") rather than invented.
+     * Defined once here and reused as theme-based Tailwind classes
+     * (bg-brand, text-ink, etc.) in every public template, per the
+     * project's own no-magic-values rule — later public-site tasks extend
+     * this block as they pull their own nodes, they do not redefine these.
      */
     --color-brand: #f8bb44;
     --color-ink: #1f1f1f;
     --color-ink-muted: #606060;
+    --color-placeholder: #6b6b6b;
     --color-link: #3055d6;
     --color-surface-muted: #f8f8f8;
+
+    /* Card drop shadow, node 225:3814 "Rectangle 191". */
+    --shadow-card: 0px 4px 4px 0px rgba(201, 201, 201, 0.25);
 }
 
 /* Alpine hides an `x-cloak` element only after it initializes; without this
