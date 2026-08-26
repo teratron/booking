@@ -19,6 +19,7 @@ use App\Services\Authorization\CabinetAccessResolver;
 use App\Services\Authorization\ScopeAuthorizer;
 use App\Services\Localization\DatabaseOverlayLoader;
 use App\Services\Localization\LanguageRegistry;
+use App\Services\Modules\ModuleResolver;
 use App\Services\Settings\SettingsRepository;
 use App\Services\Shell\LocaleSwitchResolver;
 use Astrotomic\Translatable\Locales;
@@ -70,6 +71,11 @@ class AppServiceProvider extends ServiceProvider
         // instance; without this, each of the three re-runs the same
         // slug resolution from scratch.
         $this->app->singleton(LocaleSwitchResolver::class);
+
+        // Same rationale again: the object page alone asks the same
+        // module/context question up to eight times across independently
+        // injected services (see its own docblock's per-request memo).
+        $this->app->singleton(ModuleResolver::class);
     }
 
     /**

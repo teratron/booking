@@ -87,6 +87,10 @@ final class ModuleAdministrator
             ],
         );
 
+        // The resolver caches this same registry in Redis, keyed by module
+        // id — this is the write that cache exists to notice.
+        $this->resolver->invalidateSettingsCache((int) $module->id);
+
         $this->journal->record(
             event: 'module_toggled',
             target: $module,
