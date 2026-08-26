@@ -1,16 +1,47 @@
 {{--
-    The single result-card component every public listing surface renders.
-    Card geometry (outer size and structure) never changes between tiers —
-    only the border colour and the ribbon badge do. Typography scale and
-    the soft drop shadow match the Figma source (Booking file, node
-    225:3813 "карточка отеля1").
+    The single result-card component every public listing surface renders,
+    in two geometries sharing one visual language (tier border colour,
+    badge, rating, price, contact actions):
+
+    - `row` (default) — full-width, image beside content. Matches the Figma
+      source exactly (Booking file, node 225:3813 "карточка отеля1") and is
+      correct wherever the card is the only thing in its row: the catalog's
+      own list view, the object page's "similar objects" list.
+    - `tile` — image over content, sized for a narrower grid cell. Figma's
+      catalog frame shows only the list geometry — the grid/list toggle and
+      the home page's card rails are both capability this project added
+      beyond the source design — so there is no tile node to match; this
+      variant is designed to the same type scale and spacing the row
+      variant already uses, not invented from scratch.
+
+    Before this split, every grid placement (the home page's "Рекомендуем"/
+    "Новые объекты" rails, the catalog's own tile toggle) used the row
+    geometry unconditionally: a 288px fixed-width image plus its `sm:flex-row`
+    layout activated at any viewport width, regardless of how narrow the
+    actual grid cell was, clipping titles and cutting off the "Подробнее"
+    button. Tailwind breakpoints key off the viewport, not the container, so
+    the row geometry had no way to know it had been placed somewhere narrow.
 --}}
+@props(['variant' => 'row'])
+@php
+    $isTile = $variant === 'tile';
+@endphp
 <div
-    class="flex w-full flex-col overflow-hidden rounded-lg bg-surface-muted shadow-card sm:flex-row"
+    @class([
+        'flex overflow-hidden rounded-lg bg-surface-muted shadow-card',
+        'w-full flex-col' => $isTile,
+        'w-full flex-col sm:flex-row' => ! $isTile,
+    ])
     style="border: 2px solid {{ $card->tierBorderColour ?? 'transparent' }}"
     data-object-card-id="{{ $card->objectId }}"
 >
-    <div class="relative h-56 w-full shrink-0 overflow-hidden sm:h-auto sm:w-72">
+    <div
+        @class([
+            'relative shrink-0 overflow-hidden',
+            'h-48 w-full' => $isTile,
+            'h-56 w-full sm:h-auto sm:w-72' => ! $isTile,
+        ])
+    >
         @if ($card->coverPhotoUrl)
             <img
                 src="{{ $card->coverPhotoUrl }}"
@@ -46,15 +77,15 @@
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
                 @if ($card->detailsUrl)
-                    <a href="{{ $card->detailsUrl }}" class="text-2xl font-medium text-brand hover:underline sm:text-3xl">
+                    <a href="{{ $card->detailsUrl }}" @class(['font-medium text-brand hover:underline', 'text-xl' => $isTile, 'text-2xl sm:text-3xl' => ! $isTile])>
                         {{ $card->name }}
                     </a>
                 @else
-                    <span class="text-2xl font-medium text-brand sm:text-3xl">{{ $card->name }}</span>
+                    <span @class(['font-medium text-brand', 'text-xl' => $isTile, 'text-2xl sm:text-3xl' => ! $isTile])>{{ $card->name }}</span>
                 @endif
 
                 @if ($card->settlement !== '')
-                    <p class="text-lg font-medium text-ink">{{ $card->settlement }}</p>
+                    <p @class(['font-medium text-ink', 'text-base' => $isTile, 'text-lg' => ! $isTile])>{{ $card->settlement }}</p>
                 @endif
             </div>
 
@@ -84,7 +115,7 @@
             </div>
         @endif
 
-        <div class="mt-auto flex flex-wrap items-end justify-between gap-3 pt-2">
+        <div @class(['mt-auto flex gap-3 pt-2', 'flex-col items-stretch' => $isTile, 'flex-wrap items-end justify-between' => ! $isTile])>
             <div class="flex flex-col gap-1">
                 <span class="text-xs text-ink-muted">{{ trans_choice('public.catalog.card.views', $card->viewCount) }}</span>
 
@@ -97,7 +128,7 @@
                 @endif
             </div>
 
-            <div class="flex flex-wrap items-center gap-2">
+            <div @class(['flex flex-wrap items-center gap-2', 'justify-between' => $isTile])>
                 @foreach ($card->contactActions as $action)
                     <a
                         href="{{ $action->href }}"
@@ -110,12 +141,12 @@
                 @if ($card->detailsUrl)
                     <a
                         href="{{ $card->detailsUrl }}"
-                        class="rounded-lg bg-brand px-6 py-2.5 text-base font-medium text-white hover:opacity-90"
+                        @class(['rounded-lg bg-brand text-center font-medium text-white hover:opacity-90', 'flex-1 px-4 py-2 text-sm' => $isTile, 'px-6 py-2.5 text-base' => ! $isTile])
                     >
                         {{ __('public.catalog.card.details') }}
                     </a>
                 @else
-                    <span class="cursor-not-allowed rounded-lg bg-gray-300 px-6 py-2.5 text-base font-medium text-gray-500">
+                    <span @class(['cursor-not-allowed rounded-lg bg-gray-300 text-center font-medium text-gray-500', 'flex-1 px-4 py-2 text-sm' => $isTile, 'px-6 py-2.5 text-base' => ! $isTile])>
                         {{ __('public.catalog.card.details') }}
                     </span>
                 @endif

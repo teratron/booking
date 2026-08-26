@@ -352,7 +352,7 @@
                 <x-public.section-heading>{{ __('public.object.nearby_heading') }}</x-public.section-heading>
                 <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($profile->nearbyObjects as $nearbyObject)
-                        <x-object-card :object="$nearbyObject" wire:key="nearby-card-{{ $nearbyObject->id }}" />
+                        <x-object-card :object="$nearbyObject" variant="tile" wire:key="nearby-card-{{ $nearbyObject->id }}" />
                     @endforeach
                 </div>
             </section>
@@ -364,7 +364,7 @@
                 <x-public.section-heading>{{ __('public.object.similar_heading') }}</x-public.section-heading>
                 <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($profile->similarObjects as $similarObject)
-                        <x-object-card :object="$similarObject" wire:key="similar-card-{{ $similarObject->id }}" />
+                        <x-object-card :object="$similarObject" variant="tile" wire:key="similar-card-{{ $similarObject->id }}" />
                     @endforeach
                 </div>
             </section>

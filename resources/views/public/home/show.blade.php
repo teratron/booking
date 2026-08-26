@@ -58,7 +58,7 @@
             <x-public.scroll-row :heading="__('public.home.recommended_heading')" columns="3">
                 @foreach ($recommendedObjects as $object)
                     <div class="w-80 shrink-0 sm:w-auto">
-                        <x-object-card :object="$object" wire:key="home-recommended-{{ $object->id }}" />
+                        <x-object-card :object="$object" variant="tile" wire:key="home-recommended-{{ $object->id }}" />
                     </div>
                 @endforeach
             </x-public.scroll-row>
@@ -92,7 +92,7 @@
             <x-public.scroll-row :heading="__('public.home.newest_heading')" columns="3">
                 @foreach ($newestObjects as $object)
                     <div class="w-80 shrink-0 sm:w-auto">
-                        <x-object-card :object="$object" wire:key="home-newest-{{ $object->id }}" />
+                        <x-object-card :object="$object" variant="tile" wire:key="home-newest-{{ $object->id }}" />
                     </div>
                 @endforeach
             </x-public.scroll-row>

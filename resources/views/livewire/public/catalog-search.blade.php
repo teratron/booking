@@ -150,7 +150,7 @@
             @else
                 <div @class(['mt-6 grid gap-4' => true, 'sm:grid-cols-2' => $viewMode === 'grid', 'flex flex-col' => $viewMode === 'list'])>
                     @foreach ($results as $object)
-                        <x-object-card :object="$object" wire:key="catalog-card-{{ $object->id }}" />
+                        <x-object-card :object="$object" :variant="$viewMode === 'grid' ? 'tile' : 'row'" wire:key="catalog-card-{{ $object->id }}" />
                     @endforeach
                 </div>
 

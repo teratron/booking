@@ -15,7 +15,7 @@
         @else
             <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach ($results as $object)
-                    <x-object-card :object="$object" wire:key="typed-catalog-card-{{ $object->id }}" />
+                    <x-object-card :object="$object" variant="tile" wire:key="typed-catalog-card-{{ $object->id }}" />
                 @endforeach
             </div>
 

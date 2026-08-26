@@ -203,10 +203,39 @@ it('renders the tier badge and border colour, keeping card geometry identical ac
     $vipStructure = preg_replace('/<span[^>]*style="background-color[^<]*<\/span>/', '', $stripBorder($vipHtml));
     $unrankedStructure = $stripBorder($unrankedHtml);
 
-    expect(substr_count((string) $vipStructure, 'class="flex w-full flex-col overflow-hidden rounded-lg bg-surface-muted shadow-card sm:flex-row"'))
+    expect(substr_count((string) $vipStructure, 'class="flex overflow-hidden rounded-lg bg-surface-muted shadow-card w-full flex-col sm:flex-row"'))
         ->toBe(1)
-        ->and(substr_count((string) $unrankedStructure, 'class="flex w-full flex-col overflow-hidden rounded-lg bg-surface-muted shadow-card sm:flex-row"'))
+        ->and(substr_count((string) $unrankedStructure, 'class="flex overflow-hidden rounded-lg bg-surface-muted shadow-card w-full flex-col sm:flex-row"'))
         ->toBe(1);
+});
+
+it('renders the row geometry by default, matching the Figma source exactly', function (): void {
+    $fixture = objectCardGeography();
+    $object = objectCardMakeObject($fixture, $fixture['accommodationTypeId'], 'Default Geometry Villa');
+
+    $html = (string) $this->blade('<x-object-card :object="$object" />', ['object' => $object->fresh()]);
+
+    expect($html)->toContain('sm:flex-row')
+        ->and($html)->toContain('sm:w-72')
+        ->and($html)->not->toContain('sm:grid-cols');
+});
+
+it('renders the tile geometry — image over content, no viewport-conditional row switch — when placed in a grid', function (): void {
+    // F-09/S-09: the row geometry's sm:flex-row activated at any viewport
+    // width regardless of how narrow the actual grid cell was — Tailwind
+    // breakpoints key off the viewport, not the container — clipping
+    // titles and cutting off the details button in every grid placement
+    // (the home page's rails, the catalog's own tile toggle). This variant
+    // exists specifically so a caller placing the card in a multi-column
+    // grid can say so.
+    $fixture = objectCardGeography();
+    $object = objectCardMakeObject($fixture, $fixture['accommodationTypeId'], 'Tile Geometry Villa');
+
+    $html = (string) $this->blade('<x-object-card variant="tile" :object="$object" />', ['object' => $object->fresh()]);
+
+    expect($html)->not->toContain('sm:flex-row')
+        ->and($html)->not->toContain('sm:w-72')
+        ->and($html)->toContain('Tile Geometry Villa');
 });
 
 it('captures exactly one object_card_view event per rendered card, never once per page', function (): void {

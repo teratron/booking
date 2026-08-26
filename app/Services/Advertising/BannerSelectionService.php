@@ -276,13 +276,34 @@ final class BannerSelectionService
             ->all();
     }
 
+    /**
+     * The slot registry is small and changes rarely (an operator adding a
+     * new inventory position), so it is cached whole rather than queried by
+     * key on every call — a page requesting several slots in one render
+     * (a territory page's top/mid/bottom, each independently resolved)
+     * otherwise pays one query per slot even when none of them has an
+     * eligible banner to show. Self-healing on the same TTL banner
+     * selection already uses, rather than an explicit invalidation hook
+     * wired into every possible admin mutation point.
+     *
+     * @return array<string, BannerSlot>
+     */
+    private function allSlotsByKey(): array
+    {
+        return Cache::remember(
+            'banner_slots:by_key',
+            self::CACHE_TTL_SECONDS,
+            fn () => BannerSlot::query()->get()->keyBy('key')->all(),
+        );
+    }
+
     private function resolveSlot(BannerSlot|string $slot): ?BannerSlot
     {
         if ($slot instanceof BannerSlot) {
             return $slot;
         }
 
-        return BannerSlot::query()->where('key', $slot)->first();
+        return $this->allSlotsByKey()[$slot] ?? null;
     }
 
     private function resolveTerritoryId(Territory|int|null $territory): ?int

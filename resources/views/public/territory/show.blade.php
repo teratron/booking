@@ -32,7 +32,7 @@
                 <x-public.section-heading>{{ $block['type']->name }}</x-public.section-heading>
                 <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($block['objects'] as $object)
-                        <x-object-card :object="$object" wire:key="territory-card-{{ $object->id }}" />
+                        <x-object-card :object="$object" variant="tile" wire:key="territory-card-{{ $object->id }}" />
                     @endforeach
                 </div>
             </section>
