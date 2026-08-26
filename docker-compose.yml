@@ -153,8 +153,16 @@ services:
       POSTGRES_DB: ${DB_DATABASE:-booking}
     ports:
       # Host port 5433, not 5432 — this machine already runs a native
-      # PostgreSQL Windows service bound to 5432.
-      - "5433:5432"
+      # PostgreSQL Windows service bound to 5432. Override via DB_HOST_PORT
+      # where 5433 itself collides too — confirmed on a machine where
+      # Windows reserves TCP 5341-5440 for Hyper-V dynamic ports, the same
+      # class of collision nginx's own 8300 remap above documents; a bind
+      # inside a reserved range fails with a permissions error, not
+      # "address in use". Whatever this resolves to must match DB_PORT in
+      # .env for host-side tooling (`php artisan`, IDE database clients) —
+      # the app/worker/scheduler/pulse containers never read it, since they
+      # reach Postgres over the compose network at the fixed postgres:5432.
+      - "${DB_HOST_PORT:-5433}:5432"
     volumes:
       # postgres:18+ images store data under major-version-specific
       # subdirectories of /var/lib/postgresql (not .../data directly) —

@@ -74,7 +74,9 @@ Route::prefix('{lang}')
     ->group(function (): void {
         Route::get('/', [HomePageController::class, 'show'])->name('home');
         Route::post('/country', CountryPreferenceController::class)->name('country-preference');
-        Route::post('/feedback', FeedbackSubmissionController::class)->name('feedback.submit');
+        Route::post('/feedback', FeedbackSubmissionController::class)
+            ->middleware('throttle:5,1')
+            ->name('feedback.submit');
         Route::get('/privacy-policy', [LegalPageController::class, 'privacy'])->name('legal.privacy');
         Route::get('/terms', [LegalPageController::class, 'terms'])->name('legal.terms');
         Route::get('/about', [StaticPageController::class, 'about'])->name('about');
