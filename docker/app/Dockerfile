@@ -60,6 +60,14 @@ RUN . /etc/os-release \
 
 WORKDIR /var/www/html
 
+# Replaces php-fpm's own vendor default pool (pm.max_children = 5) —
+# see docker/app/www.conf for the sizing rationale and the load test
+# that caught it. Applies to both the base and production targets below,
+# since only the `app` service (this image's default CMD) runs php-fpm at
+# all; worker/scheduler/pulse each override `command:` to a long-running
+# artisan process and never open this pool.
+COPY docker/app/www.conf /usr/local/etc/php-fpm.d/www.conf
+
 COPY docker/app/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
@@ -162,9 +170,9 @@ FROM runtime AS production
 COPY --from=vendor /var/www/html /var/www/html
 COPY --from=assets /var/www/html/public/build /var/www/html/public/build
 
-# The FPM pool (php-fpm's own default www.conf) runs as www-data; these are
-# the two trees Laravel writes to at runtime (compiled views, framework
-# cache, sessions, logs, the bootstrap cache). Scoped rather than a blanket
-# chown over the whole tree, matching entrypoint.sh's own reasoning for the
-# bind-mounted development case.
+# The FPM pool (docker/app/www.conf, copied in above) runs as www-data;
+# these are the two trees Laravel writes to at runtime (compiled views,
+# framework cache, sessions, logs, the bootstrap cache). Scoped rather than
+# a blanket chown over the whole tree, matching entrypoint.sh's own
+# reasoning for the bind-mounted development case.
 RUN chown -R www-data:www-data storage bootstrap/cache
