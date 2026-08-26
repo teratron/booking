@@ -1,36 +1,69 @@
 <x-layouts.public :metadata="$metadata" :breadcrumbs="$breadcrumbs" :structured-data="$structuredData">
     <div class="mx-auto max-w-7xl px-4 py-8 lg:px-8">
-        {{-- Cover + placement badge + availability badge --}}
-        <div class="relative h-72 w-full overflow-hidden rounded-lg sm:h-96">
-            @if ($profile->coverPhotoUrl)
-                <img
-                    src="{{ $profile->coverPhotoUrl }}"
-                    alt="{{ $profile->name }}"
-                    class="h-full w-full object-cover"
-                >
-            @else
-                <div class="flex h-full w-full items-center justify-center bg-gray-200 text-gray-400"></div>
-            @endif
+        @php
+            // Figma's own gallery (node 225:3111) is one hero beside a 2x2
+            // mosaic of supporting photos, all visible without scrolling —
+            // not the single cover plus a horizontal thumbnail strip this
+            // page rendered before. Degrades by hiding unfilled thumbnail
+            // cells rather than stretching the hero to fill them, and caps
+            // the mosaic at four supporting photos with a "+N" overlay on
+            // the last one — a fifth-and-beyond photo belongs to the full
+            // gallery a future lightbox opens, not squeezed into this block.
+            $mosaicPhotos = array_slice($profile->galleryPhotoUrls, 0, 4);
+            $remainingPhotoCount = max(0, count($profile->galleryPhotoUrls) - count($mosaicPhotos));
+        @endphp
 
-            @if ($profile->tierBadgeText)
-                <span
-                    class="absolute left-0 top-4 rounded-r px-3 py-1 text-sm font-medium text-white"
-                    style="background-color: {{ $profile->tierBadgeColour }}"
-                >
-                    {{ $profile->tierBadgeText }}
-                </span>
-            @endif
+        {{-- Cover + up to four supporting photos, mosaic — placement and availability badges sit on the hero --}}
+        <div class="grid h-72 grid-cols-1 grid-rows-1 gap-2 overflow-hidden rounded-lg sm:h-96 sm:grid-cols-4 sm:grid-rows-2">
+            <div class="relative sm:col-span-2 sm:row-span-2">
+                @if ($profile->coverPhotoUrl)
+                    <img
+                        src="{{ $profile->coverPhotoUrl }}"
+                        alt="{{ $profile->name }}"
+                        class="h-full w-full object-cover"
+                    >
+                @else
+                    <div class="flex h-full w-full items-center justify-center bg-gray-200 text-gray-400"></div>
+                @endif
 
-            @if ($profile->availabilityStatus === 'available')
-                <span class="absolute bottom-3 right-3 rounded bg-emerald-600 px-3 py-1 text-sm font-medium text-white">
-                    {{ __('public.catalog.card.availability.available') }}
-                </span>
-            @endif
+                @if ($profile->tierBadgeText)
+                    <span
+                        class="absolute left-0 top-4 rounded-r px-3 py-1 text-sm font-medium text-white"
+                        style="background-color: {{ $profile->tierBadgeColour }}"
+                    >
+                        {{ $profile->tierBadgeText }}
+                    </span>
+                @endif
+
+                @if ($profile->availabilityStatus === 'available')
+                    <span class="absolute bottom-3 right-3 rounded bg-emerald-600 px-3 py-1 text-sm font-medium text-white">
+                        {{ __('public.catalog.card.availability.available') }}
+                    </span>
+                @endif
+            </div>
+
+            @foreach ($mosaicPhotos as $index => $photoUrl)
+                <div class="relative hidden sm:block">
+                    <img
+                        src="{{ $photoUrl }}"
+                        alt="{{ $profile->name }}"
+                        class="h-full w-full object-cover"
+                        loading="lazy"
+                    >
+                    @if ($index === count($mosaicPhotos) - 1 && $remainingPhotoCount > 0)
+                        <div class="absolute inset-0 flex items-center justify-center bg-black/50 text-lg font-medium text-white">
+                            +{{ $remainingPhotoCount }}
+                        </div>
+                    @endif
+                </div>
+            @endforeach
         </div>
 
-        {{-- Gallery (remaining photos) --}}
+        {{-- The same photos, as a scrollable strip — the mosaic above hides on
+             mobile and caps at four on desktop; this keeps every photo reachable
+             regardless of viewport, until a full gallery lightbox replaces both. --}}
         @if (count($profile->galleryPhotoUrls) > 0)
-            <div class="mt-3 flex gap-3 overflow-x-auto pb-2">
+            <div class="mt-3 flex gap-3 overflow-x-auto pb-2 sm:hidden">
                 @foreach ($profile->galleryPhotoUrls as $photoUrl)
                     <img
                         src="{{ $photoUrl }}"

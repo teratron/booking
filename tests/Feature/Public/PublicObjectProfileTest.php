@@ -269,6 +269,44 @@ it('composes breadcrumb, cover, gallery, header, descriptions, rooms, details, a
         ->and($profile->galleryPhotoUrls)->toHaveCount(1);
 });
 
+it('caps the gallery mosaic at four supporting photos and overlays the true remaining count on the last one', function (): void {
+    Storage::fake('public');
+    $fixture = publicObjectRegistry();
+    $type = publicObjectMakeAccommodationType();
+    $object = publicObjectMake($fixture, $type['typeId'], 'Mosaic Overflow Hotel');
+
+    // Cover, plus five more — one past the mosaic's four-cell cap.
+    for ($i = 0; $i < 6; $i++) {
+        $object->addMedia(UploadedFile::fake()->image("photo-{$i}.jpg", 800, 600))->toMediaCollection('photos');
+    }
+
+    $this->get(publicObjectUrl($object))
+        ->assertOk()
+        ->assertSee('+1', escape: false);
+});
+
+it('shows the gallery mosaic with no overflow overlay when fewer than four supporting photos exist', function (): void {
+    Storage::fake('public');
+    $fixture = publicObjectRegistry();
+    $type = publicObjectMakeAccommodationType();
+    $object = publicObjectMake($fixture, $type['typeId'], 'Mosaic Partial Hotel');
+
+    // Cover, plus two more — short of the mosaic's four-cell cap.
+    for ($i = 0; $i < 3; $i++) {
+        $object->addMedia(UploadedFile::fake()->image("photo-{$i}.jpg", 800, 600))->toMediaCollection('photos');
+    }
+
+    $response = $this->get(publicObjectUrl($object))->assertOk();
+
+    // No fifth photo exists to be hidden, so no "+N" overlay renders at all —
+    // the mosaic degrades to its two filled cells rather than stretching the
+    // hero or inventing an overlay with nothing behind it. Matched by the
+    // mosaic overlay's own exact class list, not the bare `bg-black/50`
+    // utility alone — the shared feedback overlay present on every public
+    // page uses that same utility for its own, unrelated backdrop.
+    expect($response->getContent())->not->toContain('absolute inset-0 flex items-center justify-center bg-black/50');
+});
+
 it('renders the object-level price block for a dining fixture with no rooms, and omits the rooms heading and availability badge entirely', function (): void {
     $fixture = publicObjectRegistry();
     $typeId = publicObjectMakeDiningType();
