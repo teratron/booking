@@ -222,20 +222,33 @@ final class CatalogSearch extends Component
         return app(AttributeFilterResolver::class)->resolve($type, $this->attrs);
     }
 
-    /** @return Collection<int, AmenityGroup> */
+    /**
+     * With no type chosen yet, §10 and §14 still require filtering by
+     * service — Figma's own sidebar is permanently visible, not something
+     * that appears after a type decision. The union of every active type's
+     * amenity groups is the honest answer to "what can I filter by right
+     * now": once a type is picked, {@see ObjectType::amenityGroups()} narrows
+     * this back down to that type's own groups, same as before.
+     *
+     * @return Collection<int, AmenityGroup>
+     */
     private function filterableAmenityGroups(?ObjectType $type): Collection
     {
-        if (! $type instanceof ObjectType) {
-            return collect();
-        }
+        $groups = $type instanceof ObjectType
+            ? $type->amenityGroups()
+            : AmenityGroup::query()->whereHas(
+                'objectTypes',
+                fn ($objectTypes) => $objectTypes->where('object_types.is_active', true),
+            );
 
-        return $type->amenityGroups()
+        return $groups
             ->where('is_active', true)
             ->with(['translations', 'amenities' => function ($query): void {
                 $query->where('is_filterable', true)->where('is_active', true)->with('translations');
             }])
             ->get()
             ->filter(fn (AmenityGroup $group): bool => $group->amenities->isNotEmpty())
+            ->unique('id')
             ->values();
     }
 }

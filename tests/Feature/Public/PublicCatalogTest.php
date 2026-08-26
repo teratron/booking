@@ -160,3 +160,51 @@ it('resets to page one when a filter changes but addresses pagination by page nu
     // rendered result set no longer being the second page's slice.
     expect($component->viewData('results')->currentPage())->toBe(1);
 });
+
+it('shows the union of filterable amenity groups across active types before any type is chosen', function (): void {
+    $fixture = publicCatalogRegistry();
+
+    $sharedGroupId = DB::table('amenity_groups')->insertGetId([
+        'is_active' => true, 'display_order' => 0, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $wifiId = DB::table('amenities')->insertGetId([
+        'amenity_group_id' => $sharedGroupId, 'is_filterable' => true, 'is_active' => true,
+        'display_order' => 0, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('amenity_translations')->insert([
+        'amenity_id' => $wifiId, 'locale' => 'en', 'name' => 'Free Wi-Fi', 'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    // The group only reaches the restaurant type, never the hotel type —
+    // the union has to look past whichever type a visitor eventually picks.
+    DB::table('amenity_group_object_type')->insert([
+        'amenity_group_id' => $sharedGroupId, 'object_type_id' => $fixture['restaurantTypeId'],
+    ]);
+
+    $component = Livewire::test(CatalogSearch::class);
+
+    expect($component->get('type'))->toBeNull()
+        ->and($component->viewData('amenityGroups')->pluck('id')->all())->toContain($sharedGroupId);
+});
+
+it('narrows the amenity groups back to the selected type once one is chosen', function (): void {
+    $fixture = publicCatalogRegistry();
+
+    $restaurantOnlyGroupId = DB::table('amenity_groups')->insertGetId([
+        'is_active' => true, 'display_order' => 0, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $cateringId = DB::table('amenities')->insertGetId([
+        'amenity_group_id' => $restaurantOnlyGroupId, 'is_filterable' => true, 'is_active' => true,
+        'display_order' => 0, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('amenity_translations')->insert([
+        'amenity_id' => $cateringId, 'locale' => 'en', 'name' => 'Catering', 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('amenity_group_object_type')->insert([
+        'amenity_group_id' => $restaurantOnlyGroupId, 'object_type_id' => $fixture['restaurantTypeId'],
+    ]);
+
+    $component = Livewire::test(CatalogSearch::class)->set('type', $fixture['hotelTypeId']);
+
+    expect($component->viewData('amenityGroups')->pluck('id')->all())->not->toContain($restaurantOnlyGroupId);
+});
