@@ -73,7 +73,9 @@ Route::prefix('{lang}')
     ->name('public.')
     ->group(function (): void {
         Route::get('/', [HomePageController::class, 'show'])->name('home');
-        Route::post('/country', CountryPreferenceController::class)->name('country-preference');
+        Route::post('/country', CountryPreferenceController::class)
+            ->middleware('throttle:30,1')
+            ->name('country-preference');
         Route::post('/feedback', FeedbackSubmissionController::class)
             ->middleware('throttle:5,1')
             ->name('feedback.submit');

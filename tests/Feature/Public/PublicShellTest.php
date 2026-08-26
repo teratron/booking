@@ -245,6 +245,21 @@ it('refuses a country code that is not active', function (): void {
     $this->post('/en/country', ['country' => 'xx'])->assertNotFound();
 });
 
+it('rate-limits repeated country-preference switches from the same client, more loosely than the feedback form', function (): void {
+    // S-15: unthrottled before this fix, unlike the sibling feedback route
+    // which already carried `throttle:5,1` — a looser cap here since
+    // switching country is a one-click chrome action, not a form
+    // submission, so a visitor bouncing between countries a few times in a
+    // minute is ordinary use, not abuse.
+    publicShellRegistry();
+
+    for ($attempt = 1; $attempt <= 30; $attempt++) {
+        $this->post('/en/country', ['country' => 'md'])->assertRedirect();
+    }
+
+    $this->post('/en/country', ['country' => 'md'])->assertStatus(429);
+});
+
 it('persists a feedback submission from the shared overlay', function (): void {
     publicShellRegistry();
 
