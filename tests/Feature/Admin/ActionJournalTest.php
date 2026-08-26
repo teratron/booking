@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Filament\Admin\Resources\ActionJournal\Pages\ListActionJournal;
 use App\Filament\Admin\Resources\ActionJournal\Tables\ActionJournalTable;
 use App\Jobs\ArchiveJournalEntriesJob;
 use App\Models\User;
@@ -15,6 +16,7 @@ use Illuminate\Console\Scheduling\Schedule as ConsoleSchedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Livewire;
 use OwenIt\Auditing\Models\Audit;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -177,6 +179,27 @@ it('archives entries older than the configured retention setting without deletin
 
     expect($archivedIds)->toContain($old->id)
         ->and($archivedIds)->not->toContain($recent->id);
+});
+
+it('renders the journal list page once it holds an entry with old and new values', function (): void {
+    // Regression: the page 500'd for every role, including chief_administrator,
+    // as soon as the journal held a single row — a fresh install's empty table
+    // masked it. formatStateUsing() previously type-hinted ?array but the
+    // column state can arrive as the raw JSON string; every prior test in this
+    // file builds filter queries directly against Eloquent and never exercises
+    // this render path. Searching for the seeded value both isolates this row
+    // from whatever else the actor's own creation may itself have audited, and
+    // proves the searchable ILIKE query and the value formatter agree with
+    // each other on the same row.
+    journalSeedEntry(['old_values' => ['status' => 'qa-probe-draft'], 'new_values' => ['status' => 'qa-probe-published']]);
+    journalActor();
+
+    Livewire::test(ListActionJournal::class)
+        ->assertOk()
+        ->searchTable('qa-probe-draft')
+        ->assertOk()
+        ->assertSee('qa-probe-draft')
+        ->assertSee('qa-probe-published');
 });
 
 it('registers the archival job on the scheduler', function (): void {

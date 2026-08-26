@@ -43,13 +43,13 @@ class ActionJournalTable
 
                 TextColumn::make('old_values')
                     ->label(__('panel.action_journal.columns.previous_value'))
-                    ->formatStateUsing(fn (?array $state): string => $state === null || $state === [] ? '—' : (json_encode($state) ?: '—'))
+                    ->formatStateUsing(fn (mixed $state): string => self::formatJournalValues($state))
                     ->searchable(query: fn (Builder $query, string $search): Builder => $query->whereRaw('old_values::text ilike ?', ["%{$search}%"]))
                     ->limit(60),
 
                 TextColumn::make('new_values')
                     ->label(__('panel.action_journal.columns.new_value'))
-                    ->formatStateUsing(fn (?array $state): string => $state === null || $state === [] ? '—' : (json_encode($state) ?: '—'))
+                    ->formatStateUsing(fn (mixed $state): string => self::formatJournalValues($state))
                     ->searchable(query: fn (Builder $query, string $search): Builder => $query->whereRaw('new_values::text ilike ?', ["%{$search}%"]))
                     ->limit(60),
 
@@ -131,5 +131,33 @@ class ActionJournalTable
                     }),
             ])
             ->defaultSort('created_at', 'desc');
+    }
+
+    /**
+     * `old_values`/`new_values` are cast to `json` on the vendor `Audit`
+     * model, so the ordinary state is an array — but this closure sees two
+     * other shapes too. While a table search is active, Filament substitutes
+     * a searchable column's state with the *matched fragment* of the raw
+     * column text, a plain string that is not itself JSON (confirmed by
+     * dumping the value received here during a live search). And a raw,
+     * not-yet-cast column read hands back the JSON-encoded string outright.
+     * All three are legitimate; only the fourth case (nothing usable) is '—'.
+     */
+    private static function formatJournalValues(mixed $state): string
+    {
+        if (is_array($state)) {
+            return $state === [] ? '—' : (json_encode($state) ?: '—');
+        }
+
+        if (! is_string($state) || $state === '') {
+            return '—';
+        }
+
+        $decoded = json_decode($state, true);
+
+        // A decoded array means $state was the raw JSON column text; anything
+        // else (including null, meaning $state was not valid JSON) means it
+        // is a search-match fragment, which is already the right thing to show.
+        return is_array($decoded) ? (json_encode($decoded) ?: '—') : $state;
     }
 }
