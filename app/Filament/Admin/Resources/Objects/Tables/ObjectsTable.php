@@ -6,13 +6,13 @@ namespace App\Filament\Admin\Resources\Objects\Tables;
 
 use App\Exceptions\BulkSelectionScopeException;
 use App\Filament\Admin\Support\CountedBulkAction;
+use App\Filament\Support\SearchableModelSelect;
 use App\Jobs\ExecuteObjectBulkActionJob;
 use App\Models\Country;
 use App\Models\Language;
 use App\Models\Object_;
 use App\Models\ObjectType;
 use App\Models\PromotionLabel;
-use App\Models\Territory;
 use App\Models\User;
 use App\Services\Objects\ObjectBulkActionService;
 use App\Services\Settings\SettingsRepository;
@@ -369,13 +369,8 @@ class ObjectsTable
             ->label(__('panel.objects.bulk.move_territory'))
             ->authorize(fn (): bool => (bool) auth()->user()?->can('object.edit'))
             ->schema([
-                Select::make('territory_id')
-                    ->label(__('panel.objects.bulk.territory'))
-                    ->options(fn (): array => Territory::query()->with('translations')->get()
-                        ->mapWithKeys(fn (Territory $territory): array => [$territory->id => $territory->name ?? "#{$territory->id}"])
-                        ->all())
-                    ->required()
-                    ->searchable(),
+                SearchableModelSelect::territories('territory_id', __('panel.objects.bulk.territory'))
+                    ->required(),
             ])
             ->action(fn (Collection $records, array $data) => self::runBulkOperation($records, 'move_territory', [
                 'territory_id' => (int) $data['territory_id'],
@@ -388,11 +383,8 @@ class ObjectsTable
             ->label(__('panel.objects.bulk.assign_manager'))
             ->authorize(fn (): bool => (bool) auth()->user()?->can('object.edit'))
             ->schema([
-                Select::make('manager_id')
-                    ->label(__('panel.objects.bulk.manager'))
-                    ->options(fn (): array => User::query()->pluck('name', 'id')->all())
-                    ->required()
-                    ->searchable(),
+                SearchableModelSelect::users('manager_id', __('panel.objects.bulk.manager'))
+                    ->required(),
             ])
             ->action(fn (Collection $records, array $data) => self::runBulkOperation($records, 'assign_manager', [
                 'manager_id' => (int) $data['manager_id'],

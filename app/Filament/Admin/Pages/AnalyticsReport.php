@@ -120,11 +120,25 @@ class AnalyticsReport extends Page implements HasTable
             ->all();
     }
 
-    /** @return array<int, string> */
+    /**
+     * A lean id => name pair query rather than `Territory::query()->with('translations')->get()`
+     * — at 6,270+ seeded territories the eager-loaded version hydrates every
+     * row into a full model plus its translation collection for a single
+     * filter dropdown. This report page is a plain Blade `<select>`, not a
+     * Filament form field, so the searchable-select treatment applied to the
+     * public catalog and content forms doesn't fit here without a larger UI
+     * change; this keeps the same list-everything interaction but removes
+     * the model-hydration cost driving it.
+     *
+     * @return array<int, string>
+     */
     public function territories(): array
     {
-        return Territory::query()->with('translations')->get()
-            ->mapWithKeys(fn (Territory $territory): array => [$territory->id => $territory->name ?? "#{$territory->id}"])
+        return Territory::query()
+            ->join('territory_translations', 'territory_translations.territory_id', '=', 'territories.id')
+            ->where('territory_translations.locale', app()->getLocale())
+            ->orderBy('territory_translations.name')
+            ->pluck('territory_translations.name', 'territories.id')
             ->all();
     }
 

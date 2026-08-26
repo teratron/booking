@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources\NewsItems\Schemas;
 
+use App\Filament\Support\SearchableModelSelect;
 use App\Filament\Support\SeoMetadataFields;
 use App\Models\ArticleCategory;
 use App\Models\Language;
-use App\Models\Object_;
-use App\Models\Territory;
-use App\Models\User;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
@@ -33,31 +31,14 @@ class NewsItemForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            Select::make('author_id')
-                ->label(__('panel.news_items.form.author'))
-                ->options(fn (): array => User::query()->pluck('name', 'id')->all())
+            SearchableModelSelect::users('author_id', __('panel.news_items.form.author'))
                 ->default(fn (): ?int => Filament::auth()->user()?->getAuthIdentifier())
-                ->required()
-                ->searchable(),
+                ->required(),
 
-            Select::make('object_id')
-                ->label(__('panel.news_items.form.object'))
-                ->placeholder(__('panel.news_items.form.any_object'))
-                ->options(fn (): array => Object_::query()
-                    ->with('translations')
-                    ->get()
-                    ->mapWithKeys(fn (Object_ $object): array => [$object->id => $object->name ?? "#{$object->id}"])
-                    ->all())
-                ->searchable(),
+            SearchableModelSelect::objects('object_id', __('panel.news_items.form.object'))
+                ->placeholder(__('panel.news_items.form.any_object')),
 
-            Select::make('territory_id')
-                ->label(__('panel.news_items.form.territory'))
-                ->options(fn (): array => Territory::query()
-                    ->with('translations')
-                    ->get()
-                    ->mapWithKeys(fn (Territory $territory): array => [$territory->id => $territory->name ?? "#{$territory->id}"])
-                    ->all())
-                ->searchable(),
+            SearchableModelSelect::territories('territory_id', __('panel.news_items.form.territory')),
 
             Select::make('article_category_id')
                 ->label(__('panel.news_items.form.category'))

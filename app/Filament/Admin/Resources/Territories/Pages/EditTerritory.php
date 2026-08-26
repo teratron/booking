@@ -7,6 +7,7 @@ namespace App\Filament\Admin\Resources\Territories\Pages;
 use App\Exceptions\SlugReuseRefusedException;
 use App\Exceptions\TerritoryCycleException;
 use App\Filament\Admin\Resources\Territories\TerritoryResource;
+use App\Filament\Support\SearchableModelSelect;
 use App\Models\Territory;
 use App\Models\TerritoryTranslation;
 use App\Models\User;
@@ -14,7 +15,6 @@ use App\Services\Geography\TerritoryAdministrator;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Facades\Filament;
-use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
@@ -118,16 +118,12 @@ class EditTerritory extends EditRecord
             ->label(__('panel.territories.actions.reparent'))
             ->authorize(fn (Territory $territory): bool => (bool) auth()->user()?->can('update', $territory))
             ->schema([
-                Select::make('new_parent_id')
-                    ->label(__('panel.territories.actions.new_parent'))
-                    ->options(fn (): array => Territory::query()
-                        ->where('id', '!=', $this->currentTerritory()->id)
-                        ->with('translations')
-                        ->get()
-                        ->mapWithKeys(fn (Territory $territory): array => [$territory->id => $territory->name ?? "#{$territory->id}"])
-                        ->all())
-                    ->placeholder(__('panel.territories.actions.no_parent'))
-                    ->searchable(),
+                SearchableModelSelect::territories(
+                    'new_parent_id',
+                    __('panel.territories.actions.new_parent'),
+                    excludeId: $this->currentTerritory()->id,
+                )
+                    ->placeholder(__('panel.territories.actions.no_parent')),
             ])
             ->requiresConfirmation()
             ->modalDescription(fn (): string => __('panel.territories.actions.reparent_confirm', app(TerritoryAdministrator::class)->blastRadius($this->currentTerritory())))

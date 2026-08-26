@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources\Promotions\Schemas;
 
+use App\Filament\Support\SearchableModelSelect;
 use App\Filament\Support\SeoMetadataFields;
 use App\Models\Language;
-use App\Models\Object_;
-use App\Models\Territory;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
@@ -27,25 +26,11 @@ class PromotionForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            Select::make('object_id')
-                ->label(__('panel.promotions.form.object'))
-                ->options(fn (): array => Object_::query()
-                    ->with('translations')
-                    ->get()
-                    ->mapWithKeys(fn (Object_ $object): array => [$object->id => $object->name ?? "#{$object->id}"])
-                    ->all())
-                ->required()
-                ->searchable(),
+            SearchableModelSelect::objects('object_id', __('panel.promotions.form.object'))
+                ->required(),
 
-            Select::make('territory_id')
-                ->label(__('panel.promotions.form.territory'))
-                ->options(fn (): array => Territory::query()
-                    ->with('translations')
-                    ->get()
-                    ->mapWithKeys(fn (Territory $territory): array => [$territory->id => $territory->name ?? "#{$territory->id}"])
-                    ->all())
-                ->required()
-                ->searchable(),
+            SearchableModelSelect::territories('territory_id', __('panel.promotions.form.territory'))
+                ->required(),
 
             Select::make('status')
                 ->label(__('panel.promotions.form.status'))

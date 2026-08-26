@@ -23,6 +23,7 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 /**
@@ -88,11 +89,12 @@ class NotificationBroadcast extends Page implements HasForms
 
                 Select::make('target_id')
                     ->label(__('panel.broadcast.fields.target'))
-                    ->options(fn (Get $get): array => $this->targetOptions($get('target_type')))
                     ->disabled(fn (Get $get): bool => blank($get('target_type')))
                     ->required()
                     ->live()
-                    ->searchable(),
+                    ->searchable()
+                    ->getSearchResultsUsing(fn (Get $get, string $search): array => $this->targetSearchResults($get('target_type'), $search))
+                    ->getOptionLabelUsing(fn (Get $get, int|string|null $value): ?string => $this->targetOptionLabel($get('target_type'), $value)),
 
                 TextInput::make('title')
                     ->label(__('panel.broadcast.fields.title'))
@@ -175,20 +177,46 @@ class NotificationBroadcast extends Page implements HasForms
         return app(BroadcastComposer::class)->recipientCount($targetType, (int) $targetId);
     }
 
-    /** @return array<int, string> */
-    private function targetOptions(?string $targetType): array
+    /**
+     * Country and package are small, curated registries — safe to list in
+     * full. Resort (`Territory`, 6,270+ seeded rows) is not: searched by
+     * translated name and bounded, the same treatment the shared
+     * searchable-model-select helper gives every other form field over this
+     * table (named in prose, not `@see`-tagged — Pint's docblock handling
+     * re-imports a referenced class even fully qualified, and this file has
+     * no other reason to depend on it). Kept inline rather than routed
+     * through that helper because the field it backs switches source table
+     * by a sibling field's value, which the helper's single-table factories
+     * don't model.
+     *
+     * @return array<int, string>
+     */
+    private function targetSearchResults(?string $targetType, string $search): array
     {
         return match ($targetType) {
             BroadcastComposer::TARGET_COUNTRY => Country::query()->orderBy('display_order')->get()
                 ->mapWithKeys(fn (Country $country): array => [$country->id => $country->code])
                 ->all(),
-            BroadcastComposer::TARGET_RESORT => Territory::query()->with('translations')->get()
+            BroadcastComposer::TARGET_RESORT => Territory::query()
+                ->whereHas('translations', fn (Builder $query) => $query->where('name', 'ilike', "%{$search}%"))
+                ->limit(50)
+                ->get()
                 ->mapWithKeys(fn (Territory $territory): array => [$territory->id => $territory->name ?? "#{$territory->id}"])
                 ->all(),
             BroadcastComposer::TARGET_PACKAGE => PlacementPackage::query()->with('translations')->get()
                 ->mapWithKeys(fn (PlacementPackage $package): array => [$package->id => $package->name ?? "#{$package->id}"])
                 ->all(),
             default => [],
+        };
+    }
+
+    private function targetOptionLabel(?string $targetType, int|string|null $value): ?string
+    {
+        return match ($targetType) {
+            BroadcastComposer::TARGET_COUNTRY => Country::query()->find($value)?->code,
+            BroadcastComposer::TARGET_RESORT => Territory::query()->find($value)?->name,
+            BroadcastComposer::TARGET_PACKAGE => PlacementPackage::query()->find($value)?->name,
+            default => null,
         };
     }
 
