@@ -26,7 +26,7 @@ class LanguageResource extends ScopedResource
 {
     protected static ?string $model = Language::class;
 
-    protected static string $permissionPrefix = 'settings';
+    protected static string $permissionPrefix = 'system';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedLanguage;
 

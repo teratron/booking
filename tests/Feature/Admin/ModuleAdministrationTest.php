@@ -114,7 +114,7 @@ it('counts the blast radius rather than estimating it', function (): void {
 
 it('refuses to enable a module while its dependency is off', function (): void {
     $fixture = moduleFixture();
-    $actor = moduleActor(['settings.view', 'settings_management']);
+    $actor = moduleActor(['system.view', 'settings_management']);
     $booking = Module::query()->findOrFail($fixture['booking']);
 
     expect(fn () => app(ModuleAdministrator::class)->setState($booking, 'portal', null, true, $actor))
@@ -127,7 +127,7 @@ it('refuses to enable a module while its dependency is off', function (): void {
 
 it('enables a module once its dependency is satisfied, and journals the change with its reach', function (): void {
     $fixture = moduleFixture();
-    $actor = moduleActor(['settings.view', 'settings_management']);
+    $actor = moduleActor(['system.view', 'settings_management']);
     $administrator = app(ModuleAdministrator::class);
 
     $payment = Module::query()->findOrFail($fixture['payment']);
@@ -147,7 +147,7 @@ it('enables a module once its dependency is satisfied, and journals the change w
 
 it('resolves country scope more specifically than portal scope', function (): void {
     $fixture = moduleFixture();
-    $actor = moduleActor(['settings.view', 'settings_management']);
+    $actor = moduleActor(['system.view', 'settings_management']);
     $administrator = app(ModuleAdministrator::class);
 
     $payment = Module::query()->findOrFail($fixture['payment']);
@@ -163,7 +163,7 @@ it('resolves country scope more specifically than portal scope', function (): vo
 
 it('returns a disabled module to service unchanged when it is re-enabled', function (): void {
     $fixture = moduleFixture();
-    $actor = moduleActor(['settings.view', 'settings_management']);
+    $actor = moduleActor(['system.view', 'settings_management']);
     $administrator = app(ModuleAdministrator::class);
 
     $payment = Module::query()->findOrFail($fixture['payment']);
@@ -196,7 +196,7 @@ it('returns a disabled module to service unchanged when it is re-enabled', funct
 it('lists the registry for an unrestricted grant and refuses the registry to a country-scoped one', function (): void {
     moduleFixture();
 
-    $unrestricted = moduleActor(['admin_panel_access', 'settings.view'], 'unrestricted_role');
+    $unrestricted = moduleActor(['admin_panel_access', 'system.view'], 'unrestricted_role');
 
     $this->actingAs($unrestricted)
         ->get(ModuleResource::getUrl('index', panel: 'admin'))
@@ -205,7 +205,7 @@ it('lists the registry for an unrestricted grant and refuses the registry to a c
     $scoped = User::factory()->create();
     $scopedRole = Role::findOrCreate('country_scoped_role', 'web');
     app(PermissionRegistrar::class)->forgetCachedPermissions();
-    $scopedRole->syncPermissions(['admin_panel_access', 'settings.view']);
+    $scopedRole->syncPermissions(['admin_panel_access', 'system.view']);
     $scoped->assignRole($scopedRole);
     DB::table('role_scopes')->insert([
         'user_id' => $scoped->id, 'role_id' => $scopedRole->id,

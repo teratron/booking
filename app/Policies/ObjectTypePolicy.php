@@ -11,9 +11,12 @@ use App\Models\User;
  * The type registry defines what fields every object of a type exposes
  * portal-wide — a category-scoped grant governs objects *of* a category, not
  * the category's own definition, so no scope axis narrows this resource;
- * only an unrestricted grant reaches it. Gated on the same settings
- * permission the module registry uses, since both are portal-wide
- * configuration rather than an operational per-object action.
+ * only an unrestricted grant reaches it.
+ *
+ * Gated on `settings.*`, not `system.*` — unlike a module toggle or the
+ * language registry, an object type carries its own SEO fields, which is
+ * why `seo_specialist` legitimately holds this permission alongside
+ * `RedirectPolicy` and the interface catalog editor.
  */
 final class ObjectTypePolicy extends ScopedPolicy
 {

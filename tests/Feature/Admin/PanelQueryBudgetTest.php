@@ -33,7 +33,7 @@ function queryBudgetActor(): User
 {
     $permissions = [
         'admin_panel_access', 'object.view', 'user.view', 'geography.view',
-        'moderation.view', 'settings.view', 'audit.view',
+        'moderation.view', 'settings.view', 'system.view', 'audit.view',
         // content/commerce/finance/advertising were added by the track that
         // introduced the eleven resources this sweep now iterates — without
         // these the dynamic loop below 403s before it ever reaches a query
@@ -42,6 +42,9 @@ function queryBudgetActor(): User
         // and the three seo.view-gated resources, added the same way once
         // the loop's own dynamic resource discovery
         // (Filament::getPanel('admin')->getResources()) surfaced them too.
+        // system.view was split out of settings.view later (ModuleResource,
+        // LanguageResource) — without it those two 403 before reaching a
+        // query count, the same failure mode this comment already names.
         'content.view', 'commerce.view', 'finance.view', 'advertising.view', 'api.view', 'seo.view',
     ];
 

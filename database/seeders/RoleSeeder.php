@@ -68,6 +68,10 @@ final class RoleSeeder extends Seeder
                 // role edits directly on their own forms; `settings.*`
                 // additionally covers the object-type (category) registry's
                 // own SEO fields, since ObjectTypeResource is gated there.
+                // Deliberately NOT `system.*` (see ModulePolicy/LanguagePolicy)
+                // — this role has no stated need to toggle a module
+                // portal-wide or manage the language registry, and holding
+                // `settings.*` alone no longer implies either.
                 'permissions' => ['object.view', 'object.edit', 'content.view', 'content.edit', 'geography.view', 'geography.edit', 'settings.view', 'settings.edit', 'seo.*', 'admin_panel_access'],
             ],
             [

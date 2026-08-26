@@ -28,7 +28,7 @@ uses(RefreshDatabase::class);
 | narrows them, so each ability resolves from a single permission the acting
 | user's role either grants or does not — CatalogFilterPromotionPolicy and
 | SeoMetadataTemplatePolicy on seo.view/seo.edit, LanguagePolicy and
-| ModulePolicy on settings.view/settings.edit. ModulePolicy's create and
+| ModulePolicy on system.view/system.edit. ModulePolicy's create and
 | delete are the one deliberate exception: membership in the module registry
 | is fixed by the code that implements each module, so both abilities are
 | denied outright regardless of what the acting user holds.
@@ -169,17 +169,17 @@ it('grants SeoMetadataTemplatePolicy read access on seo.view alone, without also
 });
 
 // -----------------------------------------------------------------------
-// LanguagePolicy — settings.view / settings.edit, including reorder.
+// LanguagePolicy — system.view / system.edit, including reorder.
 // -----------------------------------------------------------------------
 
-it('resolves every LanguagePolicy action, including reorder, from the acting user\'s own settings.* grants', function (): void {
+it('resolves every LanguagePolicy action, including reorder, from the acting user\'s own system.* grants', function (): void {
     $language = Language::query()->create([
         'code' => 'ro', 'short_label' => 'RO', 'text_direction' => 'ltr',
         'is_active' => false, 'is_primary' => false, 'display_order' => 3,
     ]);
 
     $permitted = scopedRegistryPolicyActor(
-        ['admin_panel_access', 'settings.view', 'settings.edit'],
+        ['admin_panel_access', 'system.view', 'system.edit'],
         'language_policy_permitted',
     );
     $refused = scopedRegistryPolicyActor(['admin_panel_access'], 'language_policy_refused');
@@ -201,13 +201,13 @@ it('resolves every LanguagePolicy action, including reorder, from the acting use
         ->and($policy->reorder($refused))->toBeFalse();
 });
 
-it('grants LanguagePolicy read access on settings.view alone, without also granting the write abilities', function (): void {
+it('grants LanguagePolicy read access on system.view alone, without also granting the write abilities', function (): void {
     $language = Language::query()->create([
         'code' => 'uk', 'short_label' => 'UK', 'text_direction' => 'ltr',
         'is_active' => false, 'is_primary' => false, 'display_order' => 4,
     ]);
 
-    $readOnly = scopedRegistryPolicyActor(['admin_panel_access', 'settings.view'], 'language_policy_read_only');
+    $readOnly = scopedRegistryPolicyActor(['admin_panel_access', 'system.view'], 'language_policy_read_only');
 
     $policy = app(LanguagePolicy::class);
 
@@ -220,13 +220,13 @@ it('grants LanguagePolicy read access on settings.view alone, without also grant
 });
 
 // -----------------------------------------------------------------------
-// ModulePolicy — settings.view / settings.edit for view and update; create
+// ModulePolicy — system.view / system.edit for view and update; create
 // and delete are hard-denied regardless of permission, since a module's
 // existence is fixed by the code that implements it, not by an
 // administrator's grant.
 // -----------------------------------------------------------------------
 
-it('resolves ModulePolicy view and update from settings.* grants, and denies create/delete outright to the same fully-permitted actor', function (): void {
+it('resolves ModulePolicy view and update from system.* grants, and denies create/delete outright to the same fully-permitted actor', function (): void {
     $module = Module::query()->create([
         'key' => 'payment',
         'default_state' => 'disabled',
@@ -235,7 +235,7 @@ it('resolves ModulePolicy view and update from settings.* grants, and denies cre
     ]);
 
     $permitted = scopedRegistryPolicyActor(
-        ['admin_panel_access', 'settings.view', 'settings.edit'],
+        ['admin_panel_access', 'system.view', 'system.edit'],
         'module_policy_permitted',
     );
     $refused = scopedRegistryPolicyActor(['admin_panel_access'], 'module_policy_refused');
@@ -250,7 +250,7 @@ it('resolves ModulePolicy view and update from settings.* grants, and denies cre
         ->and($policy->view($refused, $module))->toBeFalse()
         ->and($policy->update($refused, $module))->toBeFalse();
 
-    // Hard-denied for both actors alike — holding settings.edit changes
+    // Hard-denied for both actors alike — holding system.edit changes
     // nothing here, since neither ability consults a permission at all.
     expect($policy->create($permitted))->toBeFalse()
         ->and($policy->delete($permitted, $module))->toBeFalse()
@@ -258,7 +258,7 @@ it('resolves ModulePolicy view and update from settings.* grants, and denies cre
         ->and($policy->delete($refused, $module))->toBeFalse();
 });
 
-it('grants ModulePolicy read access on settings.view alone, without also granting update', function (): void {
+it('grants ModulePolicy read access on system.view alone, without also granting update', function (): void {
     $module = Module::query()->create([
         'key' => 'booking',
         'default_state' => 'disabled',
@@ -266,7 +266,7 @@ it('grants ModulePolicy read access on settings.view alone, without also grantin
         'is_active' => true,
     ]);
 
-    $readOnly = scopedRegistryPolicyActor(['admin_panel_access', 'settings.view'], 'module_policy_read_only');
+    $readOnly = scopedRegistryPolicyActor(['admin_panel_access', 'system.view'], 'module_policy_read_only');
 
     $policy = app(ModulePolicy::class);
 

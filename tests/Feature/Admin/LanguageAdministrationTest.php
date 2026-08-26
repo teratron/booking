@@ -54,13 +54,13 @@ function languageFixtures(): array
 
 function languageActor(): User
 {
-    foreach (['admin_panel_access', 'settings.view', 'settings.edit'] as $permission) {
+    foreach (['admin_panel_access', 'system.view', 'system.edit'] as $permission) {
         Permission::findOrCreate($permission, 'web');
     }
 
     $role = Role::findOrCreate('language_admin', 'web');
     app(PermissionRegistrar::class)->forgetCachedPermissions();
-    $role->syncPermissions(['admin_panel_access', 'settings.view', 'settings.edit']);
+    $role->syncPermissions(['admin_panel_access', 'system.view', 'system.edit']);
 
     $user = User::factory()->create();
     $user->assignRole($role);
