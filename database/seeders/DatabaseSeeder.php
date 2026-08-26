@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             SeoMetadataTemplateSeeder::class,
             AmenitySeeder::class,
             ContactChannelTypeSeeder::class,
+            BannerSlotSeeder::class,
             PlacementTierSeeder::class,
             ModuleSeeder::class,
             NotificationChannelSeeder::class,

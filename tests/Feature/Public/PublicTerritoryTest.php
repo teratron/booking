@@ -2,9 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Models\Banner;
 use App\Models\Object_;
+use App\Models\ObjectType;
 use App\Models\Territory;
 use App\Models\User;
+use App\Services\Seo\PublicUrlGenerator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -192,6 +195,87 @@ it('restarts tier ordering per territory — the same tier distribution under tw
     expect(strpos($responseB, 'B VIP Hotel'))->toBeLessThan(strpos($responseB, 'B Standard Hotel'));
 
     expect($aStandard->id)->not->toBe($bStandard->id);
+});
+
+/**
+ * Places a banner in the given slot, targeted at $territoryId when given
+ * (null means untargeted — every territory matches).
+ */
+function publicTerritoryMakeBanner(string $slotKey, ?int $territoryId, string $linkText = 'Advertiser banner'): Banner
+{
+    $slotId = DB::table('banner_slots')->insertGetId([
+        'key' => $slotKey, 'surfaces' => json_encode(['country', 'region', 'city', 'resort', 'category']),
+        'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $bannerId = DB::table('banners')->insertGetId([
+        'banner_slot_id' => $slotId, 'name' => "Banner for {$slotKey}", 'advertiser' => 'Acme',
+        'destination_link' => 'https://example.test', 'display_order' => 0,
+        'starts_at' => now()->subDay()->toDateString(), 'ends_at' => now()->addMonth()->toDateString(),
+        'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('banner_translations')->insert([
+        'banner_id' => $bannerId, 'locale' => 'en', 'link_text' => $linkText,
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    if ($territoryId !== null) {
+        DB::table('banner_targets')->insert([
+            'banner_id' => $bannerId, 'target_type' => (new Territory)->getMorphClass(), 'target_id' => $territoryId,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+    }
+
+    return Banner::query()->findOrFail($bannerId);
+}
+
+it('renders a banner targeted at this territory in the top, mid, and bottom slots', function (): void {
+    // F-24/S-18: BannerSelectionService::forSlot() had exactly one caller in
+    // the whole codebase before this fix, and it only ever requested the
+    // three home-page slots — no territory page rendered a banner at all,
+    // regardless of what advertising inventory existed.
+    $fixture = publicTerritoryRegistry();
+    $territory = publicTerritoryMake($fixture['countryId'], 'Bannered Territory');
+    publicTerritoryMakeObject($fixture['countryId'], $territory->id, $fixture['hotelTypeId'], 'Filler Hotel');
+    publicTerritoryMakeObject($fixture['countryId'], $territory->id, $fixture['restaurantTypeId'], 'Filler Restaurant');
+
+    $top = publicTerritoryMakeBanner('territory-top', $territory->id, 'Top banner link');
+    $mid = publicTerritoryMakeBanner('territory-mid', $territory->id, 'Mid banner link');
+    $bottom = publicTerritoryMakeBanner('territory-bottom', $territory->id, 'Bottom banner link');
+
+    $html = (string) $this->get(publicTerritoryUrl($territory))->assertOk()->getContent();
+
+    expect($html)->toContain(route('banners.click', ['banner' => $top->id]))
+        ->and($html)->toContain(route('banners.click', ['banner' => $mid->id]))
+        ->and($html)->toContain(route('banners.click', ['banner' => $bottom->id]));
+});
+
+it('never shows a banner targeted at a different territory — the resort-scoped-only guarantee', function (): void {
+    $fixture = publicTerritoryRegistry();
+    $ownTerritory = publicTerritoryMake($fixture['countryId'], 'Own Territory');
+    $otherTerritory = publicTerritoryMake($fixture['countryId'], 'Unrelated Other Territory');
+    publicTerritoryMakeObject($fixture['countryId'], $ownTerritory->id, $fixture['hotelTypeId'], 'Own Territory Hotel');
+
+    $otherBanner = publicTerritoryMakeBanner('territory-top', $otherTerritory->id, 'Unrelated territory banner');
+
+    $html = (string) $this->get(publicTerritoryUrl($ownTerritory))->assertOk()->getContent();
+
+    expect($html)->not->toContain(route('banners.click', ['banner' => $otherBanner->id]));
+});
+
+it('renders a banner on the typed-catalog page, targeted by both territory and category', function (): void {
+    $fixture = publicTerritoryRegistry();
+    $territory = publicTerritoryMake($fixture['countryId'], 'Typed Catalog Territory');
+    publicTerritoryMakeObject($fixture['countryId'], $territory->id, $fixture['hotelTypeId'], 'Typed Catalog Hotel');
+
+    $banner = publicTerritoryMakeBanner('typed-catalog-top', $territory->id, 'Typed catalog banner');
+
+    /** @var ObjectType $hotelType */
+    $hotelType = ObjectType::query()->findOrFail($fixture['hotelTypeId']);
+    $url = app(PublicUrlGenerator::class)->typedCatalogUrl($territory, $hotelType);
+
+    $html = (string) $this->get((string) $url)->assertOk()->getContent();
+
+    expect($html)->toContain(route('banners.click', ['banner' => $banner->id]));
 });
 
 it('404s an inactive territory', function (): void {

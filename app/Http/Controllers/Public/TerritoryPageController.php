@@ -10,6 +10,7 @@ use App\Models\Object_;
 use App\Models\ObjectType;
 use App\Models\Promotion;
 use App\Models\Territory;
+use App\Services\Advertising\BannerSelectionService;
 use App\Services\Catalog\CatalogQueryService;
 use App\Services\Seo\MetadataResolver;
 use App\Services\Seo\PublicSlugResolver;
@@ -60,6 +61,7 @@ final class TerritoryPageController extends Controller
         private readonly PublicUrlGenerator $urls,
         private readonly MetadataResolver $metadata,
         private readonly StructuredDataBuilder $structuredData,
+        private readonly BannerSelectionService $banners,
     ) {}
 
     public function show(Request $request, string $lang, string $country, string $path): View
@@ -107,6 +109,9 @@ final class TerritoryPageController extends Controller
             'catalogBlocks' => $catalogBlocks,
             'metadata' => $this->metadata->resolve($territory, $lang, $this->urls->territoryUrl($territory, $lang)),
             'structuredData' => $this->structuredData->forTerritory($territory, $this->containedObjectItems($catalogBlocks)),
+            'bannerTop' => $this->banners->forSlot('territory-top', ['territory' => $territory, 'language' => $lang]),
+            'bannerMid' => $this->banners->forSlot('territory-mid', ['territory' => $territory, 'language' => $lang]),
+            'bannerBottom' => $this->banners->forSlot('territory-bottom', ['territory' => $territory, 'language' => $lang]),
         ]));
     }
 
@@ -141,6 +146,11 @@ final class TerritoryPageController extends Controller
             'results' => $results,
             'breadcrumbs' => $breadcrumbs,
             'metadata' => $this->metadata->resolveTypedCatalog($territory, $objectType, $lang, $selfUrl),
+            'bannerTop' => $this->banners->forSlot('typed-catalog-top', [
+                'territory' => $territory,
+                'category' => $objectType,
+                'language' => $lang,
+            ]),
         ]);
     }
 

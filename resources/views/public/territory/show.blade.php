@@ -19,6 +19,14 @@
             <p class="mt-3 max-w-3xl text-ink">{{ $territory->short_description }}</p>
         @endif
 
+        @if ($bannerTop)
+            <div class="mt-6">
+                <a href="{{ route('banners.click', ['banner' => $bannerTop->id]) }}">
+                    <x-public.banner-creative :banner="$bannerTop" class="w-full rounded-lg" />
+                </a>
+            </div>
+        @endif
+
         @foreach ($catalogBlocks as $block)
             <section class="mt-10">
                 <x-public.section-heading>{{ $block['type']->name }}</x-public.section-heading>
@@ -28,7 +36,23 @@
                     @endforeach
                 </div>
             </section>
+
+            @if ($bannerMid && $loop->first && ! $loop->last)
+                <div class="mt-10">
+                    <a href="{{ route('banners.click', ['banner' => $bannerMid->id]) }}">
+                        <x-public.banner-creative :banner="$bannerMid" class="w-full rounded-lg" />
+                    </a>
+                </div>
+            @endif
         @endforeach
+
+        @if ($bannerBottom)
+            <div class="mt-10">
+                <a href="{{ route('banners.click', ['banner' => $bannerBottom->id]) }}">
+                    <x-public.banner-creative :banner="$bannerBottom" class="w-full rounded-lg" />
+                </a>
+            </div>
+        @endif
 
         @if ($newsItems->isNotEmpty())
             <section class="mt-10">

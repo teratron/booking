@@ -2,6 +2,14 @@
     <div class="mx-auto max-w-7xl px-4 py-8 lg:px-8">
         <h1 class="text-3xl font-semibold text-ink">{{ $objectType->name }} — {{ $territory->name }}</h1>
 
+        @if ($bannerTop)
+            <div class="mt-6">
+                <a href="{{ route('banners.click', ['banner' => $bannerTop->id]) }}">
+                    <x-public.banner-creative :banner="$bannerTop" class="w-full rounded-lg" />
+                </a>
+            </div>
+        @endif
+
         @if ($results->isEmpty())
             <p class="mt-6 text-ink-muted">{{ __('public.territory.typed_catalog_empty', ['territory' => $territory->name]) }}</p>
         @else
