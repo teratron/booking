@@ -132,6 +132,36 @@ it('resolves a territory scope to itself and every descendant, never a sibling',
     expect($resortScoped->getCollection()->pluck('id')->all())->toBe([$resortObject->id]);
 });
 
+it('resolves a territory\'s descendant subtree once per instance, not once per search() call', function (): void {
+    // F-07/S-07: a territory page issues one search() call per active object
+    // type -- eight at seeded launch volume -- each independently deriving
+    // its scope from the same Territory instance. descendantsAndSelf() is a
+    // relation method: called (`->descendantsAndSelf()`), it builds a fresh
+    // query and re-runs the recursive CTE every time; accessed as a property
+    // (`->descendantsAndSelf`), Eloquent's own relation cache makes the
+    // second and later calls free. Asserted directly on the query log
+    // rather than by counting "with recursive" substrings, since the exact
+    // SQL shape is the adjacency-list package's concern, not this test's.
+    $fixture = catalogQueryGeography();
+    catalogQueryMakeObject($fixture, 'City Hotel', $fixture['cityId']);
+    $territory = Territory::query()->findOrFail($fixture['cityId']);
+    $service = app(CatalogQueryService::class);
+
+    DB::enableQueryLog();
+    $service->search(new CatalogSearchCriteria(territory: $territory, objectTypeId: $fixture['typeId']));
+    $service->search(new CatalogSearchCriteria(territory: $territory, objectTypeId: $fixture['typeId']));
+    $service->search(new CatalogSearchCriteria(territory: $territory, objectTypeId: $fixture['typeId']));
+    $queries = DB::getQueryLog();
+    DB::disableQueryLog();
+
+    $recursiveQueries = collect($queries)->filter(fn (array $q): bool => str_contains(
+        mb_strtolower((string) $q['query']),
+        'with recursive'
+    ));
+
+    expect($recursiveQueries)->toHaveCount(1);
+});
+
 it('delegates ordering entirely to the existing PlacementOrderingService, never reimplementing it', function (): void {
     $fixture = catalogQueryGeography();
     catalogQueryMakeObject($fixture, 'Solo Villa', $fixture['cityId']);

@@ -359,7 +359,15 @@ final class CatalogQueryService
         $scope = $this->resolveScope($criteria);
 
         if ($criteria->territory instanceof Territory) {
-            $territoryIds = $criteria->territory->descendantsAndSelf()->pluck('id');
+            // Property access, not a ->descendantsAndSelf() method call: the
+            // latter builds a fresh query (and re-runs the recursive CTE)
+            // every time, even against the same $territory instance. The
+            // property form goes through Eloquent's own relation cache, so a
+            // caller that resolves this criterion's territory once and
+            // passes the same instance into several search() calls -- every
+            // catalog block on a territory page does exactly this, once per
+            // active object type -- pays for the CTE once, not once per call.
+            $territoryIds = $criteria->territory->descendantsAndSelf->pluck('id');
             $query->whereIn('territory_id', $territoryIds)
                 // Redundant with territory_id (a territory's country is
                 // immutable in practice) but deliberate: objects_scope_
