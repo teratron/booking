@@ -122,6 +122,27 @@ it('renders pins for exactly the filtered result set within the viewport, not th
     expect($ids)->toBe([$inViewportMatching->id]);
 });
 
+it('ignores a literal "null" query parameter instead of matching it as a real filter value', function (): void {
+    // F-03/S-03: the catalog's own Livewire round trip dispatches its filter
+    // state including PHP nulls; the map's JS spreads that into
+    // URLSearchParams, which stringifies null to the four-character string
+    // "null" -- Request::filled() sees a non-empty string and passes it
+    // through, so every catalog-map render (the default, filterless state)
+    // resolved objectTypeId to (int) "null" === 0 and matched nothing.
+    // Reproduced here at the HTTP layer, the same shape the real request
+    // carries, not by calling the controller with clean values.
+    $fixture = publicMapGeography();
+    $object = publicMapMakeObject($fixture, $fixture['typeId'], 'Should Still Appear Hotel', 47.0, 28.8);
+
+    $response = $this->getJson('/en/map/pins?'.http_build_query([
+        'sw_lat' => 46.5, 'sw_lng' => 28.0, 'ne_lat' => 47.5, 'ne_lng' => 29.5,
+        'type' => 'null', 'q' => 'null',
+    ]));
+
+    $response->assertOk();
+    expect(collect($response->json('pins'))->pluck('id')->all())->toBe([$object->id]);
+});
+
 it('never surfaces a draft or pending object as a pin, and refuses its compact card', function (): void {
     $fixture = publicMapGeography();
     $draft = publicMapMakeObject($fixture, $fixture['typeId'], 'Draft Hotel', 47.0, 28.8, [

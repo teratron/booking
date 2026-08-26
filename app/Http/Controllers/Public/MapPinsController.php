@@ -37,10 +37,10 @@ final class MapPinsController extends Controller
         );
 
         $criteria = new CatalogSearchCriteria(
-            territory: $request->filled('territory_id') ? Territory::query()->find($request->integer('territory_id')) : null,
-            countryId: $request->filled('country_id') ? $request->integer('country_id') : null,
-            objectTypeId: $request->filled('type') ? $request->integer('type') : null,
-            name: $request->filled('q') ? $request->string('q')->value() : null,
+            territory: self::queryFilled($request, 'territory_id') ? Territory::query()->find($request->integer('territory_id')) : null,
+            countryId: self::queryFilled($request, 'country_id') ? $request->integer('country_id') : null,
+            objectTypeId: self::queryFilled($request, 'type') ? $request->integer('type') : null,
+            name: self::queryFilled($request, 'q') ? $request->string('q')->value() : null,
         );
 
         $pins = $this->catalog->pins($criteria, $bounds);
@@ -69,5 +69,25 @@ final class MapPinsController extends Controller
         abort_unless($object->status === 'published', 404);
 
         return view('components.public.map-pin-card', ['card' => $presenter->present($object)]);
+    }
+
+    /**
+     * `Request::filled()` treats the four-character string `"null"` as a
+     * real, non-empty value — which is exactly what it is once the browser
+     * JS side has serialised a PHP `null` into a query string via
+     * `URLSearchParams`. The catalog map's own filter dispatch does this on
+     * every render in its default (no-filter) state, so `type=null&q=null`
+     * arriving verbatim is the *common* case here, not an edge case; without
+     * this guard `(int) "null"` resolves to `0`, a type id nothing matches,
+     * and the map shows zero pins. Guards every caller of this endpoint, not
+     * only the one Livewire component that happens to trigger it today.
+     */
+    private static function queryFilled(Request $request, string $key): bool
+    {
+        if (! $request->filled($key)) {
+            return false;
+        }
+
+        return $request->string($key)->value() !== 'null';
     }
 }

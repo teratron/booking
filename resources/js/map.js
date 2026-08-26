@@ -113,12 +113,23 @@ document.addEventListener('alpine:init', () => {
 
         fetchPins() {
             const bounds = this.map.getBounds();
+            // this.filters comes from the catalog Livewire component's own
+            // 'catalog-filters-changed' event, which carries a real `null`
+            // for "no filter selected" -- URLSearchParams stringifies that
+            // to the four-character string "null", which the backend would
+            // then match as a real (if defensively-guarded) value. Dropped
+            // here so the default, filterless map render never sends one.
+            const activeFilters = Object.fromEntries(
+                Object.entries(this.filters).filter(
+                    ([, value]) => value !== null && value !== undefined && value !== '',
+                ),
+            );
             const params = new URLSearchParams({
                 sw_lat: bounds.getSouth(),
                 sw_lng: bounds.getWest(),
                 ne_lat: bounds.getNorth(),
                 ne_lng: bounds.getEast(),
-                ...this.filters,
+                ...activeFilters,
             });
 
             fetch(`${config.pinsUrl}?${params.toString()}`)
