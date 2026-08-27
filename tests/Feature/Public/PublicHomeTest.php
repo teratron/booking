@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\Banner;
 use App\Models\Object_;
+use App\Models\Territory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -131,8 +132,12 @@ function publicHomeMakeObject(int $countryId, int $typeId, string $name, array $
     return $object;
 }
 
-/** Places a banner in the `home-top` slot, matching every visitor (no territory/language targeting). */
-function publicHomeMakeBanner(string $linkText = 'Advertiser banner'): Banner
+/**
+ * Places a banner in the `home-top` slot, matching every visitor when
+ * `$territoryId` is omitted, or scoped to that territory (the reading a
+ * visitor's country preference now resolves to) when given.
+ */
+function publicHomeMakeBanner(string $linkText = 'Advertiser banner', ?int $territoryId = null): Banner
 {
     $slotId = DB::table('banner_slots')->insertGetId([
         'key' => 'home-top', 'surfaces' => json_encode(['home']),
@@ -148,6 +153,13 @@ function publicHomeMakeBanner(string $linkText = 'Advertiser banner'): Banner
         'banner_id' => $bannerId, 'locale' => 'en', 'link_text' => $linkText,
         'created_at' => now(), 'updated_at' => now(),
     ]);
+
+    if ($territoryId !== null) {
+        DB::table('banner_targets')->insert([
+            'banner_id' => $bannerId, 'target_type' => (new Territory)->getMorphClass(), 'target_id' => $territoryId,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+    }
 
     return Banner::query()->findOrFail($bannerId);
 }
@@ -318,4 +330,38 @@ it('resolves the home page in one server pass, under a sensible query-count ceil
     $this->get('/en')->assertOk();
 
     expect($queryCount)->toBeLessThanOrEqual(60);
+});
+
+it('renders a banner targeted at the selected country\'s own top-level territory — the home page had no territory context to match against before', function (): void {
+    // F-24/S-18 continuation: every home-page forSlot() call passed language
+    // context only, so a geographically targeted banner could never surface
+    // here regardless of what inventory existed. The visitor's own country
+    // preference now resolves to that country's top-level landing territory
+    // (the same reading CountryPreferenceController's own redirect uses),
+    // giving the home page a territory to match a targeted banner against.
+    $fixture = publicHomeRegistry();
+    $destination = publicHomeMakeFeaturedTerritory($fixture['countryId'], 'Targeted Landing Territory');
+    $banner = publicHomeMakeBanner('Geo-targeted home banner', $destination['id']);
+
+    $this->post('/en/country', ['country' => 'MD']);
+    $html = (string) $this->get('/en')->assertOk()->getContent();
+
+    expect($html)->toContain(route('banners.click', ['banner' => $banner->id]));
+});
+
+it('never shows a home banner targeted at another country\'s territory', function (): void {
+    // The selected country must resolve its own top-level territory here —
+    // otherwise the home page falls back to no territory context at all, and
+    // this comparison would prove nothing: BannerSelectionService's own
+    // contract lets every candidate through when the page resolves no
+    // territory to filter or rank against.
+    $fixture = publicHomeRegistry();
+    publicHomeMakeFeaturedTerritory($fixture['countryId'], 'Own Country Landing Territory');
+    $otherDestination = publicHomeMakeFeaturedTerritory($fixture['otherCountryId'], 'Other Country Landing Territory');
+    $otherBanner = publicHomeMakeBanner('Other country banner', $otherDestination['id']);
+
+    $this->post('/en/country', ['country' => 'MD']);
+    $html = (string) $this->get('/en')->assertOk()->getContent();
+
+    expect($html)->not->toContain(route('banners.click', ['banner' => $otherBanner->id]));
 });

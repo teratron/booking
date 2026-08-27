@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use App\Jobs\CaptureStatEventJob;
+use App\Models\Banner;
 use App\Models\Object_;
 use App\Models\Room;
+use App\Models\Territory;
 use App\Models\User;
 use App\Services\Cabinet\AvailabilityToggleService;
 use App\Services\Catalog\ObjectProfilePresenter;
@@ -221,6 +223,37 @@ function publicObjectGivePlacement(Object_ $object, string $badgeText = 'VIP'): 
         'starts_at' => now()->subDays(1)->toDateString(), 'ends_at' => now()->addDays(30)->toDateString(),
         'internal_priority' => 0, 'created_at' => now(), 'updated_at' => now(),
     ]);
+}
+
+/**
+ * Places a banner in the `object-top` slot, targeted at $territoryId when
+ * given (null means untargeted — every territory matches).
+ */
+function publicObjectMakeBanner(?int $territoryId, string $linkText = 'Advertiser banner'): Banner
+{
+    $slotId = DB::table('banner_slots')->insertGetId([
+        'key' => 'object-top', 'surfaces' => json_encode(['object']),
+        'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $bannerId = DB::table('banners')->insertGetId([
+        'banner_slot_id' => $slotId, 'name' => "Banner for object-top ({$linkText})", 'advertiser' => 'Acme',
+        'destination_link' => 'https://example.test', 'display_order' => 0,
+        'starts_at' => now()->subDay()->toDateString(), 'ends_at' => now()->addMonth()->toDateString(),
+        'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('banner_translations')->insert([
+        'banner_id' => $bannerId, 'locale' => 'en', 'link_text' => $linkText,
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    if ($territoryId !== null) {
+        DB::table('banner_targets')->insert([
+            'banner_id' => $bannerId, 'target_type' => (new Territory)->getMorphClass(), 'target_id' => $territoryId,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+    }
+
+    return Banner::query()->findOrFail($bannerId);
 }
 
 it('composes breadcrumb, cover, gallery, header, descriptions, rooms, details, and services for an accommodation fixture — and omits the object-level prices block since rooms carry their own', function (): void {
@@ -525,4 +558,45 @@ it('omits the location section entirely for an object with no coordinates', func
     $this->get(publicObjectUrl($object))
         ->assertOk()
         ->assertDontSee(__('public.object.location_heading'));
+});
+
+it('renders a banner targeted at the object\'s own territory in the object-top slot', function (): void {
+    // F-24/S-18 continuation: BannerSelectionService::forSlot() had no
+    // caller at all on the object page before this fix — no banner could
+    // ever surface here regardless of what advertising inventory existed.
+    $fixture = publicObjectRegistry();
+    $type = publicObjectMakeAccommodationType();
+    $object = publicObjectMake($fixture, $type['typeId'], 'Bannered Object Hotel');
+
+    $banner = publicObjectMakeBanner($fixture['cityTerritoryId'], 'Own territory banner');
+
+    $html = (string) $this->get(publicObjectUrl($object))->assertOk()->getContent();
+
+    expect($html)->toContain(route('banners.click', ['banner' => $banner->id]));
+});
+
+it('never shows an object-page banner targeted at a different territory', function (): void {
+    $fixture = publicObjectRegistry();
+    $type = publicObjectMakeAccommodationType();
+    $object = publicObjectMake($fixture, $type['typeId'], 'Unbannered Object Hotel');
+
+    $otherTerritoryId = DB::table('territories')->insertGetId([
+        'country_id' => $fixture['countryId'],
+        'level_id' => DB::table('territory_levels')->insertGetId([
+            'country_id' => $fixture['countryId'], 'depth_rank' => 1, 'created_at' => now(), 'updated_at' => now(),
+        ]),
+        'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('territory_translations')->insert([
+        'territory_id' => $otherTerritoryId, 'country_id' => $fixture['countryId'], 'locale' => 'en',
+        'name' => 'Unrelated Object Territory', 'slug' => 'unrelated-object-territory',
+        'full_slug_path' => 'unrelated-object-territory',
+        'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    $otherBanner = publicObjectMakeBanner($otherTerritoryId, 'Unrelated territory banner');
+
+    $html = (string) $this->get(publicObjectUrl($object))->assertOk()->getContent();
+
+    expect($html)->not->toContain(route('banners.click', ['banner' => $otherBanner->id]));
 });

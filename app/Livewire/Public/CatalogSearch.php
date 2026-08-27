@@ -7,6 +7,7 @@ namespace App\Livewire\Public;
 use App\Models\AmenityGroup;
 use App\Models\ObjectType;
 use App\Models\Territory;
+use App\Services\Advertising\BannerSelectionService;
 use App\Services\Catalog\AttributeFilterResolver;
 use App\Services\Catalog\CatalogQueryService;
 use App\Services\Seo\IndexationPolicy;
@@ -163,6 +164,11 @@ final class CatalogSearch extends Component
                 ->orderBy('display_order')
                 ->with('translations')
                 ->get(),
+            'bannerTop' => app(BannerSelectionService::class)->forSlot('catalog-top', [
+                'territory' => $criteria->territory,
+                'category' => $selectedType,
+                'language' => app()->getLocale(),
+            ]),
         ])->layoutData(['metadata' => $metadata]);
     }
 

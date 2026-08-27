@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Models\Object_;
 use App\Models\Territory;
+use App\Services\Advertising\BannerSelectionService;
 use App\Services\Analytics\EventCaptureService;
 use App\Services\Catalog\ObjectProfilePresenter;
 use App\Services\Integrations\CaptchaVerifier;
@@ -48,6 +49,7 @@ final class ObjectPageController extends Controller
         private readonly ModuleResolver $modules,
         private readonly ReviewSubmissionGate $reviewGate,
         private readonly CaptchaVerifier $captcha,
+        private readonly BannerSelectionService $banners,
     ) {}
 
     public function show(string $lang, string $slug): View
@@ -98,6 +100,15 @@ final class ObjectPageController extends Controller
             'breadcrumbs' => $this->breadcrumbs($object),
             'metadata' => $this->metadata->resolve($object, $lang, $this->urls->objectUrl($object, $lang)),
             'structuredData' => $this->structuredData->forObject($object, $profile, $bookingActive),
+            // The territory/type relations were already loaded above for the
+            // structured-data build, so targeting reuses those instances
+            // rather than paying for a second lookup of rows this request
+            // already has in hand.
+            'bannerTop' => $this->banners->forSlot('object-top', [
+                'territory' => $object->territory,
+                'category' => $object->objectType,
+                'language' => $lang,
+            ]),
             'reviewForm' => new ReviewFormViewData(
                 mode: $this->reviewGate->mode(),
                 canSubmit: $this->reviewGate->canSubmit($object->id),

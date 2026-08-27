@@ -12,6 +12,7 @@ use App\Models\NewsItem;
 use App\Models\Object_;
 use App\Models\Promotion;
 use App\Models\Review;
+use App\Models\Territory;
 use App\Services\Advertising\BannerSelectionService;
 use App\Services\Catalog\CatalogQueryService;
 use App\Services\Shell\PublicShellDataProvider;
@@ -49,6 +50,12 @@ final class HomePageController extends Controller
     public function show(string $lang): View
     {
         $country = $this->resolveCountry();
+        // The home page has no territory of its own — a visitor's selected
+        // country stands in for one, via its own top-level landing territory,
+        // so a banner targeted geographically can surface here too, not only
+        // on the territory pages that already resolve a real Territory.
+        $territory = $this->resolveTopLevelTerritory($country);
+        $bannerContext = ['territory' => $territory, 'language' => app()->getLocale()];
 
         return view('public.home.show', [
             'country' => $country,
@@ -63,9 +70,9 @@ final class HomePageController extends Controller
             'reviews' => $this->reviews($country),
             'partners' => Banner::query()->whereHas('slot', fn ($query) => $query->where('key', 'home-partners'))
                 ->where('is_active', true)->get(),
-            'bannerTop' => $this->banners->forSlot('home-top', ['language' => app()->getLocale()]),
-            'bannerMid' => $this->banners->forSlot('home-mid', ['language' => app()->getLocale()]),
-            'bannerBottom' => $this->banners->forSlot('home-bottom', ['language' => app()->getLocale()]),
+            'bannerTop' => $this->banners->forSlot('home-top', $bannerContext),
+            'bannerMid' => $this->banners->forSlot('home-mid', $bannerContext),
+            'bannerBottom' => $this->banners->forSlot('home-bottom', $bannerContext),
         ]);
     }
 
@@ -88,6 +95,27 @@ final class HomePageController extends Controller
         }
 
         return Country::query()->where('is_active', true)->orderBy('display_order')->first();
+    }
+
+    /**
+     * There is no single "country root" territory record — a country is a
+     * dimension of its own, not one node in the territory tree — so the
+     * closest real stand-in for "this country's page" is its own top-level
+     * territory with the lowest display order, the same reading the country
+     * switcher's own landing-page redirect already uses.
+     */
+    private function resolveTopLevelTerritory(?Country $country): ?Territory
+    {
+        if (! $country instanceof Country) {
+            return null;
+        }
+
+        return Territory::query()
+            ->where('country_id', $country->id)
+            ->whereNull('parent_id')
+            ->where('is_active', true)
+            ->orderBy('display_order')
+            ->first();
     }
 
     /** @return Collection<int, Object_> */

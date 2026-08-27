@@ -110,6 +110,14 @@
             <p class="mt-4 max-w-3xl text-lg text-ink">{{ $profile->shortDescription }}</p>
         @endif
 
+        @if ($bannerTop)
+            <div class="mt-6">
+                <a href="{{ route('banners.click', ['banner' => $bannerTop->id]) }}">
+                    <x-public.banner-creative :banner="$bannerTop" class="w-full rounded-lg" />
+                </a>
+            </div>
+        @endif
+
         {{-- Full description --}}
         @if ($profile->fullDescription)
             <section class="mt-4 max-w-3xl text-ink">

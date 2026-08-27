@@ -1,6 +1,14 @@
 <div class="mx-auto max-w-7xl px-4 py-8 lg:px-8">
     <h1 class="text-3xl font-medium text-ink">{{ __('public.catalog.title') }}</h1>
 
+    @if ($bannerTop)
+        <div class="mt-6">
+            <a href="{{ route('banners.click', ['banner' => $bannerTop->id]) }}">
+                <x-public.banner-creative :banner="$bannerTop" class="w-full rounded-lg" />
+            </a>
+        </div>
+    @endif
+
     <div class="mt-6 grid gap-8 lg:grid-cols-[280px_1fr]">
         <aside class="flex flex-col gap-6">
             <div>

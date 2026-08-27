@@ -37,6 +37,8 @@ final class BannerSlotSeeder extends Seeder
             ['key' => 'territory-mid', 'surfaces' => ['country', 'region', 'city', 'resort'], 'name' => ['en' => 'Territory — between catalog blocks', 'ru' => 'Территория — между блоками каталога']],
             ['key' => 'territory-bottom', 'surfaces' => ['country', 'region', 'city', 'resort'], 'name' => ['en' => 'Territory — before news', 'ru' => 'Территория — перед новостями']],
             ['key' => 'typed-catalog-top', 'surfaces' => ['category'], 'name' => ['en' => 'Typed catalog — top', 'ru' => 'Каталог по типу — верх']],
+            ['key' => 'catalog-top', 'surfaces' => ['category'], 'name' => ['en' => 'Catalog search — top', 'ru' => 'Поиск по каталогу — верх']],
+            ['key' => 'object-top', 'surfaces' => ['object'], 'name' => ['en' => 'Object page — top', 'ru' => 'Страница объекта — верх']],
         ];
 
         foreach ($slots as $slot) {

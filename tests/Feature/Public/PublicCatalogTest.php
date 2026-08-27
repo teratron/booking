@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use App\Livewire\Public\CatalogSearch;
+use App\Models\Banner;
 use App\Models\Object_;
+use App\Models\Territory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -207,4 +209,69 @@ it('narrows the amenity groups back to the selected type once one is chosen', fu
     $component = Livewire::test(CatalogSearch::class)->set('type', $fixture['hotelTypeId']);
 
     expect($component->viewData('amenityGroups')->pluck('id')->all())->not->toContain($restaurantOnlyGroupId);
+});
+
+/**
+ * Places a banner in the `catalog-top` slot, targeted at $territoryId when
+ * given (null means untargeted — every territory matches).
+ */
+function publicCatalogMakeBanner(?int $territoryId, string $linkText = 'Advertiser banner'): Banner
+{
+    $slotId = DB::table('banner_slots')->insertGetId([
+        'key' => 'catalog-top', 'surfaces' => json_encode(['category']),
+        'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $bannerId = DB::table('banners')->insertGetId([
+        'banner_slot_id' => $slotId, 'name' => "Banner for catalog-top ({$linkText})", 'advertiser' => 'Acme',
+        'destination_link' => 'https://example.test', 'display_order' => 0,
+        'starts_at' => now()->subDay()->toDateString(), 'ends_at' => now()->addMonth()->toDateString(),
+        'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('banner_translations')->insert([
+        'banner_id' => $bannerId, 'locale' => 'en', 'link_text' => $linkText,
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    if ($territoryId !== null) {
+        DB::table('banner_targets')->insert([
+            'banner_id' => $bannerId, 'target_type' => (new Territory)->getMorphClass(), 'target_id' => $territoryId,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+    }
+
+    return Banner::query()->findOrFail($bannerId);
+}
+
+it('renders a banner targeted at the selected territory on the catalog page', function (): void {
+    // F-24/S-18 continuation: BannerSelectionService::forSlot() had no
+    // caller at all on the catalog/search page before this fix.
+    $fixture = publicCatalogRegistry();
+    $banner = publicCatalogMakeBanner($fixture['territoryId'], 'Own territory banner');
+
+    Livewire::test(CatalogSearch::class)
+        ->set('territoryId', $fixture['territoryId'])
+        ->assertSee(route('banners.click', ['banner' => $banner->id]), false);
+});
+
+it('never shows a catalog-page banner targeted at a different territory than the one selected', function (): void {
+    $fixture = publicCatalogRegistry();
+    $otherTerritoryId = DB::table('territories')->insertGetId([
+        'country_id' => $fixture['countryId'],
+        'level_id' => DB::table('territory_levels')->insertGetId([
+            'country_id' => $fixture['countryId'], 'depth_rank' => 1, 'created_at' => now(), 'updated_at' => now(),
+        ]),
+        'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    DB::table('territory_translations')->insert([
+        'territory_id' => $otherTerritoryId, 'country_id' => $fixture['countryId'], 'locale' => 'en',
+        'name' => 'Other Catalog Territory', 'slug' => 'other-catalog-territory',
+        'full_slug_path' => 'other-catalog-territory',
+        'needs_review' => false, 'published_at' => now(), 'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    $banner = publicCatalogMakeBanner($fixture['territoryId'], 'Own territory banner');
+
+    Livewire::test(CatalogSearch::class)
+        ->set('territoryId', $otherTerritoryId)
+        ->assertDontSee(route('banners.click', ['banner' => $banner->id]), false);
 });
