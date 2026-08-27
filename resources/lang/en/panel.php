@@ -59,6 +59,9 @@ return [
             'availability' => 'Availability',
             'availability_confirmed' => 'Availability confirmed',
             'identifier' => 'Identifier',
+            'placement_tier' => 'Tier',
+            'placement_position' => 'Position',
+            'placement_expiry' => 'Placement expiry',
         ],
 
         'status' => [
@@ -117,6 +120,7 @@ return [
             'assign_promotion_label' => 'Assign promotional label',
             'move_territory' => 'Move to another territory',
             'assign_manager' => 'Assign a manager',
+            'assign_placement_package' => 'Assign placement package',
             'notify_owners' => 'Notify owners',
             'export' => 'Export selection',
             'reset_stale_availability' => 'Reset stale availability',
@@ -125,6 +129,9 @@ return [
             'ends_at' => 'Ends on',
             'territory' => 'Target territory',
             'manager' => 'Manager',
+            'placement_package' => 'Package',
+            'ledger_status' => 'Payment status',
+            'comment' => 'Comment',
             'notification_title' => 'Message title',
             'notification_body' => 'Message body',
             'queued' => 'Queued for processing. You will be notified once it completes.',
@@ -192,6 +199,30 @@ return [
             'summary' => ':survivor will survive. :merged will be archived, and its own page will permanently redirect here.',
             'refused' => 'This merge could not be completed',
         ],
+
+        'placement' => [
+            'grant' => 'Grant placement',
+            'package' => 'Package',
+            'ledger_status' => 'Payment status',
+            'ledger_status_options' => [
+                'granted_free' => 'Granted free of charge',
+                'awaiting_payment' => 'Awaiting payment',
+                'paid' => 'Paid',
+                'partially_paid' => 'Partially paid',
+                'overdue' => 'Overdue',
+                'cancelled' => 'Cancelled',
+            ],
+            'comment' => 'Comment',
+            'pin' => 'Pin position',
+            'position' => 'Position',
+            'unpin' => 'Unpin',
+            'history_title' => 'Placement history',
+            'starts_at' => 'Starts on',
+            'ends_at' => 'Ends on',
+            'open' => 'Current',
+            'amount' => 'Amount',
+            'granted_by' => 'Granted by',
+        ],
     ],
 
     'owners' => [
@@ -251,6 +282,90 @@ return [
             'detachment_refused' => 'Detachment refused',
             'attachment_refused' => 'Attachment refused — that object is outside your assigned scope.',
             'applied' => 'Done.',
+        ],
+    ],
+
+    'staff' => [
+        'title' => 'Staff',
+        'model_label' => 'staff account',
+
+        'columns' => [
+            'name' => 'Name',
+            'email' => 'Email',
+            'roles' => 'Roles',
+            'no_roles' => 'No roles granted',
+            'created_at' => 'Created',
+            'last_sign_in_at' => 'Last sign-in',
+            'status' => 'Status',
+        ],
+
+        'status' => [
+            'active' => 'Active',
+            'deactivated' => 'Deactivated',
+        ],
+
+        'filters' => [
+            'status_all' => 'All',
+        ],
+
+        'form' => [
+            'name' => 'Name',
+            'email' => 'Email',
+            'password' => 'Password',
+            'is_active' => 'Active',
+            'out_of_scope' => 'This action is restricted to the chief administrator.',
+        ],
+
+        'actions' => [
+            'deactivation_refused' => 'This account is the last active chief administrator — deactivating it would leave the panel with nobody able to administer it.',
+            'reset_two_factor' => 'Reset two-factor authentication',
+            'reset_two_factor_confirm' => 'This clears the account\'s current authenticator enrolment. It must set up two-factor authentication again on its next sign-in.',
+            'applied' => 'Done.',
+        ],
+
+        'scope' => [
+            'none' => 'None',
+            'missing_target' => 'Target no longer exists',
+        ],
+
+        'grants' => [
+            'title' => 'Roles & grants',
+            'revoked_line' => ':grant (revoked)',
+            'applied' => 'Done.',
+            'revoke_confirm' => 'This withdraws the role immediately. The account keeps every other role it holds.',
+            'revoke_refused' => 'This role cannot be revoked from its last remaining holder — the panel that manages permissions would become inaccessible to every administrator.',
+
+            'columns' => [
+                'role' => 'Role',
+                'scope' => 'Scope',
+                'granted_by' => 'Granted by',
+                'granted_at' => 'Granted at',
+                'status' => 'Status',
+                'revoked_at' => 'Revoked at',
+            ],
+
+            'status' => [
+                'active' => 'Active',
+                'revoked' => 'Revoked',
+            ],
+
+            'form' => [
+                'role' => 'Role',
+                'scope_kind' => 'Scope',
+                'scope_reference' => 'Scope target',
+            ],
+
+            'scope_kind' => [
+                'none' => 'Unrestricted',
+                'country' => 'Country',
+                'territory' => 'Territory',
+                'category' => 'Object category',
+            ],
+
+            'actions' => [
+                'grant' => 'Grant role',
+                'revoke' => 'Revoke',
+            ],
         ],
     ],
 
