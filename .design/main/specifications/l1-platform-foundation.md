@@ -1,6 +1,6 @@
 # Platform Foundation
 
-**Version:** 1.5.3
+**Version:** 1.5.4
 **Status:** Stable
 **Layer:** concept
 
@@ -231,8 +231,8 @@ specs from each carrying their own private theory of what the product is.
 /about, /contacts                Static pages                  -> l1-platform-shell
 /privacy-policy, /terms          Legal pages                   -> l1-platform-shell
 /404                             Error page                    -> l1-platform-shell
-/cabinet/**                      Owner cabinet                 -> l1-object-onboarding
-/admin/**                        Portal back office            -> l1-back-office
+{cabinet-path}/**                Owner cabinet                 -> l1-object-onboarding
+{admin-path}/**                  Portal back office            -> l1-back-office
 ```
 
 Every public route above is language-prefixed and country-aware. The exact URL grammar
@@ -240,6 +240,12 @@ is owned by [l1-seo.md](l1-seo.md) §5.1 — a single owner, and settled rather 
 open: the alternatives it was once weighed against were retired on 2026-08-15
 ([l1-localization.md](l1-localization.md) §7). The site map above is therefore the
 shape the portal ships, not one candidate among several.
+
+**[MODIFIED — v1.5.4]** The two panel roots are named, not routed — unlike every
+route above them, neither is a literal path. Both are deployment configuration, and
+the back office's own default is deliberately not the conventional choice: the
+requirement and its rationale belong to [l1-back-office.md](l1-back-office.md) §3.3,
+which this site map defers to rather than restating.
 
 ### 5.2 Core Entity Relationship
 
@@ -387,3 +393,4 @@ trade is no longer close.
 | 1.5.1 | 2026-08-20 | Patch: named ARIA explicitly, within the existing accessibility-parity bullet, as the mechanism for custom-component semantics — clarification only, no new invariant (ARIA validity is covered by the same §5.9 verification, not a separate one). |
 | 1.5.2 | 2026-08-20 | Patch: linked the new release-operations specification, which serves §5.4's delivery stages. Navigation only — no invariant added, changed, or removed. |
 | 1.5.3 | 2026-08-22 | Patch: §5.1 no longer frames the URL grammar as an open choice between prefix, domain, and subdomain — the choice was settled on 2026-08-15 in favour of a single origin with a language path prefix. Also corrects the delegation target: the grammar is owned by [l1-seo.md](l1-seo.md) §5.1, not by [l1-localization.md](l1-localization.md) §5.3, which specifies resolution and fallback. Clarification only — no invariant added, changed, or removed. |
+| 1.5.4 | 2026-08-27 | Patch: closed a 2026-08-22 design debt — §5.1's site map named the back office and owner cabinet with literal paths (`/admin/**`, `/cabinet/**`), which the delivered system does not use; both are runtime configuration. Replaced the literal paths with placeholders and delegated the requirement itself to [l1-back-office.md](l1-back-office.md) §3.3, which now states it, rather than adding it here — this spec's own §5.1 note already owns delegation for the URL grammar, so the panel-path requirement follows the same pattern instead of becoming a second, competing source. Correction only — no new invariant, and no cascade to [l2-tech-stack.md](l2-tech-stack.md), since nothing here changed in substance. |

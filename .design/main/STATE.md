@@ -4,7 +4,7 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-27 15:03
+**Updated:** 2026-08-27 15:10
 **Phase:** Post-Phase-11
 **Status:** Active
 
@@ -15,7 +15,7 @@
 - **Task (Phase 8, unchanged):** **Phase 8 at 20/23 — every agent-performable task is done; three owner-only tasks remain and nothing blocks them.** Track F closed and the C12 quarantine it ran under was lifted the same day when both specifications returned to `Stable` at v0.4.0. Owner chose "master = develop" for `T-8F02`: `require_code_owner_reviews` enabled first (read back to confirm before the boundary was ever observably absent), then `required_approving_review_count` dropped to 0 — same order the task's own Notes required. `T-8F03`'s read-back confirms `master` now matches `develop` field-for-field: ordinary changes clear the gate and merge unattended; any `.github/CODEOWNERS`-matched path always waits for `@teratron`, on either branch. Full detail and the comparison table: `tasks/phase-8.md` Track F.
 - **Previous:** Following the owner's development-phase authorization (§5.5.1), the agent completed every other agent-performable Phase 8 task — branch contract, deploy/verify/rollback/record pipeline, irreversibility scan, EN/RU/agent operator docs, pipeline containment tests — across three prior sessions on 2026-08-20/21. **Remaining, all owner-only regardless of authorization**: `T-8E01` (no API/CLI path to create a GitHub App), `T-8E03` (needs real production credentials absent from this dev environment), `T-8T03` (rehearsal requires a human executor by the spec's own text).
 - **Spec:** **25 specs — 9 `Stable`, 16 `RFC`.** `l1-platform-shell`, `l1-object-profile`, `l1-public-api` promoted `RFC → Stable` 2026-08-22 (Phase 9). The delivery pair's own earlier 2026-08-21 round trip (amended outside the workflow, reconciled, re-promoted to `Stable` at v0.4.0) is unrelated — see `INDEX.md`'s Amendment/Branch-Model Ledgers.
-- **Next Action:** Resolve blocker on T-8E01 (main) — see STATE.md ## Blockers, then run /magic.run main
+- **Next Action:** Run /magic.task main to update the plan
 
 ## Progress
 

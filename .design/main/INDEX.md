@@ -1,6 +1,6 @@
 # Workspace Specifications Registry
 
-**Version:** 2.13.0
+**Version:** 2.14.0
 **Status:** Active
 
 ## Overview
@@ -82,7 +82,7 @@ Delivery → Optional → Implementation); the registry itself is flat.
 
 | File | Description | Status | Layer | Version |
 | --- | --- | --- | --- | --- |
-| [l1-platform-foundation.md](specifications/l1-platform-foundation.md) | Foundation. Cross-cutting invariants: delivery (incl. accessibility), reach, domain, governance, commerce, evolution, privacy; delivery stages | Stable | 1 | 1.5.3 |
+| [l1-platform-foundation.md](specifications/l1-platform-foundation.md) | Foundation. Cross-cutting invariants: delivery (incl. accessibility), reach, domain, governance, commerce, evolution, privacy; delivery stages | Stable | 1 | 1.5.4 |
 | [l1-feature-modules.md](specifications/l1-feature-modules.md) | Foundation. Administrator-toggleable capability modules; scoping ladder, dependencies, inertness, candidate modules | RFC | 1 | 0.2.1 |
 | [l1-localization.md](specifications/l1-localization.md) | Foundation. Countries, languages (launch: EN + RU), per-entity translation model, phased activation | Stable | 1 | 0.3.0 |
 | [l1-geography.md](specifications/l1-geography.md) | Foundation. Recursive territory hierarchy, per-country level vocabularies, landing pages | RFC | 1 | 0.1.1 |
@@ -94,7 +94,7 @@ Delivery → Optional → Implementation); the registry itself is flat.
 | [l1-content-publishing.md](specifications/l1-content-publishing.md) | Public. Articles, news, and promotions; shared publication pipeline | RFC | 1 | 1.0.0 |
 | [l1-seo.md](specifications/l1-seo.md) | Public. URL grammar, metadata, indexation policy, structured data, sitemaps, redirects | Stable | 1 | 0.2.0 |
 | [l1-object-onboarding.md](specifications/l1-object-onboarding.md) | Owner. Object submission and the full owner cabinet lifecycle | RFC | 1 | 1.2.1 |
-| [l1-back-office.md](specifications/l1-back-office.md) | Operator. Portal administration, scoped RBAC, staff account and grant administration, bulk operations, import/export, settings | RFC | 1 | 0.2.0 |
+| [l1-back-office.md](specifications/l1-back-office.md) | Operator. Portal administration, scoped RBAC, staff account and grant administration, configuration-only panel paths, bulk operations, import/export, settings | RFC | 1 | 0.3.0 |
 | [l1-moderation-governance.md](specifications/l1-moderation-governance.md) | Operator. Moderation modes and queue, audit journal, soft deletion, confirmation gates | RFC | 1 | 0.1.1 |
 | [l1-notifications.md](specifications/l1-notifications.md) | Operator. Notification model, channel adapters, automated schedules, broadcasts | RFC | 1 | 0.1.1 |
 | [l1-placement-monetization.md](specifications/l1-placement-monetization.md) | Commerce. Four placement tiers, packages, the granting act, bump mechanics, expiry, financial ledger | RFC | 1 | 0.2.0 |
@@ -419,5 +419,5 @@ this workflow's.
 ## Meta Information
 
 - **Maintainer**: Core Team
-- **Last Updated**: 2026-08-23 (Review-submission-gating pass — `l1-object-profile` amended 1.2.0 → 1.3.0, `Stable → RFC` on a new invariant with one deliberate open TBD; `l2-third-party-integrations` amended 2.0.0 → 2.1.0, stays `RFC`; 25 specifications, 8 `Stable`)
-- **Previously**: 2026-08-22 (Phase 9 remediation pass — `l1-platform-shell`, `l1-object-profile`, `l1-public-api` promoted RFC → Stable, closing their live TBDs; 25 specifications, 9 `Stable`. Earlier the same day: branch model reconciled to the owner's single-line development posture, then corrected same-day to attribute the pause to its actual recorded decision rather than to newly found drift; delivery pair back to `RFC` at 0.5.1)
+- **Last Updated**: 2026-08-27 (Design-debt closure — `l1-back-office` amended 0.2.0 → 0.3.0, stays `RFC`, gaining the panel-base-paths-are-configuration invariant at §3.3; `l1-platform-foundation` patched 1.5.3 → 1.5.4, stays `Stable`, correcting §5.1's site map from two literal paths to a delegation, no cascade. Closes the 2026-08-22 backlog item of the same name. 25 specifications, 8 `Stable`)
+- **Previously**: 2026-08-23 (Review-submission-gating pass — `l1-object-profile` amended 1.2.0 → 1.3.0, `Stable → RFC` on a new invariant with one deliberate open TBD; `l2-third-party-integrations` amended 2.0.0 → 2.1.0, stays `RFC`; 25 specifications, 8 `Stable`)

@@ -570,7 +570,13 @@ unscheduled backlog work; the pair remains Phase 8's L1/L2 sources throughout. T
 Amendment Ledger and Branch-Model Ledger in [INDEX.md](INDEX.md) record both round
 trips and what each found.)*
 
-- **Design debt, opened 2026-08-22: the panel addresses are configuration, and no specification says so.** [l1-platform-foundation.md](specifications/l1-platform-foundation.md) §5.1's site map lists the back office at `/admin/**` and the owner cabinet at `/cabinet/**` as literal paths. Both are runtime configuration in the delivered system, and the staff panel's default is deliberately *not* `/admin` — a guessable staff address attracts the credential-stuffing traffic the sign-in throttle then has to absorb. The requirement is real, enforced in code, and stated in **no** specification in this registry, so writing it into §5.1 would be a new requirement rather than a correction: minor bump, `Stable → RFC`, and a C12 cascade quarantining [l2-tech-stack.md](specifications/l2-tech-stack.md). Site it in [l1-back-office.md](specifications/l1-back-office.md) instead — already `RFC`, so it costs no cascade at all — and correct §5.1 to delegate. Surfaced by the URL-grammar pass; recorded rather than taken on inside it. Route: `/magic.spec main`.
+*(Design debt opened 2026-08-22, the panel addresses are configuration, and no
+specification says so — closed 2026-08-27 exactly as routed: the invariant now lives
+at [l1-back-office.md](specifications/l1-back-office.md) §3.3 (0.3.0, no cascade,
+already `RFC`), and [l1-platform-foundation.md](specifications/l1-platform-foundation.md)
+§5.1 delegates to it instead of restating it (1.5.4, patch, `Stable` unchanged). No
+Phase 8 task existed for it — this was pure backlog, and closing it needed no plan
+change beyond removing the entry below.)*
 
 - [l1-room-reservation.md](specifications/l1-room-reservation.md) — **dormant module, deliberately deferred.** Its three tables (`reservations`, `room_availabilities`, `booking_settings`) and its `booking` / `payment` / `guest_accounts` registry rows ship **disabled** in Phase 1, and Phase 1's inertness test proves the module is absent rather than hidden. The capability itself is not in `[TZ]` §134's mandatory first release, and the previous implementation is explicitly not a migration source ([l2-data-model.md](specifications/l2-data-model.md) §2), so building the flow is scoped as its own future phase rather than smuggled into release one.
 

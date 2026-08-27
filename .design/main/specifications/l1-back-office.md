@@ -1,6 +1,6 @@
 # Back Office
 
-**Version:** 0.2.0
+**Version:** 0.3.0
 **Status:** RFC
 **Layer:** concept
 
@@ -137,6 +137,14 @@ actions, and saved filters is not a hand-built surface
   availability-status validity period, object ordering, email templates, analytics
   connections, maps, CAPTCHA, and security parameters.
 - Critical settings are restricted to the chief administrator (`[TZ]` §130).
+- **[ADDED — v0.3.0] Both panel base paths — the back office and the owner cabinet —
+  are deployment configuration, never a literal route baked into the application.**
+  The back office's own address is deliberately non-guessable rather than the
+  conventional choice a staff panel would otherwise sit at: a predictable staff
+  address invites the credential-stuffing traffic its sign-in throttle then has to
+  absorb, and configuration is what lets an operator change it without a code
+  change. This is the mechanism [l1-platform-foundation.md](l1-platform-foundation.md)
+  §5.1 delegates to when its site map names these two roots.
 
 ## 5. Detailed Design
 
@@ -441,3 +449,4 @@ journal cannot be backfilled — the events it needs will already have happened.
 | 0.1.0 | 2026-08-05 | Initial draft derived from the client technical specification. |
 | 0.1.1 | 2026-08-05 | Patch: translated quoted `[TZ]` excerpts from Russian to English per the project's language policy; no meaning changed. |
 | 0.2.0 | 2026-08-26 | Minor: gave §5.2 the administration surface it never had. The section defined how a permission is stored and enforced, and a system whose grants are written only at installation satisfied every word of it — which is what `[TZ]` §99.1 rules out and §134 puts in the mandatory first release. Added five §3.1 invariants (staff accounts created from the panel, permissions paired through the interface, effective permissions readable, grants revocable and re-boundable, the chief-administrator guard promoted from §6 note 4), the staff list and scope-picker surface in §5.2 with grant-target-moved and grant-target-deleted behaviour, §6 notes 6–7, and a §5.8 reading of `[TZ]` §134's «распределение прав» as the administrative act rather than enforcement alone. Separated §5.2's eleven-role sentence into `[TZ]` §121's nine panel roles administered here and the two object-side roles conferred through §5.4 and §5.5, which the undivided sentence had caused to be miscounted. Two new §2 open questions recorded — scoped delegation of staff creation, and a deactivated staff member's work in flight — and the existing transitive-scoping question annotated as now load-bearing. §5.2's model, permission verbs, and enforcement flowchart are unchanged; §5.5's owner management is untouched; no invariant removed. |
+| 0.3.0 | 2026-08-27 | Minor: closed the 2026-08-22 design debt — both panel base paths are runtime configuration, and no specification said so, though the code has enforced it since the back office's own default was chosen to be non-guessable. Added the invariant to §3.3 rather than to [l1-platform-foundation.md](l1-platform-foundation.md) §5.1, which merely names the two roots in its site map: siting it here cost no cascade, since this spec was already `RFC`, where writing it into the `Stable` site-map spec would have forced a minor bump and quarantined [l2-tech-stack.md](l2-tech-stack.md) under it. §5.1 now delegates to this bullet instead of stating the requirement itself. No existing invariant changed or removed. |
