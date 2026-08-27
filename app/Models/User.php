@@ -35,8 +35,9 @@ use Spatie\Permission\Traits\HasRoles;
  */
 // blocked_at / blocked_by are deliberately excluded from mass assignment:
 // account status is only ever changed through OwnerAccountService's
-// block()/restore(), never through a form field, mirroring the accountability
-// columns already treated this way elsewhere in this schema (deleted_by,
+// block()/restore() or StaffAccountService's deactivate()/restore(), never
+// through a form field, mirroring the accountability columns already
+// treated this way elsewhere in this schema (deleted_by,
 // availability_changed_by).
 #[Fillable(['name', 'email', 'password', 'company', 'phone', 'country_id', 'locale'])]
 #[Hidden(['password', 'remember_token'])]
@@ -92,6 +93,20 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     public function notificationPreferences(): HasMany
     {
         return $this->hasMany(NotificationPreference::class);
+    }
+
+    /**
+     * Every role grant this account holds, active and revoked alike — the
+     * staff-administration screen's own read-back of "what can this account
+     * do", per {@see RoleScope}. Left unfiltered here deliberately: a
+     * revoked row is still part of the account's history, and it is the
+     * caller's job to decide whether it wants only the active ones.
+     *
+     * @return HasMany<RoleScope, $this>
+     */
+    public function roleScopes(): HasMany
+    {
+        return $this->hasMany(RoleScope::class);
     }
 
     /**

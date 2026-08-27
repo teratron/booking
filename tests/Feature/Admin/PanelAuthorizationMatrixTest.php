@@ -21,6 +21,7 @@ use App\Filament\Admin\Resources\PlacementTiers\PlacementTierResource;
 use App\Filament\Admin\Resources\PromotionLabels\PromotionLabelResource;
 use App\Filament\Admin\Resources\Redirects\RedirectResource;
 use App\Filament\Admin\Resources\SeoMetadataTemplates\SeoMetadataTemplateResource;
+use App\Filament\Admin\Resources\Staff\StaffResource;
 use App\Filament\Admin\Resources\Territories\TerritoryResource;
 use App\Models\User;
 use Filament\Facades\Filament;
@@ -291,6 +292,13 @@ function seedProbeRowFor(string $resourceClass): void
                 'created_at' => now(), 'updated_at' => now(),
             ]);
         })(),
+        // A staff account holding any role that isn't one of the two
+        // object-side ones — StaffResource excludes those by relation, not
+        // by enumerating the panel roles, so any other role qualifies.
+        StaffResource::class => (function (): void {
+            $role = Role::findOrCreate('matrix_probe_staff_role', 'web');
+            User::factory()->create()->assignRole($role);
+        })(),
         default => throw new RuntimeException("No probe-row fixture registered for {$resourceClass}."),
     };
 }
@@ -373,8 +381,11 @@ it('reaches every global-registry resource only through an unrestricted grant, n
 
     // The registry drives which resources are exercised — a resource
     // declaring no scope axis in a later phase is picked up here without
-    // this file changing. These eighteen are today's, asserted so the
+    // this file changing. These nineteen are today's, asserted so the
     // fixture switch above cannot silently stop covering one of them.
+    // StaffResource joined the set with the staff-administration screen —
+    // it is a global registry the same way ModuleResource/LanguageResource
+    // are: reachable only by an unrestricted grant, never a scoped one.
     expect($axisLessResources->all())->toEqualCanonicalizing([
         ActionJournalResource::class,
         ApiClientResource::class,
@@ -394,6 +405,7 @@ it('reaches every global-registry resource only through an unrestricted grant, n
         PromotionLabelResource::class,
         RedirectResource::class,
         SeoMetadataTemplateResource::class,
+        StaffResource::class,
     ]);
 
     foreach ($axisLessResources as $resourceClass) {

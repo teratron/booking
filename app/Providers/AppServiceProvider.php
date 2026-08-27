@@ -16,6 +16,7 @@ use App\Policies\AuditPolicy;
 use App\Policies\BackupPolicy;
 use App\Services\Advertising\BannerSelectionService;
 use App\Services\Authorization\CabinetAccessResolver;
+use App\Services\Authorization\RoleGrantPresenter;
 use App\Services\Authorization\ScopeAuthorizer;
 use App\Services\Localization\DatabaseOverlayLoader;
 use App\Services\Localization\LanguageRegistry;
@@ -76,6 +77,11 @@ class AppServiceProvider extends ServiceProvider
         // module/context question up to eight times across independently
         // injected services (see its own docblock's per-request memo).
         $this->app->singleton(ModuleResolver::class);
+
+        // Same rationale a third time: the staff list resolves one of
+        // these per row via a Filament column closure, and a fresh
+        // instance per row would make its role/scope-name memo pointless.
+        $this->app->singleton(RoleGrantPresenter::class);
     }
 
     /**

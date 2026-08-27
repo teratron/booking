@@ -52,7 +52,7 @@ test('the chief administrator role cannot be revoked from its last remaining hol
     // of seed data shape.
     User::where('email', 'test@example.com')->first()->removeRole('chief_administrator');
 
-    expect(fn () => app(RoleGrantService::class)->revokeRole($solo, 'chief_administrator'))
+    expect(fn () => app(RoleGrantService::class)->revokeRole($solo, 'chief_administrator', $solo))
         ->toThrow(UnrevocableGrantException::class);
 
     expect($solo->fresh()->hasRole('chief_administrator'))->toBeTrue();
@@ -63,7 +63,7 @@ test('the chief administrator role can be revoked when another holder remains', 
     $second = User::factory()->create();
     $second->assignRole('chief_administrator');
 
-    app(RoleGrantService::class)->revokeRole($first, 'chief_administrator');
+    app(RoleGrantService::class)->revokeRole($first, 'chief_administrator', $second);
 
     expect($first->fresh()->hasRole('chief_administrator'))->toBeFalse();
     expect($second->fresh()->hasRole('chief_administrator'))->toBeTrue();
