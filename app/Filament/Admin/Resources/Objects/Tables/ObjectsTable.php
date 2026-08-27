@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Admin\Resources\Objects\Tables;
 
 use App\Exceptions\BulkSelectionScopeException;
+use App\Filament\Admin\Resources\Objects\ObjectResource;
 use App\Filament\Admin\Support\CountedBulkAction;
 use App\Filament\Support\SearchableModelSelect;
 use App\Jobs\ExecuteObjectBulkActionJob;
@@ -12,6 +13,7 @@ use App\Models\Country;
 use App\Models\Language;
 use App\Models\Object_;
 use App\Models\ObjectType;
+use App\Models\PlacementPackage;
 use App\Models\PromotionLabel;
 use App\Models\User;
 use App\Services\Objects\ObjectBulkActionService;
@@ -38,9 +40,11 @@ use Illuminate\Database\Eloquent\Collection;
  * things a member of staff has in front of them when an owner calls: the
  * caller knows their own phone number, not the portal's primary key.
  *
- * Columns whose data arrives with the commerce phase — card caption, border
- * colour, pinned position, last bump — are absent rather than rendered empty.
- * An empty column reads as "this object has none", which is a different claim
+ * Placement tier, manual position, and expiry are read from the eager-loaded
+ * `placement.package.tier` relation — {@see ObjectResource::$eagerLoad}
+ * — never queried per row. Card caption, border colour, and last bump remain
+ * absent rather than rendered empty: an empty column reads as "this object
+ * has none", which is a different claim
  * from "the portal does not track this yet".
  */
 class ObjectsTable
@@ -114,6 +118,23 @@ class ObjectsTable
             TextColumn::make('ulid')
                 ->label(__('panel.objects.columns.identifier'))
                 ->searchable()
+                ->toggleable(isToggledHiddenByDefault: true),
+
+            TextColumn::make('placement.package.tier.name')
+                ->label(__('panel.objects.columns.placement_tier'))
+                ->placeholder('—')
+                ->toggleable(isToggledHiddenByDefault: true),
+
+            TextColumn::make('placement.pinned_position')
+                ->label(__('panel.objects.columns.placement_position'))
+                ->placeholder('—')
+                ->toggleable(isToggledHiddenByDefault: true),
+
+            TextColumn::make('placement.ends_at')
+                ->label(__('panel.objects.columns.placement_expiry'))
+                ->date()
+                ->placeholder('—')
+                ->sortable()
                 ->toggleable(isToggledHiddenByDefault: true),
         ];
     }
@@ -268,6 +289,7 @@ class ObjectsTable
             self::assignPromotionLabelBulkAction(),
             self::moveTerritoryBulkAction(),
             self::assignManagerBulkAction(),
+            self::assignPlacementPackageBulkAction(),
             self::notifyOwnersBulkAction(),
             self::exportBulkAction(),
             self::resetStaleAvailabilityBulkAction(),
@@ -388,6 +410,47 @@ class ObjectsTable
             ])
             ->action(fn (Collection $records, array $data) => self::runBulkOperation($records, 'assign_manager', [
                 'manager_id' => (int) $data['manager_id'],
+            ]));
+    }
+
+    /**
+     * Grants the same placement package to every selected object in one
+     * confirmed action — the pattern this fix follows: an administrator can
+     * define a package and record a payment, but nothing before this action
+     * connected the two for more than one object at a time.
+     */
+    private static function assignPlacementPackageBulkAction(): CountedBulkAction
+    {
+        return CountedBulkAction::make('assign_placement_package')
+            ->label(__('panel.objects.bulk.assign_placement_package'))
+            ->authorize(fn (): bool => (bool) auth()->user()?->can('commerce.edit'))
+            ->schema([
+                Select::make('placement_package_id')
+                    ->label(__('panel.objects.bulk.placement_package'))
+                    ->options(fn (): array => PlacementPackage::query()
+                        ->where('is_active', true)
+                        ->with('translations')
+                        ->get()
+                        ->mapWithKeys(fn (PlacementPackage $package): array => [$package->id => $package->name ?? "#{$package->id}"])
+                        ->all())
+                    ->required()
+                    ->searchable(),
+                Select::make('ledger_status')
+                    ->label(__('panel.objects.bulk.ledger_status'))
+                    ->options([
+                        'granted_free' => __('panel.objects.placement.ledger_status_options.granted_free'),
+                        'awaiting_payment' => __('panel.objects.placement.ledger_status_options.awaiting_payment'),
+                        'paid' => __('panel.objects.placement.ledger_status_options.paid'),
+                    ])
+                    ->default('granted_free')
+                    ->required(),
+                Textarea::make('comment')
+                    ->label(__('panel.objects.bulk.comment')),
+            ])
+            ->action(fn (Collection $records, array $data) => self::runBulkOperation($records, 'assign_placement_package', [
+                'placement_package_id' => (int) $data['placement_package_id'],
+                'ledger_status' => $data['ledger_status'],
+                'comment' => $data['comment'] ?? null,
             ]));
     }
 

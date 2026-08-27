@@ -93,6 +93,30 @@ final class Object_Policy extends ScopedPolicy
         return $user->can('object.export');
     }
 
+    /**
+     * Conferring an existing placement package on an object, and setting or
+     * clearing its manual position within its own tier — an ordinary,
+     * scopable administrator permission (`[TZ]` §112 grants every position
+     * operation to a generic "administrator"), separate from creating and
+     * pricing the packages themselves. Reuses the `commerce` resource's own
+     * `edit` verb rather than a placement-specific permission key —
+     * granting is a commerce action on an object the same way editing its
+     * price-bearing fields is.
+     *
+     * `[TZ]` §25.2 separately reserves one narrower thing to the chief
+     * administrator alone: a manual position that would let a lower tier
+     * outrank a higher one in the same scope. This method does not attempt
+     * to detect that case — doing so correctly needs the current catalog
+     * ordering at the object's own scope, not just the object in isolation
+     * — so every position change this policy gates is treated as the
+     * ordinary, scoped kind for now. Distinguishing the cross-tier override
+     * is deferred to a follow-up task rather than guessed at here.
+     */
+    public function grantPlacement(User $user, Object_ $object): bool
+    {
+        return $this->authorizeAgainst($user, 'commerce.edit', $object);
+    }
+
     private function authorizeAgainst(User $user, string $permission, Object_ $object): bool
     {
         if ($this->authorize(

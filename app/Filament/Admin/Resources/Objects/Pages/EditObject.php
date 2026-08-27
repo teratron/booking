@@ -15,10 +15,12 @@ use App\Models\ObjectTranslation;
 use App\Models\PlacementPackage;
 use App\Models\Territory;
 use App\Models\User;
+use App\Policies\Object_Policy;
 use App\Services\Objects\AvailabilityAdministrationService;
 use App\Services\Objects\ObjectLifecycleService;
 use App\Services\Objects\ObjectMergeService;
 use App\Services\Placement\BumpService;
+use App\Services\Placement\PlacementLifecycleService;
 use App\Services\Seo\RedirectRegistrar;
 use App\Services\Settings\SettingsRepository;
 use Closure;
@@ -166,6 +168,9 @@ class EditObject extends EditRecord
             $this->overrideAvailabilityAction(),
             $this->revertAvailabilityAction(),
             $this->bumpAction(),
+            $this->grantPlacementAction(),
+            $this->pinAction(),
+            $this->unpinAction(),
         ];
     }
 
@@ -329,6 +334,121 @@ class EditObject extends EditRecord
 
                     return;
                 }
+
+                Notification::make()->title(__('panel.objects.lifecycle.applied'))->success()->send();
+            });
+    }
+
+    /**
+     * Confers an existing placement package on the object — the act the
+     * placement specification's own granting section requires, which
+     * nothing in this panel called before now; the service's only prior
+     * caller was the expiry sweep, which only ever demotes. Scoped like any
+     * other commerce action on this object
+     * ({@see Object_Policy::grantPlacement()}).
+     */
+    private function grantPlacementAction(): Action
+    {
+        return Action::make('grant_placement')
+            ->label(__('panel.objects.placement.grant'))
+            ->authorize(fn (Object_ $object): bool => (bool) auth()->user()?->can('grantPlacement', $object))
+            ->schema([
+                Select::make('placement_package_id')
+                    ->label(__('panel.objects.placement.package'))
+                    ->options(fn (Object_ $object): array => PlacementPackage::query()
+                        ->where('is_active', true)
+                        ->where(fn (Builder $query) => $query->whereNull('object_type_id')->orWhere('object_type_id', $object->object_type_id))
+                        ->with('translations')
+                        ->get()
+                        ->mapWithKeys(fn (PlacementPackage $package): array => [$package->id => $package->name ?? "#{$package->id}"])
+                        ->all())
+                    ->required()
+                    ->searchable(),
+                Select::make('ledger_status')
+                    ->label(__('panel.objects.placement.ledger_status'))
+                    ->options([
+                        'granted_free' => __('panel.objects.placement.ledger_status_options.granted_free'),
+                        'awaiting_payment' => __('panel.objects.placement.ledger_status_options.awaiting_payment'),
+                        'paid' => __('panel.objects.placement.ledger_status_options.paid'),
+                    ])
+                    ->default('granted_free')
+                    ->required(),
+                Textarea::make('comment')
+                    ->label(__('panel.objects.placement.comment')),
+            ])
+            ->action(function (array $data): void {
+                $actor = Filament::auth()->user();
+                $object = $this->currentObject();
+                $package = PlacementPackage::query()->find($data['placement_package_id']);
+
+                if (! $actor instanceof User || ! $package instanceof PlacementPackage) {
+                    return;
+                }
+
+                app(PlacementLifecycleService::class)->grant(
+                    $object,
+                    $package,
+                    $actor,
+                    $data['comment'] ?? null,
+                    (string) $data['ledger_status'],
+                );
+
+                $this->refreshFormData(['status']);
+                Notification::make()->title(__('panel.objects.lifecycle.applied'))->success()->send();
+            });
+    }
+
+    /**
+     * Sets the object's manual position within its own tier — one of the
+     * six position operations the placement specification names, offered
+     * only once the object holds a placement to be positioned within.
+     */
+    private function pinAction(): Action
+    {
+        return Action::make('pin_placement')
+            ->label(__('panel.objects.placement.pin'))
+            ->authorize(fn (Object_ $object): bool => (bool) auth()->user()?->can('grantPlacement', $object))
+            ->visible(fn (Object_ $object): bool => $object->placement instanceof ObjectPlacement)
+            ->schema([
+                TextInput::make('position')
+                    ->label(__('panel.objects.placement.position'))
+                    ->numeric()
+                    ->required()
+                    ->minValue(1),
+            ])
+            ->action(function (array $data): void {
+                $actor = Filament::auth()->user();
+
+                if (! $actor instanceof User) {
+                    return;
+                }
+
+                app(PlacementLifecycleService::class)->pin($this->currentObject(), (int) $data['position'], $actor);
+
+                Notification::make()->title(__('panel.objects.lifecycle.applied'))->success()->send();
+            });
+    }
+
+    /**
+     * Clears a manual position, returning the object to ordinary
+     * tier-and-bump ordering — the inverse `[TZ]` §112 requires alongside
+     * pinning itself.
+     */
+    private function unpinAction(): Action
+    {
+        return Action::make('unpin_placement')
+            ->label(__('panel.objects.placement.unpin'))
+            ->authorize(fn (Object_ $object): bool => (bool) auth()->user()?->can('grantPlacement', $object))
+            ->visible(fn (Object_ $object): bool => $object->placement?->pinned_position !== null)
+            ->requiresConfirmation()
+            ->action(function (): void {
+                $actor = Filament::auth()->user();
+
+                if (! $actor instanceof User) {
+                    return;
+                }
+
+                app(PlacementLifecycleService::class)->unpin($this->currentObject(), $actor);
 
                 Notification::make()->title(__('panel.objects.lifecycle.applied'))->success()->send();
             });

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Policies\PlacementHistoryPolicy;
+use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -33,6 +35,7 @@ use Override;
  * @property ?int $granted_by
  * @property ?string $comment
  */
+#[UsePolicy(PlacementHistoryPolicy::class)]
 class PlacementHistory extends Model
 {
     protected $guarded = ['id'];

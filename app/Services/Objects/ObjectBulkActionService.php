@@ -8,10 +8,12 @@ use App\Exceptions\BulkSelectionScopeException;
 use App\Models\Language;
 use App\Models\Notification;
 use App\Models\Object_;
+use App\Models\PlacementPackage;
 use App\Models\Territory;
 use App\Models\User;
 use App\Services\Audit\AuditJournal;
 use App\Services\Authorization\ResourceQueryScoper;
+use App\Services\Placement\PlacementLifecycleService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -39,6 +41,7 @@ final class ObjectBulkActionService
         private readonly AuditJournal $journal,
         private readonly ResourceQueryScoper $scoper,
         private readonly AvailabilityAdministrationService $availability,
+        private readonly PlacementLifecycleService $placement,
     ) {}
 
     /**
@@ -64,6 +67,11 @@ final class ObjectBulkActionService
         match ($operation) {
             'export' => $query->with(['objectType', 'country', 'territory', 'owner', 'translations']),
             'assign_manager' => $query->with('staff'),
+            // grant() reads $object->placement to decide what it is
+            // replacing — without this, strict mode throws on the lazy
+            // load the very first selected object with a prior placement
+            // would otherwise trigger.
+            'assign_placement_package' => $query->with('placement'),
             default => null,
         };
 
@@ -77,6 +85,7 @@ final class ObjectBulkActionService
             'assign_promotion_label' => $this->assignPromotionLabel($objects, $parameters, $actor),
             'move_territory' => $this->moveTerritory($objects, $parameters, $actor),
             'assign_manager' => $this->assignManager($objects, $parameters, $actor),
+            'assign_placement_package' => $this->assignPlacementPackage($objects, $parameters, $actor),
             'notify_owners' => $this->notifyOwners($objects, $parameters, $actor),
             'export' => $this->export($objects, $actor),
             'reset_stale_availability' => $this->resetStaleAvailability($objects, $actor),
@@ -134,6 +143,10 @@ final class ObjectBulkActionService
             'change_status' => ($parameters['status'] ?? null) === 'published' ? 'object.publish' : 'object.edit',
             'archive' => 'object.delete',
             'assign_promotion_label', 'move_territory', 'assign_manager', 'notify_owners', 'reset_stale_availability' => 'object.edit',
+            // Granting a placement is a commerce action on the object, not
+            // an ordinary edit — the same permission a single-object grant
+            // checks via `Object_Policy::grantPlacement()`.
+            'assign_placement_package' => 'commerce.edit',
             'export' => 'object.export',
             default => throw new InvalidArgumentException("Unknown bulk operation [{$operation}]."),
         };
@@ -141,10 +154,10 @@ final class ObjectBulkActionService
 
     /**
      * `Object_Policy`'s methods are named after the action they guard
-     * (`update`, `publish`, `delete`, `export`), not after the permission
-     * string that names the underlying grant — this maps one to the other
-     * so the same permission key drives both the query-scope narrowing and
-     * the record-level Gate check.
+     * (`update`, `publish`, `delete`, `export`, `grantPlacement`), not after
+     * the permission string that names the underlying grant — this maps one
+     * to the other so the same permission key drives both the query-scope
+     * narrowing and the record-level Gate check.
      */
     private function policyAbilityFor(string $permission): string
     {
@@ -152,6 +165,7 @@ final class ObjectBulkActionService
             'object.publish' => 'publish',
             'object.delete' => 'delete',
             'object.export' => 'export',
+            'commerce.edit' => 'grantPlacement',
             default => 'update',
         };
     }
@@ -340,6 +354,37 @@ final class ObjectBulkActionService
                 $object->staff()->syncWithoutDetaching([$managerId]);
 
                 $this->journal->record('object_bulk_manager_assigned', $object, [], ['manager_id' => $managerId], $actor, ['object', 'bulk']);
+            }
+        });
+    }
+
+    /**
+     * Grants the same package to every selected object — the bulk
+     * counterpart to the single-object grant action, sharing its one
+     * write path ({@see PlacementLifecycleService::grant()}) rather than
+     * reimplementing the transaction that keeps `object_placements` and
+     * `placement_histories` from drifting apart. The service's own journal
+     * call covers each object individually; no second, bulk-specific
+     * journal entry is added on top.
+     *
+     * @param  Collection<int, Object_>  $objects
+     * @param  array<string, mixed>  $parameters
+     */
+    private function assignPlacementPackage(Collection $objects, array $parameters, User $actor): void
+    {
+        $packageId = (int) ($parameters['placement_package_id'] ?? 0);
+        $package = PlacementPackage::query()->find($packageId);
+
+        if (! $package instanceof PlacementPackage) {
+            throw new InvalidArgumentException('Assigning a placement package in bulk requires a valid placement_package_id.');
+        }
+
+        $comment = is_string($parameters['comment'] ?? null) ? $parameters['comment'] : null;
+        $ledgerStatus = is_string($parameters['ledger_status'] ?? null) ? $parameters['ledger_status'] : 'granted_free';
+
+        DB::transaction(function () use ($objects, $package, $actor, $comment, $ledgerStatus): void {
+            foreach ($objects as $object) {
+                $this->placement->grant($object, $package, $actor, $comment, $ledgerStatus);
             }
         });
     }

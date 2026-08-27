@@ -8,6 +8,7 @@ use App\Filament\Admin\Resources\Objects\Pages\CreateObject;
 use App\Filament\Admin\Resources\Objects\Pages\EditObject;
 use App\Filament\Admin\Resources\Objects\Pages\ListObjects;
 use App\Filament\Admin\Resources\Objects\RelationManagers\AvailabilityHistoryRelationManager;
+use App\Filament\Admin\Resources\Objects\RelationManagers\PlacementHistoryRelationManager;
 use App\Filament\Admin\Resources\Objects\Schemas\ObjectForm;
 use App\Filament\Admin\Resources\Objects\Tables\ObjectsTable;
 use App\Filament\Admin\Support\ScopedResource;
@@ -50,6 +51,7 @@ class ObjectResource extends ScopedResource
         'objectType.translations',
         'country.translations',
         'territory.translations',
+        'placement.package.tier',
     ];
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice2;
@@ -88,6 +90,7 @@ class ObjectResource extends ScopedResource
     {
         return [
             AvailabilityHistoryRelationManager::class,
+            PlacementHistoryRelationManager::class,
         ];
     }
 

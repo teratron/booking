@@ -125,7 +125,7 @@ function bulkActor(array $permissions, string $scopeKind, ?int $reference, strin
 /** @return list<string> */
 function bulkFullPermissions(): array
 {
-    return ['admin_panel_access', 'object.view', 'object.edit', 'object.publish', 'object.delete', 'object.export'];
+    return ['admin_panel_access', 'object.view', 'object.edit', 'object.publish', 'object.delete', 'object.export', 'commerce.edit'];
 }
 
 function bulkNotificationType(): int
@@ -322,7 +322,7 @@ it('demands a confirmation for every registered bulk action on the objects table
     /** @var list<CountedBulkAction> $actions */
     $actions = $method->invoke(null);
 
-    expect($actions)->toHaveCount(10);
+    expect($actions)->toHaveCount(11);
 
     foreach ($actions as $action) {
         expect($action)->toBeInstanceOf(CountedBulkAction::class)
@@ -480,4 +480,43 @@ it('always dispatches export to the queue, even for a selection well under the t
 
     Queue::assertPushed(ExecuteObjectBulkActionJob::class);
     expect(DB::table('audits')->where('event', 'object_bulk_exported')->count())->toBe(0);
+});
+
+it('grants the same placement package to every selected object, each with its own open history row', function (): void {
+    $geo = bulkGeography();
+    $id1 = bulkSeedObject($geo);
+    $id2 = bulkSeedObject($geo);
+    $packageId = makePackage(2);
+    $actor = bulkActor(bulkFullPermissions(), 'none', null, 'unrestricted');
+
+    app(ObjectBulkActionService::class)->execute(
+        'assign_placement_package',
+        [$id1, $id2],
+        ['placement_package_id' => $packageId, 'ledger_status' => 'granted_free', 'comment' => 'Bulk grant'],
+        $actor,
+    );
+
+    expect(DB::table('object_placements')->where('object_id', $id1)->value('placement_package_id'))->toBe($packageId)
+        ->and(DB::table('object_placements')->where('object_id', $id2)->value('placement_package_id'))->toBe($packageId)
+        ->and(DB::table('placement_histories')->where('object_id', $id1)->where('comment', 'Bulk grant')->count())->toBe(1)
+        ->and(DB::table('placement_histories')->where('object_id', $id2)->where('comment', 'Bulk grant')->count())->toBe(1);
+});
+
+it('refuses assigning a placement package to a selection reaching outside the actor\'s own scope', function (): void {
+    $geo = bulkGeography();
+    $inScope = bulkSeedObject($geo, ['country_id' => $geo['countryMd'], 'territory_id' => $geo['territoryMd']]);
+    $outOfScope = bulkSeedObject($geo, ['country_id' => $geo['countryUa'], 'territory_id' => $geo['territoryUa']]);
+    $packageId = makePackage(1);
+
+    $actor = bulkActor(['admin_panel_access', 'object.view', 'commerce.edit'], 'country', $geo['countryMd'], 'md_only_commerce');
+
+    $attempt = fn () => app(ObjectBulkActionService::class)->execute(
+        'assign_placement_package',
+        [$inScope, $outOfScope],
+        ['placement_package_id' => $packageId, 'ledger_status' => 'granted_free'],
+        $actor,
+    );
+
+    expect($attempt)->toThrow(BulkSelectionScopeException::class);
+    expect(DB::table('object_placements')->where('object_id', $inScope)->exists())->toBeFalse();
 });

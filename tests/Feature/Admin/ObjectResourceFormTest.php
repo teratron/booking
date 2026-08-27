@@ -105,7 +105,7 @@ function objectFormActor(array $permissions, string $scopeKind, ?int $reference,
 
 function fullObjectPermissions(): array
 {
-    return ['admin_panel_access', 'object.view', 'object.create', 'object.edit', 'object.publish', 'object.delete'];
+    return ['admin_panel_access', 'object.view', 'object.create', 'object.edit', 'object.publish', 'object.delete', 'commerce.edit'];
 }
 
 it('saves a contact channel with an explicit type, where the prior schema (no type field) threw a QueryException', function (): void {

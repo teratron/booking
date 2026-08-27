@@ -246,4 +246,16 @@ class Object_ extends Model implements AuditableContract, HasMedia, HasName, Tra
     {
         return $this->hasOne(ObjectPlacement::class, 'object_id');
     }
+
+    /**
+     * Every placement grant this object has ever held, closed rows and the
+     * one open row alike — the read-back the back-office panel's own
+     * history view reads.
+     *
+     * @return HasMany<PlacementHistory, $this>
+     */
+    public function placementHistories(): HasMany
+    {
+        return $this->hasMany(PlacementHistory::class, 'object_id');
+    }
 }

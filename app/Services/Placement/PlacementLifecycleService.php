@@ -33,14 +33,27 @@ final class PlacementLifecycleService
      * updated in place for the package/dates — it is replaced, and the
      * `placement_histories` row it leaves behind is what makes the change
      * append-only rather than overwritten.
+     *
+     * A grant may be free ($ledgerStatus's default) or carry a genuinely
+     * recorded payment — the portal records that money changed hands, it
+     * does not compute proration, refunds, or overlap against the prior
+     * grant. $comment is the acting staff member's own note, stored beside
+     * both the history row and the ledger entry it opens.
      */
-    public function grant(Object_ $object, PlacementPackage $package, ?User $actor = null): void
-    {
+    public function grant(
+        Object_ $object,
+        PlacementPackage $package,
+        ?User $actor = null,
+        ?string $comment = null,
+        string $ledgerStatus = 'granted_free',
+        ?float $amount = null,
+    ): void {
         $actor ??= $this->actor;
         $startsAt = now()->toDateString();
         $endsAt = now()->addDays($package->validity_days)->toDateString();
+        $amount ??= (float) $package->price;
 
-        DB::transaction(function () use ($object, $package, $startsAt, $endsAt, $actor): void {
+        DB::transaction(function () use ($object, $package, $startsAt, $endsAt, $actor, $comment, $ledgerStatus, $amount): void {
             $previous = $object->placement;
 
             // Larastan types HasOne as non-nullable regardless of the
@@ -88,15 +101,16 @@ final class PlacementLifecycleService
                 'placement_package_id' => $package->id,
                 'starts_at' => $startsAt,
                 'ends_at' => null,
-                'amount' => $package->price,
+                'amount' => $amount,
                 'currency' => $package->currency,
-                'status' => 'granted_free',
+                'status' => $ledgerStatus,
                 'granted_by' => $actor?->id,
+                'comment' => $comment,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
 
-            // The unified ledger (`T-3A05`) reads this table, not
+            // The unified financial ledger reads this table, not
             // placement_histories — populating it here is what makes every
             // automated grant (a purchase, a renewal, a system demotion)
             // show up in the financial dashboard/report without an
@@ -109,11 +123,12 @@ final class PlacementLifecycleService
                 'object_id' => $object->id,
                 'service' => 'placement',
                 'placement_package_id' => $package->id,
-                'amount' => $package->price,
+                'amount' => $amount,
                 'currency' => $package->currency,
                 'valid_from' => $startsAt,
                 'valid_until' => $endsAt,
-                'status' => 'granted_free',
+                'status' => $ledgerStatus,
+                'comment' => $comment,
                 'responsible_staff_id' => $actor?->id,
                 'created_at' => now(),
                 'updated_at' => now(),
