@@ -1,6 +1,6 @@
 # Workspace Specifications Registry
 
-**Version:** 2.12.0
+**Version:** 2.13.0
 **Status:** Active
 
 ## Overview
@@ -94,10 +94,10 @@ Delivery → Optional → Implementation); the registry itself is flat.
 | [l1-content-publishing.md](specifications/l1-content-publishing.md) | Public. Articles, news, and promotions; shared publication pipeline | RFC | 1 | 1.0.0 |
 | [l1-seo.md](specifications/l1-seo.md) | Public. URL grammar, metadata, indexation policy, structured data, sitemaps, redirects | Stable | 1 | 0.2.0 |
 | [l1-object-onboarding.md](specifications/l1-object-onboarding.md) | Owner. Object submission and the full owner cabinet lifecycle | RFC | 1 | 1.2.1 |
-| [l1-back-office.md](specifications/l1-back-office.md) | Operator. Portal administration, scoped RBAC, bulk operations, import/export, settings | RFC | 1 | 0.1.1 |
+| [l1-back-office.md](specifications/l1-back-office.md) | Operator. Portal administration, scoped RBAC, staff account and grant administration, bulk operations, import/export, settings | RFC | 1 | 0.2.0 |
 | [l1-moderation-governance.md](specifications/l1-moderation-governance.md) | Operator. Moderation modes and queue, audit journal, soft deletion, confirmation gates | RFC | 1 | 0.1.1 |
 | [l1-notifications.md](specifications/l1-notifications.md) | Operator. Notification model, channel adapters, automated schedules, broadcasts | RFC | 1 | 0.1.1 |
-| [l1-placement-monetization.md](specifications/l1-placement-monetization.md) | Commerce. Four placement tiers, packages, bump mechanics, expiry, financial ledger | RFC | 1 | 0.1.1 |
+| [l1-placement-monetization.md](specifications/l1-placement-monetization.md) | Commerce. Four placement tiers, packages, the granting act, bump mechanics, expiry, financial ledger | RFC | 1 | 0.2.0 |
 | [l1-advertising.md](specifications/l1-advertising.md) | Commerce. Geo/language-targeted banners, slots, scheduling, promotional labels | RFC | 1 | 0.2.1 |
 | [l1-analytics.md](specifications/l1-analytics.md) | Commerce. Event model, aggregation, traffic sources, owner and operator reporting, privacy bounds | RFC | 1 | 0.2.1 |
 | [l1-public-api.md](specifications/l1-public-api.md) | Integration. Outward-facing REST contract, issued tokens, scoping, rate limits, documentation | Stable | 1 | 0.2.0 |
