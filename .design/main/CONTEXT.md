@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-08-23
+**Generated:** 2026-08-27
 
 ## Active Technologies
 
@@ -24,10 +24,15 @@
 │   ├── .prompt.md
 │   ├── TODO.md
 │   ├── booking.md
+│   ├── load-testing-2026-08-26.md
 │   ├── production-clearance.md
 │   ├── qa-deep-findings.md
 │   ├── qa-deep-plan.md
+│   ├── qa-fix-specs-2026-08-26.md
+│   ├── qa-simulation-2026-08-26.md
 │   ├── qa-sweep-report.md
+│   ├── qa-test-plan-2026-08-26.md
+│   ├── qa-tz-conformance-2026-08-26.md
 │   ├── qa-tz-conformance.md
 │   └── review-submission-design-decision.md
 ├── .editorconfig
@@ -48,6 +53,7 @@
 │   └── .gitignore
 ├── CHANGELOG.md
 ├── CLAUDE.md
+├── DProjectssrcgithub.comteratronbookingstoragelogs/
 ├── README.md
 ├── app/
 │   ├── Console/
@@ -111,6 +117,7 @@
 │   ├── database-schema.md
 │   ├── mail-and-error-tracking.md
 │   ├── operations/
+│   ├── php-fpm-capacity.md
 │   ├── production-provisioning.md
 │   ├── queues-and-observability.md
 │   ├── release/

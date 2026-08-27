@@ -1,7 +1,7 @@
 ---
 phase: 10
 name: "Deep QA Remediation"
-status: Todo
+status: Done
 subsystem: "database/seeders, database/migrations, app/Http/Middleware, app/Http/Controllers, app/Services/Shell, app/Services/Seo, app/Filament/Admin, app/Filament/Cabinet, app/Services/Advertising, app/Services/Objects, resources/views, app/Models, tests/Feature"
 requires: ["phase-2", "phase-3", "phase-4", "phase-5", "phase-6", "phase-9"]
 provides: []
@@ -15,7 +15,7 @@ duration_minutes: null
 # Stage 10 Tasks — Deep QA Remediation
 
 **Phase:** 10
-**Status:** Todo (0/32)
+**Status:** Done (32/32)
 **Strategic Goal:** Close the findings of a second, deeper functional sweep
 (`.drafts/qa-deep-findings.md`) that drove all 177 routes for every actor — anonymous
 visitor, API consumer, object owner, and all nine staff roles past the second-factor

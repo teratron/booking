@@ -1,10 +1,10 @@
 # Implementation Plan
 
-**Version:** 3.14.0
+**Version:** 3.16.0
 **Generated:** 2026-08-05
-**Based on:** .design/main/INDEX.md v2.12.0
+**Based on:** .design/main/INDEX.md v2.13.0
 **Based on RULES:** .design/RULES.md v1.4.0
-**Status:** Active — Phase 8 (delivery pipeline; 20/23, the three open tasks owner-only. Its two sources returned to `RFC` on 2026-08-22 to reconcile with the owner's single-line branch decision — not a defect, and not a reason to reopen Done work; see Plan Status below) · Phase 9 **Done** (post-launch QA remediation; 15/15, opened and closed 2026-08-22, independent of Phase 8; see Plan Status below) · Phase 10 **Todo** (deep QA remediation; 0/32, opened 2026-08-23, independent of Phase 8; see Plan Status below)
+**Status:** Active — Phase 8 (delivery pipeline; 20/23, the three open tasks owner-only. Its two sources returned to `RFC` on 2026-08-22 to reconcile with the owner's single-line branch decision — not a defect, and not a reason to reopen Done work; see Plan Status below) · Phase 9 **Done** (post-launch QA remediation; 15/15, opened and closed 2026-08-22, independent of Phase 8; see Plan Status below) · Phase 10 **Done** (deep QA remediation; 32/32, opened 2026-08-23 and closed the same pass, independent of Phase 8) · Phase 11 **Done** (revenue & administration surfaces; 25/25, opened and closed 2026-08-27, independent of Phase 8; see Plan Status below)
 
 ## Overview
 
@@ -422,7 +422,7 @@ answer was to fix it completely rather than patch around it. `T-9G01` (full regr
 gate) still waits on Tracks A/B/D closing — three of six tracks done does not satisfy a
 gate whose own precondition is all six.
 
-## Phase 10 — Deep QA Remediation — **Todo**
+## Phase 10 — Deep QA Remediation — **Done**
 
 *A second, deeper functional sweep — every route driven for every actor, including all
 nine staff roles past the second-factor gate that stopped Phase 9's own sweep around
@@ -443,7 +443,7 @@ This phase schedules the remaining 21.*
   status, platform shell, and platform foundation. No further amendment.
 
 Decomposed into 32 atomic tasks across nine tracks plus a full-suite regression gate in
-[tasks/phase-10.md](tasks/phase-10.md), which carries this phase's own planning audit
+[archives/tasks/phase-10.md](archives/tasks/phase-10.md), which carries this phase's own planning audit
 and Track Ordering rationale.
 
 **Nine tracks, six of them genuinely file-independent.** Track A (access — a fresh
@@ -478,6 +478,86 @@ own precedent — splitting a task once its true shape emerges mid-run rather th
 guessing upfront — is expected to recur here too**, particularly in Track G, the
 widest single build task in the phase (`T-10G02`, the review submission form covering
 both modes).
+
+## Phase 11 — Revenue & Administration Surfaces — **Done**
+
+*Sources: [l1-placement-monetization.md](specifications/l1-placement-monetization.md)
+§3.6/§5.6 and [l1-back-office.md](specifications/l1-back-office.md) §3.1/§5.2, both
+amended to v0.2.0 on 2026-08-26, plus
+[l1-advertising.md](specifications/l1-advertising.md) §5.6,
+[l1-object-catalog.md](specifications/l1-object-catalog.md), and
+[l2-data-model.md](specifications/l2-data-model.md) §2 for the three narrower tracks.
+Twenty-five tasks across six tracks —
+[archives/tasks/phase-11.md](archives/tasks/phase-11.md).*
+
+**This phase closes the gap between capability that was built and capability that can
+be reached.** A third sweep, run against the whole funnel on 2026-08-26, found that the
+portal's own revenue model has no seller: `PlacementLifecycleService::grant()`, `pin()`
+and `unpin()` have no caller anywhere in the panel, and `grant()`'s only production
+caller is the expiry sweep, which only ever demotes. Staff can define a package and
+record a payment and cannot connect the two. The same sweep found that
+`RoleGrantService::grantRole()` has exactly one caller in the application and it is the
+database seeder, so no staff account can be created after the portal ships. Both
+services pass their tests. Neither has a door.
+
+**Two tracks, two different diagnoses, and the distinction decided what this phase had
+to do first.** Staff administration was a real specification gap —
+`l1-back-office.md` §5.2 described how a permission is stored and enforced and never
+required that a person be able to create one, a description a seeder-only system
+satisfies completely. That was closed by amendment before this phase was planned, not
+during it. The placement surface was the opposite: `l1-back-office.md` already
+specified the screens (§5.3's quick action, §5.4's tab, history and bulk operation,
+§5.8's mandatory-release entries), while the *act* those screens perform was undefined
+in the spec that owns the domain — `l1-placement-monetization.md` had a flow diagram
+for bumping and one for expiry and none for granting. The amendment supplied the third.
+
+**One proposed item was refused rather than scheduled, and the refusal is the finding.**
+The sweep's fix specification called for enforcing per-package entitlements — promotions
+allowed, news allowed, photo caps — at the point of use. `[TZ]` contradicts itself on
+this: §25.2 lists them as package settings, while §25 later states outright that photo,
+contact, description, service and news counts must not depend on the package, with §79
+and §111 agreeing. The later text sits in the chapters that specify the panel and the
+schema, `l1-placement-monetization.md` §3.2 and §7 already codified the position-only
+model and reject feature-gating by name, and the delivered schema matches with a
+migration comment saying so. Building it would have broken package parity — the
+invariant the commercial model rests on. Recorded in that spec's v0.2.0 history so it
+is not proposed a third time.
+
+**Tracks A and B are sensitive-zone work in their entirety** — commerce and placement
+for A, authorization and policies for B — so neither qualifies as "ordinary" under the
+standing autonomous-operation grant, and each needs a person's review before it
+travels. That follows from the subject matter, not from the size of any one diff.
+
+Tracks C, D and E close the remainder of the same sweep: geographic banner slots that
+still never render (the catalog and object pages, and the home page's existing slots,
+which request by language alone and so cannot match a geographic campaign); a map-pin
+endpoint that serialises every object in the viewport, measured at 2.1 MB for a
+country-wide request; and a volume seeder that creates 52,800 objects and zero contact
+channels, leaving the portal's entire product — the contact handoff — untestable at
+volume. All three are independent of A and B and of each other.
+
+**Closed 2026-08-27, all six tracks, 25/25.** Three scoped-down sub-items are recorded
+rather than silently dropped: `T-11A02`/`T-11A05` deliver ordinary within-tier pinning
+and a scoped grant permission, but a distinct "adjust internal priority" action and the
+cross-tier chief-administrator override both need the current catalog ordering at an
+object's own scope to detect correctly, which is deferred rather than guessed at;
+`T-11B04` renders a deleted scope target as a missing-target label without yet
+implementing the full suspend/resume state the specification describes; `T-11B07`
+delivers the second-factor reset the specification names but not enrolment
+administration, since Filament's own multi-factor actions have no built-in way to
+target an account other than the acting session. None narrows what shipped — each is a
+smaller, well-defined follow-up rather than a blocker.
+
+Two defects surfaced only during closing verification, both now fixed: `PlacementHistory`
+and `RoleScope` are read through Filament `RelationManager`s and need their own
+registered policies — Filament's strict authorization mode throws at render time
+without one, which had gone unnoticed because nothing had rendered either relation
+manager under test until the closing gate did. And `DemoVolumeSeeder`'s audit-trail
+step relied on a plain Eloquent `save()` to trigger `owen-it/laravel-auditing`'s
+automatic observer, which gates itself off in console context
+(`config('audit.console')`, false by default) — every seeder run is console context, so
+the table stayed empty regardless of volume; fixed by writing through `AuditJournal`
+directly, the same path every other audit entry in this codebase already uses.
 
 ## Backlog
 
@@ -556,7 +636,7 @@ code and one changes a test matrix.
 The remaining eighteen open questions land in Phase 3 and later and are not on the
 critical path out of Phase 2.
 
-## Plan Status: Phase 8 Active, Phase 9 Done, Phase 10 Todo
+## Plan Status: Phase 8 Active, Phases 9-11 Done
 
 **Phases 1 through 7 are done — 135 of 135 tasks**, closed on 2026-08-20. A plan-wide L2
 retrospective ran on that close — Signal 🟢 Green — and is recorded in
@@ -690,6 +770,6 @@ that drove the sweep: `.drafts/qa-deep-findings.md`, `.drafts/qa-tz-conformance.
 `.drafts/qa-deep-plan.md`.
 
 Decomposed into 32 atomic tasks across nine tracks in
-[tasks/phase-10.md](tasks/phase-10.md), full detail and rationale in the Phase 10
+[archives/tasks/phase-10.md](archives/tasks/phase-10.md), full detail and rationale in the Phase 10
 section above and that file's own Track Ordering section. Runs independently of
 Phase 8 — no shared file, no shared blocker.
