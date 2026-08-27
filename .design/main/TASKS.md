@@ -1,8 +1,8 @@
 # Master Task Index (Registry)
 
-**Version:** 1.17.0
+**Version:** 1.17.1
 **Generated:** 2026-08-05
-**Based on:** .design/main/PLAN.md v3.16.0
+**Based on:** .design/main/PLAN.md v3.16.1
 **Based on RULES:** .design/RULES.md v1.4.0
 **Execution Mode:** Parallel
 **Status:** Active — Phase 8 (7 phases done, 1 active at 20/23; three remaining tasks `Blocked [!] (C12)` since 2026-08-22 — branch-model reconciliation, not regression; see Overview) · Phase 9 `Done` (post-launch QA remediation, 15/15, closed 2026-08-22; independent of Phase 8; see Overview) · Phase 10 `Done` (deep QA remediation, 32/32, closed 2026-08-23; independent of Phase 8; see Overview) · Phase 11 `Done` (revenue & administration surfaces, 25/25, opened and closed 2026-08-27; independent of Phase 8)

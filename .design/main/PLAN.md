@@ -1,8 +1,8 @@
 # Implementation Plan
 
-**Version:** 3.16.0
+**Version:** 3.16.1
 **Generated:** 2026-08-05
-**Based on:** .design/main/INDEX.md v2.13.0
+**Based on:** .design/main/INDEX.md v2.14.0
 **Based on RULES:** .design/RULES.md v1.4.0
 **Status:** Active — Phase 8 (delivery pipeline; 20/23, the three open tasks owner-only. Its two sources returned to `RFC` on 2026-08-22 to reconcile with the owner's single-line branch decision — not a defect, and not a reason to reopen Done work; see Plan Status below) · Phase 9 **Done** (post-launch QA remediation; 15/15, opened and closed 2026-08-22, independent of Phase 8; see Plan Status below) · Phase 10 **Done** (deep QA remediation; 32/32, opened 2026-08-23 and closed the same pass, independent of Phase 8) · Phase 11 **Done** (revenue & administration surfaces; 25/25, opened and closed 2026-08-27, independent of Phase 8; see Plan Status below)
 
