@@ -17,7 +17,9 @@ use App\Services\Placement\PlacementOrderingService;
 use App\Support\Analytics\StatEventKind;
 use App\Support\Catalog\CatalogSearchCriteria;
 use App\Support\Catalog\MapBounds;
+use App\Support\Catalog\MapCluster;
 use App\Support\Catalog\MapPin;
+use App\Support\Catalog\MapPinsResult;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -87,6 +89,42 @@ final class CatalogQueryService
     public const string CARD_TIER_BADGE_COLOUR_KEY = 'catalog_card_tier_badge_colour';
 
     public const string CARD_TIER_BORDER_COLOUR_KEY = 'catalog_card_tier_border_colour';
+
+    /**
+     * Below this zoom, {@see self::pins()} returns grid-cell {@see MapCluster}
+     * aggregates instead of individual markers — a country-wide viewport at
+     * launch volume serialises tens of thousands of points otherwise.
+     * Chosen to sit strictly between this project's own country-wide map
+     * zooms (the home page's `6`, the catalog page's default `5`) and its
+     * city/object zooms (the territory page's `11`, the object page's
+     * `15`), so every existing map placement already lands cleanly on one
+     * side of the threshold.
+     */
+    public const int CLUSTER_THRESHOLD_ZOOM = 9;
+
+    /**
+     * The most individual pins a single response ever carries, regardless
+     * of how many objects actually match — a country-wide viewport at or
+     * past the threshold zoom (a visitor who scrolled out again after
+     * zooming in) can still match far more than a map usefully renders
+     * pin-by-pin. {@see MapPinsResult::$truncated} tells the caller when the
+     * true match count exceeded this cap, so the client can prompt the
+     * visitor to zoom in rather than silently dropping the rest.
+     */
+    public const int MAX_PINS_PER_RESPONSE = 500;
+
+    /**
+     * The whole globe's own longitude span — halved on every step up in
+     * zoom, the same doubling-resolution-per-level convention Web Mercator
+     * tiles use, so zoom `0` collapses everything into one or two cells and
+     * each further step meaningfully coarsens or refines the grid. Deliberately
+     * generous rather than pixel-accurate tile math: even at the finest
+     * pre-threshold zoom (one below {@see self::CLUSTER_THRESHOLD_ZOOM}),
+     * a cell must still span multiple neighbouring territories — a country-
+     * wide viewport that resolves down to near-territory-sized cells
+     * defeats clustering's entire purpose of keeping the response small.
+     */
+    private const float CLUSTER_BASE_CELL_DEGREES = 360.0;
 
     /**
      * Every relation {@see ObjectCardPresenter} and {@see ObjectProfilePresenter}
@@ -313,9 +351,14 @@ final class CatalogQueryService
      * join buys nothing here. Only the tier's border colour is read, for
      * the marker's own visual treatment.
      *
-     * @return list<MapPin>
+     * Below {@see self::CLUSTER_THRESHOLD_ZOOM} the matched set is
+     * aggregated into grid-cell centroids instead: a country-wide viewport
+     * at launch volume matches tens of thousands of objects, and shipping
+     * every one of them as an individual marker is a payload cost the
+     * browser gains nothing from paying, since no visitor can distinguish
+     * that many overlapping pins at that scale anyway.
      */
-    public function pins(CatalogSearchCriteria $criteria, MapBounds $bounds): array
+    public function pins(CatalogSearchCriteria $criteria, MapBounds $bounds, int $zoom): MapPinsResult
     {
         $query = Object_::query()->where('status', 'published')->whereNotNull('geom');
 
@@ -326,13 +369,22 @@ final class CatalogQueryService
             [$bounds->southWestLng, $bounds->southWestLat, $bounds->northEastLng, $bounds->northEastLat],
         );
 
+        if ($zoom < self::CLUSTER_THRESHOLD_ZOOM) {
+            return MapPinsResult::clustered($this->clusterPins((clone $query), $zoom));
+        }
+
+        // Counted before the pin-mode select/limit are applied to the same
+        // query builder, so this reflects the true match count rather than
+        // the capped one below.
+        $totalMatched = (clone $query)->count();
+
         $query->select([
             'objects.*',
             DB::raw('ST_Y(geom::geometry) as pin_lat'),
             DB::raw('ST_X(geom::geometry) as pin_lng'),
-        ])->with(['placement.package.tier']);
+        ])->with(['placement.package.tier'])->limit(self::MAX_PINS_PER_RESPONSE);
 
-        return array_values($query->get()->map(function (Object_ $object): MapPin {
+        $pins = array_values($query->get()->map(function (Object_ $object): MapPin {
             $tier = $object->placement?->package?->tier;
 
             return new MapPin(
@@ -342,6 +394,57 @@ final class CatalogQueryService
                 tierBorderColour: $tier instanceof PlacementTier ? $tier->border_colour : null,
             );
         })->all());
+
+        return MapPinsResult::pins($pins, $totalMatched > self::MAX_PINS_PER_RESPONSE, $totalMatched);
+    }
+
+    /**
+     * Groups the already-scoped, already-viewport-bounded matched set into
+     * grid cells sized for `$zoom`, and averages each cell's coordinates
+     * into one centroid. Grouped in PHP rather than via a PostGIS
+     * `ST_SnapToGrid`/`ST_ClusterDBSCAN` aggregate: this is a plain
+     * average over at most a few tens of thousands of rows — real volume,
+     * but small enough that a second index-backed round trip through
+     * PostGIS's clustering machinery buys nothing a `GROUP BY` in PHP does
+     * not already give for free, correctly, in one query.
+     *
+     * @param  Builder<Object_>  $query  already filtered and bounded; only its select clause is replaced here
+     * @return list<MapCluster>
+     */
+    private function clusterPins(Builder $query, int $zoom): array
+    {
+        $rows = $query->select([
+            DB::raw('ST_Y(geom::geometry) as lat'),
+            DB::raw('ST_X(geom::geometry) as lng'),
+        ])->get();
+
+        $cellSize = self::CLUSTER_BASE_CELL_DEGREES / (2 ** max($zoom, 0));
+
+        /** @var array<string, array{latSum: float, lngSum: float, count: int}> $cells */
+        $cells = [];
+
+        foreach ($rows as $row) {
+            $lat = (float) $row->getAttribute('lat');
+            $lng = (float) $row->getAttribute('lng');
+            $cellKey = (int) floor($lat / $cellSize).':'.(int) floor($lng / $cellSize);
+
+            if (! array_key_exists($cellKey, $cells)) {
+                $cells[$cellKey] = ['latSum' => 0.0, 'lngSum' => 0.0, 'count' => 0];
+            }
+
+            $cells[$cellKey]['latSum'] += $lat;
+            $cells[$cellKey]['lngSum'] += $lng;
+            $cells[$cellKey]['count']++;
+        }
+
+        return array_values(array_map(
+            static fn (array $cell): MapCluster => new MapCluster(
+                lat: $cell['latSum'] / $cell['count'],
+                lng: $cell['lngSum'] / $cell['count'],
+                count: $cell['count'],
+            ),
+            $cells,
+        ));
     }
 
     /**

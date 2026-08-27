@@ -44,10 +44,23 @@
     @vite(['resources/js/map.js'])
     <div
         x-data="catalogMap(@js($config))"
-        class="h-120 w-full overflow-hidden rounded-lg"
+        class="relative h-120 w-full overflow-hidden rounded-lg"
         role="application"
         aria-label="{{ __('public.shell.map.label') }}"
     >
         <div x-ref="container" class="h-full w-full"></div>
+        {{-- The server caps individual pins per response; this tells the
+             visitor the map is showing a partial set rather than silently
+             hiding the rest. --}}
+        <div
+            x-show="truncated"
+            x-cloak
+            x-transition.opacity
+            class="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center"
+        >
+            <span class="pointer-events-none rounded-full bg-ink/80 px-3 py-1 text-xs text-white shadow">
+                {{ __('public.shell.map.truncated') }}
+            </span>
+        </div>
     </div>
 @endif

@@ -146,6 +146,7 @@ return [
         'map' => [
             'label' => 'Map of matching objects',
             'unavailable' => 'Map unavailable — no map provider is configured yet.',
+            'truncated' => 'Showing a partial set — zoom in to see more.',
         ],
         'nav' => [
             'primary' => 'Primary navigation',

@@ -11,18 +11,29 @@ use App\Services\Catalog\CatalogQueryService;
 use App\Services\Catalog\ObjectCardPresenter;
 use App\Support\Catalog\CatalogSearchCriteria;
 use App\Support\Catalog\MapBounds;
+use App\Support\Catalog\MapCluster;
 use App\Support\Catalog\MapPin;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * The catalog map's own retrieval surface: a lean list of pins within the
- * visible viewport, and — fetched separately, on click — the compact card
- * for one pin.
+ * The catalog map's own retrieval surface: a lean list of pins (or, at a
+ * zoomed-out viewport, cluster centroids) within the visible viewport, and
+ * — fetched separately, on click — the compact card for one pin.
  */
 final class MapPinsController extends Controller
 {
+    /**
+     * Assumed when a caller omits `zoom` entirely — an older cached page,
+     * or a direct API call bypassing the map's own JS, which always sends
+     * one. Set well above {@see CatalogQueryService::CLUSTER_THRESHOLD_ZOOM}
+     * so an absent zoom degrades to the pre-clustering individual-pin
+     * behaviour (capped, never silently lossy) rather than into an
+     * unrequested cluster view.
+     */
+    private const int DEFAULT_ZOOM_WHEN_UNSPECIFIED = 14;
+
     public function __construct(
         private readonly CatalogQueryService $catalog,
     ) {}
@@ -43,7 +54,19 @@ final class MapPinsController extends Controller
             name: self::queryFilled($request, 'q') ? $request->string('q')->value() : null,
         );
 
-        $pins = $this->catalog->pins($criteria, $bounds);
+        $zoom = $request->integer('zoom', self::DEFAULT_ZOOM_WHEN_UNSPECIFIED);
+
+        $result = $this->catalog->pins($criteria, $bounds, $zoom);
+
+        if ($result->clustered) {
+            return response()->json([
+                'clusters' => array_map(static fn (MapCluster $cluster): array => [
+                    'lat' => $cluster->lat,
+                    'lng' => $cluster->lng,
+                    'count' => $cluster->count,
+                ], $result->clusters),
+            ]);
+        }
 
         return response()->json([
             'pins' => array_map(static fn (MapPin $pin): array => [
@@ -51,7 +74,13 @@ final class MapPinsController extends Controller
                 'lat' => $pin->lat,
                 'lng' => $pin->lng,
                 'tier_border_colour' => $pin->tierBorderColour,
-            ], $pins),
+            ], $result->pins),
+            // Always present, never omitted on the untruncated path: a
+            // client that only checks `truncated === true` when the key
+            // exists is one property-name typo away from never showing the
+            // "zoom in to see more" affordance at all.
+            'truncated' => $result->truncated,
+            'total' => $result->totalMatched,
         ]);
     }
 

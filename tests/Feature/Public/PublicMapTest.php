@@ -5,9 +5,11 @@ declare(strict_types=1);
 use App\Models\Object_;
 use App\Models\Scopes\ModerationScope;
 use App\Models\User;
+use App\Services\Catalog\CatalogQueryService;
 use App\Services\Integrations\MapTileConfigResolver;
 use App\Services\Settings\SettingsRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -221,3 +223,151 @@ it('renders the real map component once a key is configured', function (): void 
     expect($html)->toContain('catalogMap(')
         ->and($html)->not->toContain(__('public.shell.map.unavailable'));
 });
+
+/*
+|--------------------------------------------------------------------------
+| Server-Side Clustering & Pin Cap
+|--------------------------------------------------------------------------
+|
+| A country-wide viewport used to serialise every matching object as an
+| individual pin — measured at over two megabytes for the demo volume's own
+| ~52,800 seeded points, all clustered client-side after the fact. Below
+| CatalogQueryService::CLUSTER_THRESHOLD_ZOOM the endpoint now aggregates to
+| grid-cell centroids server-side instead; at or past it, individual pins
+| are still returned but capped, with the response always carrying a
+| `truncated` flag (never omitted, true or false) and the true match count.
+|
+*/
+
+/**
+ * Bulk-inserts `$count` minimal published objects, each a tiny fraction of
+ * a degree apart -- enough to be distinct pins within one viewport, without
+ * paying `User::factory()`'s own per-row bcrypt cost for an owner nothing
+ * here reads.
+ */
+function publicMapBulkInsertPublishedObjects(array $fixture, int $typeId, int $ownerId, int $count): void
+{
+    $now = now();
+    $buffer = [];
+
+    for ($i = 0; $i < $count; $i++) {
+        $lat = 47.0 + ($i * 0.0001);
+        $lng = 28.8 + ($i * 0.0001);
+
+        $buffer[] = [
+            'ulid' => (string) Str::ulid(),
+            'owner_id' => $ownerId,
+            'object_type_id' => $typeId,
+            'territory_id' => $fixture['territoryId'],
+            'country_id' => $fixture['countryId'],
+            'status' => 'published',
+            'moderation_status' => 'approved',
+            // @phpstan-ignore argument.type
+            'geom' => DB::raw("ST_SetSRID(ST_MakePoint({$lng}, {$lat}), 4326)"),
+            'created_at' => $now,
+            'updated_at' => $now,
+        ];
+    }
+
+    DB::table('objects')->insert($buffer);
+}
+
+it('returns cluster centroids with counts rather than individual pins for a country-wide viewport below the clustering threshold', function (): void {
+    $fixture = publicMapGeography();
+    publicMapMakeObject($fixture, $fixture['typeId'], 'Cluster Member One', 47.000, 28.800);
+    publicMapMakeObject($fixture, $fixture['typeId'], 'Cluster Member Two', 47.001, 28.801);
+    publicMapMakeObject($fixture, $fixture['typeId'], 'Cluster Member Three', 47.002, 28.802);
+
+    $response = $this->getJson('/en/map/pins?'.http_build_query([
+        'sw_lat' => 46.5, 'sw_lng' => 28.0, 'ne_lat' => 47.5, 'ne_lng' => 29.5,
+        'zoom' => CatalogQueryService::CLUSTER_THRESHOLD_ZOOM - 1,
+    ]));
+
+    $response->assertOk();
+    expect($response->json())->toHaveKey('clusters')->not->toHaveKey('pins');
+
+    $clusters = $response->json('clusters');
+    expect($clusters)->toHaveCount(1);
+    expect($clusters[0])->toHaveKeys(['lat', 'lng', 'count'])
+        ->and($clusters[0]['count'])->toBe(3);
+});
+
+it('returns individual pins in the existing shape once the zoom reaches the clustering threshold', function (): void {
+    $fixture = publicMapGeography();
+    $object = publicMapMakeObject($fixture, $fixture['typeId'], 'Threshold Zoom Hotel', 47.0, 28.8);
+
+    $response = $this->getJson('/en/map/pins?'.http_build_query([
+        'sw_lat' => 46.5, 'sw_lng' => 28.0, 'ne_lat' => 47.5, 'ne_lng' => 29.5,
+        'zoom' => CatalogQueryService::CLUSTER_THRESHOLD_ZOOM,
+    ]));
+
+    $response->assertOk();
+    expect($response->json())->toHaveKey('pins')->not->toHaveKey('clusters');
+    expect(collect($response->json('pins'))->pluck('id')->all())->toBe([$object->id]);
+    expect($response->json('truncated'))->toBeFalse();
+    expect($response->json('total'))->toBe(1);
+});
+
+it('caps individual pins at the configured maximum and flags the response as truncated once the match count exceeds it', function (): void {
+    $fixture = publicMapGeography();
+    $ownerId = User::factory()->create()->id;
+    $cap = CatalogQueryService::MAX_PINS_PER_RESPONSE;
+    publicMapBulkInsertPublishedObjects($fixture, $fixture['typeId'], $ownerId, $cap + 5);
+
+    $response = $this->getJson('/en/map/pins?'.http_build_query([
+        'sw_lat' => 46.5, 'sw_lng' => 28.0, 'ne_lat' => 47.5, 'ne_lng' => 29.5,
+        'zoom' => CatalogQueryService::CLUSTER_THRESHOLD_ZOOM,
+    ]));
+
+    $response->assertOk();
+    expect($response->json('pins'))->toHaveCount($cap)
+        ->and($response->json('truncated'))->toBeTrue()
+        ->and($response->json('total'))->toBe($cap + 5);
+});
+
+it('reports the full untruncated count when the matched set is within the pin cap', function (): void {
+    $fixture = publicMapGeography();
+    $ownerId = User::factory()->create()->id;
+    publicMapBulkInsertPublishedObjects($fixture, $fixture['typeId'], $ownerId, 3);
+
+    $response = $this->getJson('/en/map/pins?'.http_build_query([
+        'sw_lat' => 46.5, 'sw_lng' => 28.0, 'ne_lat' => 47.5, 'ne_lng' => 29.5,
+        'zoom' => CatalogQueryService::CLUSTER_THRESHOLD_ZOOM,
+    ]));
+
+    $response->assertOk();
+    expect($response->json('pins'))->toHaveCount(3)
+        ->and($response->json('truncated'))->toBeFalse()
+        ->and($response->json('total'))->toBe(3);
+});
+
+it('keeps a country-wide response under a fixed byte ceiling at realistic seeded volume', function (): void {
+    $this->seed();
+    Artisan::call('db:seed', ['--class' => 'Database\\Seeders\\DemoVolumeSeeder', '--force' => true]);
+
+    expect(DB::table('objects')->count())->toBeGreaterThanOrEqual(50_000);
+
+    // Wide enough to span all three launch countries' own seeded bounds
+    // (MD/UA/GE), the same "whole map, zoomed all the way out" viewport a
+    // visitor lands on before picking a destination.
+    $response = $this->getJson('/en/map/pins?'.http_build_query([
+        'sw_lat' => 38.0, 'sw_lng' => 20.0, 'ne_lat' => 53.5, 'ne_lng' => 47.5,
+        'zoom' => CatalogQueryService::CLUSTER_THRESHOLD_ZOOM - 1,
+    ]));
+
+    $response->assertOk();
+    expect($response->json())->toHaveKey('clusters')->not->toHaveKey('pins');
+
+    $byteSize = strlen((string) $response->getContent());
+
+    // Comfortably above what a few dozen grid-cell clusters ever serialise
+    // to, comfortably below the >2MB this same viewport measured before
+    // clustering existed -- the actual regression this test guards against.
+    expect($byteSize)->toBeLessThan(50_000);
+
+    fwrite(STDERR, "\n".json_encode([
+        'seeded_objects' => DB::table('objects')->count(),
+        'response_bytes' => $byteSize,
+        'cluster_count' => count($response->json('clusters')),
+    ], JSON_PRETTY_PRINT)."\n");
+})->group('slow');
