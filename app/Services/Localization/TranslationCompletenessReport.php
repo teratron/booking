@@ -63,6 +63,12 @@ final class TranslationCompletenessReport
      * moderation-pending entities are not silently dropped: the staff
      * panel is the one place that must see them.
      *
+     * Eager-loads `translations`: the only caller (the translation report
+     * page) calls astrotomic's `hasTranslation()`/`translate()` on every
+     * row it renders — per-row column state and the publish action's own
+     * visibility both go through them — which lazy-load that relation
+     * without this, throwing under `Model::shouldBeStrict()`.
+     *
      * @return Builder<covariant \Illuminate\Database\Eloquent\Model>
      */
     public function missingQuery(TranslatableEntity $entity, string $locale): Builder
@@ -70,7 +76,7 @@ final class TranslationCompletenessReport
         $modelClass = $entity->modelClass;
 
         /** @var Builder<covariant \Illuminate\Database\Eloquent\Model> $query */
-        $query = $modelClass::query();
+        $query = $modelClass::query()->with('translations');
 
         if (in_array(FiltersModeration::class, class_uses_recursive($modelClass), true)) {
             $query->withoutGlobalScope(ModerationScope::class);
