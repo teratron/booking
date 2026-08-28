@@ -69,6 +69,8 @@ auth.json
 
 # --- Laravel -----------------------------------------------------------------
 /storage/pail
+# Transient bootstrap scripts written by the Laravel VS Code language server.
+/storage/framework/lsp-*.php
 /storage/app/public/*
 !/storage/app/public/.gitignore
 /storage/framework/cache/*
