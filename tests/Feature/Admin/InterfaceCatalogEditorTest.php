@@ -47,10 +47,30 @@ uses(RefreshDatabase::class);
 // mount's own peak usage already exceeds the value being restored to,
 // which is the same "already past the limit being set" failure this
 // project's DemoVolumeSeederTest is separately known to hit. Leaving the
-// raised limit in place for the rest of this process costs nothing; it
-// permits more, it does not consume anything on its own.
+// raised limit in place for the rest of this process costs nothing on its
+// own — except that an unconditional ini_set() would silently LOWER an
+// already-higher limit (e.g. this project's own -d memory_limit=1G on
+// `test`/`test:coverage`) to 512M for every test that runs afterward in
+// the same process, which is exactly backward. Only ever raise, never
+// lower: skip entirely when the current limit is already unlimited (-1)
+// or at least 512M.
 beforeEach(function (): void {
-    ini_set('memory_limit', '512M');
+    $current = ini_get('memory_limit');
+
+    if ($current === '-1') {
+        return;
+    }
+
+    $currentBytes = (int) $current * match (strtoupper(substr($current, -1))) {
+        'G' => 1024 ** 3,
+        'M' => 1024 ** 2,
+        'K' => 1024,
+        default => 1,
+    };
+
+    if ($currentBytes < 512 * 1024 ** 2) {
+        ini_set('memory_limit', '512M');
+    }
 });
 
 /** @return array{en: Language, ru: Language, ro: Language} */
