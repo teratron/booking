@@ -117,7 +117,25 @@ class InterfaceCatalogEditor extends Page implements HasForms
 
         foreach ($grouped as $locale => $byGroup) {
             foreach ($byGroup as $group => $valuesByKey) {
-                $repository->save($locale, $group, $valuesByKey, $actor);
+                // Only the fields an administrator actually touched: the form
+                // is pre-filled with every canonical key's current effective
+                // value, so writing the raw submitted state unfiltered would
+                // turn every untouched, still-shipped key into a stored
+                // override on the very first save — permanently shadowing any
+                // future edit to that key's shipped file default even though
+                // nobody meant to change it.
+                $current = $repository->currentValues($locale, $group);
+                $changed = array_filter(
+                    $valuesByKey,
+                    fn (string $value, string $key): bool => ($current[$key] ?? '') !== $value,
+                    ARRAY_FILTER_USE_BOTH,
+                );
+
+                if ($changed === []) {
+                    continue;
+                }
+
+                $repository->save($locale, $group, $changed, $actor);
             }
         }
 
