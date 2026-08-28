@@ -126,7 +126,7 @@ it('refuses an unauthenticated request for a signed export download with 401', f
     $this->get(jsonExportSignedUrl($export))->assertUnauthorized();
 });
 
-it("refuses an authenticated user who does not own the export, and holds no export policy override, with 403", function (): void {
+it('refuses an authenticated user who does not own the export, and holds no export policy override, with 403', function (): void {
     $owner = User::factory()->create();
     $stranger = User::factory()->create();
     $export = jsonExportArtifact($owner, ['Name'], [['Villa One']]);
