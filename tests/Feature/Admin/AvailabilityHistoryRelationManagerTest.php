@@ -215,6 +215,30 @@ it('offers no create, edit, or delete affordance over this append-only history',
         ->and($component->instance()->getTable()->getToolbarActions())->toBeEmpty();
 });
 
+it('lets a country-scoped administrator whose grant covers this object\'s own country see the tab at all, not only an unrestricted one', function (): void {
+    $fixture = availabilityHistoryFixture();
+    $actor = availabilityHistoryActor(
+        ['admin_panel_access', 'object.view', 'object.edit'],
+        'country',
+        DB::table('objects')->where('id', $fixture['objectId'])->value('country_id'),
+        'md_scoped_history',
+    );
+
+    // Filament's own RelationManager::canViewForRecord() — the tab-visibility
+    // gate EditObject consults, resolving to Policy::viewAny($user) with no
+    // record — is the actual authorization surface here, not a direct
+    // Livewire mount of the relation manager (which never calls it at all).
+    // AvailabilityHistoryPolicy::viewAny() reads a plain user.can('object.view')
+    // check rather than ScopedPolicy::authorize() with no scope target — the
+    // latter treats an omitted target as "does not match" for every scope
+    // kind except unrestricted, which would hide this exact administrator's
+    // tab even though the object edit page they are already on confirmed
+    // their country-scoped grant covers this very object.
+    $this->actingAs($actor);
+
+    expect(AvailabilityHistoryRelationManager::canViewForRecord($fixture['object'], EditObject::class))->toBeTrue();
+});
+
 it('refuses a category-scoped administrator outside the object\'s category — the same not-found the edit page already enforces, before this relation manager ever renders', function (): void {
     $fixture = availabilityHistoryFixture();
     $actor = availabilityHistoryActor(

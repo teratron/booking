@@ -13,16 +13,24 @@ use App\Models\User;
  * territory, and category before this relation manager ever renders. No
  * separate scope axis is derived here; the gate is the same `object.view`
  * grant the parent object's own policy already required.
+ *
+ * A plain `$user->can(...)` check, not `ScopedPolicy::authorize()` — the
+ * latter treats an omitted country/territory/category target as "does not
+ * match" for every scope kind except an unrestricted one, so a
+ * country-scoped administrator who can open the object's own edit page
+ * (correctly resolved there against the object's real scope) would still be
+ * refused this tab, contradicting the "same grant already required" this
+ * class exists to restate rather than re-derive.
  */
-final class AvailabilityHistoryPolicy extends ScopedPolicy
+final class AvailabilityHistoryPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $this->authorize($user, 'object.view');
+        return $user->can('object.view');
     }
 
     public function view(User $user, AvailabilityHistory $history): bool
     {
-        return $this->authorize($user, 'object.view');
+        return $user->can('object.view');
     }
 }

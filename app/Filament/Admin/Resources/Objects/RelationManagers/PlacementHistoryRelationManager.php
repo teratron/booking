@@ -86,6 +86,12 @@ class PlacementHistoryRelationManager extends RelationManager
      */
     private static function baseQuery(Builder $query): Builder
     {
-        return $query->with(['package', 'grantedBy'])->latest('starts_at');
+        // `package.translations` — not just `package` — because the
+        // `package.name` column below resolves through Translatable's own
+        // accessor, which lazy-loads `translations` on the package model;
+        // with strict-mode lazy loading enforced outside production, an
+        // under-eager-loaded `package` alone throws the moment this table
+        // actually renders a row.
+        return $query->with(['package.translations', 'grantedBy'])->latest('starts_at');
     }
 }
