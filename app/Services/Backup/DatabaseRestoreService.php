@@ -83,7 +83,7 @@ final class DatabaseRestoreService
             $dumpPath = $this->extractSingleDump($archivePath, $workingDirectory, $backupPath);
 
             $this->resetSchema();
-            $this->replay($dumpPath, $backupPath);
+            $this->replay($dumpPath);
         } finally {
             $this->cleanUp($workingDirectory);
         }
@@ -157,12 +157,12 @@ final class DatabaseRestoreService
         }
     }
 
-    private function replay(string $dumpPath, string $backupPath): void
+    private function replay(string $dumpPath): void
     {
         $result = $this->psql(['-v', 'ON_ERROR_STOP=1', '-f', $dumpPath]);
 
         if (! $result->successful()) {
-            throw DatabaseRestoreFailedException::processFailed($backupPath, $result->errorOutput());
+            throw DatabaseRestoreFailedException::processFailed('dump replay', $result->errorOutput());
         }
     }
 
