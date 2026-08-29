@@ -14,6 +14,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Support\Exceptions\Halt;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Override;
 
 /**
@@ -44,24 +45,31 @@ class EditStaff extends EditRecord
         }
 
         $service = app(StaffAccountService::class);
-
-        $service->updateContacts($record, $data, $actor);
-
         $wantsActive = (bool) ($data['is_active'] ?? true);
 
-        if ($wantsActive && $record->blocked_at !== null) {
-            $service->restore($record, $actor);
-        } elseif (! $wantsActive && $record->blocked_at === null) {
-            try {
-                $service->deactivate($record, $actor);
-            } catch (UnrevocableGrantException) {
-                Notification::make()
-                    ->danger()
-                    ->title(__('panel.staff.actions.deactivation_refused'))
-                    ->send();
+        try {
+            // Wrapped explicitly rather than relying on the save action's own
+            // transaction: Filament only opens one when a panel calls
+            // `->databaseTransactions()`, which neither panel here does. Without
+            // this, a refused deactivation still leaves updateContacts()'s write
+            // committed — exactly the partial "success" this class's own
+            // docblock says can never happen.
+            DB::transaction(function () use ($service, $record, $data, $actor, $wantsActive): void {
+                $service->updateContacts($record, $data, $actor);
 
-                throw new Halt;
-            }
+                if ($wantsActive && $record->blocked_at !== null) {
+                    $service->restore($record, $actor);
+                } elseif (! $wantsActive && $record->blocked_at === null) {
+                    $service->deactivate($record, $actor);
+                }
+            });
+        } catch (UnrevocableGrantException) {
+            Notification::make()
+                ->danger()
+                ->title(__('panel.staff.actions.deactivation_refused'))
+                ->send();
+
+            throw new Halt;
         }
 
         return $record;
