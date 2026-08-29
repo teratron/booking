@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Exceptions\LanguageAdministrationRefusedException;
+use App\Filament\Admin\Resources\Languages\LanguageResource;
+use App\Filament\Admin\Resources\Languages\Pages\ListLanguages;
 use App\Filament\Admin\Resources\Languages\Tables\LanguagesTable;
 use App\Models\InterfaceCatalogOverride;
 use App\Models\Language;
@@ -13,6 +15,7 @@ use App\Services\Localization\LanguageAdministrationService;
 use Filament\Tables\Table;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -216,4 +219,109 @@ it('makes a freshly activated language with no catalog file usable immediately, 
     expect(__('panel.brand', [], 'ro'))->toBe('Portal Administration')
         ->and(__('panel.navigation.geography', [], 'ro'))->toBe('Geography')
         ->and(__('panel.objects.columns.name', [], 'ro'))->toBe('Name');
+});
+
+/*
+|--------------------------------------------------------------------------
+| LanguageResource — Labels and Configured Table
+|--------------------------------------------------------------------------
+|
+| Every other test above drives the administration service directly, so the
+| resource's own label methods and its wiring of LanguagesTable are never
+| actually reached until the index page is rendered through the panel.
+|
+*/
+
+it('renders the language list through the resource, using its own model labels and configured table', function (): void {
+    $languages = languageFixtures();
+    $actor = languageActor();
+
+    $this->actingAs($actor)
+        ->get(LanguageResource::getUrl('index', panel: 'admin'))
+        ->assertSuccessful()
+        ->assertSee(__('panel.languages.title'))
+        ->assertSee($languages['en']->code)
+        ->assertSee($languages['ru']->code);
+});
+
+/*
+|--------------------------------------------------------------------------
+| LanguagesTable — Record Actions
+|--------------------------------------------------------------------------
+|
+| The service-level tests above exercise LanguageAdministrationService in
+| isolation; these drive the same operations through the table's own
+| record actions, which is where the success/refusal notification wiring
+| actually lives.
+|
+*/
+
+it('activates a language through the table action and notifies success', function (): void {
+    $languages = languageFixtures();
+    $actor = languageActor();
+
+    Livewire::actingAs($actor)
+        ->test(ListLanguages::class)
+        ->callTableAction('activate', $languages['ro'])
+        ->assertNotified(__('panel.languages.notifications.activated'));
+
+    expect($languages['ro']->fresh()->is_active)->toBeTrue();
+});
+
+it('refuses deactivating the primary language at the service level, independent of the action button that hides it', function (): void {
+    $languages = languageFixtures();
+    $actor = languageActor();
+
+    // The deactivate button is never shown for the primary language (see
+    // its `visible()` closure) — Filament enforces visible() server-side for
+    // its own mountTableAction()/callMountedAction() test helpers too, so
+    // there is no way to drive the hidden action itself through the panel to
+    // prove a second, independent refusal exists. LanguageAdministrationService
+    // ::deactivate() carries that refusal directly, which is what actually
+    // matters: hiding a button is a usability affordance, never the access
+    // control, so the guarantee has to hold here regardless of the UI.
+    expect(fn () => app(LanguageAdministrationService::class)->deactivate($languages['en'], $actor))
+        ->toThrow(LanguageAdministrationRefusedException::class);
+
+    expect($languages['en']->fresh()->is_active)->toBeTrue();
+});
+
+it('deactivates a non-primary language through the table action and notifies success', function (): void {
+    $languages = languageFixtures();
+    $actor = languageActor();
+
+    Livewire::actingAs($actor)
+        ->test(ListLanguages::class)
+        ->callTableAction('deactivate', $languages['ru'])
+        ->assertNotified(__('panel.languages.notifications.deactivated'));
+
+    expect($languages['ru']->fresh()->is_active)->toBeFalse();
+});
+
+it('refuses making an inactive language primary at the service level, independent of the action button that hides it', function (): void {
+    $languages = languageFixtures();
+    $actor = languageActor();
+
+    // Same reasoning as the deactivate-primary case above: the make-primary
+    // button is never shown for an inactive language, and Filament's own
+    // visible() enforcement makes the hidden action unreachable through the
+    // panel's own testing helpers — the guarantee that matters lives in
+    // LanguageAdministrationService::makePrimary() itself.
+    expect(fn () => app(LanguageAdministrationService::class)->makePrimary($languages['ro'], $actor))
+        ->toThrow(LanguageAdministrationRefusedException::class);
+
+    expect($languages['ro']->fresh()->is_primary)->toBeFalse();
+});
+
+it('makes a language primary through the table action and notifies success', function (): void {
+    $languages = languageFixtures();
+    $actor = languageActor();
+
+    Livewire::actingAs($actor)
+        ->test(ListLanguages::class)
+        ->callTableAction('make_primary', $languages['ru'])
+        ->assertNotified(__('panel.languages.notifications.primary_changed'));
+
+    expect($languages['ru']->fresh()->is_primary)->toBeTrue()
+        ->and($languages['en']->fresh()->is_primary)->toBeFalse();
 });
