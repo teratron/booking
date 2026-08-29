@@ -83,14 +83,14 @@ final class ScrubsPersonalDataBeforeSend
         $scrubbed = [];
 
         foreach ($data as $key => $value) {
-            if (is_array($value)) {
-                $scrubbed[$key] = self::scrubArray($value);
+            if (is_string($key) && self::keyLooksSensitive($key)) {
+                $scrubbed[$key] = self::REDACTED;
 
                 continue;
             }
 
-            if (is_string($key) && self::keyLooksSensitive($key)) {
-                $scrubbed[$key] = self::REDACTED;
+            if (is_array($value)) {
+                $scrubbed[$key] = self::scrubArray($value);
 
                 continue;
             }
