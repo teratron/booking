@@ -82,7 +82,13 @@ class EditTerritory extends EditRecord
             $fields['slug'] ??= $record->translations()->where('locale', $locale)->value('slug')
                 ?? Str::slug($fields['name'] ?? (string) $record->id);
 
-            $record->translations()->updateOrCreate(['locale' => $locale], $fields);
+            // country_id is denormalized onto every translation row and has
+            // no database default — without setting it here, the very first
+            // translation written for a locale the territory had none in yet
+            // (an existing territory gaining a newly activated language)
+            // violates the NOT NULL constraint before recomputeSlugPaths()
+            // ever gets a chance to keep it in sync.
+            $record->translations()->updateOrCreate(['locale' => $locale], ['country_id' => $record->country_id, ...$fields]);
         }
 
         if ($touchedSlug) {

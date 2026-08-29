@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Exceptions\TerritoryCycleException;
+use App\Filament\Admin\Resources\Territories\Pages\CreateTerritory;
 use App\Filament\Admin\Resources\Territories\Pages\EditTerritory;
 use App\Filament\Admin\Resources\Territories\TerritoryResource;
 use App\Models\Territory;
@@ -241,4 +242,152 @@ it('lets a region-scoped grant reach every descendant through the subtree expans
 
     expect($regionScoped->can('update', Territory::query()->findOrFail($fixture['resort'])))->toBeTrue()
         ->and($regionScoped->can('update', Territory::query()->findOrFail($fixture['siblingRegion'])))->toBeFalse();
+});
+
+/*
+|--------------------------------------------------------------------------
+| CreateTerritory — Never Rendered Before This
+|--------------------------------------------------------------------------
+|
+| The create page shares its translation-write shape with EditTerritory but
+| had no coverage of its own at all: neither the form render nor a single
+| record creation reached it.
+|
+*/
+
+it('renders the territory create form', function (): void {
+    territoryFixture();
+    $actor = territoryActor(['admin_panel_access', 'geography.view', 'geography.create', 'geography.edit'], 'none', null, 'unrestricted');
+
+    $this->actingAs($actor)
+        ->get(TerritoryResource::getUrl('create', panel: 'admin'))
+        ->assertSuccessful();
+});
+
+it('creates a territory with a translation, deriving the slug from the name and skipping a locale left blank', function (): void {
+    $fixture = territoryFixture();
+    $actor = territoryActor(['admin_panel_access', 'geography.view', 'geography.create', 'geography.edit'], 'none', null, 'unrestricted');
+    $levelId = DB::table('territory_levels')->where('country_id', $fixture['countryMd'])->value('id');
+
+    // A second active language left untouched exercises the "skip a
+    // translation with no name" branch alongside the primary write.
+    DB::table('languages')->insert([
+        'code' => 'ru', 'short_label' => 'RU', 'is_active' => true, 'is_primary' => false,
+        'display_order' => 2, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    Livewire::actingAs($actor)
+        ->test(CreateTerritory::class)
+        ->fillForm([
+            'country_id' => $fixture['countryMd'],
+            'level_id' => $levelId,
+            'translations' => [
+                'en' => ['name' => 'New Resort'],
+            ],
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $created = Territory::query()
+        ->whereHas('translations', fn ($query) => $query->where('name', 'New Resort'))
+        ->firstOrFail();
+
+    expect($created->country_id)->toBe($fixture['countryMd'])
+        ->and($created->translations()->where('locale', 'en')->value('slug'))->toBe('new-resort-'.$created->id)
+        ->and($created->translations()->where('locale', 'ru')->exists())->toBeFalse();
+});
+
+/*
+|--------------------------------------------------------------------------
+| EditTerritory — Remaining Branches
+|--------------------------------------------------------------------------
+|
+| The reparent header action itself, the "nothing to write" and "no prior
+| translation" shapes of the per-locale save loop, and the slug-reuse
+| refusal notification are never reached by the tests above, which drive
+| TerritoryAdministrator and a plain field save directly.
+|
+*/
+
+it('skips writing a translation when every field submitted for a locale is blank', function (): void {
+    $fixture = territoryFixture();
+    $actor = territoryActor(['admin_panel_access', 'geography.view', 'geography.edit'], 'none', null, 'unrestricted');
+
+    Livewire::actingAs($actor)
+        ->test(EditTerritory::class, ['record' => $fixture['city']])
+        ->fillForm(['translations' => ['en' => ['name' => '', 'slug' => '']]])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect(DB::table('territory_translations')->where('territory_id', $fixture['city'])->where('locale', 'en')->value('name'))
+        ->toBe('City');
+});
+
+it('derives a new translation slug from the name when saving a locale the territory had no translation for yet', function (): void {
+    $fixture = territoryFixture();
+    $actor = territoryActor(['admin_panel_access', 'geography.view', 'geography.edit'], 'none', null, 'unrestricted');
+
+    DB::table('languages')->insert([
+        'code' => 'ru', 'short_label' => 'RU', 'is_active' => true, 'is_primary' => false,
+        'display_order' => 2, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    Livewire::actingAs($actor)
+        ->test(EditTerritory::class, ['record' => $fixture['city']])
+        ->fillForm(['translations' => ['ru' => ['name' => 'Sunny District']]])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect(DB::table('territory_translations')->where('territory_id', $fixture['city'])->where('locale', 'ru')->value('slug'))
+        ->toBe('sunny-district');
+});
+
+it('surfaces a slug-reuse refusal as a notification while the rest of the save still applies', function (): void {
+    $fixture = territoryFixture();
+    $actor = territoryActor(['admin_panel_access', 'geography.view', 'geography.edit'], 'none', null, 'unrestricted');
+
+    // A redirect already promises that "md/claimed-slug" leads elsewhere —
+    // reusing it as the region's own new slug must be refused.
+    DB::table('redirects')->insert([
+        'locale' => 'en', 'from_path' => 'md/claimed-slug', 'to_path' => 'md/somewhere-else',
+        'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    Livewire::actingAs($actor)
+        ->test(EditTerritory::class, ['record' => $fixture['region']->id])
+        ->fillForm(['is_active' => false, 'translations' => ['en' => ['slug' => 'claimed-slug']]])
+        ->call('save')
+        ->assertHasNoFormErrors()
+        ->assertNotified(__('panel.territories.form.slug_claimed_by_redirect'));
+
+    // The rest of the field save still applied despite the slug refusal.
+    expect(Territory::query()->findOrFail($fixture['region']->id)->is_active)->toBeFalse();
+});
+
+it('reparents a territory through the header action and journals the applied change', function (): void {
+    $fixture = territoryFixture();
+    $actor = territoryActor(['admin_panel_access', 'geography.view', 'geography.edit'], 'none', null, 'unrestricted');
+
+    Livewire::actingAs($actor)
+        ->test(EditTerritory::class, ['record' => $fixture['city']])
+        ->mountAction('reparent')
+        ->setActionData(['new_parent_id' => $fixture['siblingRegion']])
+        ->callMountedAction()
+        ->assertNotified(__('panel.objects.lifecycle.applied'));
+
+    expect(Territory::query()->findOrFail($fixture['city'])->parent_id)->toBe($fixture['siblingRegion']);
+});
+
+it('refuses a reparent that would create a cycle through the header action, notifying without moving the record', function (): void {
+    $fixture = territoryFixture();
+    $actor = territoryActor(['admin_panel_access', 'geography.view', 'geography.edit'], 'none', null, 'unrestricted');
+
+    Livewire::actingAs($actor)
+        ->test(EditTerritory::class, ['record' => $fixture['region']->id])
+        ->mountAction('reparent')
+        ->setActionData(['new_parent_id' => $fixture['resort']])
+        ->callMountedAction()
+        ->assertNotified(__('panel.territories.actions.cycle_refused'));
+
+    expect($fixture['region']->fresh()->parent_id)->toBeNull();
 });

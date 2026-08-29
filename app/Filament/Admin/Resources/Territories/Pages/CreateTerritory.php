@@ -50,7 +50,11 @@ class CreateTerritory extends CreateRecord
 
             $fields['slug'] ??= Str::slug($fields['name']).'-'.$record->id;
 
-            $record->translations()->create(['locale' => $locale, ...$fields]);
+            // country_id is denormalized onto every translation row (see the
+            // migration that added it) and has no database default — without
+            // setting it here, the very first translation ever written for a
+            // freshly created territory violates the NOT NULL constraint.
+            $record->translations()->create(['locale' => $locale, 'country_id' => $record->country_id, ...$fields]);
         }
 
         /** @var Territory $reloaded */
