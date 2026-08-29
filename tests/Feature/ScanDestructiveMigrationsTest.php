@@ -66,6 +66,69 @@ test('passes with no findings against the range Verify names — the existing mi
         ->assertSuccessful();
 });
 
+test('reports no destructive operations when the diffed migrations are purely additive', function (): void {
+    $migration = fixtureMigrationAddingAColumn();
+
+    Process::fake([
+        'git diff*' => Process::result($migration."\n"),
+    ]);
+
+    $this->artisan('release:scan-destructive-migrations', ['--since' => 'fixture-baseline'])
+        ->expectsOutputToContain('no destructive operations found')
+        ->assertSuccessful();
+
+    unlink($migration);
+});
+
+test('resolves the baseline from the most recent v* tag when --since is omitted', function (): void {
+    Process::fake([
+        'git describe*' => Process::result("v1.2.3\n"),
+        'git diff*' => Process::result(''),
+    ]);
+
+    // No new migrations against that resolved tag — the message naming it
+    // is proof resolvePreviousTag() actually returned the faked tag rather
+    // than falling through to the empty-tree default.
+    $this->artisan('release:scan-destructive-migrations')
+        ->expectsOutputToContain('No migrations introduced since v1.2.3.')
+        ->assertSuccessful();
+});
+
+test('falls back to the empty-tree hash when no previous v* tag exists', function (): void {
+    Process::fake([
+        'git describe*' => Process::result('', 'fatal: no tags can describe', 1),
+        'git diff*' => Process::result(''),
+    ]);
+
+    $this->artisan('release:scan-destructive-migrations')
+        ->expectsOutputToContain('No migrations introduced since 4b825dc642cb6eb9a060e54bf8d69288fbee4904.')
+        ->assertSuccessful();
+});
+
+function fixtureMigrationAddingAColumn(): string
+{
+    // Mirrors fixtureMigrationDroppingAColumn() below, but purely additive
+    // — exercises the "files exist, but nothing in them is destructive"
+    // branch, distinct from the "no files at all" branch the other tests
+    // already cover via an empty git diff.
+    $path = sys_get_temp_dir().'/fixture_adds_a_column_'.bin2hex(random_bytes(8)).'.php';
+
+    file_put_contents($path, <<<'PHP'
+        <?php
+
+        return new class {
+            public function up(): void
+            {
+                Schema::table('objects', function ($table) {
+                    $table->string('new_field')->nullable();
+                });
+            }
+        };
+        PHP);
+
+    return $path;
+}
+
 function fixtureMigrationDroppingAColumn(): string
 {
     // A system temp path, deliberately outside database/migrations — the
