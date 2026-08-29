@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Exceptions\OwnerDetachmentException;
+use App\Filament\Admin\Resources\Owners\OwnerResource;
 use App\Filament\Admin\Resources\Owners\Pages\CreateOwner;
 use App\Filament\Admin\Resources\Owners\Pages\EditOwner;
 use App\Filament\Admin\Resources\Owners\Pages\ListOwners;
@@ -10,6 +11,7 @@ use App\Filament\Admin\Resources\Owners\RelationManagers\ObjectsRelationManager;
 use App\Filament\Admin\Resources\Owners\Tables\OwnersTable;
 use App\Models\Object_;
 use App\Models\User;
+use App\Services\Authorization\ScopeConstraint;
 use App\Services\Owners\OwnerAccountService;
 use Carbon\Carbon;
 use Filament\Auth\Pages\Login as PanelLogin;
@@ -18,6 +20,7 @@ use Filament\Tables\Columns\TextColumn;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
@@ -148,6 +151,32 @@ function ownerFullPermissions(): array
     return ['admin_panel_access', 'user.view', 'user.create', 'user.edit', 'user.delete'];
 }
 
+/**
+ * Same role/permission wiring as {@see ownerActor()}, but deliberately
+ * skips the `role_scopes` insert — the actor holds the permission through a
+ * role, yet that role carries no scope grant at all. That is the "reaches
+ * nothing" case {@see ScopeConstraint::reachesNothing()}
+ * exists to catch, distinct from an actor lacking the permission outright
+ * (which resolves to a `null` grant set, not an empty one).
+ *
+ * @param  list<string>  $permissions
+ */
+function ownerActorWithoutScopeGrant(array $permissions, string $roleKey): User
+{
+    foreach ($permissions as $permission) {
+        Permission::findOrCreate($permission, 'web');
+    }
+
+    $role = Role::findOrCreate($roleKey, 'web');
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $role->syncPermissions($permissions);
+
+    $user = User::factory()->create();
+    $user->assignRole($role);
+
+    return $user->fresh();
+}
+
 // -----------------------------------------------------------------------
 // The list — every required column, backed by real seeded data.
 // -----------------------------------------------------------------------
@@ -256,6 +285,46 @@ it('creates an owner account, assigns the object_owner role, and dispatches a pa
     Notification::assertSentTo($owner, ResetPassword::class);
 });
 
+it('refuses a country-scoped administrator creating an owner outside their scope', function (): void {
+    $geo = ownerGeography();
+    $actor = ownerActor(['admin_panel_access', 'user.view', 'user.create'], 'country', $geo['countryMd'], 'md_only_create');
+
+    Livewire::actingAs($actor)
+        ->test(CreateOwner::class)
+        ->fillForm([
+            'name' => 'Out Of Scope Owner',
+            'email' => 'out.of.scope.owner@example.test',
+            'company' => 'Somewhere Else',
+            'phone' => '+380000111222',
+            'country_id' => $geo['countryUa'],
+        ])
+        ->call('create')
+        ->assertHasFormErrors(['country_id']);
+
+    expect(User::query()->where('email', 'out.of.scope.owner@example.test')->exists())->toBeFalse()
+        ->and(DB::table('audits')->where('event', 'owner_account_created')->count())->toBe(0);
+});
+
+it('refuses an administrator whose grant reaches no scope from creating any owner account', function (): void {
+    $geo = ownerGeography();
+    $actor = ownerActorWithoutScopeGrant(['admin_panel_access', 'user.view', 'user.create'], 'reaches_nothing_create');
+
+    Livewire::actingAs($actor)
+        ->test(CreateOwner::class)
+        ->fillForm([
+            'name' => 'Nobody Reaches',
+            'email' => 'nobody.reaches@example.test',
+            'company' => 'Nowhere',
+            'phone' => '+373600000111',
+            'country_id' => $geo['countryMd'],
+        ])
+        ->call('create')
+        ->assertHasFormErrors(['country_id']);
+
+    expect(User::query()->where('email', 'nobody.reaches@example.test')->exists())->toBeFalse()
+        ->and(DB::table('audits')->where('event', 'owner_account_created')->count())->toBe(0);
+});
+
 // -----------------------------------------------------------------------
 // Editing contacts.
 // -----------------------------------------------------------------------
@@ -305,6 +374,37 @@ it('refuses a country-scoped administrator reassigning an in-scope owner to an o
         ->assertHasFormErrors(['country_id']);
 
     expect($owner->fresh()->country_id)->toBe($geo['countryMd'])
+        ->and(DB::table('audits')->where('event', 'owner_contacts_updated')->where('auditable_id', $owner->id)->count())->toBe(0);
+});
+
+it('refuses an administrator whose edit grant reaches no scope, even though their view grant covers the record', function (): void {
+    $geo = ownerGeography();
+    $owner = seedOwnerAccount(['country_id' => $geo['countryMd']]);
+
+    // EditOwner's own authorizeAccess() gates the whole page on canEdit()
+    // (UserPolicy::update()), not canView() — so an actor whose edit grant
+    // reaches nothing 403s opening the page itself, before any form or save
+    // step exists to test. This proves the same refusal UserPolicy::update()
+    // makes directly: a view grant scoped to Moldova (via its own role_scopes
+    // row) does not substitute for an edit grant through a second role that
+    // deliberately carries no role_scopes row of its own.
+    $actor = ownerActor(['admin_panel_access', 'user.view'], 'country', $geo['countryMd'], 'reaches_nothing_edit_view');
+
+    Permission::findOrCreate('user.edit', 'web');
+    $editRole = Role::findOrCreate('reaches_nothing_edit_only', 'web');
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $editRole->syncPermissions(['user.edit']);
+    $actor->assignRole($editRole);
+    $actor = $actor->fresh();
+
+    expect($actor->can('view', $owner))->toBeTrue()
+        ->and($actor->can('update', $owner))->toBeFalse();
+
+    test()->actingAs($actor)
+        ->get(OwnerResource::getUrl('edit', ['record' => $owner->getKey()], panel: 'admin'))
+        ->assertForbidden();
+
+    expect($owner->fresh()->name)->not->toBe('Should Not Persist')
         ->and(DB::table('audits')->where('event', 'owner_contacts_updated')->where('auditable_id', $owner->id)->count())->toBe(0);
 });
 
@@ -426,6 +526,106 @@ it('blocks and restores an owner, journalling once each, staying idempotent on a
     expect($owner->blocked_at)->toBeNull()
         ->and($owner->blocked_by)->toBeNull()
         ->and(DB::table('audits')->where('event', 'owner_restored')->where('auditable_id', $owner->id)->count())->toBe(1);
+});
+
+// -----------------------------------------------------------------------
+// Header actions — exercised through the Filament page's own action
+// closures, proving they actually wire into the service and the
+// notification layer, rather than only the service methods they call
+// (already covered directly, above) ever running.
+// -----------------------------------------------------------------------
+
+it('applies the block header action through the Filament page, journalling and notifying', function (): void {
+    $geo = ownerGeography();
+    $owner = seedOwnerAccount(['country_id' => $geo['countryMd']]);
+    $actor = ownerActor(ownerFullPermissions(), 'none', null, 'unrestricted_block_action');
+
+    Livewire::actingAs($actor)
+        ->test(EditOwner::class, ['record' => $owner->getKey()])
+        ->callAction('block')
+        ->assertNotified(__('panel.owners.actions.applied'));
+
+    expect($owner->fresh()->blocked_at)->not->toBeNull()
+        ->and(DB::table('audits')->where('event', 'owner_blocked')->where('auditable_id', $owner->id)->count())->toBe(1);
+});
+
+it('applies the restore header action through the Filament page, journalling and notifying', function (): void {
+    $geo = ownerGeography();
+    $owner = seedOwnerAccount(['country_id' => $geo['countryMd']]);
+    $actor = ownerActor(ownerFullPermissions(), 'none', null, 'unrestricted_restore_action');
+    app(OwnerAccountService::class)->block($owner, $actor);
+
+    Livewire::actingAs($actor)
+        ->test(EditOwner::class, ['record' => $owner->getKey()])
+        ->callAction('restore')
+        ->assertNotified(__('panel.owners.actions.applied'));
+
+    expect($owner->fresh()->blocked_at)->toBeNull()
+        ->and(DB::table('audits')->where('event', 'owner_restored')->where('auditable_id', $owner->id)->count())->toBe(1);
+});
+
+it('sends a password reset link through its header action, journalling and dispatching the reset notification', function (): void {
+    Notification::fake();
+
+    $geo = ownerGeography();
+    $owner = seedOwnerAccount(['country_id' => $geo['countryMd']]);
+    $actor = ownerActor(ownerFullPermissions(), 'none', null, 'unrestricted_reset_action');
+
+    Livewire::actingAs($actor)
+        ->test(EditOwner::class, ['record' => $owner->getKey()])
+        ->callAction('send_password_reset_link')
+        ->assertNotified(__('panel.owners.actions.password_reset_link_sent'));
+
+    expect(DB::table('audits')->where('event', 'owner_password_reset_link_sent')->where('auditable_id', $owner->id)->count())->toBe(1);
+
+    Notification::assertSentTo($owner, ResetPassword::class);
+});
+
+it('impersonates the target owner through the header action, switching the auth session and journalling it', function (): void {
+    $geo = ownerGeography();
+    $owner = seedOwnerAccount(['country_id' => $geo['countryMd']]);
+    // user.edit is required to open EditOwner at all (its authorizeAccess()
+    // gates on canEdit()); user.view alone would 403 before the page — and
+    // the impersonate action itself — are ever reached.
+    $actor = ownerActor(['admin_panel_access', 'user.view', 'user.edit', 'impersonate'], 'none', null, 'unrestricted_impersonate_action');
+
+    Livewire::actingAs($actor)
+        ->test(EditOwner::class, ['record' => $owner->getKey()])
+        ->callAction('impersonate');
+
+    /** @var User $current */
+    $current = Auth::guard('web')->user();
+
+    expect($current->id)->toBe($owner->id)
+        ->and(DB::table('audits')->where('event', 'owner_impersonation_started')->where('auditable_id', $owner->id)->count())->toBe(1);
+});
+
+it('shows a refusal notification when the impersonation service refuses the header action, without switching the session', function (): void {
+    $geo = ownerGeography();
+    $owner = seedOwnerAccount(['country_id' => $geo['countryMd']]);
+
+    // An actor holding both the impersonate permission and the object_owner
+    // role is a misconfiguration the page's own ->authorize() closure
+    // cannot see (it only checks the bare permission) — exactly the gap
+    // ImpersonationService::enter() exists to close regardless.
+    $actor = ownerActor(['admin_panel_access', 'user.view', 'user.edit'], 'none', null, 'misconfigured_impersonate_actor');
+    Permission::findOrCreate('impersonate', 'web');
+    Role::findOrCreate('object_owner', 'web');
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $actor->assignRole('object_owner');
+    $actor->givePermissionTo('impersonate');
+    $actor = $actor->fresh();
+
+    Livewire::actingAs($actor)
+        ->test(EditOwner::class, ['record' => $owner->getKey()])
+        ->callAction('impersonate')
+        ->assertNotified(__('panel.owners.actions.impersonation_refused'));
+
+    /** @var User $current */
+    $current = Auth::guard('web')->user();
+
+    expect($current->id)->toBe($actor->id)
+        ->and(DB::table('audits')->where('event', 'owner_impersonation_started')->count())->toBe(0);
 });
 
 // -----------------------------------------------------------------------
