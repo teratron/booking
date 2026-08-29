@@ -143,4 +143,30 @@ final class StaffAccountService
 
         $this->journal->record('staff_restored', $staff, $previous, ['blocked_at' => null, 'blocked_by' => null], $actor, ['staff']);
     }
+
+    /**
+     * Applies the staff edit form's save atomically: the contact-detail
+     * update and the active/inactive toggle succeed or fail together, so a
+     * deactivation {@see guardDeactivation()} refuses can never leave the
+     * contact edits committed on their own — a "failed" save must not
+     * partially succeed.
+     *
+     * @param  array{name?: string, email?: string, is_active?: bool}  $data
+     *
+     * @throws UnrevocableGrantException from deactivate(), propagated unchanged
+     */
+    public function saveEdit(User $staff, array $data, User $actor): void
+    {
+        DB::transaction(function () use ($staff, $data, $actor): void {
+            $this->updateContacts($staff, $data, $actor);
+
+            $wantsActive = (bool) ($data['is_active'] ?? true);
+
+            if ($wantsActive && $staff->blocked_at !== null) {
+                $this->restore($staff, $actor);
+            } elseif (! $wantsActive && $staff->blocked_at === null) {
+                $this->deactivate($staff, $actor);
+            }
+        });
+    }
 }

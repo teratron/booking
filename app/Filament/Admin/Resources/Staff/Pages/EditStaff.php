@@ -14,21 +14,16 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Support\Exceptions\Halt;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 use Override;
 
 /**
- * The staff form's edit page — contact saves through
- * {@see StaffAccountService::updateContacts()}, and the status toggle
- * translated into a {@see StaffAccountService::deactivate()} or
- * {@see StaffAccountService::restore()} call rather than a bare column
- * write, so the last-remaining-chief-administrator guard on deactivation
- * always runs.
- *
- * A refused deactivation halts the save entirely rather than silently
- * saving the contact changes while leaving the account active — a partial
- * "success" here would tell the administrator the toggle worked when it did
- * not.
+ * The staff form's edit page — the whole save (contact fields plus the
+ * active/inactive toggle) goes through the single
+ * {@see StaffAccountService::saveEdit()} call, atomic there so the
+ * last-remaining-chief-administrator guard on deactivation always runs and
+ * a refusal can never leave the contact edits committed on their own — a
+ * partial "success" here would tell the administrator the toggle worked
+ * when it did not.
  */
 class EditStaff extends EditRecord
 {
@@ -44,25 +39,8 @@ class EditStaff extends EditRecord
             return $record;
         }
 
-        $service = app(StaffAccountService::class);
-        $wantsActive = (bool) ($data['is_active'] ?? true);
-
         try {
-            // Wrapped explicitly rather than relying on the save action's own
-            // transaction: Filament only opens one when a panel calls
-            // `->databaseTransactions()`, which neither panel here does. Without
-            // this, a refused deactivation still leaves updateContacts()'s write
-            // committed — exactly the partial "success" this class's own
-            // docblock says can never happen.
-            DB::transaction(function () use ($service, $record, $data, $actor, $wantsActive): void {
-                $service->updateContacts($record, $data, $actor);
-
-                if ($wantsActive && $record->blocked_at !== null) {
-                    $service->restore($record, $actor);
-                } elseif (! $wantsActive && $record->blocked_at === null) {
-                    $service->deactivate($record, $actor);
-                }
-            });
+            app(StaffAccountService::class)->saveEdit($record, $data, $actor);
         } catch (UnrevocableGrantException) {
             Notification::make()
                 ->danger()
