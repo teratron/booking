@@ -44,10 +44,20 @@ it('renders the shell 404 page — not a framework default — for an unresolved
     $response->assertSee(__('public.legal.not_found.title'));
     $response->assertSee('<meta name="robots" content="noindex">', false);
     // Proves it is the real shell (not a bare error page): the same
-    // responsive markers T-5A01's own shell test asserts on.
+    // responsive markers PublicShellTest itself asserts on.
     $response->assertSee('mobileOpen = !mobileOpen', false);
     $response->assertSee('sm:flex', false);
     $response->assertSee('hidden lg:block', false);
+});
+
+it('renders the 404 illustration with translatable alt text, never the raw English caption baked into the source image', function (): void {
+    publicErrorAndLegalRegistry();
+
+    $response = $this->get('/en/this-route-does-not-exist-anywhere');
+
+    $response->assertNotFound();
+    $response->assertSee('images/errors/404-robot.png', false);
+    $response->assertSee(__('public.legal.not_found.illustration_alt'));
 });
 
 it('404s the same way for an unresolved route outside any lang segment', function (): void {

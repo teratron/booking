@@ -191,6 +191,7 @@ return [
             'title' => 'Page not found',
             'body' => "The page you're looking for doesn't exist, may have been moved, or the address was typed incorrectly.",
             'home_link' => 'Back to home',
+            'illustration_alt' => 'A confused robot surrounded by loose gears',
         ],
         'privacy' => [
             'title' => 'Privacy Policy',
