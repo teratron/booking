@@ -32,11 +32,26 @@ class EditSeoMetadataTemplate extends EditRecord
         ];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * Captures the record's still-unmodified entity type and locale, not
+     * {@see mutateFormDataBeforeFill()} — that hook runs during the page's
+     * initial `mount()`, a separate Livewire request from the one that
+     * calls `afterSave()` below, and this class's `$originalCacheKey` is a
+     * plain, unpersisted property: Livewire only carries public properties
+     * across that request boundary, so a value captured at mount time
+     * would already be back to null by the time save runs. Reading it here
+     * instead — one step before {@see handleRecordUpdate()} overwrites the
+     * in-memory record — keeps capture and use inside the same request.
+     *
+     * @return array<string, mixed>
+     */
     #[Override]
-    protected function mutateFormDataBeforeFill(array $data): array
+    protected function mutateFormDataBeforeSave(array $data): array
     {
-        $this->originalCacheKey = ['entityType' => (string) $data['entity_type'], 'locale' => (string) $data['locale']];
+        /** @var SeoMetadataTemplate $record */
+        $record = $this->record;
+
+        $this->originalCacheKey = ['entityType' => (string) $record->entity_type, 'locale' => (string) $record->locale];
 
         return $data;
     }
