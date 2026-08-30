@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Exceptions\ArticleScheduleRefusedException;
 use App\Filament\Admin\Resources\ArticleCategories\Pages\CreateArticleCategory;
+use App\Filament\Admin\Resources\ArticleCategories\Pages\EditArticleCategory;
+use App\Filament\Admin\Resources\ArticleCategories\Pages\ListArticleCategories;
 use App\Filament\Admin\Resources\ArticleTags\Pages\CreateArticleTag;
 use App\Models\Article;
 use App\Models\ArticleCategory;
@@ -253,6 +255,48 @@ it('lets an administrator create a new article category through the admin panel 
     $category = ArticleCategory::query()->where('slug', 'destination-guides')->firstOrFail();
 
     expect($category->name)->toBe('Destination Guides');
+});
+
+it('lets an administrator rename an article category and change its per-language translation through the edit page', function (): void {
+    $actor = articleContentActor();
+    $category = articleTestCategory('guides');
+
+    Livewire::actingAs($actor)
+        ->test(EditArticleCategory::class, ['record' => $category->id])
+        ->fillForm([
+            'slug' => 'guides',
+            'is_active' => false,
+            'display_order' => 3,
+            'translations' => ['en' => ['name' => 'Travel Guides']],
+        ])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    $fresh = ArticleCategory::query()->findOrFail($category->id);
+
+    expect($fresh->is_active)->toBeFalse()
+        ->and($fresh->display_order)->toBe(3)
+        ->and($fresh->translate('en')->name)->toBe('Travel Guides');
+});
+
+it('filters the article category list by active state and deletes a category from the edit page', function (): void {
+    $actor = articleContentActor();
+    $active = articleTestCategory('active-guides');
+    $inactive = articleTestCategory('retired-guides');
+    $inactive->update(['is_active' => false]);
+
+    Livewire::actingAs($actor)
+        ->test(ListArticleCategories::class)
+        ->assertCanSeeTableRecords([$active, $inactive])
+        ->filterTable('is_active', true)
+        ->assertCanSeeTableRecords([$active])
+        ->assertCanNotSeeTableRecords([$inactive]);
+
+    Livewire::actingAs($actor)
+        ->test(EditArticleCategory::class, ['record' => $active->id])
+        ->callAction('delete');
+
+    expect(ArticleCategory::query()->whereKey($active->id)->exists())->toBeFalse();
 });
 
 it('lets an administrator create a new article tag through the admin panel with zero code changes', function (): void {
