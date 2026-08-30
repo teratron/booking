@@ -13,7 +13,7 @@ uses(RefreshDatabase::class);
 
 /*
 |--------------------------------------------------------------------------
-| SEO Metadata Resolution Ladder (T-6B01)
+| SEO Metadata Resolution Ladder
 |--------------------------------------------------------------------------
 |
 | The three-rung ladder every indexable public page reads through before

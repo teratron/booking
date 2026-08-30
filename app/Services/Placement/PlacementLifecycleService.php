@@ -60,8 +60,8 @@ final class PlacementLifecycleService
             // relation's real cardinality (a fresh object legitimately has
             // no `object_placements` row yet), so the prior row's fields
             // are extracted through an explicit instanceof check rather
-            // than nullsafe access — same convention `T-2T04` established
-            // for a genuinely-nullable BelongsTo.
+            // than nullsafe access — the same convention this codebase uses
+            // everywhere else for a genuinely-nullable BelongsTo.
             $previousPinnedPosition = null;
             $previousInternalPriority = 0;
             $previousCreatedAt = now();

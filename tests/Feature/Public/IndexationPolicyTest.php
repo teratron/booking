@@ -13,7 +13,7 @@ uses(RefreshDatabase::class);
 
 /*
 |--------------------------------------------------------------------------
-| Indexation Policy — Matrix, Filter Allowlist, Pagination, Robots (T-6B02)
+| Indexation Policy — Matrix, Filter Allowlist, Pagination, Robots
 |--------------------------------------------------------------------------
 |
 | Filtered catalog views are not indexable by default. A single active

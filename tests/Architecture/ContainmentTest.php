@@ -25,7 +25,13 @@ test('no specification references leak into product code', function (): void {
 
     $forbidden = [
         '/\.design\//',
-        '/\bT-\d{3,5}\b/',
+        // Task IDs are T-{phase}{track}{seq} — a phase number, a single
+        // uppercase track letter, then a sequence number, optionally
+        // suffixed with a sub-step. A fixed digit-only width never matches
+        // this real shape, which always has a letter between two digit
+        // runs; writing a live-matching example here would trip this very
+        // test against its own source.
+        '/\bT-\d+[A-Z]\d+(?:\.\d+)?\b/',
         '/\bphase-\d+\b/i',
         '/\bPhase\s+\d+\b/', // prose form ("Phase" + a number in running text) — the file-form pattern above only catches the hyphenated slug
         '/\b(?:PLAN|TASKS|INDEX|RULES)\.md\b/',

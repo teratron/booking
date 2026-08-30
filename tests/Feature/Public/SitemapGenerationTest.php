@@ -13,7 +13,7 @@ uses(RefreshDatabase::class);
 
 /*
 |--------------------------------------------------------------------------
-| Sitemap Index — Paginated Per-Language Artefacts (T-6B04)
+| Sitemap Index — Paginated Per-Language Artefacts
 |--------------------------------------------------------------------------
 |
 | The index references one child sitemap per (active language, populated

@@ -16,7 +16,7 @@ uses(RefreshDatabase::class);
 
 /*
 |--------------------------------------------------------------------------
-| SEO URL Grammar — Addressing Foundation (T-6A01)
+| SEO URL Grammar — Addressing Foundation
 |--------------------------------------------------------------------------
 |
 | The inbound (PublicSlugResolver) and outbound (PublicUrlGenerator) halves

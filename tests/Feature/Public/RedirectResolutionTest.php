@@ -24,7 +24,7 @@ uses(RefreshDatabase::class);
 
 /*
 |--------------------------------------------------------------------------
-| Redirect Table — Model, Resolution, Same-Operation Creation (T-6A02)
+| Redirect Table — Model, Resolution, Same-Operation Creation
 |--------------------------------------------------------------------------
 |
 | A changed slug leaves a permanent redirect from the old address, created

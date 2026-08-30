@@ -26,14 +26,16 @@ uses(RefreshDatabase::class);
 | exception, not a silently-affected zero rows. The moderation/soft-delete
 | guarantee is enforced by a global scope, proven against a minimal fixture
 | model bound to the real `objects` table rather than the eventual
-| production model, which is T-1D03's own boundary to define.
+| production model — relations, casts, and the rest belong to the real
+| Object_ model, not this fixture.
 |
 */
 
 /**
- * Minimal Eloquent binding to `objects`, scoped to exactly what this task
- * owns — soft-delete and moderation filtering. Relations, casts, and the
- * remaining package traits are T-1D03's responsibility, not reproduced here.
+ * Minimal Eloquent binding to `objects`, scoped to exactly the two
+ * guarantees this file proves — soft-delete and moderation filtering.
+ * Relations, casts, and the remaining package traits belong to the real
+ * Object_ model, not reproduced here.
  */
 final class RetentionFixtureObject extends Model
 {

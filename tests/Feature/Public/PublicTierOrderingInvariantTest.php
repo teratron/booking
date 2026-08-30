@@ -27,9 +27,9 @@ uses(RefreshDatabase::class);
 |
 | The catalog map is deliberately excluded: pins plot at real coordinates,
 | not a stacked list, and CatalogQueryService::pins() intentionally skips
-| PlacementOrderingService entirely (T-5A06's own documented decision) — a
-| tier-ordering assertion would contradict working, correct behaviour, not
-| verify it.
+| PlacementOrderingService entirely — geographic position, not placement
+| tier, decides where a pin sits, so a tier-ordering assertion would
+| contradict working, correct behaviour, not verify it.
 |
 | Tagged `slow`: touches six separate public surfaces in one run, excluded
 | from `composer test`/`quality`, run explicitly.
@@ -190,8 +190,8 @@ it("holds tier precedence in an object profile page's own nearby and similar blo
     tierInvariantGivePlacement($nearbyVip, 'VIP');
 
     // Similar: same type, same country, a different territory — proven
-    // distinct from "nearby" in T-5B04's own test; here only tier order
-    // within it matters.
+    // distinct from "nearby" elsewhere; here only tier order within it
+    // matters.
     $similarStandard = tierInvariantMakeObject($fixture['countryId'], $elsewhereTerritoryId, $typeId, 'Similar Standard');
     $similarVip = tierInvariantMakeObject($fixture['countryId'], $elsewhereTerritoryId, $typeId, 'Similar VIP');
     tierInvariantGivePlacement($similarVip, 'VIP');

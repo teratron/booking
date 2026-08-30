@@ -16,7 +16,7 @@ uses(RefreshDatabase::class);
 | Authorization Test Matrix
 |--------------------------------------------------------------------------
 |
-| Proves T-1D01's ScopeAuthorizer denies as well as it allows, across every
+| Proves ScopeAuthorizer denies as well as it allows, across every
 | scope kind and a representative permission verb set, against a fixture
 | spanning two countries, nested territories (three levels deep), and two
 | object categories — not a single-country, single-permission shortcut.

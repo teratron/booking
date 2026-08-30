@@ -48,7 +48,7 @@ function ownerUser(): User
     $user->assignRole($role);
     $user = $user->fresh();
 
-    // The cabinet is Filament tenant-scoped to Object_ (T-4A01): reaching
+    // The cabinet is Filament tenant-scoped to Object_: reaching
     // any page past sign-in requires at least one object to land on, the
     // same way an admin account requires a permission before its panel
     // renders anything. Object assignment happens once, at owner creation

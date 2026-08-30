@@ -19,11 +19,11 @@ uses(RefreshDatabase::class);
 | Moderation Mode Resolution & the Change-Request Pipeline
 |--------------------------------------------------------------------------
 |
-| T-2D01 is the phase's second-highest cascade risk: the queue, the review
-| screen, and the object form's return-for-revision action all consume its
-| output, and its snapshot semantics cannot be retrofitted once requests
-| exist in the table. Every rung of the ladder is exercised by its own case
-| rather than trusted from the shape of the code.
+| Moderation mode resolution is a high-cascade-risk piece: the queue, the
+| review screen, and the object form's return-for-revision action all
+| consume its output, and its snapshot semantics cannot be retrofitted once
+| requests exist in the table. Every rung of the ladder is exercised by its
+| own case rather than trusted from the shape of the code.
 |
 */
 
@@ -109,8 +109,8 @@ it('publishes immediately when the change type is not on the moderated list, reg
     setModerationMode('object', $fixture['objectId'], 'review');
 
     // 'availability' is deliberately absent from the default moderated-types
-    // list — the same fact that makes the owner-facing toggle exempt in
-    // T-2B06 makes it exempt here, with no special case in the pipeline.
+    // list — the same fact that makes the owner-facing toggle exempt
+    // elsewhere makes it exempt here, with no special case in the pipeline.
     $outcome = app(ModerationPipeline::class)->submit(
         target: $fixture['object'],
         section: 'availability',

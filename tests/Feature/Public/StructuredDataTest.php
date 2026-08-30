@@ -10,7 +10,7 @@ uses(RefreshDatabase::class);
 
 /*
 |--------------------------------------------------------------------------
-| Structured Data & Breadcrumbs, Gated on Module State (T-6B03)
+| Structured Data & Breadcrumbs, Gated on Module State
 |--------------------------------------------------------------------------
 |
 | Each page type emits the Schema.org entity the specification names for

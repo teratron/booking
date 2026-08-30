@@ -29,9 +29,9 @@ uses(RefreshDatabase::class);
 | Cabinet Moderation Gating & Availability Bypass Invariant
 |--------------------------------------------------------------------------
 |
-| T-4B01 (object editing) and T-4C01 (news/promotions) each already prove
-| their own moderation routing in isolation — one fixture per mode, never
-| switched mid-test. What only this task proves is that the SAME scope's
+| Object editing and news/promotions each already have their own moderation
+| routing proven in isolation elsewhere — one fixture per mode, never
+| switched mid-test. What only this file proves is that the SAME scope's
 | resolved mode genuinely drives behaviour live: an edit queued under review
 | mode, followed immediately by another edit to the identical scope now
 | switched to immediate, must apply directly — not merely that two

@@ -186,9 +186,10 @@ it('clears the flag once the object has been edited since the notification was r
 it('never blocks the save action for a flagged object — the flag is advisory only', function (): void {
     $fixture = cabinetStalenessGeography();
     $owner = cabinetStalenessOwner('staleness_owner_advisory_only');
-    // A draft object's edits always apply directly (T-4B01) — kept that way
-    // here deliberately, so this test proves only the staleness flag's own
-    // advisory nature, not an unrelated moderation-routing decision.
+    // A draft object's edits always apply directly, with no moderation
+    // queue in between — kept that way here deliberately, so this test
+    // proves only the staleness flag's own advisory nature, not an
+    // unrelated moderation-routing decision.
     $object = cabinetStalenessMakeObject($fixture, $owner->id, ['status' => 'draft', 'moderation_status' => null]);
     $typeId = cabinetStalenessSeedNotificationType();
     cabinetStalenessRaiseNotification($object, $typeId, $owner->id);

@@ -202,9 +202,9 @@ it('persists filters, search and sort without the resource asking', function ():
 it('demands a confirmation of every bulk action built on the contract', function (): void {
     $action = CountedBulkAction::make('probe');
 
-    // The count in the confirmation copy is asserted against a mounted action
-    // in T-2B03, where a real selection exists to be counted. What belongs
-    // here is that the confirmation cannot be skipped by omission.
+    // The count in the confirmation copy is asserted elsewhere, against a
+    // mounted action where a real selection exists to be counted. What
+    // belongs here is that the confirmation cannot be skipped by omission.
     expect($action->isConfirmationRequired())->toBeTrue()
         ->and($action->shouldDeselectRecordsAfterCompletion())->toBeTrue()
         ->and(__('panel.bulk.confirmation', ['count' => 87]))->toContain('87');

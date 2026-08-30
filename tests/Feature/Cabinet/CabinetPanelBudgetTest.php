@@ -24,8 +24,8 @@ uses(RefreshDatabase::class);
 | Cabinet Panel Query Budget Under Seeded Volume
 |--------------------------------------------------------------------------
 |
-| The admin panel's own query-budget invariant (T-3T04) seeds portal-wide
-| DemoVolumeSeeder scale because its resources see the whole portal. The
+| The admin panel's own query-budget test seeds portal-wide DemoVolumeSeeder
+| scale because its resources see the whole portal. The
 | cabinet panel never does — every resource here is scoped to one owner's
 | one object, so the volume dimension that matters is realistic per-owner
 | content: a busy object with a full room list, a full gallery, a season's

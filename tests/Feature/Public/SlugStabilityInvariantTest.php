@@ -20,7 +20,7 @@ uses(RefreshDatabase::class);
 | Redirect Permanence & Slug Stability — the Durable Invariant
 |--------------------------------------------------------------------------
 |
-| RedirectResolutionTest (T-6A02) proves each mechanism works in isolation;
+| RedirectResolutionTest proves each mechanism works in isolation;
 | this file proves the invariant holds as a durable guarantee, holistically,
 | for the one case that mechanism-level test does not reach: a mid-tree
 | reparent whose descendant is itself several levels deep, where "every

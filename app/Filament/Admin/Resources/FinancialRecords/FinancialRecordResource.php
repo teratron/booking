@@ -18,10 +18,11 @@ use Filament\Tables\Table;
 use UnitEnum;
 
 /**
- * The unified financial ledger — §5.5's "a ledger, not a payment system".
- * Declares no scope axis: financial read/write is gated on the standalone
- * `finance.*` permission set, independent of an administrator's country or
- * category grants, matching `T-2A05`'s dashboard finance block.
+ * The unified financial ledger — a record of what happened, never a payment
+ * system in its own right. Declares no scope axis: financial read/write is
+ * gated on the standalone `finance.*` permission set, independent of an
+ * administrator's country or category grants, matching the dashboard's own
+ * finance block.
  */
 class FinancialRecordResource extends ScopedResource
 {

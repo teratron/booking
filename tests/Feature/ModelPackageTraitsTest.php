@@ -73,7 +73,8 @@ test('a translated territory subtree expands through staudenmeir/laravel-adjacen
     expect(DB::table('territory_translations')->where('territory_id', $region->id)->count())->toBe(1);
 
     // staudenmeir/laravel-adjacency-list: descendants() walks the recursive
-    // CTE two levels down, the exact claim T-1D01's scope resolver relies on.
+    // CTE two levels down, the exact claim ScopeAuthorizer's territory-scope
+    // coverage check relies on.
     $descendantNames = $region->descendants()->pluck('id');
     expect($descendantNames)->toContain($city->id, $resort->id);
     expect($region->descendants()->count())->toBe(2);
