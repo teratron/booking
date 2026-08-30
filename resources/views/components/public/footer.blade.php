@@ -57,8 +57,8 @@
             @if (count($socialLinks) > 0)
                 <div class="mt-3 flex items-center gap-2">
                     @foreach ($socialLinks as $network => $href)
-                        <a href="{{ $href }}" target="_blank" rel="noopener noreferrer" class="block h-7 w-7 overflow-hidden rounded">
-                            <img src="{{ asset("images/social/{$network}.png") }}" alt="{{ $network }}" class="h-full w-full object-cover">
+                        <a href="{{ $href }}" target="_blank" rel="noopener noreferrer" class="block h-7 w-7" aria-label="{{ $network }}">
+                            <x-dynamic-component :component="'public.icons.'.$network" class="h-full w-full" />
                         </a>
                     @endforeach
                 </div>

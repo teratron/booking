@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Middleware\ResolvePublicLocale;
 use App\Models\FeedbackSubmission;
+use App\Services\Settings\SettingsRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\DB;
@@ -147,6 +148,29 @@ it('reads navigation entries from the object-type registry rather than a hard-co
     $response = $this->get('/en/__shell-test');
 
     $response->assertSee('Glamping')->assertDontSee('Retired Type');
+});
+
+it('renders the footer\'s social links as inline SVG, never a raster image', function (): void {
+    publicShellRegistry();
+    registerPublicShellTestRoute();
+
+    app(SettingsRepository::class)->set('portal.social_instagram_url', 'https://instagram.com/example');
+    app(SettingsRepository::class)->set('portal.social_telegram_url', 'https://t.me/example');
+    app(SettingsRepository::class)->set('portal.social_facebook_url', 'https://facebook.com/example');
+
+    $response = $this->get('/en/__shell-test');
+
+    $response->assertOk()
+        ->assertSee('https://instagram.com/example', false)
+        ->assertSee('https://t.me/example', false)
+        ->assertSee('https://facebook.com/example', false)
+        ->assertDontSee('<img', false);
+
+    // Every social badge is a self-contained inline <svg>, not a shared
+    // sprite reused three times — one per network, matching the three
+    // links rendered above.
+    preg_match_all('/<svg[^>]*aria-hidden="true"[^>]*>/', $response->getContent(), $matches);
+    expect(count($matches[0]))->toBeGreaterThanOrEqual(3);
 });
 
 it('links every category entry — header, mobile drawer, and footer — by the type\'s numeric id, not its string key', function (): void {
