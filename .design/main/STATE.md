@@ -13,7 +13,7 @@
 - **Task (Phase 13, done 2026-08-31):** **19/19 — planned and closed the same session.** Nine build tracks (three `500` blockers; 66 MB SEO dashboard → SQL aggregation; every unbounded Filament `Select` → `SearchableModelSelect`; catalog/territory/object budgets via bounded queries + tagged caching; `robots.txt` single-authority; serve-time sitemap freshness 503; panel assets in the image + health check; nginx `limit_req` edge zone + explicit FPM `listen.backlog`; load-benchmark runbook; `InterfaceCatalogEditor` 11 MB → one `(group, section)` slice) plus a fail-first validation track: `QaSweepRegressionTest` + `UnboundedOptionLoaderTest` (found two `->options()` offenders manual review missed). Full non-slow Pest suite + Pint + PHPStan 8 + `migrate:fresh --seed` green. Track G (object-application funnel) deferred to `PLAN.md` `## Backlog` by design (`l1-object-onboarding` `TBD`). Detail: `archives/tasks/phase-13.md`.
 - **Task (Phase 12, done 2026-08-30):** **7/7 — seven tracks.** `ContainmentTest.php` extended with a TZ-aware SKIP/FAIL pattern for bare `§N.N` spec-section references; 31 files / 33 real leaks rewritten in plain language (raw grep's 50 corrected after classifying each). Full detail: `archives/tasks/phase-12.md`.
 - **Phases 9–11 (done 2026-08-22/23/27):** 72 tasks across three independent QA/revenue-remediation phases, all closed clean (full regression gates green each time). Full detail: `archives/tasks/phase-{9,10,11}.md`, `PLAN.md`'s own sections.
-- **Phase 8 (owner-blocked):** 21/23 — `T-8E01` closed 2026-08-31 (GitHub App created and installed, App ID `4689159`, permissions confirmed by the owner against the spec table; `T-8E02` and CODEOWNERS both stay clean of it). `T-8E03`/`T-8T03` remain, each owner-only **and** `Blocked [!] (C12)` since 2026-08-22 (branch-model reconciliation — see Blockers). Full detail: `tasks/phase-8.md`.
+- **Phase 8 (owner-blocked):** 22/23 — `T-8E01` and `T-8E03` both closed 2026-08-31. `T-8E03` found and fixed a real defect en route: `AUTOMATION_APP_PRIVATE_KEY` had been set to an SSH fingerprint, not the actual PEM — rotated to the real key (`.secrets/booking-release-bot.2026-08-22.private-key.pem`), and the three misplaced variables + their wrong webhook-mechanism comment removed from `.env.example` and the local `.env`. Only `T-8T03` remains, owner-only **and** `Blocked [!] (C12)` since 2026-08-22 (branch-model reconciliation — see Blockers). Full detail: `tasks/phase-8.md`.
 - **Spec:** **25 specs — 8 `Stable`, 17 `RFC`** (confirmed via `check-prerequisites` 2026-08-30). See `INDEX.md`'s Amendment/Branch-Model Ledgers for the delivery pair's own history.
 - **Next Action:** Phase 13 closed (19/19), changes committed to `master`. Run `/magic.task main` if a post-run drift check is wanted; otherwise the open work is Phase 8 (owner-only/C12-blocked) and the `## Backlog` object-application funnel (needs `/magic.spec main` to close `l1-object-onboarding`'s `TBD` first).
 
@@ -22,8 +22,8 @@
 ```
 Phase 13: [19/19] ████████ 100% — Done
 Overall: [12/13] ███████░ 92%
-Plan: Phase 1-7 done (135/135) · Phase 8 in progress (21/23, owner-blocked) · Phase 9 done (15/15) · Phase 10 done (32/32) · Phase 11 done (25/25) · Phase 12 done (7/7) · Phase 13 done (19/19)
-Phase 8 tracks:  A 4/4 · B 4/4 · C 1/1 · D 5/5 · E 2/3 (E03 User) · F 3/3 · T 2/3 (T03 User+Agent)
+Plan: Phase 1-7 done (135/135) · Phase 8 in progress (22/23, owner-blocked) · Phase 9 done (15/15) · Phase 10 done (32/32) · Phase 11 done (25/25) · Phase 12 done (7/7) · Phase 13 done (19/19)
+Phase 8 tracks:  A 4/4 · B 4/4 · C 1/1 · D 5/5 · E 3/3 · F 3/3 · T 2/3 (T03 User+Agent)
 Phase 13 tracks: A 4/4 · B 3/3 · C 3/3 · D 3/3 · E 1/1 · F 2/2 · T 3/3 — all Done (Track G → Backlog by design)
 ```
 
@@ -37,7 +37,7 @@ Phase 13 tracks: A 4/4 · B 3/3 · C 3/3 · D 3/3 · E 1/1 · F 2/2 · T 3/3 —
 
 <!-- Empty if none. Format: [severity] description -->
 
-[info] `T-8E03`, `T-8T03` carry `Blocked [!] (C12)` since 2026-08-22, alongside their pre-existing owner-only blockers — `l1-release-operations`/`l2-release-pipeline` are `RFC` again (branch-model reconciliation, not the 2026-08-21 sensitive-zone finding, which stays closed). `T-8E01` closed 2026-08-31 despite carrying the same C12 marker: its own blocker (no browser-free App-creation path) was independent of spec status and got resolved directly; C12 itself did not lift and does not gate a task's own completion, only fresh agent-initiated work under this phase. Clears (for the remaining two) at [l1-release-operations.md](specifications/l1-release-operations.md) §3.3's resumption condition, not by any task. See INDEX.md Branch-Model Ledger.
+[info] `T-8T03` carries `Blocked [!] (C12)` since 2026-08-22, alongside its pre-existing owner-only blocker — `l1-release-operations`/`l2-release-pipeline` are `RFC` again (branch-model reconciliation, not the 2026-08-21 sensitive-zone finding, which stays closed). `T-8E01`/`T-8E03` both closed 2026-08-31 despite carrying the same C12 marker: their own blockers (no browser-free App-creation path; production credentials not existing locally) were independent of spec status and got resolved directly; C12 itself did not lift and does not gate a task's own completion, only fresh agent-initiated work under this phase. Clears (for T-8T03) at [l1-release-operations.md](specifications/l1-release-operations.md) §3.3's resumption condition, not by any task. See INDEX.md Branch-Model Ledger.
 
 ## Blocking Constraints
 

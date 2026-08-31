@@ -15,7 +15,7 @@ duration_minutes: ~
 # Stage 8 Tasks — Delivery Pipeline & Operator Documentation
 
 **Phase:** 8
-**Status:** In Progress (21/23 — `T-8E01` closed 2026-08-31; the two remaining tasks are `Blocked [!] (C12)`. Track F closed 2026-08-21 and both source specifications returned to `Stable` at v0.4.0 the same day; on 2026-08-22 both dropped to `RFC` again — not by regression, but to reconcile with the project owner's single-line branch decision for the development period, recorded in `CLAUDE.md` § Release & Deployment and [l1-release-operations.md](../specifications/l1-release-operations.md) §3.3. `T-8E01`, `T-8E03`, `T-8T03` each already carried their own owner-only blocker unrelated to spec status — no API path to create a GitHub App, absent production credentials, and a human-executor requirement in the specification's own text — and the C12 marker sits alongside those, not in place of them. `T-8E01`'s own blocker was the GitHub-App-creation step itself, now done; C12 was never that blocker and does not lift with it. The quarantine lifts when §3.3's resumption condition is met, not by any task in this phase. See STATE.md and [l1-release-operations.md](../specifications/l1-release-operations.md) §5.5.1.)
+**Status:** In Progress (22/23 — `T-8E01` and `T-8E03` closed 2026-08-31; only `T-8T03` remains, `Blocked [!] (C12)`. Track F closed 2026-08-21 and both source specifications returned to `Stable` at v0.4.0 the same day; on 2026-08-22 both dropped to `RFC` again — not by regression, but to reconcile with the project owner's single-line branch decision for the development period, recorded in `CLAUDE.md` § Release & Deployment and [l1-release-operations.md](../specifications/l1-release-operations.md) §3.3. `T-8E01`, `T-8E03`, `T-8T03` each already carried their own owner-only blocker unrelated to spec status — no API path to create a GitHub App, absent production credentials, and a human-executor requirement in the specification's own text — and the C12 marker sits alongside those, not in place of them. `T-8E01`'s own blocker was the GitHub-App-creation step itself, now done; C12 was never that blocker and does not lift with it. The quarantine lifts when §3.3's resumption condition is met, not by any task in this phase. See STATE.md and [l1-release-operations.md](../specifications/l1-release-operations.md) §5.5.1.)
 **Strategic Goal:** The portal's implementation is complete and it has never been
 released. This phase builds the path a change takes from an accepted branch to a
 serving production portal, the path back when a release turns out wrong, and the
@@ -79,7 +79,7 @@ and defers its proof to `T-8T03`, rather than claiming a verification it cannot 
 
 - [x] [T-8E01] Automation identity — a GitHub App with an explicitly withheld permission set
 - [x] [T-8E02] `production` environment and its required reviewers
-- [ ] [T-8E03] Secrets across the three tiers, none of them in the repository `Blocked [!] (C12)`
+- [x] [T-8E03] Secrets across the three tiers, none of them in the repository `Blocked [!] (C12)`
 
 ### Track F — Sensitive-Zone Gate Integrity
 
@@ -332,7 +332,7 @@ than last despite being the least technically interesting work in the phase.
 **[T-8E03] Secrets across the three tiers, none of them in the repository**
 
 - **Spec:** [l2-release-pipeline.md](../specifications/l2-release-pipeline.md) §5.8; [l1-release-operations.md](../specifications/l1-release-operations.md) §3.6
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** User
 - **Requires:** `T-8E02` (the environment must exist to hold the second tier)
 - **Verify:** `gh secret list` shows registry credentials and the automation app key at repository scope; `gh secret list --env production` shows host access, deployment target, and the maintenance bypass; `git log -p --all -S'BEGIN PRIVATE KEY'` and a scan of the built image (`T-8B01`'s Verify line) both find nothing.
@@ -344,6 +344,7 @@ than last despite being the least technically interesting work in the phase.
   **`T-8B02` made one production-tier name concrete**: `MAINTENANCE_BYPASS_SECRET`, read by `docker/deploy/deploy.sh` from the `deploy` job's own environment and passed to `php artisan down --secret=`. Registry credentials need no separate secret at all — `T-8B01`'s `build` job already authenticates to `ghcr.io` with the built-in `GITHUB_TOKEN`. Repository-tier `MAP_TILE_KEY` was already named in `T-8B01`. The self-hosted-runner deployment model `T-8B02` chose also means "host access" is not a runner-side secret the way an SSH-based design would need — the runner already executes locally on the host under whatever account installed it.
 
   **`Blocked [!] (C12)`, alongside its existing owner-only blocker.** The production credentials this task registers do not exist in this development environment regardless of spec status — that blocker is unrelated to and unaffected by the branch-model reconciliation. The C12 marker records the mechanical fact that its L1 parent is `RFC`, not a second, independent reason to wait.
+- **Changes:** All four secrets confirmed live via `gh secret list` (repository: `AUTOMATION_APP_ID`, `AUTOMATION_APP_PRIVATE_KEY`, `MAP_TILE_KEY`; `production` environment: `MAINTENANCE_BYPASS_SECRET`) — set 2026-08-23, in an earlier session. One defect found and fixed 2026-08-31: `AUTOMATION_APP_PRIVATE_KEY`'s stored value was an SSH key fingerprint (`SHA256:...=`), not the actual PEM — unusable for signing a JWT, so the automation identity could not have authenticated as itself. Re-set from the real `.pem` file (`gh secret set AUTOMATION_APP_PRIVATE_KEY --repo teratron/booking < .secrets/booking-release-bot.2026-08-22.private-key.pem`, confirmed by the secret's own updated timestamp moving to 2026-08-31). Root cause traced to `.env.example`, which had shipped these three variables with a comment describing an inbound-webhook mechanism this App was deliberately built without (webhook disabled, `T-8E01`) — none of the three are read by application code (`config/`, `app/`); all three reach their consumers exclusively through the GitHub Actions job environment (`docker/deploy/deploy.sh`, `release.yml`). Removed from `.env.example` and from the local `.env` that had inherited the same wrong values. `git log --all -- .env` and `-- .secrets/` both confirm neither path was ever tracked — no leak.
 
 ### Track T — Validation & Acceptance
 
