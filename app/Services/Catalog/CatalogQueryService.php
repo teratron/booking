@@ -528,8 +528,8 @@ final class CatalogQueryService
      * The scope {@see PlacementOrderingService::apply()} reads bump recency
      * for. The service accepts exactly one scope value — a territory takes
      * precedence when both a territory and a type are selected, since a
-     * bump "acts for the city, district, or resort the object belongs to"
-     * (the spec's own §5.3 wording); a type-only view (no territory) scopes
+     * bump "acts for the city, district, or resort the object belongs to";
+     * a type-only view (no territory) scopes
      * to the type instead.
      */
     private function resolveScope(CatalogSearchCriteria $criteria): Territory|ObjectType|null

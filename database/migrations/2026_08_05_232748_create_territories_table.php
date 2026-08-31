@@ -38,8 +38,8 @@ return new class extends Migration
             $table->unsignedInteger('display_order')->default(0);
             $table->timestamps();
 
-            // No soft-delete column: §5.6 blocks deletion outright while
-            // objects or descendants are attached and uses is_active for
+            // No soft-delete column: deletion is blocked outright while
+            // objects or descendants are attached, and is_active is used for
             // deactivation instead — a territory is never in an archived
             // state the way an object is.
         });

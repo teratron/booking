@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-08-27
+**Generated:** 2026-08-30
 
 ## Active Technologies
 
@@ -12,7 +12,7 @@
 .
 ├── .claude/
 │   ├── rules/
-│   └── scheduled_tasks.lock
+│   └── skills/
 ├── .design/
 │   ├── .version
 │   ├── INDEX.md
@@ -53,7 +53,6 @@
 │   └── .gitignore
 ├── CHANGELOG.md
 ├── CLAUDE.md
-├── DProjectssrcgithub.comteratronbookingstoragelogs/
 ├── README.md
 ├── app/
 │   ├── Console/
@@ -161,15 +160,15 @@
 
 ## Recent Changes
 
-- `ResolvedMetadata` now carries per-language alternate URLs, computed through the identical `LocaleSwitchResolver::targetUrl()` call the language switcher itself uses, so hreflang tags and the switcher can never independently drift. The public layout emits one `<link rel="alternate">` per active language plus one `x-default`.
+- Rewrote genuine `§N.N` leaks in the catalog Livewire component, the app provider, and two public views.
 
-### Track E — Cabinet Settings Crash
+### Track F — Tests
 
-- `cabinet/settings` 500d for every owner — the one cabinet route with no tenant segment, inside a panel whose full layout (sidebar, topbar, tenant menu) builds tenant-scoped URLs unconditionally with no null-tenant guard anywhere in that shared Filament chrome. The first, narrower patch fixed the one reported crash and immediately surfaced two more unguarded call sites in the same layout; switched to Filament's own `isSimple: true` default for tenant-independent pages instead of patching each vendor call site in turn.
+- Rewrote genuine `§N.N` leaks in 4 test files.
 
-### Track F — Test-Suite Correction
+### Track T — Mechanical Enforcement & Validation
 
-- `PublicRootEntryTest` asserted a fallback-to-primary-language branch its own bare `$this->get('/')` never actually reached — the HTTP test client silently attaches a default `Accept-Language` header that already matches. Fixed the assumption, not the resolver: `PublicEntryLocaleResolver` was already correct.
+- Added a TZ-aware PCRE SKIP/FAIL pattern to `ContainmentTest.php` that flags a bare `.design/`-spec `§N.N` reference while correctly leaving every `[TZ]` client-specification citation untouched — verified against all 56 real occurrences in the tree (23 `[TZ]`, 33 leak) before any file was rewritten, then run once before the cleanup (failed, listing exactly the 31 real-leak files) and once after (passed clean).
 
 ### Track G — Full-Suite Regression Gate
 

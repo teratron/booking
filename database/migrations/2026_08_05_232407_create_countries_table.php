@@ -21,8 +21,8 @@ return new class extends Migration
             $table->string('phone_code', 10);
 
             // No launch country's own primary language is active at
-            // release (§5.6) — Moldova/Ukraine/Georgia's primary languages
-            // are Romanian/Ukrainian/Georgian, none of which ship active.
+            // release — Moldova/Ukraine/Georgia's primary languages are
+            // Romanian/Ukrainian/Georgian, none of which ship active.
             // This FK is deliberately unconstrained by is_active: an
             // inactive primary language is a normal, resolvable state, not
             // a validation error.

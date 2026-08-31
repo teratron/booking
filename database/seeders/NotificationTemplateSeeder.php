@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\DB;
 /**
  * Seeds one template row per (type, locale, channel) combination the
  * notification type's own `default_channels` names. Administrator-editable
- * seed content, not fixed strings — per §6.3, `NotificationDispatchService`
- * renders and stores this text at creation time, so an edit here only
- * changes what a *future* notification says.
+ * seed content, not fixed strings — `NotificationDispatchService` renders
+ * and stores this text at creation time, so an edit here only changes what
+ * a *future* notification says.
  */
 final class NotificationTemplateSeeder extends Seeder
 {

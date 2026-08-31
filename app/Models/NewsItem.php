@@ -80,7 +80,7 @@ class NewsItem extends Model implements HasMedia, Summarizable, TranslatableCont
 
     /**
      * A cover image (singleFile) plus an unbounded gallery — the two
-     * collections §3.3's "cover image, gallery" names.
+     * collections a news item's own media surface needs.
      */
     public function registerMediaCollections(): void
     {

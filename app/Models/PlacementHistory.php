@@ -14,9 +14,9 @@ use Override;
 /**
  * The append-only record of every placement grant an object ever held — a
  * package change never deletes the previous row, it closes it and a new one
- * begins. Doubles as the financial ledger: per the specification's own
- * §5.1 model, the payment fields (`amount`, `paid_at`, `document_number`,
- * `status`, …) live on this same row rather than a sibling table, since a
+ * begins. Doubles as the financial ledger: the payment fields (`amount`,
+ * `paid_at`, `document_number`, `status`, …) live on this same row rather
+ * than a sibling table, since a
  * placement grant and its payment are the same commercial event viewed from
  * two angles — the schema already carries this shape from its first
  * migration.

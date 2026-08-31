@@ -1,10 +1,10 @@
 # Implementation Plan
 
-**Version:** 3.16.1
+**Version:** 3.17.0
 **Generated:** 2026-08-05
 **Based on:** .design/main/INDEX.md v2.14.0
 **Based on RULES:** .design/RULES.md v1.4.0
-**Status:** Active — Phase 8 (delivery pipeline; 20/23, the three open tasks owner-only. Its two sources returned to `RFC` on 2026-08-22 to reconcile with the owner's single-line branch decision — not a defect, and not a reason to reopen Done work; see Plan Status below) · Phase 9 **Done** (post-launch QA remediation; 15/15, opened and closed 2026-08-22, independent of Phase 8; see Plan Status below) · Phase 10 **Done** (deep QA remediation; 32/32, opened 2026-08-23 and closed the same pass, independent of Phase 8) · Phase 11 **Done** (revenue & administration surfaces; 25/25, opened and closed 2026-08-27, independent of Phase 8; see Plan Status below)
+**Status:** Active — Phase 8 (delivery pipeline; 20/23, the three open tasks owner-only. Its two sources returned to `RFC` on 2026-08-22 to reconcile with the owner's single-line branch decision — not a defect, and not a reason to reopen Done work; see Plan Status below) · Phase 9 **Done** (post-launch QA remediation; 15/15, opened and closed 2026-08-22, independent of Phase 8; see Plan Status below) · Phase 10 **Done** (deep QA remediation; 32/32, opened 2026-08-23 and closed the same pass, independent of Phase 8) · Phase 11 **Done** (revenue & administration surfaces; 25/25, opened and closed 2026-08-27, independent of Phase 8; see Plan Status below) · Phase 12 **Done** (SDD reference containment cleanup; 7/7, opened and closed 2026-08-30, independent of Phase 8; see Plan Status below)
 
 ## Overview
 
@@ -559,6 +559,62 @@ automatic observer, which gates itself off in console context
 the table stayed empty regardless of volume; fixed by writing through `AuditJournal`
 directly, the same path every other audit entry in this codebase already uses.
 
+## Phase 12 — SDD Reference Containment Cleanup — **Done**
+
+*A mechanical enforcement gap, the leaks it was silently missing, and a scope correction
+found mid-phase that turned out to be the most useful part of it. No governing
+`.design/main/specifications/*.md` source — this is engineering hygiene against
+`.claude/rules/magic.md` §6, not a product requirement.*
+
+`ContainmentTest`'s task-ID pattern was fixed and its 24 genuine leaks cleaned in a prior
+session (`aa7b7d0`) — the regex matched only a fixed-width digit run and could never match
+the real `T-{phase}{track}{seq}` shape, so it had been passing green with zero actual
+coverage. That same audit surfaced what looked like a second, wider leak class: a raw
+`grep -rn '§'` across the tree returned 50 files carrying a bare `§N.N` spec-section
+reference. **That raw count was wrong as a leak count.** Reading every occurrence's actual
+sentence — not just the grep line — found this codebase also cites the client's own
+original technical specification (marked `[TZ]`, e.g. `` `[TZ]` §17/§100 ``), a permanent,
+legitimate reference distinct from a `.design/`-spec leak. Of the 56 total occurrences, 23
+across 18 files were `[TZ]` citations that must never be touched, and only 33 across 31
+files were genuine leaks. Executing the phase's own first draft — rewrite all 50 — would
+have silently destroyed 18 files' worth of correct citations while still reporting a clean
+`ContainmentTest` pass.
+
+- [x] **Database Layer** (Track A) — 5 migrations, 2 seeders, comment-only
+- [x] **Services, Jobs & Console** (Track B) — 9 files, two placement/commerce (sensitive-zone)
+- [x] **Models** (Track C) — 5 files, one financial-record model (sensitive-zone)
+- [x] **Filament Admin** (Track D) — 2 files, both financial/commerce (sensitive-zone)
+- [x] **Public Surface** (Track E) — the catalog Livewire component, the app provider, two public views
+- [x] **Tests** (Track F) — 4 test files
+- [x] **Mechanical Enforcement & Validation** (Track T) — TZ-aware pattern, confirmed it failed against the real leak set first, then confirmed clean
+
+Decomposed into 7 atomic tasks across seven tracks in [archives/tasks/phase-12.md](archives/tasks/phase-12.md),
+closed the same day it was opened. The phase is **genuinely seven-wide for its six build
+tracks**, one-wide at the close: `(A ∥ B ∥ C ∥ D ∥ E ∥ F) → T`. No two tracks share a
+file — every one of the 31 real leaks belongs to exactly one track — and a comment-only
+rewrite in one file cannot conflict with one in another, so this is the first phase in the
+plan with **zero** hidden dependency between its build tracks.
+
+**Three tracks touch this project's own declared sensitive zones even though every edit
+inside them is comment-only.** `CLAUDE.md`'s Release & Deployment table gates authorization
+policies, financial records, and placement/commerce paths on a person's review grant
+regardless of what the diff actually changes — Track B (`BumpService`,
+`CommerceReportingService`), Track C (`FinancialRecord`), and Track D
+(`FinancialRecordForm`, `CommerceReports`) each contain at least one such file, so each
+needs review before it merges, the same posture Phase 11's Tracks A and B held for
+substantive commerce/authorization work. `app/Policies/Object_Policy.php` — the file that
+would have made Track C an authorization-zone track too — turned out to carry only `[TZ]`
+citations and was dropped once classified. Tracks A, E, and F touch no sensitive path and
+travel as ordinary changes under the standing autonomous-operation grant.
+
+**Track T proved the fix rather than just applying it, in both directions.** Verified the
+new SKIP/FAIL regex standalone against all 56 real occurrences (23 `[TZ]`, 33 leak) before
+touching a single file — zero false positives, zero missed leaks. Then ran
+`ContainmentTest` once *before* Tracks A–F, where it failed listing exactly the 31
+genuine-leak files (proving detection), and once after, where it passed clean. A pattern
+verified only after the tree is already clean proves nothing, the same lesson the task-ID
+regex fix already established one level up.
+
 ## Backlog
 
 Registered specifications not scheduled into an active phase.
@@ -642,7 +698,7 @@ code and one changes a test matrix.
 The remaining eighteen open questions land in Phase 3 and later and are not on the
 critical path out of Phase 2.
 
-## Plan Status: Phase 8 Active, Phases 9-11 Done
+## Plan Status: Phase 8 Active, Phases 9-12 Done
 
 **Phases 1 through 7 are done — 135 of 135 tasks**, closed on 2026-08-20. A plan-wide L2
 retrospective ran on that close — Signal 🟢 Green — and is recorded in
@@ -779,3 +835,17 @@ Decomposed into 32 atomic tasks across nine tracks in
 [archives/tasks/phase-10.md](archives/tasks/phase-10.md), full detail and rationale in the Phase 10
 section above and that file's own Track Ordering section. Runs independently of
 Phase 8 — no shared file, no shared blocker.
+
+**Phase 12 opened and closed 2026-08-30, from `/magic.task main`, independently of
+Phase 8.** Not a QA sweep this time — a follow-on from a prior session's own task-ID
+containment fix (`aa7b7d0`), which found that `ContainmentTest.php`'s six forbidden
+patterns cover five leak classes fully but left a sixth — bare `§N.N` spec-section
+references — with no mechanical check at all. A raw grep sweep across `app/`,
+`resources/`, `database/`, and `tests/` counted 50 files carrying the pattern; classifying
+every occurrence's actual sentence before touching anything found 18 of those files carry
+only the client's own legitimate `[TZ]` §-citations, not `.design/`-spec leaks — the real
+scope was 31 files, 33 occurrences. This phase both cleaned the 31 and closed the
+gap that let them accumulate, in that order at the task level (Track T's own check
+failed before Tracks A–F ran, and passed only after) so the fix is proven against a real
+known-leak baseline rather than trusted on inspection. Full detail:
+[archives/tasks/phase-12.md](archives/tasks/phase-12.md).

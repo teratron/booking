@@ -417,8 +417,8 @@ final class RunBenchmarks extends Command
 
     /**
      * The catalog's own name filter (`ilike '%term%'` against translated
-     * names — this project's search surface until §5.7's stated Typesense
-     * escalation trigger fires) driven with `$n` distinct terms so every
+     * names — this project's search surface until it escalates to
+     * Typesense) driven with `$n` distinct terms so every
      * sample is a genuine cache miss, the realistic case for free-text
      * search input. p95 is the headline figure this scenario exists to
      * produce: over 300ms is the specification's own stated trigger to

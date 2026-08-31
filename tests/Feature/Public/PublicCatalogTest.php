@@ -19,7 +19,7 @@ uses(RefreshDatabase::class);
 | Public Catalog / Search Results Page
 |--------------------------------------------------------------------------
 |
-| Every §5.1 search parameter round-trips through the URL; a filter change
+| Every search parameter round-trips through the URL; a filter change
 | never discards the view-mode choice and vice versa; results and the map's
 | pins update in the same round trip; pagination is addressable by page
 | number.

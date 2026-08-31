@@ -36,6 +36,19 @@ test('no specification references leak into product code', function (): void {
         '/\bPhase\s+\d+\b/', // prose form ("Phase" + a number in running text) — the file-form pattern above only catches the hyphenated slug
         '/\b(?:PLAN|TASKS|INDEX|RULES)\.md\b/',
         '/\bl[12]-[a-z][a-z-]*\.md\b/',
+        // A bare section-symbol reference is only a leak when it points at
+        // this project's own internal specification set — a citation of the
+        // client's own original technical specification (marked "[TZ]"
+        // throughout this codebase, e.g. "[TZ]` §17/§100") is a permanent,
+        // legitimate reference to an external document that predates and
+        // outlives the design scaffolding, not part of it. The SKIP/FAIL
+        // branch consumes every "[TZ] ... §N(.N)? ..." citation (including a
+        // sentence naming several, joined by "and" or "/") up to the next
+        // full stop before the unqualified-§ branch is tried, so a real TZ
+        // citation never counts as a leak here — and this comment names no
+        // unqualified §-number itself, for the same reason the pattern
+        // above this one avoids a live task-ID example.
+        '/\[TZ\][^.]*?§\d+(?:\.\d+)?(?:[^.]*?§\d+(?:\.\d+)?)*(*SKIP)(*FAIL)|§\d/',
     ];
 
     $offenders = [];

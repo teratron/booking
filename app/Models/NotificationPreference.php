@@ -13,8 +13,7 @@ use Override;
  * means "not yet configured", not "disabled" — every type defaults to
  * enabled until the recipient explicitly turns it off. Only optional-class
  * types are ever suppressible this way; a transactional type's dispatch
- * never consults this table, per §3's "recipients control optional classes
- * only".
+ * never consults this table — recipients control optional classes only.
  *
  * @property int $user_id
  * @property int $notification_type_id

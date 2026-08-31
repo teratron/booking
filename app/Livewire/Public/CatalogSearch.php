@@ -22,7 +22,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 
 /**
- * The catalog search results page: every §5.1 search parameter round-trips
+ * The catalog search results page: every search parameter round-trips
  * through the URL (shareable, back-navigable), and every filter change
  * re-renders both the result list and the embedded map's pins in the same
  * Livewire round trip — the map picks up the `catalog-filters-changed`
@@ -229,8 +229,8 @@ final class CatalogSearch extends Component
     }
 
     /**
-     * With no type chosen yet, §10 and §14 still require filtering by
-     * service — Figma's own sidebar is permanently visible, not something
+     * With no type chosen yet, filtering by service is still required —
+     * Figma's own sidebar is permanently visible, not something
      * that appears after a type decision. The union of every active type's
      * amenity groups is the honest answer to "what can I filter by right
      * now": once a type is picked, {@see ObjectType::amenityGroups()} narrows

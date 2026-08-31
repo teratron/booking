@@ -14,10 +14,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Reserved — no launch module declares a conflict (§5.2's registry
-        // has none). Shaped now rather than retrofitted later, mirroring
-        // module_dependencies exactly, since the source model declares both
-        // "dependencies" and "conflicts" as first-class relations on Module.
+        // Reserved — no launch module declares a conflict; the module
+        // registry has none today. Shaped now rather than retrofitted
+        // later, mirroring module_dependencies exactly, since the source
+        // model declares both "dependencies" and "conflicts" as
+        // first-class relations on Module.
         Schema::create('module_conflicts', function (Blueprint $table) {
             $table->foreignId('module_id')->constrained()->cascadeOnDelete();
             $table->foreignId('conflicts_with_module_id')->constrained('modules')->cascadeOnDelete();

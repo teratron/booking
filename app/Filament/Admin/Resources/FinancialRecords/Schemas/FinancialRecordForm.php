@@ -17,7 +17,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 /**
- * Manual, administrator-entered records per §122 — this form is the
+ * Manual, administrator-entered records — this form is the
  * primary way a real payment (as opposed to `PlacementLifecycleService`'s
  * automatic `granted_free` write on every grant) enters the ledger.
  * Exactly one of object/banner is required, matching the table's own

@@ -23,7 +23,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 
 /**
- * The scheduled sweep behind §5.4's expiry flow — dispatched by the
+ * The scheduled sweep behind the placement expiry flow — dispatched by the
  * scheduler (see routes/console.php), never reachable from a web route.
  * Two independent passes: warnings (a `placement_expiring` notification at
  * each configured offset, purely informational, never mutates a placement)
@@ -210,8 +210,8 @@ final class PlacementExpirySweepJob implements ShouldQueue
         }
 
         // No per-user language preference exists on the User model yet —
-        // a real gap (§3's "language follows the recipient" has nothing to
-        // read from). Falls back to the portal's primary language rather
+        // a real gap: "language follows the recipient" has nothing to
+        // read from. Falls back to the portal's primary language rather
         // than inventing a new user column inside this job; the recipient
         // still gets a correctly-rendered message, just not necessarily in
         // their own language until that gap is closed.

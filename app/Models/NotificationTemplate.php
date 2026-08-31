@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * One (type, locale, channel) message variant — administrator-editable
- * seed content, per §6.3's audit property: editing a template must never
+ * seed content, kept as an audit trail: editing a template must never
  * retroactively change what a recipient was already shown, so
  * `NotificationDispatchService` renders and stores the message at creation
  * time rather than resolving this row at delivery time.

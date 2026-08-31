@@ -114,7 +114,7 @@ final class SettingsRegistry
 
             new SettingDefinition('placement.expiry_grace_days', 'placement', 'int', 3),
             new SettingDefinition('placement.expired_behaviour', 'placement', 'string', 'demote'),
-            // The pre-expiry/day-of points of §62's six-point warning
+            // The pre-expiry/day-of points of the six-point warning
             // schedule; the sixth point ("after") reuses expiry_grace_days
             // above rather than a second offset list.
             new SettingDefinition('placement.expiry_warning_offset_days', 'placement', 'array', [30, 14, 7, 3, 0]),

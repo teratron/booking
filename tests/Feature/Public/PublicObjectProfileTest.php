@@ -532,8 +532,8 @@ it('reflects an owner-toggled availability status immediately, not the profile c
 });
 
 it('renders the location section — address, map, and directions link — for an object carrying coordinates', function (): void {
-    // F-17: §5.1 lists "Location: address · map · directions · nearby
-    // attractions" among the page's sections, but the template rendered
+    // F-17: the object page's own composition lists "Location: address ·
+    // map · directions · nearby attractions" among its sections, but the template rendered
     // every other block except this one despite the object already
     // carrying latitude/longitude and the map component already existing.
     $fixture = publicObjectRegistry();

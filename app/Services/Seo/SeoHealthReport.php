@@ -29,8 +29,8 @@ final class SeoHealthReport
 
     /**
      * One row per (entity kind, table, translation table, FK column, own
-     * display-name column) — the closed set §2 of the SEO specification
-     * names as carrying SEO data, minus territories/objects/etc. that are
+     * display-name column) — the closed set of entity kinds this portal
+     * carries SEO data for, minus territories/objects/etc. that are
      * not translatable content in their own right.
      *
      * @var array<string, array{table: string, translations: string, fk: string, nameColumn: string}>

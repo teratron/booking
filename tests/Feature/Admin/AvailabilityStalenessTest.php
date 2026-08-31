@@ -26,8 +26,8 @@ uses(RefreshDatabase::class);
 |--------------------------------------------------------------------------
 |
 | The confirmation cadence is a setting an administrator can change, never
-| a constant; the object list offers every quick filter §5.5 names; a bulk
-| reset over the stale ones journals one history row per affected object;
+| a constant; the object list offers every quick filter this feature names;
+| a bulk reset over the stale ones journals one history row per affected object;
 | and the optional auto-reset sweep — off by default, since resetting a
 | stale "no vacancies" back to "available" manufactures exactly the false
 | claim this whole feature exists to prevent — only ever runs as a

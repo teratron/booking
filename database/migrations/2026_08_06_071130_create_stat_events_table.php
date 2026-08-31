@@ -23,8 +23,8 @@ return new class extends Migration
         //
         // kind is coarse (six categories); for contact_click rows,
         // contact_channel_type_id disambiguates which contact method was
-        // used — the finer-grained click types §3.1's prose lists (phone,
-        // Viber, Telegram, …) are channel rows, not separate kinds.
+        // used — the finer-grained click types (phone, Viber, Telegram, …)
+        // are channel rows, not separate kinds.
         //
         // A single DEFAULT partition is created here, routing every row
         // regardless of date — the minimal shape this migration can

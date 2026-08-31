@@ -9,7 +9,7 @@ use App\Models\NotificationDispatch;
 
 /**
  * The inbox has nothing to deliver — the notification record itself is the
- * inbox entry, per §3's "the notification is a record, not a send". This
+ * inbox entry: "the notification is a record, not a send". This
  * adapter exists only so `inbox` is a real, registered channel like any
  * other rather than a special case the dispatch pipeline has to know about.
  */

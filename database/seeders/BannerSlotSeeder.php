@@ -29,7 +29,7 @@ final class BannerSlotSeeder extends Seeder
             ['key' => 'home-mid', 'surfaces' => ['home'], 'name' => ['en' => 'Home — middle', 'ru' => 'Главная — середина']],
             ['key' => 'home-bottom', 'surfaces' => ['home'], 'name' => ['en' => 'Home — bottom', 'ru' => 'Главная — низ']],
             ['key' => 'home-partners', 'surfaces' => ['home'], 'name' => ['en' => 'Home — partner strip', 'ru' => 'Главная — партнёры']],
-            // Geographic inventory (§24): scoped to whichever territory and
+            // Geographic inventory: scoped to whichever territory and
             // category the rendering page resolves, per BannerSelectionService's
             // own targeting contract — a resort page requesting these slots
             // only ever surfaces a banner targeted at that resort or broader.

@@ -14,8 +14,8 @@ use Filament\Support\Icons\Heroicon;
 use UnitEnum;
 
 /**
- * The report set §61/§123 name — active/ending/expired placements, free
- * placements, paid bump counts, active campaigns — filterable by country
+ * The report set for the back office — active/ending/expired placements,
+ * free placements, paid bump counts, active campaigns — filterable by country
  * and period. Each figure is computed on demand by
  * {@see CommerceReportingService}; the raw rows behind any of them are one
  * click away on the ledger resource this page sits beside.

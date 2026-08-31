@@ -155,7 +155,7 @@ it('keeps an object URL unchanged when the object is reassigned to a different t
 
     $urlBefore = app(PublicUrlGenerator::class)->objectUrl($object);
 
-    // The exact structural move §5.1 names as the reason object URLs stay
+    // The exact structural move that's the reason object URLs stay
     // flat: an administrator reassigns the object to a neighbouring resort.
     // Under a hierarchical object URL this would break a ranked page.
     $object->update(['territory_id' => $neighbouringResort->id]);

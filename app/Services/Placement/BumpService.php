@@ -118,8 +118,8 @@ final class BumpService
 
         if ($package->free_bumps_per_period !== null) {
             // The period is the object's current placement term, not a
-            // rolling window — a new grant resets the allowance, matching
-            // §26.2's "bump duration" limit being one of the package's own
+            // rolling window — a new grant resets the allowance, since the
+            // bump-duration limit is one of the package's own
             // administrator-set terms.
             $usedThisPeriod = BumpEvent::query()
                 ->where('object_id', $object->id)

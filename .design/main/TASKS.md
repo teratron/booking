@@ -1,11 +1,11 @@
 # Master Task Index (Registry)
 
-**Version:** 1.17.1
+**Version:** 1.18.0
 **Generated:** 2026-08-05
-**Based on:** .design/main/PLAN.md v3.16.1
+**Based on:** .design/main/PLAN.md v3.17.0
 **Based on RULES:** .design/RULES.md v1.4.0
 **Execution Mode:** Parallel
-**Status:** Active — Phase 8 (7 phases done, 1 active at 20/23; three remaining tasks `Blocked [!] (C12)` since 2026-08-22 — branch-model reconciliation, not regression; see Overview) · Phase 9 `Done` (post-launch QA remediation, 15/15, closed 2026-08-22; independent of Phase 8; see Overview) · Phase 10 `Done` (deep QA remediation, 32/32, closed 2026-08-23; independent of Phase 8; see Overview) · Phase 11 `Done` (revenue & administration surfaces, 25/25, opened and closed 2026-08-27; independent of Phase 8)
+**Status:** Active — Phase 8 (7 phases done, 1 active at 20/23; three remaining tasks `Blocked [!] (C12)` since 2026-08-22 — branch-model reconciliation, not regression; see Overview) · Phase 9 `Done` (post-launch QA remediation, 15/15, closed 2026-08-22; independent of Phase 8; see Overview) · Phase 10 `Done` (deep QA remediation, 32/32, closed 2026-08-23; independent of Phase 8; see Overview) · Phase 11 `Done` (revenue & administration surfaces, 25/25, opened and closed 2026-08-27; independent of Phase 8) · Phase 12 `Done` (SDD reference containment cleanup, 7/7, opened and closed 2026-08-30; independent of Phase 8; see Overview)
 
 ## Overview
 
@@ -114,6 +114,26 @@ administrator-selectable submission-gating mode. 32 tasks across nine tracks, si
 them file-independent. Full detail: [tasks/phase-10.md](archives/tasks/phase-10.md),
 [PLAN.md](PLAN.md) Phase 10 section, `.drafts/qa-deep-findings.md`.
 
+**Phase 11 opened and closed 2026-08-27, independently of Phase 8 — this entry was
+missing from the table below until this pass corrected it; the header above and
+[PLAN.md](PLAN.md) already carried it.** A third funnel-wide sweep found the portal's own
+revenue model had no seller (`PlacementLifecycleService::grant()`/`pin()`/`unpin()` had
+no caller anywhere in the panel) and no staff administration path
+(`RoleGrantService::grantRole()`'s only caller was the database seeder). 25 tasks across
+six tracks, two of them (commerce granting, authorization) sensitive-zone work in their
+entirety and reviewed accordingly. Full detail: [tasks/phase-11.md](archives/tasks/phase-11.md),
+[PLAN.md](PLAN.md) Phase 11 section.
+
+**Phase 12 opened and closed 2026-08-30, from `/magic.task main` itself rather than a QA
+sweep, independently of Phase 8.** A prior session's task-ID containment fix (`aa7b7d0`)
+found `ContainmentTest.php` checks five leak classes but not a sixth — bare `§N.N`
+spec-section references — and a first sweep against that gap counted 50 files. Classifying
+every occurrence individually before touching anything found 18 of those files carry only
+the client's own legitimate `[TZ]` §-citations, not `.design/`-spec leaks; the real scope
+was 31 files, 33 occurrences. 7 tasks across seven tracks, three touching declared
+sensitive zones by path despite every edit being comment-only. Full detail:
+[tasks/phase-12.md](archives/tasks/phase-12.md), [PLAN.md](PLAN.md) Phase 12 section.
+
 ## Active Phases
 
 | Phase | Description | Status |
@@ -129,6 +149,7 @@ them file-independent. Full detail: [tasks/phase-10.md](archives/tasks/phase-10.
 | [Phase 9](archives/tasks/phase-9.md) | Post-launch QA remediation — contact-channel forms, API guest-redirect contract, canonical-host consistency, hreflang alternates, a cabinet Settings crash, one test-suite fix | `Done (Archived)` (15/15) |
 | [Phase 10](archives/tasks/phase-10.md) | Deep QA remediation — access/module gating, URL routing, three eager-load crashes, cache invalidation, role data, content lifecycle and third-party wiring, review submission, missing pages, full regression gate | `Done (Archived)` (32/32, all nine tracks closed) |
 | [Phase 11](archives/tasks/phase-11.md) | Revenue & administration surfaces — placement granting, staff account and role administration, geographic banner slots, map-pin bounding, fixture volume | `Done (Archived)` (25/25) |
+| [Phase 12](archives/tasks/phase-12.md) | SDD reference containment cleanup — 31-file `§N.N` leak fix (corrected from a 50-file raw grep count) across six file-independent tracks, plus the TZ-aware `ContainmentTest` pattern that closes the gap | `Done (Archived)` (7/7) |
 
 ## Execution Notes
 
@@ -276,9 +297,25 @@ scaffolding for the already-registered, already-Backlogged
 carry their own open design questions — none is scheduled for removal. Full rationale
 in [tasks/phase-10.md](archives/tasks/phase-10.md) §Track Ordering.
 
+**Phase 12 was genuinely seven-wide for its six build tracks, one-wide at the close**:
+`(A ∥ B ∥ C ∥ D ∥ E ∥ F) → T`. Unlike every prior phase, no two tracks shared a file at
+all — each of the 31 real leaked `§N.N` references belonged to exactly one file, and a
+comment-only rewrite in one file could not conflict with a comment-only rewrite in another.
+A raw grep had first counted 50 files; classifying every occurrence individually found 18
+of those carried only the client's own legitimate `[TZ]` §-citations, not `.design/`-spec
+leaks, before any file was touched. Tracks B, C, and D each contained at least one file
+under a declared sensitive zone (placement/commerce, financial records) and needed a
+person's review grant before merging even though every edit inside them was text-only —
+the release policy gates on the path touched, not on what the diff does to it. `T-12T01`
+(extending `ContainmentTest` with a TZ-aware pattern) was the only task that waited on
+everything, and it ran once *before* Tracks A–F too, where it failed — proving the new
+pattern actually detected the leak class it was written for, rather than passing
+vacuously the way the task-ID regex it follows on from did. Full rationale in
+[tasks/phase-12.md](archives/tasks/phase-12.md).
+
 ## Meta Information
 
-- **Last Updated**: 2026-08-23 (Phase 10 closed — 32/32, nine tracks, full `composer quality` gate clean via `docker compose exec app`; independent of Phase 8; Phase 8 remains active at 20/23, owner-blocked, Phase 9 done)
-- **Previously**: 2026-08-23 (Phase 10 planned — 32 tasks, nine tracks, opened from a second deeper QA sweep)
-- **Before that**: 2026-08-22 (Phase 9 closed — 15/15, six tracks, full regression gate clean; 8 phases done total, Phase 8 remains active at 20/23, owner-blocked)
+- **Last Updated**: 2026-08-30 (Phase 12 planned and closed the same session — 7/7, seven tracks, full `composer quality` gate clean; corrected its own opening 50-file estimate to 31 real leaks after classifying every occurrence, and corrected this file's own previously-missing Phase 11 registry row in the same pass)
+- **Previously**: 2026-08-27 (Phase 11 closed — 25/25, six tracks, revenue and administration surfaces)
+- **Before that**: 2026-08-23 (Phase 10 closed — 32/32, nine tracks, full `composer quality` gate clean via `docker compose exec app`; independent of Phase 8; Phase 8 remains active at 20/23, owner-blocked, Phase 9 done)
 - **Maintainer**: Core Team

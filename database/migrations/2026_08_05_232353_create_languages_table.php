@@ -31,9 +31,9 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // "Exactly one" is a business rule (§5.1: "primary flag (exactly
-        // one)"); a plain boolean column cannot express "at most one true"
-        // on its own. Laravel's fluent Blueprint has no conditional-unique
+        // Exactly one language may carry the primary flag; a plain boolean
+        // column cannot express "at most one true" on its own. Laravel's
+        // fluent Blueprint has no conditional-unique
         // primitive, so the partial index is raw SQL — a normal, accepted
         // escape hatch for a Postgres feature the schema builder does not
         // abstract.

@@ -1,7 +1,7 @@
 <x-layouts.public>
     {{--
-        Sixteen blocks in §5.2 composition order (header/footer are the
-        shared layout's own blocks 1 and 16). Every block below is omitted
+        Sixteen blocks in the home page's own composition order (header/footer
+        are the shared layout's own blocks 1 and 16). Every block below is omitted
         entirely — never an empty frame — when it has nothing to show.
     --}}
 

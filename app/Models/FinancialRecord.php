@@ -12,8 +12,8 @@ use Illuminate\Support\Carbon;
 use Override;
 
 /**
- * The portal's unified financial ledger — a record, not a payment system,
- * per §5.5: it records that money changed hands elsewhere. Covers both
+ * The portal's unified financial ledger — a record, not a payment system:
+ * it records that money changed hands elsewhere. Covers both
  * revenue streams through exactly one of `object_id`/`banner_id` (a
  * database constraint enforces this, mirroring the favorites table's
  * exactly-one-identity pattern): a placement package sold to an object

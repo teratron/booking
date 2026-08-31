@@ -2,8 +2,8 @@
     Home hero search. Visual language is the Figma source (Booking file,
     node 225:4066 "поле поиска"): a white, softly blurred bar split by
     divider lines, with a brand submit button. Fields are Destination and
-    Type — the hero-search scope §5.1 of the object catalog specification
-    actually defines — not the check-in/party-size fields Figma's literal
+    Type — the hero-search scope the object catalog actually defines —
+    not the check-in/party-size fields Figma's literal
     hotel-booking template shows, which only apply where the optional
     room-reservation module is active for the viewed scope; offering them
     unconditionally would silently promise date-checked availability this

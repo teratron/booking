@@ -8,9 +8,9 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 /**
- * The report set §5.5 and §61/§123 name for the back office: active
- * placements, placements ending at each warning threshold, expired
- * placements, objects with no term set, free placements, paid bump counts,
+ * The report set for the back office: active placements, placements ending
+ * at each warning threshold, expired placements, objects with no term set,
+ * free placements, paid bump counts,
  * and active advertising campaigns. Each figure is a real query against
  * seeded volume — cheap enough to compute on demand, so nothing here is
  * cached; the ledger export (a separate, filtered concern) is what a staff

@@ -53,9 +53,9 @@ final class ReviewModerationService
     }
 
     /**
-     * Removes a published review from public view — the upheld-report path
-     * (§5.4 of the object-profile spec), always soft delete with a recorded
-     * reason, never the `rejected` status a review that was never live uses.
+     * Removes a published review from public view — the upheld-report path,
+     * always soft delete with a recorded reason, never the `rejected`
+     * status a review that was never live uses.
      */
     public function hide(Review $review, string $reason, User $actor): void
     {

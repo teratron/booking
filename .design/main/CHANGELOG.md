@@ -303,6 +303,38 @@ Phase 7 closed the plan: all seven phases done, 135/135 tasks. A plan-wide retro
 
 - `PublicRootEntryTest` asserted a fallback-to-primary-language branch its own bare `$this->get('/')` never actually reached — the HTTP test client silently attaches a default `Accept-Language` header that already matches. Fixed the assumption, not the resolver: `PublicEntryLocaleResolver` was already correct.
 
+## Phase 12 — 2026-08-30
+
+**SDD Reference Containment Cleanup** — a prior session's task-ID containment fix found `ContainmentTest.php` also missed a bare `§N.N` spec-section-reference leak class entirely. A raw grep first counted 50 files; classifying every occurrence's actual sentence before touching anything found 18 of those carry only the client's own legitimate `[TZ]` §-citations, not `.design/`-spec leaks — the real scope was 31 files, 33 occurrences. 7/7 tasks across seven tracks, no product-behavior change (comment/docblock text only).
+
+### Track A — Database Layer
+
+- Rewrote genuine `§N.N` leaks in 5 migrations and 2 seeders in plain language.
+
+### Track B — Services, Jobs & Console
+
+- Rewrote genuine `§N.N` leaks in 9 files (`Sensitive-Zone`: `BumpService`, `CommerceReportingService` are placement/commerce).
+
+### Track C — Models
+
+- Rewrote genuine `§N.N` leaks in 5 model files (`Sensitive-Zone`: `FinancialRecord`).
+
+### Track D — Filament Admin
+
+- Rewrote genuine `§N.N` leaks in 2 files (`Sensitive-Zone`: both financial/commerce).
+
+### Track E — Public Surface
+
+- Rewrote genuine `§N.N` leaks in the catalog Livewire component, the app provider, and two public views.
+
+### Track F — Tests
+
+- Rewrote genuine `§N.N` leaks in 4 test files.
+
+### Track T — Mechanical Enforcement & Validation
+
+- Added a TZ-aware PCRE SKIP/FAIL pattern to `ContainmentTest.php` that flags a bare `.design/`-spec `§N.N` reference while correctly leaving every `[TZ]` client-specification citation untouched — verified against all 56 real occurrences in the tree (23 `[TZ]`, 33 leak) before any file was rewritten, then run once before the cleanup (failed, listing exactly the 31 real-leak files) and once after (passed clean).
+
 ### Track G — Full-Suite Regression Gate
 
 - 974 tests passed, 3 skipped, 0 failed across the full non-slow suite with all six tracks' fixes applied together, plus a clean `pint`/`composer analyse`/`composer audit`/`composer unused` pass.
