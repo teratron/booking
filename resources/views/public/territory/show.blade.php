@@ -59,15 +59,12 @@
                 <x-public.section-heading>{{ __('public.shell.nav.news') }}</x-public.section-heading>
                 <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($newsItems as $newsItem)
-                        <x-public.nav-link
+                        <x-public.content-card
+                            :title="$newsItem->title"
+                            :summary="$newsItem->summary"
                             :href="\Illuminate\Support\Facades\Route::has('public.news.show') ? route('public.news.show', ['lang' => app()->getLocale(), 'slug' => $newsItem->slug]) : null"
-                            class="block rounded-lg border border-gray-200 p-4 hover:border-brand"
-                        >
-                            <p class="font-medium text-ink">{{ $newsItem->title }}</p>
-                            @if ($newsItem->summary)
-                                <p class="mt-1 line-clamp-2 text-sm text-ink-muted">{{ $newsItem->summary }}</p>
-                            @endif
-                        </x-public.nav-link>
+                            :cover-image-url="$newsItem->getFirstMediaUrl('cover_image') ?: null"
+                        />
                     @endforeach
                 </div>
             </section>
@@ -78,15 +75,12 @@
                 <x-public.section-heading>{{ __('public.territory.promotions') }}</x-public.section-heading>
                 <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($promotions as $promotion)
-                        <x-public.nav-link
+                        <x-public.content-card
+                            :title="$promotion->title"
+                            :summary="$promotion->summary"
                             :href="\Illuminate\Support\Facades\Route::has('public.promotions.show') ? route('public.promotions.show', ['lang' => app()->getLocale(), 'slug' => $promotion->slug]) : null"
-                            class="block rounded-lg border border-gray-200 p-4 hover:border-brand"
-                        >
-                            <p class="font-medium text-ink">{{ $promotion->title }}</p>
-                            @if ($promotion->summary)
-                                <p class="mt-1 line-clamp-2 text-sm text-ink-muted">{{ $promotion->summary }}</p>
-                            @endif
-                        </x-public.nav-link>
+                            :cover-image-url="$promotion->getFirstMediaUrl('image') ?: null"
+                        />
                     @endforeach
                 </div>
             </section>

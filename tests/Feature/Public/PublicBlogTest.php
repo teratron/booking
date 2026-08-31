@@ -2,11 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Models\Article;
 use App\Models\Object_;
 use App\Models\Territory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
@@ -125,6 +128,22 @@ it('renders published articles only in the listing, each carrying its category a
         ->assertSee('Travel Tips')
         ->assertSee('Family')
         ->assertDontSee('Draft Article');
+});
+
+it('renders an article\'s cover image on its listing card, not only on its own detail page', function (): void {
+    Storage::fake('public');
+    publicBlogRegistry();
+
+    $articleId = publicBlogMakeArticle();
+    publicBlogGiveTranslation($articleId, 'Article With A Cover');
+    Article::query()->findOrFail($articleId)
+        ->addMedia(UploadedFile::fake()->image('cover.jpg', 800, 450))
+        ->toMediaCollection('cover_image');
+
+    $this->get(route('public.blog.index', ['lang' => 'en']))
+        ->assertOk()
+        ->assertSee('Article With A Cover')
+        ->assertSee('<img', false);
 });
 
 it('renders an empty state when no article has been published yet', function (): void {

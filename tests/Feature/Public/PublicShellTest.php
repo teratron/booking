@@ -284,14 +284,16 @@ it('rate-limits repeated country-preference switches from the same client, more 
     $this->post('/en/country', ['country' => 'md'])->assertStatus(429);
 });
 
-it('persists a feedback submission from the shared overlay', function (): void {
+it('persists a feedback submission from the shared overlay, including the optional phone number', function (): void {
     publicShellRegistry();
 
     $response = $this->post('/en/feedback', [
         'name' => 'Ana',
         'email' => 'ana@example.test',
+        'phone' => '+380635271831',
         'message' => 'Great portal, one small suggestion…',
         'page_url' => '/en/o/some-hotel',
+        'consent' => '1',
     ]);
 
     $response->assertRedirect();
@@ -299,5 +301,21 @@ it('persists a feedback submission from the shared overlay', function (): void {
     $submission = FeedbackSubmission::query()->sole();
     expect($submission->name)->toBe('Ana')
         ->and($submission->email)->toBe('ana@example.test')
+        ->and($submission->phone)->toBe('+380635271831')
         ->and($submission->locale)->toBe('en');
+});
+
+it('never persists a feedback submission without the personal-data consent, matching Figma\'s own checkbox on this frame', function (): void {
+    publicShellRegistry();
+
+    $response = $this->post('/en/feedback', [
+        'name' => 'Ana',
+        'email' => 'ana@example.test',
+        'message' => 'Great portal, one small suggestion…',
+        'page_url' => '/en/o/some-hotel',
+        // consent deliberately omitted
+    ]);
+
+    $response->assertSessionHasErrors('consent');
+    expect(FeedbackSubmission::query()->count())->toBe(0);
 });

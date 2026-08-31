@@ -18,6 +18,7 @@ final class FeedbackSubmissionService
         return FeedbackSubmission::query()->create([
             'name' => $data->name,
             'email' => $data->email,
+            'phone' => $data->phone,
             'message' => $data->message,
             'page_url' => $data->pageUrl,
             'locale' => $data->locale,

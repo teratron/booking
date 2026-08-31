@@ -175,11 +175,15 @@ return [
         'feedback' => [
             'trigger' => 'Feedback',
             'heading' => 'Send us feedback',
+            'subtitle' => 'Leave your details and we\'ll get back to you.',
             'close' => 'Close',
             'thanks' => 'Thank you — your message has been received.',
             'name' => 'Name',
             'email' => 'Email',
+            'phone' => 'Phone number',
             'message' => 'Message',
+            'consent' => 'I agree to the processing of my personal data, per the',
+            'consent_link' => 'privacy policy',
             'submit' => 'Send',
         ],
         'cookie_consent' => [

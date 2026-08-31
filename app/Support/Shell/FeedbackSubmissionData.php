@@ -13,6 +13,7 @@ final readonly class FeedbackSubmissionData
     public function __construct(
         public string $name,
         public string $email,
+        public ?string $phone,
         public string $message,
         public string $pageUrl,
         public string $locale,

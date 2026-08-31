@@ -12,6 +12,7 @@
                         :summary="$newsItem->summary"
                         :href="route('public.news.show', ['lang' => app()->getLocale(), 'slug' => $newsItem->slug])"
                         :kicker="$newsItem->is_pinned ? __('public.news.pinned') : null"
+                        :cover-image-url="$newsItem->getFirstMediaUrl('cover_image') ?: null"
                     />
                 @endforeach
             </div>

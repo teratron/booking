@@ -23,7 +23,9 @@
                         class="h-full w-full object-cover"
                     >
                 @else
-                    <div class="flex h-full w-full items-center justify-center bg-gray-200 text-gray-400"></div>
+                    <div class="flex h-full w-full items-center justify-center bg-gray-200 text-gray-400">
+                        <x-public.icons.camera class="h-12 w-12" />
+                    </div>
                 @endif
 
                 @if ($profile->tierBadgeText)
@@ -282,6 +284,7 @@
                             :title="$promotion->title"
                             :summary="$promotion->summary"
                             :href="\Illuminate\Support\Facades\Route::has('public.promotions.show') ? route('public.promotions.show', ['lang' => app()->getLocale(), 'slug' => $promotion->slug]) : null"
+                            :cover-image-url="$promotion->getFirstMediaUrl('image') ?: null"
                         />
                     @endforeach
                 </div>
@@ -298,6 +301,7 @@
                             :title="$newsItem->title"
                             :summary="$newsItem->summary"
                             :href="\Illuminate\Support\Facades\Route::has('public.news.show') ? route('public.news.show', ['lang' => app()->getLocale(), 'slug' => $newsItem->slug]) : null"
+                            :cover-image-url="$newsItem->getFirstMediaUrl('cover_image') ?: null"
                         />
                     @endforeach
                 </div>

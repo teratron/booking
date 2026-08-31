@@ -77,12 +77,13 @@
         @if ($promotions->isNotEmpty())
             <x-public.scroll-row :heading="__('public.territory.promotions')" columns="4">
                 @foreach ($promotions as $promotion)
-                    <x-public.nav-link
-                        :href="\Illuminate\Support\Facades\Route::has('public.promotions.show') ? route('public.promotions.show', ['lang' => app()->getLocale(), 'slug' => $promotion->slug]) : null"
-                        class="block w-64 shrink-0 rounded-lg border border-gray-200 p-4 sm:w-auto"
-                    >
-                        <p class="font-medium text-ink">{{ $promotion->title }}</p>
-                    </x-public.nav-link>
+                    <div class="w-64 shrink-0 sm:w-auto">
+                        <x-public.content-card
+                            :title="$promotion->title"
+                            :href="\Illuminate\Support\Facades\Route::has('public.promotions.show') ? route('public.promotions.show', ['lang' => app()->getLocale(), 'slug' => $promotion->slug]) : null"
+                            :cover-image-url="$promotion->getFirstMediaUrl('image') ?: null"
+                        />
+                    </div>
                 @endforeach
             </x-public.scroll-row>
         @endif
@@ -131,22 +132,20 @@
                 <x-public.section-heading>{{ __('public.home.editorial_heading') }}</x-public.section-heading>
                 <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($newsItems as $newsItem)
-                        <x-public.nav-link
+                        <x-public.content-card
+                            :title="$newsItem->title"
                             :href="\Illuminate\Support\Facades\Route::has('public.news.show') ? route('public.news.show', ['lang' => app()->getLocale(), 'slug' => $newsItem->slug]) : null"
-                            class="block rounded-lg border border-gray-200 p-4"
-                        >
-                            <span class="text-xs font-semibold uppercase text-brand">{{ __('public.shell.nav.news') }}</span>
-                            <p class="mt-1 font-medium text-ink">{{ $newsItem->title }}</p>
-                        </x-public.nav-link>
+                            :kicker="__('public.shell.nav.news')"
+                            :cover-image-url="$newsItem->getFirstMediaUrl('cover_image') ?: null"
+                        />
                     @endforeach
                     @foreach ($articles as $article)
-                        <x-public.nav-link
+                        <x-public.content-card
+                            :title="$article->title"
                             :href="\Illuminate\Support\Facades\Route::has('public.blog.show') ? route('public.blog.show', ['lang' => app()->getLocale(), 'slug' => $article->slug]) : null"
-                            class="block rounded-lg border border-gray-200 p-4"
-                        >
-                            <span class="text-xs font-semibold uppercase text-brand">{{ __('public.shell.nav.blog') }}</span>
-                            <p class="mt-1 font-medium text-ink">{{ $article->title }}</p>
-                        </x-public.nav-link>
+                            :kicker="__('public.shell.nav.blog')"
+                            :cover-image-url="$article->getFirstMediaUrl('cover_image') ?: null"
+                        />
                     @endforeach
                 </div>
             </section>

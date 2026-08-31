@@ -65,7 +65,7 @@ final class HomePageController extends Controller
             'newestObjects' => $this->objectsRail($country, createdAfter: now()->subDays(90)),
             'promotions' => $this->promotions($country),
             'newsItems' => $this->newsItems($country),
-            'articles' => Article::published()->with('translations')->latest('publish_at')->limit(self::ARTICLES_PER_RAIL)->get(),
+            'articles' => Article::published()->with(['translations', 'media'])->latest('publish_at')->limit(self::ARTICLES_PER_RAIL)->get(),
             'popularCities' => $this->shell->popularCities($country?->id),
             'reviews' => $this->reviews($country),
             'partners' => Banner::query()->whereHas('slot', fn ($query) => $query->where('key', 'home-partners'))
@@ -180,7 +180,9 @@ final class HomePageController extends Controller
 
         return Promotion::published()
             ->whereHas('territory', fn ($query) => $query->where('country_id', $country->id))
-            ->with('translations')
+            // 'media' eager-loaded so the card's cover image
+            // (getFirstMediaUrl) never re-queries per row.
+            ->with(['translations', 'media'])
             ->limit(self::PROMOTIONS_PER_RAIL)
             ->get();
     }
@@ -197,7 +199,9 @@ final class HomePageController extends Controller
                 $query->whereNull('territory_id')
                     ->orWhereHas('territory', fn ($territoryQuery) => $territoryQuery->where('country_id', $country->id));
             })
-            ->with('translations')
+            // 'media' eager-loaded so the card's cover image
+            // (getFirstMediaUrl) never re-queries per row.
+            ->with(['translations', 'media'])
             ->orderByDesc('is_pinned')
             ->latest('publish_at')
             ->limit(self::NEWS_PER_RAIL)

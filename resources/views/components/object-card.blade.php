@@ -50,7 +50,9 @@
                 loading="lazy"
             >
         @else
-            <div class="flex h-full w-full items-center justify-center bg-gray-200 text-gray-400"></div>
+            <div class="flex h-full w-full items-center justify-center bg-gray-200 text-gray-400">
+                <x-public.icons.camera class="h-10 w-10" />
+            </div>
         @endif
 
         @if ($card->tierBadgeText)

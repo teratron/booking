@@ -1,10 +1,10 @@
 {{--
     Not shown in any Figma frame — this shell-level requirement is named in
-    the specification's own scope but has no visual reference, matching how
-    the feedback overlay handles the same gap. Consent is remembered in
-    localStorage rather than a cookie: the notice's own concern is never
-    reappearing once dismissed, a purely client-side fact this page never
-    needs to read server-side.
+    the specification's own scope but has no visual reference (unlike the
+    feedback overlay, which does have one — see that component's own
+    comment). Consent is remembered in localStorage rather than a cookie:
+    the notice's own concern is never reappearing once dismissed, a purely
+    client-side fact this page never needs to read server-side.
 --}}
 <div x-data="{ visible: false }" x-init="visible = ! localStorage.getItem('cookie-consent-accepted')">
     <div

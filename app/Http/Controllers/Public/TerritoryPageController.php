@@ -85,13 +85,17 @@ final class TerritoryPageController extends Controller
             sprintf('territory:sidebar:%d:%s', $territory->id, $lang),
             self::SIDEBAR_CACHE_TTL_SECONDS,
             fn (): array => [
+                // 'media' eager-loaded on both so the card's cover image
+                // (getFirstMediaUrl) never re-queries per row — this whole
+                // block is cached as a unit anyway, so the extra join costs
+                // nothing beyond the first request per cache period.
                 'newsItems' => NewsItem::published()->where('territory_id', $territory->id)
-                    ->with('translations')
+                    ->with(['translations', 'media'])
                     ->latest('publish_at')
                     ->limit(self::NEWS_PER_BLOCK)
                     ->get(),
                 'promotions' => Promotion::published()->where('territory_id', $territory->id)
-                    ->with('translations')
+                    ->with(['translations', 'media'])
                     ->limit(self::PROMOTIONS_PER_BLOCK)
                     ->get(),
                 'childTerritories' => $territory->children()->where('is_active', true)

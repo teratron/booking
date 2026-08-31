@@ -344,7 +344,9 @@ final class ObjectProfilePresenter
     {
         return array_values(Promotion::published()
             ->where('object_id', $object->id)
-            ->with('translations')
+            // 'media' eager-loaded so the card's cover image
+            // (getFirstMediaUrl) never re-queries per row.
+            ->with(['translations', 'media'])
             ->limit(self::PROMOTIONS_PER_BLOCK)
             ->get()
             ->all());
@@ -355,7 +357,9 @@ final class ObjectProfilePresenter
     {
         return array_values(NewsItem::published()
             ->where('object_id', $object->id)
-            ->with('translations')
+            // 'media' eager-loaded so the card's cover image
+            // (getFirstMediaUrl) never re-queries per row.
+            ->with(['translations', 'media'])
             ->latest('publish_at')
             ->limit(self::NEWS_PER_BLOCK)
             ->get()

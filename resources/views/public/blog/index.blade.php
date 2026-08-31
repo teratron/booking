@@ -12,6 +12,7 @@
                         :summary="$article->summary"
                         :href="route('public.blog.show', ['lang' => app()->getLocale(), 'slug' => $article->slug])"
                         :kicker="$article->category?->name"
+                        :cover-image-url="$article->getFirstMediaUrl('cover_image') ?: null"
                     >
                         @if ($article->tags->isNotEmpty())
                             <div class="mt-2 flex flex-wrap gap-1">
