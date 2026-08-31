@@ -4,7 +4,7 @@
 **Generated:** 2026-08-05
 **Based on:** .design/main/INDEX.md v2.15.1
 **Based on RULES:** .design/RULES.md v1.4.0
-**Status:** Active — Phase 8 (delivery pipeline; 20/23, the three open tasks owner-only. Its two sources returned to `RFC` on 2026-08-22 to reconcile with the owner's single-line branch decision — not a defect, and not a reason to reopen Done work; see Plan Status below) · Phase 9 **Done** (post-launch QA remediation; 15/15, opened and closed 2026-08-22, independent of Phase 8; see Plan Status below) · Phase 10 **Done** (deep QA remediation; 32/32, opened 2026-08-23 and closed the same pass, independent of Phase 8) · Phase 11 **Done** (revenue & administration surfaces; 25/25, opened and closed 2026-08-27, independent of Phase 8; see Plan Status below) · Phase 12 **Done** (SDD reference containment cleanup; 7/7, opened and closed 2026-08-30, independent of Phase 8; see Plan Status below) · Phase 13 **Done** (QA-sweep remediation, 2026-08-31 — three `500` blockers, size/query-budget failures, two setup gaps; 18/19 delivered, opened and closed the same session; T-13B03's interface-catalog-editor half and Track G both in `## Backlog`; independent of Phase 8)
+**Status:** Active — Phase 8 (delivery pipeline; 20/23, the three open tasks owner-only. Its two sources returned to `RFC` on 2026-08-22 to reconcile with the owner's single-line branch decision — not a defect, and not a reason to reopen Done work; see Plan Status below) · Phase 9 **Done** (post-launch QA remediation; 15/15, opened and closed 2026-08-22, independent of Phase 8; see Plan Status below) · Phase 10 **Done** (deep QA remediation; 32/32, opened 2026-08-23 and closed the same pass, independent of Phase 8) · Phase 11 **Done** (revenue & administration surfaces; 25/25, opened and closed 2026-08-27, independent of Phase 8; see Plan Status below) · Phase 12 **Done** (SDD reference containment cleanup; 7/7, opened and closed 2026-08-30, independent of Phase 8; see Plan Status below) · Phase 13 **Done** (QA-sweep remediation, 2026-08-31 — three `500` blockers, size/query-budget failures, two setup gaps; 19/19, opened and closed the same session; Track G (object-application funnel) deferred to `## Backlog` by design; independent of Phase 8)
 
 ## Overview
 
@@ -615,7 +615,7 @@ genuine-leak files (proving detection), and once after, where it passed clean. A
 verified only after the tree is already clean proves nothing, the same lesson the task-ID
 regex fix already established one level up.
 
-## Phase 13 — QA Sweep Remediation (2026-08-31) — **Done**
+## Phase 13 — QA Sweep Remediation (2026-08-31) — **Done** (19/19)
 
 *The fourth full-funnel QA sweep (`.drafts/qa-simulation-2026-08-31.md`,
 `.drafts/qa-fix-specs-2026-08-31.md`) found three blockers that take a primary surface
@@ -624,15 +624,16 @@ one admin dashboard — plus a cluster of size/query-budget failures and two set
 This phase fixes them and adds the mechanical guards so the class does not regress a
 fifth time. Independent of Phase 8.*
 
-*Closed the same session it was planned — 18/19 delivered. The validation track's own
+*Closed the same session it was planned — 19/19. The validation track's own
 `UnboundedOptionLoaderTest` found two `->options()` offenders manual review had missed
-(admin + cabinet object forms, an article author select), all since routed through
-server-side search. T-13B03's interface-catalog-editor payload reduction was reverted
-after a first cut broke the editor's own tests and is split to `## Backlog`; the
-backup-administration half of B03 shipped. Local gate green: Pint, PHPStan level 8, the
-full non-slow Pest suite + architecture + regression, `migrate:fresh --seed`. Two
-pre-existing `master` failures (`PublicFeedbackSubmissionTest`, a `consent` field the
-0ee8b0f overlay change added without updating the fixture) were fixed in passing.*
+(admin + cabinet object forms, plus an article author select), all since routed through
+server-side search. T-13B03's `InterfaceCatalogEditor` payload reduction took two cuts —
+the first used a shadow property the `->live()` Select never wrote; the working version
+keeps the slice-picker state in the form's own `data` path and retargets the two editor
+tests that spanned sections. Local gate green: Pint, PHPStan level 8, the full non-slow
+Pest suite + architecture + regression, `migrate:fresh --seed`. Two pre-existing
+`master` failures (`PublicFeedbackSubmissionTest`, a `consent` field the 0ee8b0f overlay
+change added without updating the fixture) were fixed in passing.*
 
 - **Performance/size budgets** — [l2-tech-stack.md](specifications/l2-tech-stack.md) §5.9
   gained response-size and peak-memory budgets, the aggregate-or-paginate-at-volume
@@ -713,8 +714,6 @@ change beyond removing the entry below.)*
 - [l1-room-reservation.md](specifications/l1-room-reservation.md) — **dormant module, deliberately deferred.** Its three tables (`reservations`, `room_availabilities`, `booking_settings`) and its `booking` / `payment` / `guest_accounts` registry rows ship **disabled** in Phase 1, and Phase 1's inertness test proves the module is absent rather than hidden. The capability itself is not in `[TZ]` §134's mandatory first release, and the previous implementation is explicitly not a migration source ([l2-data-model.md](specifications/l2-data-model.md) §2), so building the flow is scoped as its own future phase rather than smuggled into release one.
 
 - **Object-application funnel (F-04)** — the 2026-08-31 QA sweep confirmed the "Add your object" CTA still dead-ends at `/cabinet/login`, with no public application form and `ObjectResource::canCreate()` still `false`. The fix is a feature build — a public, moderated `object_application` intake → admin conversion to an object + owner account — governed by [l1-object-onboarding.md](specifications/l1-object-onboarding.md), which is `RFC` and carries one open `TBD` on the scope question the funnel turns on. Pulled out of Phase 13 (Track G) into this Backlog: run `/magic.spec main` to close the `TBD`, then `/magic.task main` to schedule it. Phase 13's T-13A01 ships the interim — the CTA points at the contacts page, not the login wall.
-
-- **Interface-catalog editor payload reduction** — split out of Phase 13's T-13B03 (the backup-administration half of that task shipped). The `InterfaceCatalogEditor` admin page renders one Textarea per catalog key per active locale — ~2,800 fields, ~11 MB — because Filament's `Tabs` build every segment's panel into the DOM at once. A first cut (a `(group, section)` slice picker so only one segment's ~56 fields build) was reverted: `panel`'s 1,289 keys spread over 45 segments and the two existing editor tests each save across two segments in one submit, which needs a Filament `->live()` picker-state redesign and a test rework, not a quick patch. Admin-only screen, so it did not block the phase. Schedule via `/magic.task main` when picked up.
 
 ## Decision Archive
 

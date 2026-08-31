@@ -4,34 +4,34 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-31 14:01
+**Updated:** 2026-08-31 14:47
 **Phase:** 13 — QA Sweep Remediation (2026-08-31) — Done
 **Status:** Active
 
 ## Current Position
 
-- **Task (Phase 13, done 2026-08-31):** **18/19 delivered — planned and closed the same session.** Nine build tracks (three `500` blockers; 66 MB SEO dashboard → SQL aggregation; every unbounded Filament `Select` → `SearchableModelSelect`; catalog/territory/object budgets via bounded queries + tagged caching; `robots.txt` single-authority; serve-time sitemap freshness 503; panel assets in the image + health check; nginx `limit_req` edge zone + explicit FPM `listen.backlog`; load-benchmark runbook) plus a fail-first validation track: `QaSweepRegressionTest` + `UnboundedOptionLoaderTest` (found two `->options()` offenders manual review missed). Full non-slow Pest suite + Pint + PHPStan 8 + `migrate:fresh --seed` green. T-13B03's interface-catalog-editor payload reduction reverted (a first cut broke its tests) → `PLAN.md` `## Backlog`, alongside Track G (`l1-object-onboarding` `TBD`). Detail: `archives/tasks/phase-13.md`.
+- **Task (Phase 13, done 2026-08-31):** **19/19 — planned and closed the same session.** Nine build tracks (three `500` blockers; 66 MB SEO dashboard → SQL aggregation; every unbounded Filament `Select` → `SearchableModelSelect`; catalog/territory/object budgets via bounded queries + tagged caching; `robots.txt` single-authority; serve-time sitemap freshness 503; panel assets in the image + health check; nginx `limit_req` edge zone + explicit FPM `listen.backlog`; load-benchmark runbook; `InterfaceCatalogEditor` 11 MB → one `(group, section)` slice) plus a fail-first validation track: `QaSweepRegressionTest` + `UnboundedOptionLoaderTest` (found two `->options()` offenders manual review missed). Full non-slow Pest suite + Pint + PHPStan 8 + `migrate:fresh --seed` green. Track G (object-application funnel) deferred to `PLAN.md` `## Backlog` by design (`l1-object-onboarding` `TBD`). Detail: `archives/tasks/phase-13.md`.
 - **Task (Phase 12, done 2026-08-30):** **7/7 — seven tracks.** `ContainmentTest.php` extended with a TZ-aware SKIP/FAIL pattern for bare `§N.N` spec-section references; 31 files / 33 real leaks rewritten in plain language (raw grep's 50 corrected after classifying each). Full detail: `archives/tasks/phase-12.md`.
 - **Phases 9–11 (done 2026-08-22/23/27):** 72 tasks across three independent QA/revenue-remediation phases, all closed clean (full regression gates green each time). Full detail: `archives/tasks/phase-{9,10,11}.md`, `PLAN.md`'s own sections.
 - **Phase 8 (unchanged, owner-blocked):** 20/23 — every agent-performable task done; `T-8E01`/`T-8E03`/`T-8T03` remain, each owner-only **and** `Blocked [!] (C12)` since 2026-08-22 (branch-model reconciliation — see Blockers). Full detail: `tasks/phase-8.md`.
 - **Spec:** **25 specs — 8 `Stable`, 17 `RFC`** (confirmed via `check-prerequisites` 2026-08-30). See `INDEX.md`'s Amendment/Branch-Model Ledgers for the delivery pair's own history.
-- **Next Action:** Phase 13 closed (18/19), changes committed to `master`. Run `/magic.task main` if a post-run drift check is wanted; otherwise the open work is Phase 8 (owner-only/C12-blocked) and two `## Backlog` items — the object-application funnel (needs `/magic.spec main` for `l1-object-onboarding`'s `TBD`) and the interface-catalog-editor payload reduction.
+- **Next Action:** Phase 13 closed (19/19), changes committed to `master`. Run `/magic.task main` if a post-run drift check is wanted; otherwise the open work is Phase 8 (owner-only/C12-blocked) and the `## Backlog` object-application funnel (needs `/magic.spec main` to close `l1-object-onboarding`'s `TBD` first).
 
 ## Progress
 
 ```
-Phase 13: [18/19] ███████░ 95% — Done (B03 editor half → Backlog)
+Phase 13: [19/19] ████████ 100% — Done
 Overall: [12/13] ███████░ 92%
-Plan: Phase 1-7 done (135/135) · Phase 8 in progress (20/23, owner-blocked) · Phase 9 done (15/15) · Phase 10 done (32/32) · Phase 11 done (25/25) · Phase 12 done (7/7) · Phase 13 done (18/19)
+Plan: Phase 1-7 done (135/135) · Phase 8 in progress (20/23, owner-blocked) · Phase 9 done (15/15) · Phase 10 done (32/32) · Phase 11 done (25/25) · Phase 12 done (7/7) · Phase 13 done (19/19)
 Phase 8 tracks:  A 4/4 · B 4/4 · C 1/1 · D 5/5 · E 1/3 (E01/E03 User) · F 3/3 · T 2/3 (T03 User+Agent)
-Phase 13 tracks: A 4/4 · B 2.5/3 (B03 editor→Backlog) · C 3/3 · D 3/3 · E 1/1 · F 2/2 · T 3/3 (Track G→Backlog)
+Phase 13 tracks: A 4/4 · B 3/3 · C 3/3 · D 3/3 · E 1/1 · F 2/2 · T 3/3 — all Done (Track G → Backlog by design)
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
-- 2026-08-31 **Decision:** Phase 13 done (18/19). Dashboard reads are SQL aggregates + bounded samples (never full-table enumeration); every unbounded Filament `Select` goes through `SearchableModelSelect`, enforced by `UnboundedOptionLoaderTest`; served artefacts self-check freshness → 503 + dispatch; hottest render carries an nginx `limit_req` edge zone. C02/C03 used tagged caching not the deeper query rewrite (protects placement-tier-first ordering); F02 is a runbook not a command. B03's interface-catalog-editor slice UI was reverted (broke its tests, needs a Filament schema redesign) → Backlog.
+- 2026-08-31 **Decision:** Phase 13 done (19/19). Dashboard reads are SQL aggregates + bounded samples (never full-table enumeration); every unbounded Filament `Select` goes through `SearchableModelSelect`, enforced by `UnboundedOptionLoaderTest`; served artefacts self-check freshness → 503 + dispatch; hottest render carries an nginx `limit_req` edge zone; `InterfaceCatalogEditor` shows one `(group, section)` slice, picker state in the form's `data` path. C02/C03 used tagged caching not the deeper query rewrite (protects placement-tier-first ordering); F02 is a runbook not a command. Track G (object-application funnel) deferred to Backlog by design.
 
 ## Blockers
 

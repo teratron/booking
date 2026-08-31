@@ -1108,6 +1108,9 @@ return [
         'title' => 'Interface catalog',
         'save' => 'Save catalog',
         'saved' => 'Interface catalog saved.',
+        'section_picker' => 'Which strings to edit',
+        'group' => 'Catalog',
+        'section' => 'Section',
     ],
 
     'translation_report' => [

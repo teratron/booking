@@ -31,6 +31,7 @@ key_files:
     - "app/Services/Backup/BackupAdministrationService.php"
     - "app/Filament/Admin/Pages/SeoHealthDashboard.php"
     - "app/Filament/Admin/Pages/BackupAdministration.php"
+    - "app/Filament/Admin/Pages/InterfaceCatalogEditor.php"
     - "app/Filament/Admin/Resources/Objects/Pages/EditObject.php"
     - "app/Filament/Admin/Resources/Objects/Schemas/ObjectForm.php"
     - "app/Filament/Admin/Resources/Articles/Schemas/ArticleForm.php"
@@ -64,7 +65,7 @@ duration_minutes: ~
 # Stage 13 Tasks — QA Sweep Remediation (2026-08-31)
 
 **Phase:** 13
-**Status:** Done (18/19 delivered — T-13B03's interface-catalog-editor half split to `## Backlog`; full local gate green: Pint, PHPStan level 8, Pest full suite + arch + regression, migrate:fresh --seed)
+**Status:** Done (19/19 — all tracks landed; full local gate green: Pint, PHPStan level 8, full non-slow Pest suite + arch + regression, migrate:fresh --seed. Track G — object-application funnel — deferred to `## Backlog` by design, not a shortfall.)
 **Strategic Goal:** The fourth full-funnel QA sweep
 (`.drafts/qa-simulation-2026-08-31.md`, `.drafts/qa-fix-specs-2026-08-31.md`) found
 **three blockers that take a primary surface fully offline in the seeded state** — the
@@ -140,7 +141,7 @@ not the gate.
 - [x] [T-13A04] Feedback overlay: render without a shared session error bag
 - [x] [T-13B01] SEO Health dashboard: aggregate in SQL, paginate the drill-down
 - [x] [T-13B02] Object create/edit: bind the remaining unbounded `Select` option lists to a server-side search
-- [x] [T-13B03] Interface-catalog editor + backup administration: bound the payload, move the disk probe off the request — backup admin done; editor payload reduction split to Backlog
+- [x] [T-13B03] Interface-catalog editor + backup administration: bound the payload, move the disk probe off the request
 - [x] [T-13C01] Catalog: replace the full-registry territory `<select>` with a searchable server-backed picker
 - [x] [T-13C02] Territory page: resolve the subtree once, fetch all types in one pass
 - [x] [T-13C03] Object page: memoise and cache module resolution
@@ -257,7 +258,7 @@ not the gate.
 ### [T-13B03] Interface-catalog editor + backup administration
 
 - **Spec:** l2-tech-stack.md §5.9 (v2.5.0)
-- **Status:** Partial — backup administration done; interface-catalog editor split to `## Backlog`
+- **Status:** Done
 - **Assignment:** Agent
 - **Fix:** `InterfaceCatalogEditor` — paginate or lazy-load the interface-string catalog
   (11 MB → bounded). `BackupAdministration` — move the synchronous backup-destination
@@ -272,13 +273,20 @@ not the gate.
   schedule busts the cache in `routes/console.php`; blade + `panel.php` (en/ru) updated.
   Verified: backup admin → 563 ms warm with the destination unreachable, no disk probe
   in the render path.
-- **Deferred:** the `InterfaceCatalogEditor` payload reduction. A first cut — a
-  `(group, section)` slice picker so only one segment's ~56 fields build instead of all
-  ~2,800 — was reverted: `panel`'s 1,289 keys spread over 45 segments, and the two
-  existing editor tests both save across two segments in one submit, which the slice
-  form cannot express without a Filament schema redesign (`->live()` picker state sync)
-  and a test rework. Moved to [PLAN.md](../../PLAN.md) `## Backlog` rather than shipped
-  half-built. The page still renders (heavy, ~11 MB) as before — an admin-only screen.
+- **Changes (editor):** `InterfaceCatalogEditor` now shows one `(group, section)` slice
+  at a time. Two `->live()` `Select`s (`selectedGroup`, `selectedSegment`) sit in the
+  form's own `data` state path — their single source of truth, no shadow property to
+  sync — and `afterStateUpdated` refills `data` with `sliceState()` (the two picker
+  values plus one field per active locale per key in that section). `save()` skips any
+  field name without `__` (the pickers). `segmentTabs()` / the all-groups `Tabs` build
+  removed; `sliceState()`, `currentGroup()`, `currentSegment()`, `segmentsFor()`,
+  `segmentKeys()` added. `panel.php` (en/ru) gains `section_picker` / `group` / `section`.
+  A first cut used a shadow `public ?string $selectedGroup` that the `->live()` Select
+  never wrote — the fix was to keep the picker state in `data` only. The two editor
+  tests that edited across two sections in one submit were retargeted to two keys of the
+  `panel` `bulk` section (both dotted, so the `.` <-> `_dot_` round-trip is still
+  covered), and a new test asserts only the selected section's fields render and the
+  component HTML stays under 600 KB (was ~11 MB across ~2,800 fields).
 
 ### [T-13C01] Catalog — searchable server-backed territory picker
 

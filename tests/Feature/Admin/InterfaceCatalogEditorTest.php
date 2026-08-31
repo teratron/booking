@@ -131,17 +131,42 @@ it('loads shipped defaults and administrator overrides into the form for active 
         ->assertFormFieldDoesNotExist('ro__panel__brand');
 });
 
+it('renders only the selected section, not every catalog key at once', function (): void {
+    catalogEditorLanguages();
+    $actor = catalogEditorActor();
+
+    $component = Livewire::actingAs($actor)->test(InterfaceCatalogEditor::class);
+
+    // The default slice is the first section of the first group. Its own
+    // fields are built; a field from a different section of the same group
+    // is not — the whole point of the slice picker, and why the page is no
+    // longer the ~11 MB render that materialised all ~1,400 keys x locales.
+    $component->assertFormFieldExists('en__panel__brand')
+        ->assertFormFieldDoesNotExist('en__panel__navigation_dot_catalog');
+
+    // Switching sections swaps which fields exist, in both directions.
+    $component->set('data.selectedSegment', 'navigation')
+        ->assertFormFieldExists('en__panel__navigation_dot_catalog')
+        ->assertFormFieldDoesNotExist('en__panel__brand');
+
+    expect(strlen($component->html()))->toBeLessThan(600_000);
+});
+
 it('persists an edited value, keeps a dotted catalog key intact through the field-name encoding, and journals only the changed group', function (): void {
     $languages = catalogEditorLanguages();
     $actor = catalogEditorActor();
 
+    // The editor shows one (group, section) slice at a time; `bulk` is a
+    // `panel` section whose keys (`bulk.confirmation`, `bulk.confirm_label`)
+    // both carry a dot, so this covers the '.' <-> '_dot_' field-name
+    // round-trip in `fieldName()` / `decodeFieldName()`.
     Livewire::actingAs($actor)
         ->test(InterfaceCatalogEditor::class)
+        ->set('data.selectedSegment', 'bulk')
+        ->assertFormFieldExists('en__panel__bulk_dot_confirmation')
         ->fillForm([
-            'en__panel__brand' => 'Riviera Admin',
-            // 'interface_catalog.saved' round-trips through fieldName()'s
-            // '.' -> '_dot_' encoding and decodeFieldName()'s reverse of it.
-            'en__panel__interface_catalog_dot_saved' => 'Catalog changes are live.',
+            'en__panel__bulk_dot_confirmation' => 'Really apply this to every selected row?',
+            'en__panel__bulk_dot_confirm_label' => 'Yes, apply to all',
         ])
         ->call('save')
         ->assertHasNoFormErrors()
@@ -149,8 +174,8 @@ it('persists an edited value, keeps a dotted catalog key intact through the fiel
 
     $repository = app(InterfaceCatalogRepository::class);
 
-    expect($repository->currentValue('en', 'panel', 'brand'))->toBe('Riviera Admin')
-        ->and($repository->currentValue('en', 'panel', 'interface_catalog.saved'))->toBe('Catalog changes are live.');
+    expect($repository->currentValue('en', 'panel', 'bulk.confirmation'))->toBe('Really apply this to every selected row?')
+        ->and($repository->currentValue('en', 'panel', 'bulk.confirm_label'))->toBe('Yes, apply to all');
 
     $panelEntry = DB::table('audits')
         ->where('event', 'interface_catalog_edited')
@@ -159,7 +184,7 @@ it('persists an edited value, keeps a dotted catalog key intact through the fiel
         ->first();
 
     expect($panelEntry)->not->toBeNull()
-        ->and($panelEntry->new_values)->toContain('brand')
+        ->and($panelEntry->new_values)->toContain('bulk.confirmation')
         ->and($panelEntry->tags)->toBe('localization');
 
     // Nothing in the 'public' group or in 'ru' was touched by this submit,

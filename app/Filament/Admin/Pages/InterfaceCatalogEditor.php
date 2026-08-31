@@ -10,17 +10,15 @@ use App\Services\Localization\InterfaceCatalog;
 use App\Services\Localization\InterfaceCatalogRepository;
 use BackedEnum;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Fieldset;
-use Filament\Schemas\Components\Tabs;
-use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use UnitEnum;
 
@@ -34,6 +32,13 @@ use UnitEnum;
  * One field per active language per catalog key; a language with no file of
  * its own (freshly activated) starts every field blank and resolves
  * entirely through the primary-language fallback until filled in.
+ *
+ * The catalog holds ~1,400 keys across two groups; one Textarea per key per
+ * active language is ~2,800 fields, which rendered together is an ~11 MB
+ * page. The editor shows one (group, section) slice at a time — two
+ * `->live()` Selects at the top pick it, and only that slice's fields are
+ * built and filled. Both Selects and the slice fields share the form's own
+ * `data` state path, so the picker is its own single source of truth.
  *
  * @property-read Schema $form
  */
@@ -69,21 +74,10 @@ class InterfaceCatalogEditor extends Page implements HasForms
 
     public function mount(): void
     {
-        $catalog = app(InterfaceCatalog::class);
-        $repository = app(InterfaceCatalogRepository::class);
-        $locales = $this->activeLocales();
+        $group = app(InterfaceCatalog::class)->groups()[0] ?? null;
+        $segment = $this->segmentsFor($group)[0] ?? null;
 
-        $values = [];
-
-        foreach ($catalog->groups() as $group) {
-            foreach ($locales as $locale) {
-                foreach ($repository->currentValues($locale, $group) as $key => $value) {
-                    $values[$this->fieldName($locale, $group, $key)] = $value;
-                }
-            }
-        }
-
-        $this->form->fill($values);
+        $this->form->fill($this->sliceState($group, $segment));
     }
 
     public function form(Schema $schema): Schema
@@ -91,12 +85,44 @@ class InterfaceCatalogEditor extends Page implements HasForms
         $catalog = app(InterfaceCatalog::class);
         $locales = $this->activeLocales();
 
-        $tabs = collect($catalog->groups())
-            ->flatMap(fn (string $group): Collection => $this->segmentTabs($catalog, $group, $locales))
-            ->all();
+        $group = $this->currentGroup();
+        $segment = $this->currentSegment();
+
+        $groupOptions = array_combine($catalog->groups(), array_map(Str::headline(...), $catalog->groups()));
+        $segments = $this->segmentsFor($group);
+        $segmentOptions = array_combine($segments, array_map(Str::headline(...), $segments));
+
+        $keyFieldsets = $group !== null && $segment !== null
+            ? array_map(
+                fn (string $key): Fieldset => $this->keyFieldset($group, $key, $locales),
+                $this->segmentKeys($group, $segment),
+            )
+            : [];
 
         return $schema
-            ->components([Tabs::make()->tabs($tabs)])
+            ->components([
+                Fieldset::make(__('panel.interface_catalog.section_picker'))
+                    ->columns(2)
+                    ->schema([
+                        Select::make('selectedGroup')
+                            ->label(__('panel.interface_catalog.group'))
+                            ->options($groupOptions)
+                            ->selectablePlaceholder(false)
+                            ->live()
+                            ->afterStateUpdated(function (?string $state): void {
+                                $this->form->fill($this->sliceState($state, $this->segmentsFor($state)[0] ?? null));
+                            }),
+                        Select::make('selectedSegment')
+                            ->label(__('panel.interface_catalog.section'))
+                            ->options($segmentOptions)
+                            ->selectablePlaceholder(false)
+                            ->live()
+                            ->afterStateUpdated(function (?string $state): void {
+                                $this->form->fill($this->sliceState($this->currentGroup(), $state));
+                            }),
+                    ]),
+                ...$keyFieldsets,
+            ])
             ->statePath('data');
     }
 
@@ -111,6 +137,12 @@ class InterfaceCatalogEditor extends Page implements HasForms
         $grouped = [];
 
         foreach ($flatState as $fieldName => $value) {
+            // The slice-picker Selects live in the same state path; they
+            // carry no `__` separator, so they are skipped here.
+            if (! str_contains((string) $fieldName, '__')) {
+                continue;
+            }
+
             [$locale, $group, $key] = $this->decodeFieldName((string) $fieldName);
             $grouped[$locale][$group][$key] = (string) $value;
         }
@@ -118,12 +150,11 @@ class InterfaceCatalogEditor extends Page implements HasForms
         foreach ($grouped as $locale => $byGroup) {
             foreach ($byGroup as $group => $valuesByKey) {
                 // Only the fields an administrator actually touched: the form
-                // is pre-filled with every canonical key's current effective
-                // value, so writing the raw submitted state unfiltered would
-                // turn every untouched, still-shipped key into a stored
-                // override on the very first save — permanently shadowing any
-                // future edit to that key's shipped file default even though
-                // nobody meant to change it.
+                // is pre-filled with the current effective value of every key
+                // in the shown slice, so writing the raw submitted state
+                // unfiltered would turn every untouched, still-shipped key
+                // into a stored override, permanently shadowing any future
+                // edit to that key's shipped file default.
                 $current = $repository->currentValues($locale, $group);
                 $changed = array_filter(
                     $valuesByKey,
@@ -143,17 +174,81 @@ class InterfaceCatalogEditor extends Page implements HasForms
     }
 
     /**
-     * @param  list<string>  $locales
-     * @return Collection<int, Tab>
+     * The full form state for one (group, section) slice: the two picker
+     * values plus one field per active locale per key in that section.
+     *
+     * @return array<string, mixed>
      */
-    private function segmentTabs(InterfaceCatalog $catalog, string $group, array $locales): Collection
+    private function sliceState(?string $group, ?string $segment): array
     {
-        return collect($catalog->canonicalKeys($group))
-            ->keys()
-            ->groupBy(fn (string $key): string => Str::before($key, '.'))
-            ->map(fn (Collection $keys, string $segment): Tab => Tab::make(Str::headline($segment))
-                ->schema($keys->map(fn (string $key): Fieldset => $this->keyFieldset($group, $key, $locales))->all()))
-            ->values();
+        $state = ['selectedGroup' => $group, 'selectedSegment' => $segment];
+
+        if ($group === null || $segment === null) {
+            return $state;
+        }
+
+        $repository = app(InterfaceCatalogRepository::class);
+
+        foreach ($this->activeLocales() as $locale) {
+            $current = $repository->currentValues($locale, $group);
+
+            foreach ($this->segmentKeys($group, $segment) as $key) {
+                $state[$this->fieldName($locale, $group, $key)] = $current[$key] ?? '';
+            }
+        }
+
+        return $state;
+    }
+
+    private function currentGroup(): ?string
+    {
+        $group = $this->data['selectedGroup'] ?? null;
+        $groups = app(InterfaceCatalog::class)->groups();
+
+        return is_string($group) && in_array($group, $groups, true) ? $group : ($groups[0] ?? null);
+    }
+
+    private function currentSegment(): ?string
+    {
+        $segments = $this->segmentsFor($this->currentGroup());
+        $segment = $this->data['selectedSegment'] ?? null;
+
+        return is_string($segment) && in_array($segment, $segments, true) ? $segment : ($segments[0] ?? null);
+    }
+
+    /**
+     * The distinct first path components of a group's canonical keys, in
+     * declaration order — `navigation.catalog` and `navigation.commerce`
+     * both fall under the `navigation` section.
+     *
+     * @return list<string>
+     */
+    private function segmentsFor(?string $group): array
+    {
+        if ($group === null) {
+            return [];
+        }
+
+        $segments = [];
+
+        foreach (array_keys(app(InterfaceCatalog::class)->canonicalKeys($group)) as $key) {
+            $segments[Str::before($key, '.')] = true;
+        }
+
+        return array_keys($segments);
+    }
+
+    /**
+     * Every canonical key of $group whose section is $segment.
+     *
+     * @return list<string>
+     */
+    private function segmentKeys(string $group, string $segment): array
+    {
+        return array_values(array_filter(
+            array_keys(app(InterfaceCatalog::class)->canonicalKeys($group)),
+            fn (string $key): bool => Str::before($key, '.') === $segment,
+        ));
     }
 
     /**
