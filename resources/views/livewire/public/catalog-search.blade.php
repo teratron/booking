@@ -1,4 +1,16 @@
-<div class="mx-auto max-w-7xl px-4 py-8 lg:px-8">
+{{--
+    The filter sidebar renders inline on desktop and as a toggled drawer on
+    phone/tablet (Figma's own "кнопка фильтра"/mobile filter frames,
+    nodes 22:2720/227:5120) — `filtersOpen` starts from a live media-query
+    check rather than a fixed breakpoint guess, so it stays correct if the
+    viewport crosses `lg:` after load (rotating a tablet, resizing a
+    desktop window) without a full page reload.
+--}}
+<div
+    class="mx-auto max-w-7xl px-4 py-8 lg:px-8"
+    x-data="{ filtersOpen: window.matchMedia('(min-width: 1024px)').matches }"
+    x-init="window.matchMedia('(min-width: 1024px)').addEventListener('change', (e) => filtersOpen = e.matches)"
+>
     <h1 class="text-3xl font-medium text-ink">{{ __('public.catalog.title') }}</h1>
 
     @if ($bannerTop)
@@ -10,7 +22,28 @@
     @endif
 
     <div class="mt-6 grid gap-8 lg:grid-cols-[280px_1fr]">
-        <aside class="flex flex-col gap-6">
+        <aside x-show="filtersOpen" x-cloak class="flex flex-col gap-6">
+            <div class="flex items-center justify-between gap-3 lg:hidden">
+                <p class="text-base font-medium text-ink">{{ __('public.catalog.filters.toggle') }}</p>
+                <div class="flex items-center gap-3">
+                    <button
+                        type="button"
+                        wire:click="$reset('type', 'territoryId', 'amenities', 'priceMin', 'priceMax', 'ratingMin', 'attrs')"
+                        class="text-sm font-medium text-brand hover:underline"
+                    >
+                        {{ __('public.catalog.filters.reset') }}
+                    </button>
+                    <button
+                        type="button"
+                        @click="filtersOpen = false"
+                        class="rounded p-1 text-ink-muted hover:text-ink"
+                        aria-label="{{ __('public.catalog.filters.close') }}"
+                    >
+                        <x-public.icons.close class="h-5 w-5" />
+                    </button>
+                </div>
+            </div>
+
             <div>
                 <label class="block text-base font-medium text-ink" for="catalog-territory">{{ __('public.catalog.filters.territory') }}</label>
                 <select id="catalog-territory" wire:model.live="territoryId" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand">
@@ -132,6 +165,14 @@
                 <p class="text-sm text-ink-muted">{{ trans_choice('public.catalog.results_count', $results->total()) }}</p>
 
                 <div class="flex gap-2">
+                    <button
+                        type="button"
+                        @click="filtersOpen = true"
+                        class="flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-ink lg:hidden"
+                    >
+                        <x-public.icons.filter class="h-4 w-4" />
+                        {{ __('public.catalog.filters.toggle') }}
+                    </button>
                     <button
                         type="button"
                         wire:click="setViewMode('grid')"

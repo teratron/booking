@@ -141,7 +141,10 @@
                             <dl class="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-sm text-ink-muted">
                                 @if ($room['maxGuests'])
                                     <dt>{{ __('public.object.room.max_guests') }}</dt>
-                                    <dd>{{ $room['maxGuests'] }}</dd>
+                                    <dd class="flex items-center gap-1">
+                                        <x-public.icons.guest class="h-4 w-4 shrink-0" />
+                                        {{ $room['maxGuests'] }}
+                                    </dd>
                                 @endif
                                 @if ($room['areaSqm'])
                                     <dt>{{ __('public.object.room.area') }}</dt>

@@ -302,6 +302,19 @@ it('composes breadcrumb, cover, gallery, header, descriptions, rooms, details, a
         ->and($profile->galleryPhotoUrls)->toHaveCount(1);
 });
 
+it('renders a room\'s guest-capacity figure with its inline SVG icon, never a raster image', function (): void {
+    Storage::fake('public');
+    $fixture = publicObjectRegistry();
+    $type = publicObjectMakeAccommodationType();
+    $object = publicObjectMake($fixture, $type['typeId'], 'Capacity Icon Hotel');
+    publicObjectGiveRoom($object, 'Deluxe Double');
+
+    $this->get(publicObjectUrl($object))
+        ->assertOk()
+        ->assertSee(__('public.object.room.max_guests'))
+        ->assertSeeInOrder([__('public.object.room.max_guests'), '<svg', '3'], escape: false);
+});
+
 it('caps the gallery mosaic at four supporting photos and overlays the true remaining count on the last one', function (): void {
     Storage::fake('public');
     $fixture = publicObjectRegistry();

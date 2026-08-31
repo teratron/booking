@@ -34,6 +34,9 @@ return [
             'rating_min' => 'Minimum rating',
             'amenities' => 'Amenities',
             'more' => 'More filters',
+            'toggle' => 'Filters',
+            'reset' => 'Reset filters',
+            'close' => 'Close filters',
         ],
     ],
 

@@ -275,3 +275,24 @@ it('never shows a catalog-page banner targeted at a different territory than the
         ->set('territoryId', $otherTerritoryId)
         ->assertDontSee(route('banners.click', ['banner' => $banner->id]), false);
 });
+
+it('renders the mobile filter toggle and its in-drawer close button as inline SVG, never a raster image', function (): void {
+    Livewire::test(CatalogSearch::class)
+        ->assertSee(__('public.catalog.filters.toggle'))
+        ->assertSee(__('public.catalog.filters.reset'))
+        ->assertSeeHtml('aria-label="'.__('public.catalog.filters.close').'"')
+        ->assertDontSeeHtml('<img');
+});
+
+it('wires the drawer reset button to every filter property, but never the search query or the view-mode preference', function (): void {
+    // Livewire's `$reset(...)` is a client-side magic action resolved by
+    // Alpine before any server round trip — there is no server-side
+    // `reset` call to intercept from a Pest test, so this pins down the
+    // one thing that actually is this project's own code: the exact
+    // property list the button's `wire:click` names. `q` (the search
+    // query) and `viewMode` (grid/list) are deliberately excluded — a
+    // "reset filters" action must not also clear what the visitor typed
+    // or how they chose to view results.
+    Livewire::test(CatalogSearch::class)
+        ->assertSeeHtml("wire:click=\"\$reset('type', 'territoryId', 'amenities', 'priceMin', 'priceMax', 'ratingMin', 'attrs')\"");
+});
