@@ -1,7 +1,7 @@
 # SEO
 
 **Version:** 0.3.0
-**Status:** RFC
+**Status:** Stable
 **Layer:** concept
 
 ## Overview
@@ -271,4 +271,4 @@ moment pages are indexed; retrofitting them means mass redirects and a ranking r
 | 0.1.1 | 2026-08-05 | Clarification only: restated language references as "active languages" (two at launch, five eventually) following l1-localization.md v0.2.0; no rule changed. |
 | 0.1.2 | 2026-08-05 | Patch: translated quoted `[TZ]` excerpts and the §1 sample search query from Russian to English per the project's language policy; no rule changed. |
 | 0.2.0 | 2026-08-22 | Minor: closed §2's open question on country-specific domains — the project owner retired them on 2026-08-15 in favour of a single origin with the language as the leading path segment. §2 now states the settled constraint and its consequence for the canonical/alternate rules; §7 records the option as retired rather than deferred. §5.1's grammar is unchanged: it was already the single-origin form. |
-| 0.3.0 | 2026-08-31 | Minor (**Stable → RFC**, amendment rule): §3.4 and §5.5 close a cold-start hole in the sitemap model — a freshly deployed portal must serve a complete, current sitemap from its first request (generated at deploy, not only on content change), and the serving layer must treat an over-age artefact as absent rather than serving it stale; §3.4 and §6 state that `robots.txt` (and the sitemap route) have a single authority — the application — so a static artefact at the web root cannot silently override the administrator's directive. Originates from the 2026-08-31 QA sweep, which found `/sitemap.xml` served an empty index on a fresh instance and a stale static `robots.txt` shadowing the dynamic route. |
+| 0.3.0 | 2026-08-31 | Minor (**Stable → RFC → Stable**, amendment rule + same-day re-review): §3.4 and §5.5 close a cold-start hole in the sitemap model — a freshly deployed portal must serve a complete, current sitemap from its first request (generated at deploy, not only on content change), and the serving layer must treat an over-age artefact as absent rather than serving it stale; §3.4 and §6 state that `robots.txt` (and the sitemap route) have a single authority — the application — so a static artefact at the web root cannot silently override the administrator's directive. Originates from the 2026-08-31 QA sweep, which found `/sitemap.xml` served an empty index on a fresh instance and a stale static `robots.txt` shadowing the dynamic route. The amendment reverted the spec to `RFC`; a zero-`TBD`, review-clean check (`@role:spec-critic` + `@role:prompt-engineer`) returned it to `Stable` in the immediately following `/magic.task` pass (Trust Mode C9). |

@@ -9,6 +9,7 @@ use App\Exceptions\BumpRefusedException;
 use App\Exceptions\ObjectMergeRefusedException;
 use App\Exceptions\PermanentDeletionRefusedException;
 use App\Filament\Admin\Resources\Objects\ObjectResource;
+use App\Filament\Support\SearchableModelSelect;
 use App\Models\Object_;
 use App\Models\ObjectPlacement;
 use App\Models\ObjectTranslation;
@@ -522,16 +523,14 @@ class EditObject extends EditRecord
             ->label(__('panel.objects.lifecycle.transfer_ownership'))
             ->authorize(fn (Object_ $object): bool => (bool) auth()->user()?->can('update', $object))
             ->schema([
-                Select::make('new_owner_id')
-                    ->label(__('panel.objects.lifecycle.new_owner'))
-                    // Not `->relationship()`: that binding resolves options
-                    // and persistence against the record's own relation,
-                    // which is the wrong behaviour for an action's own data
-                    // field — this select's value is read once in the
-                    // action closure and passed to the service explicitly.
-                    ->options(fn (): array => User::query()->pluck('name', 'id')->all())
-                    ->required()
-                    ->searchable(),
+                // Server-side search — the users table is unbounded (staff
+                // + every object owner), so a full `->options()` hydrate
+                // here is the same create-form pathology `SearchableModelSelect`
+                // exists to prevent. Not `->relationship()`: this is an
+                // action's own data field, read once in the closure and
+                // passed to the service, not a record relation.
+                SearchableModelSelect::users('new_owner_id', __('panel.objects.lifecycle.new_owner'))
+                    ->required(),
             ])
             ->action(function (array $data): void {
                 $actor = Filament::auth()->user();

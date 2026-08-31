@@ -178,27 +178,40 @@ final class TerritoryPageController extends Controller
      */
     private function catalogBlocks(Territory $territory): array
     {
-        $types = ObjectType::query()->where('is_active', true)->orderBy('display_order')->with('translations')->get();
+        // Cached under the same `territory:{id}` tag the sidebar uses, so
+        // an object change anywhere in this subtree drops both together.
+        // Each block runs the whole catalog retrieval (the recursive
+        // subtree CTE, the placement-tier ordering, the card eager-load
+        // stack) once per active object type; on a cold render that is the
+        // page's dominant cost, and it must not be paid on every request
+        // for a public landing page.
+        return Cache::tags(['content', "territory:{$territory->id}"])->remember(
+            "territory:{$territory->id}:catalog-blocks:".app()->getLocale(),
+            now()->addMinutes(10),
+            function () use ($territory): array {
+                $types = ObjectType::query()->where('is_active', true)->orderBy('display_order')->with('translations')->get();
 
-        $blocks = [];
+                $blocks = [];
 
-        foreach ($types as $type) {
-            $criteria = new CatalogSearchCriteria(
-                territory: $territory,
-                objectTypeId: $type->id,
-                perPage: self::OBJECTS_PER_BLOCK,
-            );
+                foreach ($types as $type) {
+                    $criteria = new CatalogSearchCriteria(
+                        territory: $territory,
+                        objectTypeId: $type->id,
+                        perPage: self::OBJECTS_PER_BLOCK,
+                    );
 
-            $objects = $this->catalog->search($criteria)->getCollection();
+                    $objects = $this->catalog->search($criteria)->getCollection();
 
-            if ($objects->isEmpty()) {
-                continue;
-            }
+                    if ($objects->isEmpty()) {
+                        continue;
+                    }
 
-            $blocks[] = ['type' => $type, 'objects' => $objects];
-        }
+                    $blocks[] = ['type' => $type, 'objects' => $objects];
+                }
 
-        return $blocks;
+                return $blocks;
+            },
+        );
     }
 
     /**

@@ -36,6 +36,9 @@ function feedbackPayload(array $overrides = []): array
         'email' => 'qa@example.test',
         'message' => 'Testing the feedback channel end to end.',
         'page_url' => 'https://portal.test/en',
+        // The overlay's personal-data-processing checkbox — the controller
+        // rejects the submission without it (rule `accepted`).
+        'consent' => '1',
     ], $overrides);
 }
 

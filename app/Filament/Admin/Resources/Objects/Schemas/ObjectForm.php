@@ -168,18 +168,33 @@ class ObjectForm
                 ->required()
                 ->live(),
 
+            // Server-side search, scoped to the selected country: the
+            // territory registry is unbounded (6,270 rows and required to
+            // stay runtime-extensible), so hydrating it in full on every
+            // form render is the create-form pathology `SearchableModelSelect`
+            // exists to prevent — here with the extra country filter that
+            // helper's generic `territories()` does not carry.
             Select::make('territory_id')
                 ->label(__('panel.objects.columns.territory'))
-                ->options(function (Get $get): array {
-                    $query = Territory::query()->with('translations');
-
-                    if ($get('country_id')) {
-                        $query->where('country_id', $get('country_id'));
-                    }
-
-                    return $query->get()
+                ->searchable()
+                ->getSearchResultsUsing(function (string $search, Get $get): array {
+                    return Territory::query()
+                        ->with('translations')
+                        ->where('is_active', true)
+                        ->when($get('country_id'), fn (Builder $query, $countryId) => $query->where('country_id', $countryId))
+                        ->whereHas('translations', fn (Builder $query) => $query->where('name', 'ilike', "%{$search}%"))
+                        ->limit(50)
+                        ->get()
                         ->mapWithKeys(fn (Territory $territory): array => [$territory->id => $territory->name ?? "#{$territory->id}"])
                         ->all();
+                })
+                // Never null for a real id — a territory with no translation
+                // in the current locale still has to resolve to a label, or
+                // Filament rejects the stored value as "not a valid option".
+                ->getOptionLabelUsing(function (int|string|null $value): ?string {
+                    $territory = Territory::query()->with('translations')->find($value);
+
+                    return $territory === null ? null : ($territory->name ?? "#{$territory->id}");
                 })
                 ->required(),
 

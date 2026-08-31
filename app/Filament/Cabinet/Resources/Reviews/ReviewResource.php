@@ -61,7 +61,10 @@ class ReviewResource extends CabinetResource
      */
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with('object');
+        // `author` joins the eager set: the author column falls back to
+        // `author->name` for a registered reviewer, a lazy-loading
+        // violation per row without it.
+        return parent::getEloquentQuery()->with(['object', 'author']);
     }
 
     public static function table(Table $table): Table

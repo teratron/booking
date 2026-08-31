@@ -170,6 +170,13 @@ FROM runtime AS production
 COPY --from=vendor /var/www/html /var/www/html
 COPY --from=assets /var/www/html/public/build /var/www/html/public/build
 
+# The admin and owner panels' own CSS/JS/fonts. Gitignored (a committed
+# copy silently goes stale against the installed Filament version), so they
+# must be republished into the image — without this the panels render
+# unstyled and non-interactive, and the deploy health check
+# (docker/deploy/verify-health.sh) fails on the missing app.css.
+RUN php artisan filament:assets
+
 # The FPM pool (docker/app/www.conf, copied in above) runs as www-data;
 # these are the two trees Laravel writes to at runtime (compiled views,
 # framework cache, sessions, logs, the bootstrap cache). Scoped rather than

@@ -30,4 +30,19 @@ return [
 
     'disk' => env('SITEMAP_DISK', 'public'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Maximum served age
+    |--------------------------------------------------------------------------
+    |
+    | The route that serves the index treats an artefact older than this
+    | (or missing entirely — a fresh deploy that has run no generation job
+    | yet) as absent: it dispatches a regeneration and answers 503 with a
+    | short Retry-After rather than serving a stale or empty sitemap. The
+    | hourly schedule keeps a live portal well inside this window.
+    |
+    */
+
+    'max_age_hours' => (int) env('SITEMAP_MAX_AGE_HOURS', 6),
+
 ];

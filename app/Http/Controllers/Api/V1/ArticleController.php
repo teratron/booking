@@ -35,11 +35,12 @@ final class ArticleController extends Controller implements DocumentsQueryParame
     {
         $validated = $request->validate(self::queryParameterRules());
 
-        // 'category' and 'tags' must be eager-loaded here: ArticleResource
-        // reads both on every row, and neither was loaded — a lazy-loading
-        // violation (or a silent per-row N+1 outside strict mode) on every
-        // paginated response.
-        $query = Article::published()->with(['translations', 'category', 'tags'])->latest('publish_at');
+        // ArticleResource reads `category->name` (a translated attribute on
+        // ArticleCategory) and each `tag->name` on every row, so `category`
+        // alone is not enough — its `translations` must come with it, or the
+        // per-row `->name` access is a lazy-loading violation (a silent N+1
+        // outside strict mode) on every paginated response.
+        $query = Article::published()->with(['translations', 'category.translations', 'tags'])->latest('publish_at');
 
         if (isset($validated['category'])) {
             $query->where('article_category_id', $validated['category']);

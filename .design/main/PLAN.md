@@ -1,10 +1,10 @@
 # Implementation Plan
 
-**Version:** 3.18.0
+**Version:** 3.18.1
 **Generated:** 2026-08-05
-**Based on:** .design/main/INDEX.md v2.15.0
+**Based on:** .design/main/INDEX.md v2.15.1
 **Based on RULES:** .design/RULES.md v1.4.0
-**Status:** Active — Phase 8 (delivery pipeline; 20/23, the three open tasks owner-only. Its two sources returned to `RFC` on 2026-08-22 to reconcile with the owner's single-line branch decision — not a defect, and not a reason to reopen Done work; see Plan Status below) · Phase 9 **Done** (post-launch QA remediation; 15/15, opened and closed 2026-08-22, independent of Phase 8; see Plan Status below) · Phase 10 **Done** (deep QA remediation; 32/32, opened 2026-08-23 and closed the same pass, independent of Phase 8) · Phase 11 **Done** (revenue & administration surfaces; 25/25, opened and closed 2026-08-27, independent of Phase 8; see Plan Status below) · Phase 12 **Done** (SDD reference containment cleanup; 7/7, opened and closed 2026-08-30, independent of Phase 8; see Plan Status below) · Phase 13 **Todo** (QA-sweep remediation, 2026-08-31 — three `500` blockers, size/query-budget failures, two setup gaps; 21 tasks across nine build tracks plus validation; independent of Phase 8)
+**Status:** Active — Phase 8 (delivery pipeline; 20/23, the three open tasks owner-only. Its two sources returned to `RFC` on 2026-08-22 to reconcile with the owner's single-line branch decision — not a defect, and not a reason to reopen Done work; see Plan Status below) · Phase 9 **Done** (post-launch QA remediation; 15/15, opened and closed 2026-08-22, independent of Phase 8; see Plan Status below) · Phase 10 **Done** (deep QA remediation; 32/32, opened 2026-08-23 and closed the same pass, independent of Phase 8) · Phase 11 **Done** (revenue & administration surfaces; 25/25, opened and closed 2026-08-27, independent of Phase 8; see Plan Status below) · Phase 12 **Done** (SDD reference containment cleanup; 7/7, opened and closed 2026-08-30, independent of Phase 8; see Plan Status below) · Phase 13 **Done** (QA-sweep remediation, 2026-08-31 — three `500` blockers, size/query-budget failures, two setup gaps; 18/19 delivered, opened and closed the same session; T-13B03's interface-catalog-editor half and Track G both in `## Backlog`; independent of Phase 8)
 
 ## Overview
 
@@ -615,7 +615,7 @@ genuine-leak files (proving detection), and once after, where it passed clean. A
 verified only after the tree is already clean proves nothing, the same lesson the task-ID
 regex fix already established one level up.
 
-## Phase 13 — QA Sweep Remediation (2026-08-31) — **Todo**
+## Phase 13 — QA Sweep Remediation (2026-08-31) — **Done**
 
 *The fourth full-funnel QA sweep (`.drafts/qa-simulation-2026-08-31.md`,
 `.drafts/qa-fix-specs-2026-08-31.md`) found three blockers that take a primary surface
@@ -623,6 +623,16 @@ fully offline in the seeded state — the public home page, the entire owner cab
 one admin dashboard — plus a cluster of size/query-budget failures and two setup gaps.
 This phase fixes them and adds the mechanical guards so the class does not regress a
 fifth time. Independent of Phase 8.*
+
+*Closed the same session it was planned — 18/19 delivered. The validation track's own
+`UnboundedOptionLoaderTest` found two `->options()` offenders manual review had missed
+(admin + cabinet object forms, an article author select), all since routed through
+server-side search. T-13B03's interface-catalog-editor payload reduction was reverted
+after a first cut broke the editor's own tests and is split to `## Backlog`; the
+backup-administration half of B03 shipped. Local gate green: Pint, PHPStan level 8, the
+full non-slow Pest suite + architecture + regression, `migrate:fresh --seed`. Two
+pre-existing `master` failures (`PublicFeedbackSubmissionTest`, a `consent` field the
+0ee8b0f overlay change added without updating the fixture) were fixed in passing.*
 
 - **Performance/size budgets** — [l2-tech-stack.md](specifications/l2-tech-stack.md) §5.9
   gained response-size and peak-memory budgets, the aggregate-or-paginate-at-volume
@@ -635,11 +645,27 @@ fifth time. Independent of Phase 8.*
   §5.4/§5.5 requires the image to carry published panel assets and the deploy sequence
   to regenerate the sitemap (**0.6.0**, stays `RFC`) [L2]
 
-Decomposed into 21 atomic tasks across nine build tracks plus a validation track in
-[tasks/phase-13.md](tasks/phase-13.md). Track order:
-`(A1 ∥ A2 ∥ A3 ∥ A4 ∥ B ∥ C ∥ D ∥ E ∥ F ∥ G) → T`. Every build track owns a
-non-overlapping file set; Tracks D and G are internally sequential (shared SEO-artefact
-surface; application intake before its admin queue).
+Decomposed into 19 atomic tasks across nine build tracks plus a validation track in
+[archives/tasks/phase-13.md](archives/tasks/phase-13.md). Track order:
+`(A1 ∥ A2 ∥ A3 ∥ A4 ∥ B ∥ C ∥ D ∥ E ∥ F) → T`. Every build track owns a
+non-overlapping file set; Track D is internally sequential (shared SEO-artefact
+surface + `config/sitemap.php`).
+
+**Track G — the object-application funnel (F-04) — is deferred to `## Backlog`.** Its
+governing spec [l1-object-onboarding.md](specifications/l1-object-onboarding.md) is
+`RFC` with one open `TBD` on the scope question the funnel turns on; it is scheduled by
+`/magic.spec main` → `/magic.task main`, not here. T-13A01 carries the 2026-08-26 S-04
+interim (point the "Add your object" CTA at the contacts page, not the login wall) so
+the portal stops advertising a route it does not have while the funnel waits.
+
+Every remaining task's governing spec is `Stable`. `l2-tech-stack` **2.5.0** and
+`l1-seo` **0.3.0** — amended this session, reverted to `RFC` by the amendment rule,
+then returned to `Stable` in the immediately following `/magic.task` pass once their
+same-session Post-Update Review was confirmed and both were verified `TBD`-free
+([INDEX.md](INDEX.md), 2026-08-31 amendment-pass note). `l2-release-pipeline` **0.6.0**
+stays `RFC`; the two tasks that also implement its §5.4/§5.5 amendments (T-13E01,
+T-13D03) are pointed at the `Stable` spec that governs their mechanism
+(`l2-tech-stack` §5.10, `l1-seo` §5.5), with the pipeline sections carried as context.
 
 **Two blockers are re-regressions.** Phase 10 fixed "three eager-load crashes"; N-01
 (home), N-02 (cabinet, every resource) and N-05 (`/api/v1/articles`) are the same class
@@ -658,11 +684,12 @@ Tracks A, C and G fix code against specs that were already correct, the same pos
 Phases 9 and 10 held.
 
 **No track touches a declared sensitive zone.** Track A2 (`CabinetPanelProvider`
-tenancy) and Track G2 (admin conversion creates an owner account) are
-authorization-adjacent and were confirmed clear of `app/Policies/` and the grant
-tables; both travel as ordinary changes under the standing autonomous-operation grant.
-Track E edits `composer.json`, `docker/app/Dockerfile` and `README.md` — none is
-`.env*` or `.github/workflows/`.
+tenancy) is authorization-adjacent and was confirmed clear of `app/Policies/` and the
+grant tables; it travels as an ordinary change under the standing autonomous-operation
+grant. Track E edits `composer.json`, `docker/app/Dockerfile` and `README.md` — none is
+`.env*` or `.github/workflows/`. (The backlogged Track G would have been
+authorization-adjacent too — admin conversion creates an owner account — and carries
+its own review boundary when it is scheduled.)
 
 ## Backlog
 
@@ -684,6 +711,10 @@ Phase 8 task existed for it — this was pure backlog, and closing it needed no 
 change beyond removing the entry below.)*
 
 - [l1-room-reservation.md](specifications/l1-room-reservation.md) — **dormant module, deliberately deferred.** Its three tables (`reservations`, `room_availabilities`, `booking_settings`) and its `booking` / `payment` / `guest_accounts` registry rows ship **disabled** in Phase 1, and Phase 1's inertness test proves the module is absent rather than hidden. The capability itself is not in `[TZ]` §134's mandatory first release, and the previous implementation is explicitly not a migration source ([l2-data-model.md](specifications/l2-data-model.md) §2), so building the flow is scoped as its own future phase rather than smuggled into release one.
+
+- **Object-application funnel (F-04)** — the 2026-08-31 QA sweep confirmed the "Add your object" CTA still dead-ends at `/cabinet/login`, with no public application form and `ObjectResource::canCreate()` still `false`. The fix is a feature build — a public, moderated `object_application` intake → admin conversion to an object + owner account — governed by [l1-object-onboarding.md](specifications/l1-object-onboarding.md), which is `RFC` and carries one open `TBD` on the scope question the funnel turns on. Pulled out of Phase 13 (Track G) into this Backlog: run `/magic.spec main` to close the `TBD`, then `/magic.task main` to schedule it. Phase 13's T-13A01 ships the interim — the CTA points at the contacts page, not the login wall.
+
+- **Interface-catalog editor payload reduction** — split out of Phase 13's T-13B03 (the backup-administration half of that task shipped). The `InterfaceCatalogEditor` admin page renders one Textarea per catalog key per active locale — ~2,800 fields, ~11 MB — because Filament's `Tabs` build every segment's panel into the DOM at once. A first cut (a `(group, section)` slice picker so only one segment's ~56 fields build) was reverted: `panel`'s 1,289 keys spread over 45 segments and the two existing editor tests each save across two segments in one submit, which needs a Filament `->live()` picker-state redesign and a test rework, not a quick patch. Admin-only screen, so it did not block the phase. Schedule via `/magic.task main` when picked up.
 
 ## Decision Archive
 

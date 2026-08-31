@@ -28,7 +28,19 @@ while [ "$attempt" -le "$MAX_ATTEMPTS" ]; do
     status="$(curl -s -o /dev/null -w '%{http_code}' "$URL" || true)"
 
     if [ "$status" = "200" ]; then
-        echo "==> Healthy after ${attempt} attempt(s) (${URL} -> ${status})"
+        # The health route says the application booted; this says the panels
+        # can actually render. Filament's CSS/JS is gitignored and
+        # republished into the image at build time (docker/app/Dockerfile) —
+        # an image missing it serves both panels unstyled and dead, which
+        # `/up` alone cannot see.
+        asset_status="$(curl -s -o /dev/null -w '%{http_code}' 'http://localhost/css/filament/filament/app.css' || true)"
+
+        if [ "$asset_status" != "200" ]; then
+            echo "==> /up healthy but Filament panel assets missing (app.css -> ${asset_status}) — release is unhealthy"
+            exit 1
+        fi
+
+        echo "==> Healthy after ${attempt} attempt(s) (${URL} -> ${status}, panel assets -> ${asset_status})"
         exit 0
     fi
 

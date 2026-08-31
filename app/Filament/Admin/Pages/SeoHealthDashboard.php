@@ -44,10 +44,32 @@ class SeoHealthDashboard extends Page
         return __('panel.seo_health.title');
     }
 
-    /** @return array<string, list<array{entityType: string, locale: string, name: string}>> */
+    private ?SeoHealthReport $report = null;
+
+    private function report(): SeoHealthReport
+    {
+        // One instance per page render so its own per-run memo (the
+        // canonical-URL grouping, shared by the duplicate-address count and
+        // its sample) is actually reused across the two calls the view
+        // makes.
+        return $this->report ??= app(SeoHealthReport::class);
+    }
+
+    /** @return array<string, int> warning key => accurate count */
+    public function summary(): array
+    {
+        return $this->report()->summary();
+    }
+
+    /**
+     * A bounded sample per check for the drill-down table — the accurate
+     * total is {@see self::summary()}.
+     *
+     * @return array<string, list<array{entityType: string, locale: string, name: string}>>
+     */
     public function warnings(): array
     {
-        return app(SeoHealthReport::class)->warnings();
+        return $this->report()->warnings();
     }
 
     /**

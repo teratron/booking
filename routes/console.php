@@ -15,6 +15,7 @@ use App\Jobs\PlacementExpirySweepJob;
 use App\Jobs\PromotionArchivalJob;
 use App\Jobs\StalenessSweepJob;
 use App\Jobs\SweepStaleAvailabilityJob;
+use App\Services\Backup\BackupAdministrationService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -104,7 +105,14 @@ Schedule::command('backup:clean')->dailyAt('02:00')->name('backup:cleanup');
 // is actually sitting on the destination disk — catches a destination that
 // silently stopped receiving artefacts, or received a corrupted one, rather
 // than relying solely on the producing job's own exit status.
-Schedule::command('backup:monitor')->dailyAt('03:00')->name('backup:monitor');
+Schedule::command('backup:monitor')
+    ->dailyAt('03:00')
+    ->name('backup:monitor')
+    // The administration screen reads a 15-minute-cached snapshot of the
+    // destination-disk listing rather than enumerating it live on every
+    // render; this daily run has just touched the same destination, so
+    // bust that cache so the screen reflects it on the next visit.
+    ->after(fn () => app(BackupAdministrationService::class)->forgetViewSnapshot());
 
 // Records the point-in-time job/queue throughput sample Horizon's own
 // metrics graphs read — without this scheduled, the dashboard's metrics

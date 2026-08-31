@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources\Articles\Schemas;
 
+use App\Filament\Support\SearchableModelSelect;
 use App\Filament\Support\SeoMetadataFields;
 use App\Models\ArticleCategory;
 use App\Models\ArticleTag;
 use App\Models\Language;
 use App\Models\Object_;
 use App\Models\Territory;
-use App\Models\User;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
@@ -33,12 +33,13 @@ class ArticleForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            Select::make('author_id')
-                ->label(__('panel.articles.form.author'))
-                ->options(fn (): array => User::query()->pluck('name', 'id')->all())
+            // The users table is unbounded (staff plus every registered
+            // owner), so a full `->options()` hydrate here is the same
+            // create-form pathology `SearchableModelSelect` exists to
+            // prevent — server-side search instead.
+            SearchableModelSelect::users('author_id', __('panel.articles.form.author'))
                 ->default(fn (): ?int => Filament::auth()->user()?->getAuthIdentifier())
-                ->required()
-                ->searchable(),
+                ->required(),
 
             Select::make('article_category_id')
                 ->label(__('panel.articles.form.category'))

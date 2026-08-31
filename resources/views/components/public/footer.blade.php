@@ -22,9 +22,11 @@
         'telegram' => $settings->get('portal.social_telegram_url'),
         'facebook' => $settings->get('portal.social_facebook_url'),
     ]);
-    $addObjectHref = \Illuminate\Support\Facades\Route::has('filament.cabinet.auth.login')
-        ? route('filament.cabinet.auth.login')
-        : null;
+    // Interim (F-04): the owner-application funnel is not built yet, so
+    // this points at the contacts page rather than the cabinet login
+    // wall, which offers a logged-out visitor nothing. Repointed at the
+    // application form once that ships.
+    $addObjectHref = $urlIfRouted('public.contacts');
 @endphp
 <footer class="bg-brand text-white">
     <div class="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-5 lg:px-8">

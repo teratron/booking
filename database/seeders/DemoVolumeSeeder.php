@@ -207,6 +207,24 @@ final class DemoVolumeSeeder extends Seeder
 
         DB::statement("select setval(pg_get_serial_sequence('territories', 'id'), (select max(id) from territories))");
 
+        // Editorial curation the public shell reads: the footer's "popular
+        // destinations" (top-level, portal-wide) and the home page's
+        // "popular cities" (deeper, country-scoped) both list only
+        // `is_featured` territories, so a volume seed that flags none leaves
+        // both blocks empty. Flag the first few per country at each level so
+        // those surfaces have realistic content.
+        foreach ([null, 'first-level'] as $tier) {
+            DB::table('territories')
+                ->whereIn('id', function ($sub) use ($tier): void {
+                    $sub->from('territories')
+                        ->selectRaw('id')
+                        ->when($tier === null, fn ($q) => $q->whereNull('parent_id'), fn ($q) => $q->whereNotNull('parent_id'))
+                        ->orderBy('country_id')->orderBy('id')
+                        ->limit($tier === null ? 9 : 24);
+                })
+                ->update(['is_featured' => true]);
+        }
+
         return $leafIds;
     }
 

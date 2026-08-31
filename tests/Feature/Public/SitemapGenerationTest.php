@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Jobs\GenerateSitemapsJob;
 use App\Models\User;
 use App\Services\Seo\SitemapBuilder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -122,10 +124,18 @@ it('serves the generated index and its children through the static-read routes',
     $this->get('/sitemaps/en/territory-1.xml')->assertOk()->assertSee('served-town', false);
 });
 
-it('404s a sitemap route before the generation job has ever run', function (): void {
+it('answers the index with 503 + Retry-After (and 404s a child) before the generation job has ever run', function (): void {
     Storage::fake('public');
+    Queue::fake();
 
-    $this->get('/sitemap.xml')->assertNotFound();
+    // The index is the entry point search engines hit: a missing artefact
+    // triggers a regeneration and asks the crawler back shortly, rather
+    // than serving a 404 that reads as "this site has no sitemap".
+    $this->get('/sitemap.xml')->assertStatus(503)->assertHeader('Retry-After');
+    Queue::assertPushed(GenerateSitemapsJob::class);
+
+    // A named child artefact that was never generated is a genuine 404 —
+    // there is nothing to regenerate for one specific missing page file.
     $this->get('/sitemaps/en/territory-1.xml')->assertNotFound();
 });
 

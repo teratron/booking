@@ -21,6 +21,7 @@ use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Contracts\View\View;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
@@ -68,9 +69,23 @@ class CabinetPanelProvider extends PanelProvider
             // not weaken moderation anywhere else — it only widens which of
             // an *authenticated, already-authorized* owner's own objects
             // they may select as their current tenant.
-            ->resolveTenantUsing(
-                fn (string $key): Object_ => Object_::withoutGlobalScope(ModerationScope::class)->findOrFail($key)
-            )
+            // `translations` is loaded here because the panel chrome the
+            // moment this returns — the tenant switcher, the sidebar home
+            // link — reads the tenant's translated `name`; without it every
+            // full-layout cabinet page is a lazy-loading violation under
+            // strict mode. The `ctype_digit` guard keeps a tampered,
+            // non-numeric `{tenant}` segment a clean 404 rather than a
+            // Postgres `bigint` cast error surfacing as a 500 with SQL in
+            // the body.
+            ->resolveTenantUsing(function (string $key): Object_ {
+                if (! ctype_digit($key)) {
+                    throw new ModelNotFoundException;
+                }
+
+                return Object_::withoutGlobalScope(ModerationScope::class)
+                    ->with('translations')
+                    ->findOrFail($key);
+            })
             ->tenantMenu()
             ->colors([
                 'primary' => Color::Amber,

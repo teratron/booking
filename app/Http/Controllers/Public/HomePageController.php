@@ -68,8 +68,13 @@ final class HomePageController extends Controller
             'articles' => Article::published()->with(['translations', 'media'])->latest('publish_at')->limit(self::ARTICLES_PER_RAIL)->get(),
             'popularCities' => $this->shell->popularCities($country?->id),
             'reviews' => $this->reviews($country),
+            // `translations` and `media` are both read per row by
+            // `x-public.banner-creative` (`link_text`, `getFirstMediaUrl`);
+            // the `forSlot()` banners above already eager-load them, this
+            // untargeted collection did not — a lazy-loading violation on
+            // every home render once a `home-partners` banner exists.
             'partners' => Banner::query()->whereHas('slot', fn ($query) => $query->where('key', 'home-partners'))
-                ->where('is_active', true)->get(),
+                ->where('is_active', true)->with(['translations', 'media'])->get(),
             'bannerTop' => $this->banners->forSlot('home-top', $bannerContext),
             'bannerMid' => $this->banners->forSlot('home-mid', $bannerContext),
             'bannerBottom' => $this->banners->forSlot('home-bottom', $bannerContext),

@@ -65,7 +65,12 @@ class ObjectResource extends CabinetResource
      */
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->withoutGlobalScope(ModerationScope::class);
+        // `translations` eager-loaded: the list column reads the object's
+        // translated `name` per row, a lazy-loading violation under strict
+        // mode without it.
+        return parent::getEloquentQuery()
+            ->withoutGlobalScope(ModerationScope::class)
+            ->with('translations');
     }
 
     public static function table(Table $table): Table

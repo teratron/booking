@@ -1,11 +1,11 @@
 # Master Task Index (Registry)
 
-**Version:** 1.19.0
+**Version:** 1.19.2
 **Generated:** 2026-08-05
-**Based on:** .design/main/PLAN.md v3.18.0
+**Based on:** .design/main/PLAN.md v3.18.1
 **Based on RULES:** .design/RULES.md v1.4.0
 **Execution Mode:** Parallel
-**Status:** Active — Phase 8 (7 phases done, 1 active at 20/23; three remaining tasks `Blocked [!] (C12)` since 2026-08-22 — branch-model reconciliation, not regression; see Overview) · Phase 9 `Done` (post-launch QA remediation, 15/15, closed 2026-08-22; independent of Phase 8; see Overview) · Phase 10 `Done` (deep QA remediation, 32/32, closed 2026-08-23; independent of Phase 8; see Overview) · Phase 11 `Done` (revenue & administration surfaces, 25/25, opened and closed 2026-08-27; independent of Phase 8) · Phase 12 `Done` (SDD reference containment cleanup, 7/7, opened and closed 2026-08-30; independent of Phase 8; see Overview) · Phase 13 `Todo` (QA-sweep remediation, 2026-08-31 — 21 tasks, nine build tracks plus validation, decomposed and unstarted; independent of Phase 8)
+**Status:** Active — Phase 8 (7 phases done, 1 active at 20/23; three remaining tasks `Blocked [!] (C12)` since 2026-08-22 — branch-model reconciliation, not regression; see Overview) · Phase 9 `Done` (post-launch QA remediation, 15/15, closed 2026-08-22; independent of Phase 8; see Overview) · Phase 10 `Done` (deep QA remediation, 32/32, closed 2026-08-23; independent of Phase 8; see Overview) · Phase 11 `Done` (revenue & administration surfaces, 25/25, opened and closed 2026-08-27; independent of Phase 8) · Phase 12 `Done` (SDD reference containment cleanup, 7/7, opened and closed 2026-08-30; independent of Phase 8; see Overview) · Phase 13 `Done` (QA-sweep remediation, 2026-08-31 — 18/19 delivered: nine build tracks plus a fail-first validation track; local gate green — Pint, PHPStan level 8, full non-slow Pest suite + arch + regression, `migrate:fresh --seed`; T-13B03's interface-catalog-editor half and the object-application-funnel track both in `## Backlog`; independent of Phase 8)
 
 ## Overview
 
@@ -150,7 +150,7 @@ sensitive zones by path despite every edit being comment-only. Full detail:
 | [Phase 10](archives/tasks/phase-10.md) | Deep QA remediation — access/module gating, URL routing, three eager-load crashes, cache invalidation, role data, content lifecycle and third-party wiring, review submission, missing pages, full regression gate | `Done (Archived)` (32/32, all nine tracks closed) |
 | [Phase 11](archives/tasks/phase-11.md) | Revenue & administration surfaces — placement granting, staff account and role administration, geographic banner slots, map-pin bounding, fixture volume | `Done (Archived)` (25/25) |
 | [Phase 12](archives/tasks/phase-12.md) | SDD reference containment cleanup — 31-file `§N.N` leak fix (corrected from a 50-file raw grep count) across six file-independent tracks, plus the TZ-aware `ContainmentTest` pattern that closes the gap | `Done (Archived)` (7/7) |
-| [Phase 13](tasks/phase-13.md) | QA-sweep remediation (2026-08-31) — three `500` blockers (home page, owner cabinet, `/api/v1/articles`), a 66 MB admin report, catalog/territory/object query-budget failures, a stale static `robots.txt`, a cold-start sitemap, unpublished panel assets, overload-sheds-as-502; nine build tracks plus a fail-first validation track | `Todo` (0/21) |
+| [Phase 13](archives/tasks/phase-13.md) | QA-sweep remediation (2026-08-31) — three `500` blockers (home page, owner cabinet, `/api/v1/articles`), a 66 MB admin report, catalog/territory/object query-budget failures, a stale static `robots.txt`, a cold-start sitemap, unpublished panel assets, overload-sheds-as-502; nine build tracks plus a fail-first validation track (Track G, the object-application funnel, plus T-13B03's interface-catalog-editor half, are in `## Backlog`) | `Done (Archived)` (18/19 delivered; local gate green: Pint, PHPStan level 8, full non-slow Pest suite + arch + regression, `migrate:fresh --seed`) |
 
 ## Execution Notes
 
@@ -315,23 +315,28 @@ vacuously the way the task-ID regex it follows on from did. Full rationale in
 [tasks/phase-12.md](archives/tasks/phase-12.md).
 
 **Phase 13 is nine build tracks wide plus a fail-first validation track**:
-`(A1 ∥ A2 ∥ A3 ∥ A4 ∥ B ∥ C ∥ D ∥ E ∥ F ∥ G) → T`. Each build track owns a
-non-overlapping file set; Tracks D (SEO artefacts + `config/sitemap.php`) and G
-(application intake, then its admin queue) are internally sequential. Two of its three
-blockers — N-01 (home) and N-02 (cabinet, every resource) — are the same eager-load
-crash class Phase 10 already fixed once, back again and exposed this time by Phase 11's
-volume seeder, which the previous seeder's empty banner set had hidden. Tracks B, D, E
-and F implement the three spec amendments the `/magic.spec main` pass made
-(`l2-tech-stack` 2.5.0, `l1-seo` 0.3.0, `l2-release-pipeline` 0.6.0, all `→ RFC` or
-staying `RFC`); Tracks A, C and G fix code against specs that were already correct, the
-Phase 9/10 posture. `T-13T02` — the architecture and size-ceiling guards — must be seen
-to fail against the current tree before the build tracks land. Full rationale in
-[tasks/phase-13.md](tasks/phase-13.md).
+`(A1 ∥ A2 ∥ A3 ∥ A4 ∥ B ∥ C ∥ D ∥ E ∥ F) → T`. Each build track owns a
+non-overlapping file set; Track D (SEO artefacts + `config/sitemap.php`) is internally
+sequential. Two of its three blockers — N-01 (home) and N-02 (cabinet, every resource)
+— are the same eager-load crash class Phase 10 already fixed once, back again and
+exposed this time by Phase 11's volume seeder, which the previous seeder's empty banner
+set had hidden. Tracks B, D, E and F implement the spec amendments the `/magic.spec
+main` pass made (`l2-tech-stack` 2.5.0, `l1-seo` 0.3.0 — both amended, reverted to
+`RFC` by the amendment rule, then returned to `Stable` in this same-session
+`/magic.task` pass once review-clean and `TBD`-free; `l2-release-pipeline` 0.6.0 stays
+`RFC` but its two consuming tasks are pointed at the `Stable` spec that governs their
+mechanism). Tracks A and C fix code against specs that were already correct, the
+Phase 9/10 posture. **Track G (object-application funnel, F-04) is deferred to
+`## Backlog`** — its spec `l1-object-onboarding` is `RFC` with an open `TBD`; T-13A01
+ships the CTA interim. `T-13T02` — the architecture and size-ceiling guards — must be
+seen to fail against the current tree before the build tracks land. Full rationale in
+[tasks/phase-13.md](archives/tasks/phase-13.md).
 
 ## Meta Information
 
-- **Last Updated**: 2026-08-31 (Phase 13 planned from the 2026-08-31 QA sweep — 21 tasks, nine build tracks plus validation, unstarted; three amended specs recorded in `INDEX.md`; `SYNC_GAP` to registry v2.15.0 closed)
-- **Previously**: 2026-08-30 (Phase 12 planned and closed the same session — 7/7, seven tracks, full `composer quality` gate clean; corrected its own opening 50-file estimate to 31 real leaks after classifying every occurrence, and corrected this file's own previously-missing Phase 11 registry row in the same pass)
+- **Last Updated**: 2026-08-31 (Phase 13 closed the same session it was planned — 18/19 delivered, nine build tracks plus a fail-first validation track; local gate green — Pint, PHPStan level 8, full non-slow Pest suite + arch + `QaSweepRegressionTest`, `migrate:fresh --seed`; the validation track's own `UnboundedOptionLoaderTest` found two `->options()` offenders manual review had missed, both since routed through server-side search; three spec-containment leaks from earlier tracks restated in plain language; T-13B03's interface-catalog-editor payload reduction reverted after a first cut broke its tests, split to `## Backlog` alongside Track G — object-application funnel; registry at INDEX v2.15.1)
+- **Previously**: 2026-08-31 (Phase 13 planned from the 2026-08-31 QA sweep, then re-scoped on the post-`/magic.run` drift-recovery pass — 19 tasks, nine build tracks plus validation, unstarted; `l2-tech-stack` 2.5.0 and `l1-seo` 0.3.0 returned to `Stable` after their amendment's same-session re-review; Track G moved to `## Backlog`)
+- **Before that**: 2026-08-30 (Phase 12 planned and closed the same session — 7/7, seven tracks, full `composer quality` gate clean; corrected its own opening 50-file estimate to 31 real leaks after classifying every occurrence, and corrected this file's own previously-missing Phase 11 registry row in the same pass)
 - **Before that**: 2026-08-27 (Phase 11 closed — 25/25, six tracks, revenue and administration surfaces)
 - **Before that**: 2026-08-23 (Phase 10 closed — 32/32, nine tracks, full `composer quality` gate clean via `docker compose exec app`; independent of Phase 8; Phase 8 remains active at 20/23, owner-blocked, Phase 9 done)
 - **Maintainer**: Core Team

@@ -160,7 +160,18 @@ final class CatalogSearch extends Component
             'selectedType' => $selectedType,
             'typeGroups' => app(PublicShellDataProvider::class)->navigationGroups(),
             'amenityGroups' => $this->filterableAmenityGroups($selectedType),
-            'territories' => Territory::query()->where('is_active', true)
+            // Top-level (region) territories only, plus whichever one is
+            // currently selected so its label always resolves. The full
+            // registry is 6,000+ rows and grows with a runtime-extensible
+            // dimension — inlining all of it into one <select> is a
+            // response-size budget failure ([TZ] §18) and unusable as a
+            // control. Finer-grained filtering is what the territory
+            // landing pages themselves are for.
+            'territories' => Territory::query()
+                ->where('is_active', true)
+                ->where(fn ($query) => $query
+                    ->whereNull('parent_id')
+                    ->when($this->territoryId !== null, fn ($q) => $q->orWhere('id', $this->territoryId)))
                 ->orderBy('display_order')
                 ->with('translations')
                 ->get(),

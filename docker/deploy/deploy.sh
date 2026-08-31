@@ -19,7 +19,11 @@ set -eu
 #   5. Warm caches            — against the app service specifically; worker,
 #      scheduler, and pulse serve no HTTP requests, so a cold
 #      bootstrap/cache on their own containers costs nothing a visitor feels.
-#   6. Leave maintenance mode.
+#   6. Regenerate the sitemap — after migrations, so its queries see the
+#      deployed schema; before leaving maintenance, so the first crawler
+#      request is not served the previous release's (or, on a first deploy,
+#      an empty) sitemap while it waits for the hourly schedule.
+#   7. Leave maintenance mode.
 #
 # Usage: deploy.sh <image-digest>
 # <image-digest> is the build job's own "sha256:..." output — never
@@ -74,6 +78,9 @@ $COMPOSE exec -T app php artisan config:cache
 $COMPOSE exec -T app php artisan route:cache
 $COMPOSE exec -T app php artisan event:cache
 $COMPOSE exec -T app php artisan view:cache
+
+echo "==> Regenerating sitemap artefacts"
+$COMPOSE exec -T app php artisan sitemap:generate
 
 echo "==> Restarting nginx (last, so it never fronts a not-yet-started application)"
 $COMPOSE up -d nginx

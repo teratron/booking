@@ -552,6 +552,7 @@ return [
             'missing_translation' => 'Missing translation',
         ],
         'empty_state' => 'No issues found for this check.',
+        'sample_note' => 'Showing the first :shown of :total — drill into the affected entity to see the rest.',
         'missing_translation_count' => '{1} :count entity missing this translation|[2,*] :count entities missing this translation',
     ],
 
@@ -1005,6 +1006,7 @@ return [
         'none' => 'None yet',
         'staleness_warning' => 'The last database backup is older than :hours hours.',
         'destination_unreachable' => 'The backup destination could not be reached. The figures below may be incomplete — this has been reported.',
+        'checked_at' => 'Figures last read :ago.',
 
         'fields' => [
             'last_database_backup' => 'Last successful database backup',
@@ -1014,10 +1016,12 @@ return [
         'actions' => [
             'run_now' => 'Run backup now',
             'download_report' => 'Download technical report',
+            'recheck_now' => 'Re-check destination now',
         ],
 
         'notifications' => [
             'queued' => 'Backup queued — it will run in the background.',
+            'rechecked' => 'Re-reading the backup destination — refresh in a moment.',
         ],
 
         'log' => [

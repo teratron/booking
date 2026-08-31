@@ -12,10 +12,6 @@ use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Number;
-use Spatie\Backup\BackupDestination\Backup;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use UnitEnum;
 
@@ -67,36 +63,33 @@ class BackupAdministration extends Page
         return __('panel.backup_administration.title');
     }
 
-    public function lastDatabaseBackup(): ?Backup
+    /**
+     * The whole screen's data, from a 15-minute cache — the live version of
+     * this enumerated remote object storage on every render and cost ~7 s.
+     * Refreshed by the daily `backup:monitor` schedule and by
+     * {@see self::recheckNow()}.
+     *
+     * @return array{
+     *     generated_at: string, unreachable: bool, is_stale: bool,
+     *     staleness_threshold_hours: int, last_database_backup_at: ?string,
+     *     last_media_backup_at: ?string,
+     *     database_history: list<array{date: string, size: string}>,
+     *     media_history: list<array{date: string}>,
+     * }
+     */
+    public function snapshot(): array
     {
-        return $this->service()->lastDatabaseBackup();
+        return $this->service()->viewSnapshot();
     }
 
-    public function lastMediaBackupDate(): ?Carbon
+    public function recheckNow(): void
     {
-        return $this->service()->lastMediaBackupDate();
-    }
+        $this->service()->forgetViewSnapshot();
 
-    public function isDatabaseBackupStale(): bool
-    {
-        return $this->service()->isDatabaseBackupStale();
-    }
-
-    public function stalenessThresholdHours(): int
-    {
-        return $this->service()->stalenessThresholdHours();
-    }
-
-    /** @return Collection<int, Backup> */
-    public function databaseBackupHistory(): Collection
-    {
-        return $this->service()->databaseBackupHistory();
-    }
-
-    /** @return Collection<int, array{path: string, date: Carbon}> */
-    public function mediaGenerationHistory(): Collection
-    {
-        return $this->service()->mediaGenerationHistory();
+        Notification::make()
+            ->title(__('panel.backup_administration.notifications.rechecked'))
+            ->success()
+            ->send();
     }
 
     /**
@@ -115,11 +108,6 @@ class BackupAdministration extends Page
             ->send();
     }
 
-    public function backupSizeLabel(Backup $backup): string
-    {
-        return Number::fileSize($backup->sizeInBytes());
-    }
-
     public function downloadTechnicalReport(): StreamedResponse
     {
         $report = $this->service()->technicalReport();
@@ -128,11 +116,6 @@ class BackupAdministration extends Page
         return response()->streamDownload(function () use ($report): void {
             echo $report;
         }, $fileName, ['Content-Type' => 'text/plain']);
-    }
-
-    public function destinationUnreachable(): bool
-    {
-        return $this->service()->destinationUnreachable();
     }
 
     private function service(): BackupAdministrationService

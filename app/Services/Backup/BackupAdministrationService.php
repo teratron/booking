@@ -6,6 +6,7 @@ namespace App\Services\Backup;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Number;
@@ -116,6 +117,69 @@ final class BackupAdministrationService
     public function stalenessThresholdHours(): int
     {
         return (int) config('booking.backups.staleness_threshold_hours', 48);
+    }
+
+    private const string SNAPSHOT_CACHE_KEY = 'backup-administration.view-snapshot';
+
+    /**
+     * Everything the administration screen renders, as plain data, computed
+     * once and cached: the destination-disk enumeration this packages
+     * (`databaseBackupHistory()`, `mediaGenerationHistory()`, the reachability
+     * probe) hits remote object storage and cost this screen ~7 s per render
+     * when run live on every request. The daily `backup:monitor` schedule
+     * busts the cache (see the scheduler wiring in routes/console.php), and
+     * the screen offers a manual "re-check now" action that calls
+     * {@see self::forgetViewSnapshot()}.
+     *
+     * @return array{
+     *     generated_at: string,
+     *     unreachable: bool,
+     *     is_stale: bool,
+     *     staleness_threshold_hours: int,
+     *     last_database_backup_at: ?string,
+     *     last_media_backup_at: ?string,
+     *     database_history: list<array{date: string, size: string}>,
+     *     media_history: list<array{date: string}>,
+     * }
+     */
+    public function viewSnapshot(): array
+    {
+        return Cache::remember(
+            self::SNAPSHOT_CACHE_KEY,
+            now()->addMinutes(15),
+            function (): array {
+                $last = $this->lastDatabaseBackup();
+                $dbHistory = array_values(
+                    $this->databaseBackupHistory()
+                        ->map(fn (Backup $backup): array => [
+                            'date' => $backup->date()->toIso8601String(),
+                            'size' => Number::fileSize($backup->sizeInBytes()),
+                        ])
+                        ->all()
+                );
+                $mediaHistory = array_values(
+                    $this->mediaGenerationHistory()
+                        ->map(fn (array $row): array => ['date' => $row['date']->toIso8601String()])
+                        ->all()
+                );
+
+                return [
+                    'generated_at' => now()->toIso8601String(),
+                    'unreachable' => $this->destinationUnreachable(),
+                    'is_stale' => $this->isDatabaseBackupStale(),
+                    'staleness_threshold_hours' => $this->stalenessThresholdHours(),
+                    'last_database_backup_at' => $last instanceof Backup && $last->exists() ? $last->date()->toIso8601String() : null,
+                    'last_media_backup_at' => $this->lastMediaBackupDate()?->toIso8601String(),
+                    'database_history' => $dbHistory,
+                    'media_history' => $mediaHistory,
+                ];
+            },
+        );
+    }
+
+    public function forgetViewSnapshot(): void
+    {
+        Cache::forget(self::SNAPSHOT_CACHE_KEY);
     }
 
     /**

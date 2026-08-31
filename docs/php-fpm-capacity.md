@@ -70,6 +70,48 @@ Recompute this against the instance actually provisioned:
 5. Re-run the load test in this same runbook's own method (or a real
    traffic replay) against the tuned value before it is trusted.
 
+## The pre-launch concurrency benchmark — required by `[TZ]` §18
+
+`composer bench --scenario=load` measures **single-request** cost per public
+surface (p50/p95 wall-clock, query count) against seeded volume. It is a
+per-commit gate and it does not measure concurrency — a developer
+workstation cannot: the built-in PHP server serialises, and the Docker
+bind mount on Windows serialises concurrent file I/O so badly that even a
+zero-query page plateaus at ~5 req/s. A trustworthy concurrency number
+needs the **provisioned production instance** (or an identical staging box),
+with the release image and its code on the instance's own disk.
+
+Run this once before the first release, and again whenever the
+catalog, territory, or object query-cost fixes land:
+
+1. **Baseline.** With one virtual user, record p50/p95/p99 and worker RSS
+   for `/{lang}/catalog`, `/{lang}/{country}/{territory}`, `/{lang}/o/{slug}`,
+   and `/api/v1/objects`.
+2. **Ramp.** `k6` or `wrk`, concurrency `c = 4 → 8 → 16 → 32 → 64`, ~1 min
+   per step, bounded request counts (not `-t`/time-bounded — a
+   time-bounded run past capacity produces a 502 storm once the FPM
+   `listen.backlog` fills, which is a real failure mode but not the knee
+   you are looking for here). Stop when any of: error rate > 1 %, p99 > 2 s
+   or > 4× the single-user baseline, or CPU / memory / DB-pool utilisation
+   > 90 %.
+3. **Record**, per surface: the **throughput knee** (the concurrency where
+   req/s stops rising and latency runs away), the **first resource to
+   saturate** — worker CPU (`docker stats`), the Postgres connection pool
+   (`pg_stat_activity`), a lock (`pg_stat_activity.wait_event_type`), Redis
+   (`redis-cli INFO`), or a downstream service — and p99 against the
+   portal's documented per-surface response-time and query-count budgets.
+4. **Hold** at ~80 % of the lowest knee for 10 minutes; confirm no memory
+   creep (worker RSS flat), no rising error rate, and full recovery once
+   load stops.
+5. **Re-size `pm.max_children` from the result, clamped by CPU as well as
+   memory.** The RSS formula above is the memory *upper bound*. These pages
+   are CPU-bound, not IO-bound; if the knee arrives well below the
+   memory-derived child count, the pool is oversubscribed for the vCPU
+   count — set `pm.max_children ≈ 2 × vCPU` and keep the memory figure as
+   the cap. The `docker/nginx/default.conf` catalog `limit_req` and
+   `docker/app/www.conf`'s explicit `listen.backlog = 1024` bound the blast
+   radius of a spike; they do not replace this measurement.
+
 ## Verifying the running configuration
 
 ```bash
@@ -77,4 +119,5 @@ docker compose exec app php-fpm -tt 2>&1 | grep -A4 'pm '
 ```
 
 Confirms the pool is reading `docker/app/www.conf`, not the vendor default,
-and shows the values currently in effect.
+and shows the values currently in effect. `listen.backlog` appears in the
+same output.
