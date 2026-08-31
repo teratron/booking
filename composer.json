@@ -31,7 +31,7 @@
         "staudenmeir/laravel-adjacency-list": "^1.26.1"
     },
     "require-dev": {
-        "driftingly/rector-laravel": "^2.6.1",
+        "driftingly/rector-laravel": "^2.6.2",
         "fakerphp/faker": "^1.24.1",
         "icanhazstring/composer-unused": "^0.9.6",
         "larastan/larastan": "^3.10.0",
@@ -42,8 +42,8 @@
         "nunomaduro/collision": "^8.9.5",
         "pestphp/pest": "^5.1.3",
         "pestphp/pest-plugin-laravel": "^5.0.1",
-        "phpstan/phpstan": "^2.2.9",
-        "rector/rector": "^2.6.4"
+        "phpstan/phpstan": "^2.2.10",
+        "rector/rector": "^2.6.5"
     },
     "autoload": {
         "psr-4": {
