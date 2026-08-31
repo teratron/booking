@@ -1,7 +1,7 @@
 # SEO
 
-**Version:** 0.2.0
-**Status:** Stable
+**Version:** 0.3.0
+**Status:** RFC
 **Layer:** concept
 
 ## Overview
@@ -105,9 +105,14 @@ to prevent that.
 - Breadcrumbs are present and marked up on every page below the home page
   (`[TZ]` §13).
 - Sitemaps cover every indexable page in every language, are indexed and paginated,
-  and are regenerated on content change (`[TZ]` §13).
+  and are regenerated on content change (`[TZ]` §13). A freshly deployed portal serves
+  a **complete, current** sitemap from its first request — the deployment sequence
+  generates it, not only the content-change job, which has had no event to fire on yet.
+  The serving layer treats an artefact older than a bounded age as **absent**
+  (regenerate, then serve) rather than serving it stale.
 - A robots directive and custom error pages are administrator-manageable
-  (`[TZ]` §13, §126).
+  (`[TZ]` §13, §126). The `robots.txt` response has exactly one source — the
+  application — so the administrator's directive always takes effect.
 
 ## 5. Detailed Design
 
@@ -182,8 +187,11 @@ graph TD
 ### 5.5 Sitemaps & Redirects
 
 A sitemap index references per-language, per-entity-type sitemaps, each paginated
-within the format's limits. Regeneration is a scheduled job triggered by content
-change, not a per-request computation
+within the format's limits. Regeneration has three triggers, not one: the scheduled
+content-change job (below); a deployment, so a fresh install never serves an empty
+index before the first content event; and a serve-time freshness check that
+regenerates when the stored artefact has aged past a bounded window rather than
+serving it stale. It is never a per-request computation
 ([l1-notifications.md](l1-notifications.md) §5.4).
 
 A redirect table, administrator-editable (`[TZ]` §126), holds permanent redirects
@@ -208,7 +216,11 @@ maintainable — at portal scale nobody discovers a duplicate slug by browsing.
    the redirect table consulted on miss. Every incoming request from search hits this
    path ([l1-localization.md](l1-localization.md) §6.2).
 2. Generate sitemaps as a job writing static artefacts. Computing them per request at
-   this entity count is not viable, and search engines fetch them repeatedly.
+   this entity count is not viable, and search engines fetch them repeatedly. The
+   route that serves the artefact is the only reader; a static file placed at the web
+   root that shadows that route silently defeats §3.4's freshness and completeness
+   guarantees. The same applies to `robots.txt` — its route is the single authority,
+   and a static artefact beside it silently overrides the administrator's directive.
 3. Make indexability a property the rendering layer reads from data, never a
    hard-coded per-route decision — §3.2 requires an administrator to change it.
 4. Gate structured-data emission on module state
@@ -259,3 +271,4 @@ moment pages are indexed; retrofitting them means mass redirects and a ranking r
 | 0.1.1 | 2026-08-05 | Clarification only: restated language references as "active languages" (two at launch, five eventually) following l1-localization.md v0.2.0; no rule changed. |
 | 0.1.2 | 2026-08-05 | Patch: translated quoted `[TZ]` excerpts and the §1 sample search query from Russian to English per the project's language policy; no rule changed. |
 | 0.2.0 | 2026-08-22 | Minor: closed §2's open question on country-specific domains — the project owner retired them on 2026-08-15 in favour of a single origin with the language as the leading path segment. §2 now states the settled constraint and its consequence for the canonical/alternate rules; §7 records the option as retired rather than deferred. §5.1's grammar is unchanged: it was already the single-origin form. |
+| 0.3.0 | 2026-08-31 | Minor (**Stable → RFC**, amendment rule): §3.4 and §5.5 close a cold-start hole in the sitemap model — a freshly deployed portal must serve a complete, current sitemap from its first request (generated at deploy, not only on content change), and the serving layer must treat an over-age artefact as absent rather than serving it stale; §3.4 and §6 state that `robots.txt` (and the sitemap route) have a single authority — the application — so a static artefact at the web root cannot silently override the administrator's directive. Originates from the 2026-08-31 QA sweep, which found `/sitemap.xml` served an empty index on a fresh instance and a stale static `robots.txt` shadowing the dynamic route. |

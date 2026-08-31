@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-08-30
+**Generated:** 2026-08-31
 
 ## Active Technologies
 
@@ -12,6 +12,7 @@
 .
 ├── .claude/
 │   ├── rules/
+│   ├── scheduled_tasks.lock
 │   └── skills/
 ├── .design/
 │   ├── .version
@@ -29,7 +30,9 @@
 │   ├── qa-deep-findings.md
 │   ├── qa-deep-plan.md
 │   ├── qa-fix-specs-2026-08-26.md
+│   ├── qa-fix-specs-2026-08-31.md
 │   ├── qa-simulation-2026-08-26.md
+│   ├── qa-simulation-2026-08-31.md
 │   ├── qa-sweep-report.md
 │   ├── qa-test-plan-2026-08-26.md
 │   ├── qa-tz-conformance-2026-08-26.md
@@ -129,9 +132,12 @@
 ├── pnpm-workspace.yaml
 ├── public/
 │   ├── .htaccess
+│   ├── css/
 │   ├── favicon.ico
+│   ├── fonts/
 │   ├── images/
 │   ├── index.php
+│   ├── js/
 │   └── robots.txt
 ├── rector.php
 ├── resources/

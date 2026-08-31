@@ -1,7 +1,7 @@
 # Technology Stack
 
-**Version:** 2.4.1
-**Status:** Stable
+**Version:** 2.5.0
+**Status:** RFC
 **Layer:** implementation
 **Implements:** l1-platform-foundation.md
 
@@ -285,11 +285,42 @@ budgets are stated and measured:
 | Object page, cache miss | < 300 ms |
 | Search, p95 | < 300 ms — the §5.7 escalation trigger to Typesense |
 | Any single request | ≤ 30 queries |
+| Any rendered response, at seeded volume | Bounded — its byte size does not grow with the row count of an unbounded table |
+| Peak render memory, any surface | Well below the smallest production PHP-FPM worker limit — a render that only completes at a raised limit is a failure, not a slow page |
+
+**Size and memory are budgets, not just latency.** A page whose response grows
+linearly with the catalog — a full-registry `<select>` inlined into the markup, a
+report that lists one row per record, an admin editor that embeds the entire
+interface-string catalog — is a budget failure even when it returns `200`, because it
+fails the moment the data does. Every rendered surface, **including custom admin pages
+and health reports, not only the standard resource lists** ([l1-back-office.md](l1-back-office.md) §5),
+aggregates or paginates rather than enumerating every row of an unbounded table into
+one response.
+
+**The overload failure mode is a bounded shed, not a stall.** Under a sustained
+arrival rate above worker-pool capacity the portal returns a bounded `429` with
+`Retry-After`; a connection-refused / listen-backlog-overflow `502` on an unrelated
+route is a failure of this budget, because it lets a burst on one expensive page take
+down every other page. The two heaviest routes — the catalog and the territory page —
+carry an edge rate-limit sized so a burst on either cannot exhaust the shared worker
+backlog, and the pool's backlog depth is a deliberate value rather than the vendor
+default.
 
 Benchmarks run against **seeded realistic volume** — tens of thousands of objects, not
 a dozen fixtures. The catalog ranking query (§5.6) and territory subtree expansion
 (§5.3) behave differently at scale, and a benchmark against fixtures measures nothing
 about either.
+
+**A concurrency / load benchmark against the provisioned production instance is a
+distinct, pre-launch gate** (`[TZ]` §18's own "load test against catalog and territory
+pages before launch"), separate from the per-commit query-count and TTFB checks above.
+It runs on hardware representative of production — not a developer workstation, whose
+filesystem and process model impose their own serialisation and yield no trustworthy
+concurrency number — ramps concurrency until a stop condition, and records: the
+throughput knee, the first resource to saturate (worker CPU, database pool, a lock,
+Redis, a downstream service), p99 against the budgets above, and a sustained hold at
+~80 % of the knee for a leak check. Its result sizes the worker pool; the memory-only
+sizing formula stays the upper clamp, never the target.
 
 Full working conventions live in [CLAUDE.md](../../../CLAUDE.md) under "Engineering
 Discipline"; this section fixes the tooling selection and the numeric budgets that the
@@ -465,3 +496,4 @@ as part of its WCAG pass (§5.9) — there is nothing left for a second gate to 
 | 2.3.0 | 2026-08-20 | Minor: added WCAG 2.2 AA verification to §5.9 — `axe-core` against the rendered DOM inside Pest browser tests (`pestphp/pest-plugin-browser`), folded into `composer quality` rather than a separate pipeline. Implements the new accessibility-parity invariant ([l1-platform-foundation.md](l1-platform-foundation.md) §3.1 v1.5.0). Records why the three externally-referenced Claude Skills, a standalone Node pipeline, and static JS linting were rejected. |
 | 2.4.0 | 2026-08-20 | Minor: clarified that ARIA validity is covered by §5.9's existing axe-core ruleset, not a separate gate; added the keyboard-interaction-testing gap axe-core cannot close (§6 item 10) and a pointer to the W3C ARIA Authoring Practices Guide for building custom widgets correctly. Records why the three externally-referenced "ARIA" resources were rejected — two are unrelated products name-colliding with "Aria," the third is a pattern library, not a verifier. |
 | 2.4.1 | 2026-08-20 | Patch: linked the new release-pipeline specification, which invokes this stack's quality gate and deploys into its §5.10 topology. Navigation only — §5.9, §5.10, and §5.11 are unchanged. |
+| 2.5.0 | 2026-08-31 | Minor (**Stable → RFC**, amendment rule): §5.9's performance budgets gained a **response-size** row and a **peak-render-memory** row, both framed as budgets that fail with the data rather than only with latency; a requirement that every rendered surface — custom admin pages and health reports included, not only standard resource lists — aggregates or paginates rather than enumerating an unbounded table into one response; an **overload failure-mode contract** (a bounded `429`, never a listen-backlog `502` on an unrelated route; an edge rate-limit on the catalog and territory routes; a deliberate backlog depth); and a **pre-launch concurrency / load benchmark** on production-representative hardware as a gate distinct from the per-commit query/TTFB checks, whose result sizes the worker pool. Originates from the 2026-08-31 QA sweep, which found a 66 MB admin report, a 2.3 MB create form, an 11 MB editor page, a 136 MB catalog render, and that a sustained overload sheds as fast `502`s rather than `429`s. |

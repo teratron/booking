@@ -1,10 +1,10 @@
 # Implementation Plan
 
-**Version:** 3.17.0
+**Version:** 3.18.0
 **Generated:** 2026-08-05
-**Based on:** .design/main/INDEX.md v2.14.0
+**Based on:** .design/main/INDEX.md v2.15.0
 **Based on RULES:** .design/RULES.md v1.4.0
-**Status:** Active — Phase 8 (delivery pipeline; 20/23, the three open tasks owner-only. Its two sources returned to `RFC` on 2026-08-22 to reconcile with the owner's single-line branch decision — not a defect, and not a reason to reopen Done work; see Plan Status below) · Phase 9 **Done** (post-launch QA remediation; 15/15, opened and closed 2026-08-22, independent of Phase 8; see Plan Status below) · Phase 10 **Done** (deep QA remediation; 32/32, opened 2026-08-23 and closed the same pass, independent of Phase 8) · Phase 11 **Done** (revenue & administration surfaces; 25/25, opened and closed 2026-08-27, independent of Phase 8; see Plan Status below) · Phase 12 **Done** (SDD reference containment cleanup; 7/7, opened and closed 2026-08-30, independent of Phase 8; see Plan Status below)
+**Status:** Active — Phase 8 (delivery pipeline; 20/23, the three open tasks owner-only. Its two sources returned to `RFC` on 2026-08-22 to reconcile with the owner's single-line branch decision — not a defect, and not a reason to reopen Done work; see Plan Status below) · Phase 9 **Done** (post-launch QA remediation; 15/15, opened and closed 2026-08-22, independent of Phase 8; see Plan Status below) · Phase 10 **Done** (deep QA remediation; 32/32, opened 2026-08-23 and closed the same pass, independent of Phase 8) · Phase 11 **Done** (revenue & administration surfaces; 25/25, opened and closed 2026-08-27, independent of Phase 8; see Plan Status below) · Phase 12 **Done** (SDD reference containment cleanup; 7/7, opened and closed 2026-08-30, independent of Phase 8; see Plan Status below) · Phase 13 **Todo** (QA-sweep remediation, 2026-08-31 — three `500` blockers, size/query-budget failures, two setup gaps; 21 tasks across nine build tracks plus validation; independent of Phase 8)
 
 ## Overview
 
@@ -614,6 +614,55 @@ touching a single file — zero false positives, zero missed leaks. Then ran
 genuine-leak files (proving detection), and once after, where it passed clean. A pattern
 verified only after the tree is already clean proves nothing, the same lesson the task-ID
 regex fix already established one level up.
+
+## Phase 13 — QA Sweep Remediation (2026-08-31) — **Todo**
+
+*The fourth full-funnel QA sweep (`.drafts/qa-simulation-2026-08-31.md`,
+`.drafts/qa-fix-specs-2026-08-31.md`) found three blockers that take a primary surface
+fully offline in the seeded state — the public home page, the entire owner cabinet, and
+one admin dashboard — plus a cluster of size/query-budget failures and two setup gaps.
+This phase fixes them and adds the mechanical guards so the class does not regress a
+fifth time. Independent of Phase 8.*
+
+- **Performance/size budgets** — [l2-tech-stack.md](specifications/l2-tech-stack.md) §5.9
+  gained response-size and peak-memory budgets, the aggregate-or-paginate-at-volume
+  rule, the overload failure-mode contract, and the pre-launch load benchmark
+  (**2.5.0**, `Stable → RFC`) [L2]
+- **SEO artefacts** — [l1-seo.md](specifications/l1-seo.md) §3.4/§5.5/§6 closed the
+  sitemap cold-start hole and stated the single-authority rule for `robots.txt`
+  (**0.3.0**, `Stable → RFC`) [L1]
+- **Release artefact** — [l2-release-pipeline.md](specifications/l2-release-pipeline.md)
+  §5.4/§5.5 requires the image to carry published panel assets and the deploy sequence
+  to regenerate the sitemap (**0.6.0**, stays `RFC`) [L2]
+
+Decomposed into 21 atomic tasks across nine build tracks plus a validation track in
+[tasks/phase-13.md](tasks/phase-13.md). Track order:
+`(A1 ∥ A2 ∥ A3 ∥ A4 ∥ B ∥ C ∥ D ∥ E ∥ F ∥ G) → T`. Every build track owns a
+non-overlapping file set; Tracks D and G are internally sequential (shared SEO-artefact
+surface; application intake before its admin queue).
+
+**Two blockers are re-regressions.** Phase 10 fixed "three eager-load crashes"; N-01
+(home), N-02 (cabinet, every resource) and N-05 (`/api/v1/articles`) are the same class
+back — a Blade partial or Filament column reads a translated attribute on a model whose
+`translations` relation was never eager-loaded, and `Model::shouldBeStrict(! isProduction())`
+turns each into a `500`. Phase 11's volume seeder is what exposed N-01: the previous
+seeder created no banners, so the partner-banner loop never rendered. Track T's guards
+are volume- and size-scoped for exactly that reason.
+
+**Most findings are conformance, not design.** The `≤ 30 queries` and N+1 budgets in
+§5.9 already covered F-06/F-07/F-08 and N-01/N-02/N-05; the object-application intake
+surface is already in [l1-object-onboarding.md](specifications/l1-object-onboarding.md);
+the working owner cabinet is already required there. Only Tracks B, D, E and F implement
+fresh spec amendments — the `/magic.spec main` pass run immediately before this plan.
+Tracks A, C and G fix code against specs that were already correct, the same posture
+Phases 9 and 10 held.
+
+**No track touches a declared sensitive zone.** Track A2 (`CabinetPanelProvider`
+tenancy) and Track G2 (admin conversion creates an owner account) are
+authorization-adjacent and were confirmed clear of `app/Policies/` and the grant
+tables; both travel as ordinary changes under the standing autonomous-operation grant.
+Track E edits `composer.json`, `docker/app/Dockerfile` and `README.md` — none is
+`.env*` or `.github/workflows/`.
 
 ## Backlog
 

@@ -1,6 +1,6 @@
 # Workspace Specifications Registry
 
-**Version:** 2.14.0
+**Version:** 2.15.0
 **Status:** Active
 
 ## Overview
@@ -92,7 +92,7 @@ Delivery → Optional → Implementation); the registry itself is flat.
 | [l1-object-profile.md](specifications/l1-object-profile.md) | Public. Object page; direct-contact conversion contract, rooms, prices, services, reviews | RFC | 1 | 1.3.0 |
 | [l1-availability-status.md](specifications/l1-availability-status.md) | Public. Owner-asserted "vacancies available" flag, staleness management | Stable | 1 | 0.2.0 |
 | [l1-content-publishing.md](specifications/l1-content-publishing.md) | Public. Articles, news, and promotions; shared publication pipeline | RFC | 1 | 1.0.0 |
-| [l1-seo.md](specifications/l1-seo.md) | Public. URL grammar, metadata, indexation policy, structured data, sitemaps, redirects | Stable | 1 | 0.2.0 |
+| [l1-seo.md](specifications/l1-seo.md) | Public. URL grammar, metadata, indexation policy, structured data, sitemaps, redirects | RFC | 1 | 0.3.0 |
 | [l1-object-onboarding.md](specifications/l1-object-onboarding.md) | Owner. Object submission and the full owner cabinet lifecycle | RFC | 1 | 1.2.1 |
 | [l1-back-office.md](specifications/l1-back-office.md) | Operator. Portal administration, scoped RBAC, staff account and grant administration, configuration-only panel paths, bulk operations, import/export, settings | RFC | 1 | 0.3.0 |
 | [l1-moderation-governance.md](specifications/l1-moderation-governance.md) | Operator. Moderation modes and queue, audit journal, soft deletion, confirmation gates | RFC | 1 | 0.1.1 |
@@ -104,9 +104,9 @@ Delivery → Optional → Implementation); the registry itself is flat.
 | [l1-release-operations.md](specifications/l1-release-operations.md) | Delivery. Promotion path, gate obligations, release records, the two reversal paths, operator documentation set, agent-decided vs. human-decided release actions, scoped development-phase gate-construction exception, standing autonomous-operation grant with its sensitive-zone circuit breaker, interim single-line branch state | RFC | 1 | 0.5.1 |
 | [l1-room-reservation.md](specifications/l1-room-reservation.md) | Optional module — **disabled by default**. Booking: calendars, requests, prepaid checkout | RFC | 1 | 1.0.1 |
 | [l2-data-model.md](specifications/l2-data-model.md) | Implementation. Consolidated table inventory, conventions, index plan, deletion and archival rules, schema deliverables | RFC | 2 | 0.3.1 |
-| [l2-tech-stack.md](specifications/l2-tech-stack.md) | Implementation. Laravel 13 + Filament 5 + PostgreSQL/PostGIS + Redis; package set, bespoke surface, quality gates (incl. WCAG 2.2 AA + ARIA) and performance budgets, self-hosted deployment, dev/production environment configuration | Stable | 2 | 2.4.1 |
+| [l2-tech-stack.md](specifications/l2-tech-stack.md) | Implementation. Laravel 13 + Filament 5 + PostgreSQL/PostGIS + Redis; package set, bespoke surface, quality gates (incl. WCAG 2.2 AA + ARIA), performance/size/memory budgets and the pre-launch load-benchmark gate, self-hosted deployment, dev/production environment configuration | RFC | 2 | 2.5.0 |
 | [l2-third-party-integrations.md](specifications/l2-third-party-integrations.md) | Implementation. External services: storage, CDN, map tiles, SMTP, CAPTCHA, error tracking, dormant payment | RFC | 2 | 2.1.0 |
-| [l2-release-pipeline.md](specifications/l2-release-pipeline.md) | Implementation. Git Flow branch contract, two GitHub Actions workflows, image digest as release artefact, pull-based deploy with health-assertion rollback, destructive-migration scan, automation identity permissions, sensitive-zone enforcement, EN/RU/agent documentation tree | RFC | 2 | 0.5.1 |
+| [l2-release-pipeline.md](specifications/l2-release-pipeline.md) | Implementation. Git Flow branch contract, two GitHub Actions workflows, image digest as release artefact (incl. published panel assets), pull-based deploy with health-assertion rollback and sitemap regeneration, destructive-migration scan, automation identity permissions, sensitive-zone enforcement, EN/RU/agent documentation tree | RFC | 2 | 0.6.0 |
 
 ## Review-Submission-Gating Ledger (2026-08-23)
 
@@ -416,8 +416,39 @@ headcount, not launch status.
 `Verify` lines that no longer pass. Task records are `/magic.task`'s to reconcile, not
 this workflow's.
 
+## QA-sweep amendment pass, 2026-08-31
+
+Three specifications gained requirements the 2026-08-31 full-funnel QA sweep
+(`.drafts/qa-simulation-2026-08-31.md`, `.drafts/qa-fix-specs-2026-08-31.md`) showed
+were absent:
+
+- `l2-tech-stack` **2.4.1 → 2.5.0**, `Stable → RFC`. §5.9 gains response-size and
+  peak-render-memory budgets, the "aggregate or paginate at volume, never enumerate an
+  unbounded table" rule for every rendered surface (custom admin pages included), the
+  overload failure-mode contract (bounded `429`, never a backlog `502`; edge
+  rate-limit on catalog/territory), and the pre-launch load benchmark as a gate
+  distinct from the per-commit checks.
+- `l1-seo` **0.2.0 → 0.3.0**, `Stable → RFC`. §3.4/§5.5/§6 close the sitemap cold-start
+  hole (generated at deploy, not only on content change; not served past a freshness
+  bound) and state that `robots.txt` and the sitemap route are the single authority —
+  no static artefact may shadow them.
+- `l2-release-pipeline` **0.5.1 → 0.6.0**, stays `RFC`. §5.4 requires the release image
+  to carry the published Filament panel assets; §5.5 adds a sitemap-regeneration deploy
+  step.
+
+No C12 cascade — nothing `Implements:` either dropped spec. Count moves **8 `Stable` →
+6 `Stable`**, 19 `RFC`.
+
+**Not addressed here — conformance, not design.** Most of the sweep's findings
+(N-01/N-02/N-05 lazy-load `500`s, N-07/N-08 oversized pages, F-04 the absent object
+application funnel, F-06/F-07/F-08 the query and payload counts) are the product
+failing specs that were already correct — the `≤ 30 queries` and N+1 budgets in
+`l2-tech-stack` §5.9, the intake surface in `l1-object-onboarding`, the working owner
+cabinet in the same. Those route to `/magic.task` for remediation scheduling, not to a
+spec change.
+
 ## Meta Information
 
 - **Maintainer**: Core Team
-- **Last Updated**: 2026-08-27 (Design-debt closure — `l1-back-office` amended 0.2.0 → 0.3.0, stays `RFC`, gaining the panel-base-paths-are-configuration invariant at §3.3; `l1-platform-foundation` patched 1.5.3 → 1.5.4, stays `Stable`, correcting §5.1's site map from two literal paths to a delegation, no cascade. Closes the 2026-08-22 backlog item of the same name. 25 specifications, 8 `Stable`)
-- **Previously**: 2026-08-23 (Review-submission-gating pass — `l1-object-profile` amended 1.2.0 → 1.3.0, `Stable → RFC` on a new invariant with one deliberate open TBD; `l2-third-party-integrations` amended 2.0.0 → 2.1.0, stays `RFC`; 25 specifications, 8 `Stable`)
+- **Last Updated**: 2026-08-31 (QA-sweep amendment pass — `l2-tech-stack` 2.4.1 → 2.5.0 `Stable → RFC`, `l1-seo` 0.2.0 → 0.3.0 `Stable → RFC`, `l2-release-pipeline` 0.5.1 → 0.6.0 stays `RFC`; no cascade. 25 specifications, 6 `Stable`)
+- **Previously**: 2026-08-27 (Design-debt closure — `l1-back-office` amended 0.2.0 → 0.3.0, stays `RFC`, gaining the panel-base-paths-are-configuration invariant at §3.3; `l1-platform-foundation` patched 1.5.3 → 1.5.4, stays `Stable`, correcting §5.1's site map from two literal paths to a delegation, no cascade. Closes the 2026-08-22 backlog item of the same name. 25 specifications, 8 `Stable`)

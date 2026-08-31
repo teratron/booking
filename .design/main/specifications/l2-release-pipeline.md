@@ -1,6 +1,6 @@
 # Release Pipeline
 
-**Version:** 0.5.1
+**Version:** 0.6.0
 **Status:** RFC
 **Layer:** implementation
 **Implements:** l1-release-operations.md
@@ -195,6 +195,14 @@ ghcr.io/{owner}/booking@sha256:{digest}
    └── (nginx serves the built assets from the same image layer)
 ```
 
+The image carries **both** asset sets the running system needs: the Vite build output
+and the published Filament panel assets ([l2-tech-stack.md](l2-tech-stack.md) §5.10).
+Both are generated at build time from gitignored source; a release image missing the
+Filament assets renders the administration and owner panels unstyled and
+non-interactive. §5.5's health assertion covers a panel asset, not only the
+application health route, so this is caught as an unhealthy release rather than
+discovered by an operator.
+
 Infrastructure services — PostgreSQL, Redis, object storage — are not part of the
 artefact. They are provisioned once and outlive releases, which is exactly why a schema
 change is the asymmetric part of §5.6.
@@ -217,7 +225,12 @@ each step is where it is:
    events, views. A cold production cache is not a fault, but it makes the first
    requests after every release look like a performance regression in the very budgets
    [l2-tech-stack.md](l2-tech-stack.md) §5.9 sets.
-6. **Leave maintenance mode.**
+6. **Regenerate the sitemap artefacts.** The sitemap is written by a job triggered on
+   content change ([l1-seo.md](l1-seo.md) §5.5); a fresh deployment has had no such
+   event, so without this step the first crawler request is served an empty or
+   previous-release sitemap until the next scheduled tick. Run after migrations so the
+   generation query sees the deployed schema.
+7. **Leave maintenance mode.**
 
 The scheduler and queue workers are restarted rather than reloaded: both hold resolved
 application state from process start, and a worker running yesterday's code against
@@ -543,3 +556,4 @@ deployment credentials in scope.
 | 0.4.0 | 2026-08-21 | New §5.11 (Sensitive-Zone Enforcement) — the section the first re-review of 0.3.0 found missing entirely: `.github/CODEOWNERS` as the single source of ownership patterns, an architecture test deriving its candidates by walking the real tree per zone rather than from a hand-written path list, and the `require_code_owner_reviews` / `required_approving_review_count` protection settings that make the check actually block a merge. States the ordering constraint between those two settings as a safety property — enabling code-owner review always precedes lowering the approving count, since the reverse order opens a window with neither guarantee — and states what the mechanism deliberately does not gate. §5.2's branch topology table is corrected to match: both protected branches require code-owner review and carry no approving-review count of their own, where the table previously described `develop` as requiring one approving review and said nothing about code owners on either line. §4 gains a compliance row for [l1-release-operations.md](l1-release-operations.md) §5.5.2, which had none. |
 | 0.5.0 | 2026-08-22 | Minor: §5.2's topology table is reframed as the target state, in force from the client's production launch, following [l1-release-operations.md](l1-release-operations.md) §3.3's interim clause — until handover the repository runs a single line, `master`, and the interim's own two rules (work lands directly; the quality gate stays unconditional) are stated so the period has a contract rather than an absence of one. §5.1's Current State row is corrected against a live read: `develop` does not exist, `master` is the sole remote head, `branches/master/protection` returns `404 Branch not protected` and `rulesets` returns `[]` — the row previously described two branches and was accurate when written. §5.11 gains an inertness notice: with no protection rule, its settings are absent and `CODEOWNERS` is consulted by nothing, leaving only the tree-walking test, whose result no merge path reads. The mechanism is not withdrawn — the section doubles as the restoration procedure, and restoration is a precondition of the first release rather than a follow-up to it. |
 | 0.5.1 | 2026-08-22 | Patch, corrective: §5.1's Current State row and §5.11's inertness notice framed the pause as freshly discovered drift. It is a recorded owner decision from the same day, documented in the project's engineering-conventions document and branch-model runbook, with the prior working state preserved at a named git tag. Both passages are reworded to state that plainly. §5.2's resumption condition is corrected to match those two documents: client production launch **or** a second developer joining, whichever comes first — 0.5.0 named only the first. |
+| 0.6.0 | 2026-08-31 | Minor: §5.4 states the release image carries the published Filament panel assets alongside the Vite build — a missing set renders both panels unstyled, which §5.5's health assertion now treats as an unhealthy release. §5.5's deploy sequence gains a step (after cache-warm, before leaving maintenance) that regenerates the sitemap artefacts, so a fresh deployment does not serve an empty or previous-release sitemap until the next content-change tick. Both originate from the 2026-08-31 QA sweep. |

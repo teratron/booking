@@ -4,9 +4,9 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** main
-**Updated:** 2026-08-31 08:35
-**Phase:** 12 — SDD Reference Containment Cleanup (Done); Phase 8 owner-blocked, nothing else agent-performable
-**Status:** Done
+**Updated:** 2026-08-31 11:43
+**Phase:** 13 — QA Sweep Remediation (2026-08-31)
+**Status:** Active
 
 ## Current Position
 
@@ -14,12 +14,13 @@
 - **Phases 9–11 (done 2026-08-22/23/27):** 72 tasks across three independent QA/revenue-remediation phases, all closed clean (full regression gates green each time). Full detail: `archives/tasks/phase-{9,10,11}.md`, `PLAN.md`'s own sections.
 - **Phase 8 (unchanged, owner-blocked):** 20/23 — every agent-performable task done; `T-8E01`/`T-8E03`/`T-8T03` remain, each owner-only **and** `Blocked [!] (C12)` since 2026-08-22 (branch-model reconciliation — see Blockers). Full detail: `tasks/phase-8.md`.
 - **Spec:** **25 specs — 8 `Stable`, 17 `RFC`** (confirmed via `check-prerequisites` 2026-08-30). See `INDEX.md`'s Amendment/Branch-Model Ledgers for the delivery pair's own history.
-- **Next Action:** No agent-performable work remains anywhere in the plan — `T-8E01`/`T-8E03`/`T-8T03` stay owner-blocked (see Blockers) until the branch-model reconciliation resumption condition clears.
+- **Next Action:** Resolve blocker on T-8E01 (main) — see STATE.md ## Blockers, then run /magic.run main
 
 ## Progress
 
 ```
-Overall: [12/12] █████████ 100%
+Phase 13: [0/22] ░░░░░░░░ 0%
+Overall: [11/13] ███████░ 85%
 Plan: Phase 1-7 done (135/135) · Phase 8 in progress (20/23, owner-blocked) · Phase 9 done (15/15) · Phase 10 done (32/32) · Phase 11 done (25/25) · Phase 12 done (7/7)
 Phase 8 tracks:  A 4/4 · B 4/4 · C 1/1 · D 5/5 · E 1/3 (E01/E03 User) · F 3/3 · T 2/3 (T03 User+Agent)
 Phase 12 tracks: A 1/1 · B 1/1 · C 1/1 · D 1/1 · E 1/1 · F 1/1 · T 1/1 — all Done
@@ -30,7 +31,6 @@ Phase 12 tracks: A 1/1 · B 1/1 · C 1/1 · D 1/1 · E 1/1 · F 1/1 · T 1/1 —
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
 - 2026-08-30 **Decision:** Phase 12 complete (7/7). Provides: 31 genuine .design/-spec-section leaks rewritten in plain language; ContainmentTest now mechanically catches a bare section reference while correctly excluding the client's own [TZ] citations via a SKIP/FAIL regex; corrected the phase's own initial 50-file estimate to 31 real leaks after classifying every occurrence individually.
-- 2026-08-31 **Decision:** `/magic.task main` (no argument) opened no new phase. 0 Draft specs to promote; all 8 Stable specs already fully covered by Phases 1–12; the 17 RFC specs correctly sit outside active planning per C6. A design-audit pass this session flagged "catalog has no sort control" as a spec gap against `l1-object-catalog.md` §3.3 — false alarm, corrected before planning: §5.3's own ordering contract is the spec's entire "sort," fully implemented by `PlacementOrderingService::apply()`, with no user-choosable key anywhere in §5.1's parameter list. See the paired Blocking Constraint below.
 
 ## Blockers
 
