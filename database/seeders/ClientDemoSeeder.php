@@ -11,6 +11,7 @@ use App\Models\NewsItem;
 use App\Models\Object_;
 use App\Models\Promotion;
 use App\Models\Review;
+use App\Models\Room;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
@@ -59,6 +60,55 @@ final class ClientDemoSeeder extends Seeder
         'GE' => [
             'Tbilisi' => ['lat' => 41.7151, 'lng' => 44.8271],
             'Batumi' => ['lat' => 41.6168, 'lng' => 41.6367],
+        ],
+    ];
+
+    /**
+     * Object types this portal models as room-based accommodation (the
+     * `has_rooms` flag on the object type registry) — the only types
+     * {@see self::seedRooms()} attaches room rows to. Named here rather
+     * than read from the registry, since a curated demo fixture states its
+     * own scope deliberately instead of inheriting whatever the registry
+     * happens to contain.
+     *
+     * @var list<string>
+     */
+    private const array ACCOMMODATION_TYPES = ['hotel', 'guesthouse', 'sanatorium'];
+
+    /**
+     * @var array<string, list<array{name: array{en: string, ru: string}, bed: array{en: string, ru: string}, capacity: int, area: float, guests: int, extraBed: bool, price: int}>>
+     */
+    private const array ROOM_TYPES = [
+        'hotel' => [
+            [
+                'name' => ['en' => 'Standard Double', 'ru' => 'Стандартный двухместный'],
+                'bed' => ['en' => '1 double bed', 'ru' => '1 двуспальная кровать'],
+                'capacity' => 2, 'area' => 22.0, 'guests' => 2, 'extraBed' => false, 'price' => 45,
+            ],
+            [
+                'name' => ['en' => 'Family Suite', 'ru' => 'Семейный люкс'],
+                'bed' => ['en' => '2 double beds', 'ru' => '2 двуспальные кровати'],
+                'capacity' => 4, 'area' => 38.0, 'guests' => 4, 'extraBed' => true, 'price' => 85,
+            ],
+        ],
+        'guesthouse' => [
+            [
+                'name' => ['en' => 'Garden Room', 'ru' => 'Номер с видом на сад'],
+                'bed' => ['en' => '1 double bed', 'ru' => '1 двуспальная кровать'],
+                'capacity' => 2, 'area' => 18.0, 'guests' => 2, 'extraBed' => false, 'price' => 35,
+            ],
+        ],
+        'sanatorium' => [
+            [
+                'name' => ['en' => 'Standard Ward', 'ru' => 'Стандартная палата'],
+                'bed' => ['en' => '2 single beds', 'ru' => '2 односпальные кровати'],
+                'capacity' => 2, 'area' => 20.0, 'guests' => 2, 'extraBed' => false, 'price' => 30,
+            ],
+            [
+                'name' => ['en' => 'Deluxe Ward', 'ru' => 'Улучшенная палата'],
+                'bed' => ['en' => '1 double bed', 'ru' => '1 двуспальная кровать'],
+                'capacity' => 2, 'area' => 26.0, 'guests' => 3, 'extraBed' => true, 'price' => 50,
+            ],
         ],
     ];
 
@@ -205,6 +255,7 @@ final class ClientDemoSeeder extends Seeder
         $territoryIds = $this->seedTerritories($countryIds, $languages);
         $owners = $this->seedOwners();
         $objects = $this->seedObjects($territoryIds, $objectTypeIds, $owners);
+        $this->seedRooms($objects);
         $this->seedReviews($objects);
         $this->seedBanners($bannerSlotIds);
 
@@ -327,6 +378,74 @@ final class ClientDemoSeeder extends Seeder
         }
 
         return $created;
+    }
+
+    /**
+     * Room rows for every accommodation-type object — without this, the
+     * object page's whole "Rooms" section (and the guest-capacity icon
+     * inside it) has nothing to render for a `hasRooms` object, no matter
+     * how photo-complete the object itself is. `$objectIds` is positional,
+     * in the same order {@see self::OBJECTS} declares them, matching
+     * {@see self::seedObjects()}'s own return order.
+     *
+     * @param  list<int>  $objectIds
+     */
+    private function seedRooms(array $objectIds): void
+    {
+        $currencyByObjectId = DB::table('objects')
+            ->join('countries', 'objects.country_id', '=', 'countries.id')
+            ->pluck('countries.currency', 'objects.id');
+
+        // Looked up by the English translation text rather than a stable
+        // key: `amenities` carries no such key (only a translated name),
+        // and this seeder already depends on AmenitySeeder's exact fixed
+        // content running first in the same DatabaseSeeder chain.
+        $amenityIds = DB::table('amenities')
+            ->join('amenity_translations', 'amenities.id', '=', 'amenity_translations.amenity_id')
+            ->where('amenity_translations.locale', 'en')
+            ->whereIn('amenity_translations.name', ['Breakfast included', 'Air conditioning', 'Private bathroom'])
+            ->pluck('amenities.id')
+            ->all();
+
+        foreach (self::OBJECTS as $i => $data) {
+            if (! in_array($data['type'], self::ACCOMMODATION_TYPES, true)) {
+                continue;
+            }
+
+            $objectId = $objectIds[$i];
+            $currency = $currencyByObjectId[$objectId] ?? 'EUR';
+
+            foreach (self::ROOM_TYPES[$data['type']] as $order => $template) {
+                /** @var Room $room */
+                $room = Room::query()->create([
+                    'object_id' => $objectId,
+                    'capacity' => $template['capacity'],
+                    'room_count' => 3,
+                    'area_sqm' => $template['area'],
+                    'bed_configuration' => $template['bed']['en'],
+                    'max_guests' => $template['guests'],
+                    'has_extra_bed' => $template['extraBed'],
+                    'display_order' => $order,
+                    'is_active' => true,
+                ]);
+
+                foreach (['en', 'ru'] as $locale) {
+                    $room->translateOrNew($locale)->fill([
+                        'name' => $template['name'][$locale],
+                        'published_at' => now(),
+                    ]);
+                }
+                $room->save();
+
+                $room->amenities()->sync($amenityIds);
+
+                $room->prices()->create([
+                    'calculation_unit' => 'per_night',
+                    'amount' => $template['price'],
+                    'currency' => $currency,
+                ]);
+            }
+        }
     }
 
     /** @param  list<int>  $objectIds */
