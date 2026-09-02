@@ -2,6 +2,26 @@
 
 Operational documentation for the portal.
 
+## Setup & Installation (`setup/`)
+
+Plain-language, no-assumed-background guides for getting the portal running
+the first time — on a laptop or on a server, with Docker or without — in
+English and Russian. Start at
+[`setup/README.md`](setup/README.md).
+
+| Guide | English | Русский |
+| --- | --- | --- |
+| Start here — what this is, which guide to follow | [`setup/en/overview.md`](setup/en/overview.md) | [`setup/ru/overview.md`](setup/ru/overview.md) |
+| Local, with Docker | [`setup/en/local-with-docker.md`](setup/en/local-with-docker.md) | [`setup/ru/local-with-docker.md`](setup/ru/local-with-docker.md) |
+| Local, without Docker | [`setup/en/local-without-docker.md`](setup/en/local-without-docker.md) | [`setup/ru/local-without-docker.md`](setup/ru/local-without-docker.md) |
+| Production, with Docker (the designed path) | [`setup/en/production-with-docker.md`](setup/en/production-with-docker.md) | [`setup/ru/production-with-docker.md`](setup/ru/production-with-docker.md) |
+| Production, without Docker | [`setup/en/production-without-docker.md`](setup/en/production-without-docker.md) | [`setup/ru/production-without-docker.md`](setup/ru/production-without-docker.md) |
+| First run, sign-in, everyday tasks | [`setup/en/first-run-and-daily-tasks.md`](setup/en/first-run-and-daily-tasks.md) | [`setup/ru/first-run-and-daily-tasks.md`](setup/ru/first-run-and-daily-tasks.md) |
+| Troubleshooting the setup | [`setup/en/troubleshooting.md`](setup/en/troubleshooting.md) | [`setup/ru/troubleshooting.md`](setup/ru/troubleshooting.md) |
+
+The English and Russian copy of each file carries the same name and the same
+steps — change one, change the other in the same edit.
+
 ## System Runbooks
 
 Developer audience, English, technical — how the system itself is built and
